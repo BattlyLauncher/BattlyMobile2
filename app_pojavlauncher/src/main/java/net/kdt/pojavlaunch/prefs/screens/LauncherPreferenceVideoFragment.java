@@ -13,6 +13,9 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.prefs.CustomSeekBarPreference;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Fragment for any settings video related
  */
@@ -24,6 +27,8 @@ public class LauncherPreferenceVideoFragment extends LauncherPreferenceFragment 
 
         //Disable notch checking behavior on android 8.1 and below.
         requirePreference("ignoreNotch").setVisible(Build.VERSION.SDK_INT >= Build.VERSION_CODES.P && LauncherPreferences.PREF_NOTCH_SIZE > 0);
+
+        configureRendererPreference();
 
         CustomSeekBarPreference resolutionSeekbar = requirePreference("resolutionRatio",
                 CustomSeekBarPreference.class);
@@ -57,5 +62,28 @@ public class LauncherPreferenceVideoFragment extends LauncherPreferenceFragment 
     private void computeVisibility(){
         requirePreference("force_vsync", SwitchPreferenceCompat.class)
                 .setVisible(LauncherPreferences.PREF_USE_ALTERNATE_SURFACE);
+    }
+
+    private void configureRendererPreference() {
+        ListPreference rendererPreference = requirePreference("renderer", ListPreference.class);
+        List<CharSequence> entries = new ArrayList<>();
+        List<CharSequence> values = new ArrayList<>();
+
+        entries.add(getString(R.string.preference_renderer_auto));
+        values.add("auto");
+
+        Tools.RenderersList renderers = Tools.getCompatibleRenderers(requireContext());
+        for (String rendererDisplayName : renderers.rendererDisplayNames) {
+            entries.add(rendererDisplayName);
+        }
+        values.addAll(renderers.rendererIds);
+
+        rendererPreference.setEntries(entries.toArray(new CharSequence[0]));
+        rendererPreference.setEntryValues(values.toArray(new CharSequence[0]));
+
+        String currentValue = rendererPreference.getValue();
+        if (currentValue == null || !values.contains(currentValue)) {
+            rendererPreference.setValue("auto");
+        }
     }
 }

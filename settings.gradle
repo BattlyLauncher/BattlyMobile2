@@ -14,7 +14,7 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name='Amethyst'
+rootProject.name='Battly Launcher'
 include ':jre_lwjgl3glfw'
 include ':app_pojavlauncher'
 
@@ -22,3 +22,4 @@ include ':arc_dns_injector'
 include ':lwjgl2_methods_injector'
 include ':forge_installer'
 include ':MobileGlues'
+include ':Terracotta'

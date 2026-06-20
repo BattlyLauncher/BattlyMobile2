@@ -1,16 +1,23 @@
 package com.kdt.mcgui;
 
 import android.animation.ObjectAnimator;
+import android.animation.ValueAnimator;
 import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
+import android.graphics.LinearGradient;
 import android.graphics.Paint;
+import android.animation.ArgbEvaluator;
+import android.graphics.Shader;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.net.NetworkInfo;
 import android.net.Uri;
+import android.text.SpannableStringBuilder;
+import android.text.Spanned;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.RelativeSizeSpan;
 import android.util.AttributeSet;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -30,6 +37,7 @@ import androidx.appcompat.widget.AppCompatSpinner;
 import androidx.core.content.res.ResourcesCompat;
 
 
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.PojavProfile;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -42,6 +50,7 @@ import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.extra.ExtraListener;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
+import net.kdt.pojavlaunch.utils.BattlyPlusManager;
 
 import java.io.File;
 import java.io.IOException;
@@ -133,25 +142,39 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
 
     /* Triggered when we need to perform mojang login */
     private final ExtraListener<String[]> mMojangLoginListener = (key, value) -> {
-        if(value[1].isEmpty()){ // Test mode
-            MinecraftAccount account = new MinecraftAccount();
-            account.username = value[0];
+        MinecraftAccount account = MinecraftAccount.load(value[0]);
+        if (account == null) account = new MinecraftAccount();
+        account.username = value[0];
+        account.isMicrosoft = false;
+        account.msaRefreshToken = "0";
+        account.xuid = null;
+        if (!value[1].isEmpty()) {
+            account.accessToken = value[1]; // Battly or Mojang token — marks account as non-local
+        }
+        if (value[1].isEmpty()) {
+            account.accessToken = "0";
+        }
+        if (value.length > 2 && value[2] != null && !value[2].isEmpty()) {
+            account.profileId = value[2];
+        }
+        MinecraftAccount finalAccount = account;
+        PojavApplication.sExecutorService.execute(() -> {
+            if (!finalAccount.isLocal()) {
+                finalAccount.updateSkinFace();
+            }
             try {
-                account.save();
-            }catch (IOException e){
+                finalAccount.save();
+            } catch (IOException e) {
                 Log.e("McAccountSpinner", "Failed to save the account : " + e);
             }
-
-            mDoneListener.onLoginDone(account);
-        }
+            Tools.runOnUiThread(() -> mDoneListener.onLoginDone(finalAccount));
+        });
         return false;
     };
 
 
     @SuppressLint("ClickableViewAccessibility")
     private void init(){
-        // Set visual properties
-        setBackgroundColor(getResources().getColor(R.color.background_status_bar));
         mLoginBarPaint.setColor(getResources().getColor(R.color.minebutton_color));
         mLoginBarPaint.setStrokeWidth(getResources().getDimensionPixelOffset(R.dimen._2sdp));
 
@@ -169,6 +192,13 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
         if(position == 0){  // Add account button
             if(mAccountList.size() > 1){
                 ExtraCore.setValue(ExtraConstants.SELECT_AUTH_METHOD, true);
+                // Reset selection to current account so back navigation doesn't re-trigger this
+                post(() -> {
+                    int accountPos = mSelectecAccount != null
+                            ? mAccountList.indexOf(mSelectecAccount.username)
+                            : 1;
+                    setSelection(accountPos > 0 ? accountPos : 1, false);
+                });
             }
             return;
         }
@@ -186,6 +216,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
     protected void onDraw(Canvas canvas) {
         if(mLoginBarWidth == -1) mLoginBarWidth = getWidth(); // Initial draw
 
+        if(mLoginStep <= 0 || mLoginStep >= MAX_LOGIN_STEP) return;
         float bottom = getHeight() - mLoginBarPaint.getStrokeWidth()/2;
         canvas.drawLine(0, bottom, mLoginBarWidth, bottom, mLoginBarPaint);
     }
@@ -201,6 +232,9 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
         mAccountList.remove(position);
 
         reloadAccounts(false, 0);
+        if (mAccountList.size() <= 1) {
+            ExtraCore.setValue(ExtraConstants.SELECT_AUTH_METHOD, true);
+        }
     }
 
     @Keep
@@ -293,6 +327,12 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
             }
             return;
         }
+        if (minecraftAccount.isBattly() && MinecraftAccount.getSkinFace(minecraftAccount.username) == null) {
+            PojavApplication.sExecutorService.execute(() -> {
+                minecraftAccount.updateSkinFace();
+                Tools.runOnUiThread(this::setImageFromSelectedAccount);
+            });
+        }
     }
 
     /** Pick the selected account, the one in settings if 0 is passed */
@@ -307,7 +347,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
             if (selectedAccount == null){
                 Context ctx = Objects.requireNonNull(getContext());
 
-                new AlertDialog.Builder(ctx)
+                new AlertDialog.Builder(ctx, R.style.BattlyDialog)
                         .setCancelable(false)
                         .setTitle(R.string.account_corrupted)
                         .setMessage(R.string.login_again)
@@ -348,7 +388,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
                     mHeadDrawable = new BitmapDrawable(getResources(), bitmap);
                     view.setCompoundDrawables(mHeadDrawable, null, null, null);
                 }else{
-                    view.setCompoundDrawables(null, null, null, null);
+                    view.setCompoundDrawables(ResourcesCompat.getDrawable(getResources(), R.drawable.bg_battly_launcher_avatar, null), null, null, null);
                 }
                 view.postProcessDrawables();
             }
@@ -374,10 +414,14 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
 
             ExtendedTextView textview = convertView.findViewById(R.id.account_item);
             ImageView deleteButton = convertView.findViewById(R.id.delete_account_button);
-            textview.setText(super.getItem(position));
 
             // Handle the "Add account section"
             if(position == 0) {
+                convertView.animate().cancel();
+                convertView.setAlpha(1f);
+                convertView.setBackgroundResource(R.drawable.bg_battly_launcher_account);
+                clearPlusTextAnimation(convertView, textview);
+                textview.setText(super.getItem(position));
                 textview.setCompoundDrawables(ResourcesCompat.getDrawable(parent.getResources(), R.drawable.ic_add, null), null, null, null);
                 deleteButton.setVisibility(View.GONE);
             }
@@ -386,9 +430,17 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
                 Drawable accountHead = mImageCache.get(username);
                 if (accountHead == null){
                     accountHead = new BitmapDrawable(parent.getResources(), MinecraftAccount.getSkinFace(username));
+                    if (((BitmapDrawable) accountHead).getBitmap() == null) {
+                        accountHead = ResourcesCompat.getDrawable(parent.getResources(), R.drawable.bg_battly_launcher_avatar, null);
+                    }
                     mImageCache.put(username, accountHead);
                 }
+                accountHead = accountHead.getConstantState() != null
+                        ? accountHead.getConstantState().newDrawable(parent.getResources()).mutate()
+                        : accountHead.mutate();
+                textview.setText(getStyledAccountText(username));
                 textview.setCompoundDrawables(accountHead, null, null, null);
+                applyAccountStyle(convertView, textview, username);
 
                 deleteButton.setVisibility(View.VISIBLE);
                 deleteButton.setOnClickListener(v -> {
@@ -396,6 +448,81 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
                 });
             }
             return convertView;
+        }
+
+        private CharSequence getStyledAccountText(String username) {
+            MinecraftAccount account = net.kdt.pojavlaunch.value.MinecraftAccount.load(username);
+            String status;
+            if (account == null || account.isLocal()) {
+                String battlyUsername = getContext()
+                        .getSharedPreferences("battly_account", android.content.Context.MODE_PRIVATE)
+                        .getString("battly_username", "");
+                if (!battlyUsername.isEmpty() && battlyUsername.equalsIgnoreCase(username)) {
+                    status = BattlyPlusManager.isPlus(getContext())
+                            ? getContext().getString(R.string.launcher_status_battly_plus)
+                            : getContext().getString(R.string.launcher_status_battly);
+                } else {
+                    status = getContext().getString(R.string.launcher_status_local);
+                }
+            } else if (!account.isMicrosoft) {
+                status = BattlyPlusManager.isPlus(getContext())
+                        ? getContext().getString(R.string.launcher_status_battly_plus)
+                        : getContext().getString(R.string.launcher_status_battly);
+            } else {
+                status = getContext().getString(R.string.launcher_status_microsoft);
+            }
+            SpannableStringBuilder textBuilder = new SpannableStringBuilder(username);
+            textBuilder.append('\n').append(status);
+            int statusStart = username.length() + 1;
+            textBuilder.setSpan(new RelativeSizeSpan(0.72f), statusStart, textBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            textBuilder.setSpan(new ForegroundColorSpan(Color.parseColor("#C6D6E3")), statusStart, textBuilder.length(), Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            return textBuilder;
+        }
+
+        private void applyAccountStyle(View view, ExtendedTextView textview, String username) {
+            MinecraftAccount account = MinecraftAccount.load(username);
+            boolean isBattlyAccount = account != null && account.isBattly();
+            view.setBackgroundResource(R.drawable.bg_battly_launcher_account);
+            if (!isBattlyAccount || !BattlyPlusManager.isPlus(getContext())) {
+                view.animate().cancel();
+                clearPlusTextAnimation(view, textview);
+                view.setAlpha(1f);
+                return;
+            }
+            ValueAnimator oldAnimator = (ValueAnimator) view.getTag(R.id.tag_battly_plus_animator);
+            if (oldAnimator != null) {
+                oldAnimator.cancel();
+            }
+            ValueAnimator animator = ValueAnimator.ofFloat(0f, 1f);
+            animator.setDuration(1800);
+            animator.setRepeatCount(ValueAnimator.INFINITE);
+            animator.setRepeatMode(ValueAnimator.RESTART);
+            animator.addUpdateListener(animation -> {
+                float fraction = (float) animation.getAnimatedValue();
+                int width = Math.max(textview.getWidth(),
+                        Math.round(textview.getPaint().measureText(textview.getText().toString())));
+                if (width <= 0) return;
+                float offset = width * fraction;
+                Shader shader = new LinearGradient(
+                        -offset, 0, width - offset, 0,
+                        new int[]{0xFF3E8ED0, 0xFFFF7FAC, 0xFF3E8ED0},
+                        new float[]{0f, 0.5f, 1f},
+                        Shader.TileMode.CLAMP);
+                textview.getPaint().setShader(shader);
+                textview.invalidate();
+            });
+            view.setTag(R.id.tag_battly_plus_animator, animator);
+            textview.post(animator::start);
+        }
+
+        private void clearPlusTextAnimation(View view, ExtendedTextView textview) {
+            ValueAnimator oldAnimator = (ValueAnimator) view.getTag(R.id.tag_battly_plus_animator);
+            if (oldAnimator != null) {
+                oldAnimator.cancel();
+                view.setTag(R.id.tag_battly_plus_animator, null);
+            }
+            textview.getPaint().setShader(null);
+            textview.invalidate();
         }
 
 
@@ -409,7 +536,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
         }
 
         private void showDeleteDialog(Context context, int position) {
-            new AlertDialog.Builder(context)
+            new AlertDialog.Builder(context, R.style.BattlyDialog)
                     .setMessage(R.string.warning_remove_account)
                     .setPositiveButton(android.R.string.cancel, null)
                     .setNeutralButton(R.string.global_delete, (dialog, which) -> {

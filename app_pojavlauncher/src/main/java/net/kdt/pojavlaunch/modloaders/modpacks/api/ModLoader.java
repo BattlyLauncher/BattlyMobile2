@@ -53,16 +53,16 @@ public class ModLoader {
      * @param listener the listener that gets notified of the installation status
      * @return the task Runnable that needs to be ran
      */
-    public Runnable getDownloadTask(ModloaderDownloadListener listener) {
+    public Runnable getDownloadTask(Context context, ModloaderDownloadListener listener) {
         switch (modLoaderType) {
             case MOD_LOADER_FORGE:
-                return new ForgeDownloadTask(listener, minecraftVersion, modLoaderVersion);
+                return new ForgeDownloadTask(context, listener, minecraftVersion, modLoaderVersion, false);
             case MOD_LOADER_FABRIC:
                 return createFabriclikeTask(listener, FabriclikeUtils.FABRIC_UTILS);
             case MOD_LOADER_QUILT:
                 return createFabriclikeTask(listener, FabriclikeUtils.QUILT_UTILS);
             case MOD_LOADER_NEOFORGE:
-                return new NeoForgeDownloadTask(listener, modLoaderVersion);
+                return new NeoForgeDownloadTask(context, listener, modLoaderVersion, false);
             default:
                 return null;
         }
@@ -101,11 +101,10 @@ public class ModLoader {
      */
     public boolean requiresGuiInstallation() {
         switch (modLoaderType) {
-            case MOD_LOADER_FORGE:
-            case MOD_LOADER_NEOFORGE:
-                return true;
             case MOD_LOADER_FABRIC:
             case MOD_LOADER_QUILT:
+            case MOD_LOADER_FORGE:
+            case MOD_LOADER_NEOFORGE:
             default:
                 return false;
         }

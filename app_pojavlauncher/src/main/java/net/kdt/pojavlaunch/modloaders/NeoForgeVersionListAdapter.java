@@ -7,8 +7,9 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.TextView;
 
+import net.kdt.pojavlaunch.R;
+
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -23,16 +24,8 @@ public class NeoForgeVersionListAdapter extends BaseExpandableListAdapter implem
         mGameVersions = new ArrayList<>();
         mNeoForgeVersions = new ArrayList<>();
         for(String version : neoforgeVersions) {
-            String[] parts = version.split("\\.");
-            String gameVersion;
-            try {
-                if (Integer.parseInt(parts[1]) < 25) { // Actual logic for normal mcvers
-                    gameVersion = "1." + parts[0] + "." + parts[1];
-                } else gameVersion = parts[0] + "." + parts[1];
-            } catch (NumberFormatException ignored) {
-                // Handling for april fools version
-                gameVersion = parts[0] + "." + parts[1];
-            }
+            String gameVersion = NeoForgeVersionUtils.toMinecraftVersion(version);
+            if (gameVersion == null) continue;
             List<String> versionList;
             int gameVersionIndex = mGameVersions.indexOf(gameVersion);
             if(gameVersionIndex != -1) versionList = mNeoForgeVersions.get(gameVersionIndex);
@@ -88,9 +81,10 @@ public class NeoForgeVersionListAdapter extends BaseExpandableListAdapter implem
     @Override
     public View getGroupView(int i, boolean b, View convertView, ViewGroup viewGroup) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, viewGroup, false);
+            convertView = mLayoutInflater.inflate(R.layout.item_modloader_group, viewGroup, false);
 
-        ((TextView) convertView).setText(getGameVersion(i));
+        ((TextView) convertView.findViewById(R.id.modloader_group_title)).setText(getGameVersion(i));
+        convertView.findViewById(R.id.modloader_group_arrow).setRotation(b ? 180f : 0f);
 
         return convertView;
     }
@@ -98,8 +92,8 @@ public class NeoForgeVersionListAdapter extends BaseExpandableListAdapter implem
     @Override
     public View getChildView(int i, int i1, boolean b, View convertView, ViewGroup viewGroup) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, viewGroup, false);
-        ((TextView) convertView).setText(getNeoForgeVersion(i, i1));
+            convertView = mLayoutInflater.inflate(R.layout.item_modloader_child, viewGroup, false);
+        ((TextView) convertView.findViewById(R.id.modloader_child_title)).setText(getNeoForgeVersion(i, i1));
         return convertView;
     }
 

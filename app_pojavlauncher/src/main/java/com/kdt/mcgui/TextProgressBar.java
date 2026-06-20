@@ -36,6 +36,8 @@ public class TextProgressBar extends ProgressBar {
     private void init(){
         setProgressDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.view_text_progressbar, null));
         setProgress(35);
+        setMax(100);
+        setMinHeight((int) (getResources().getDisplayMetrics().density * 36));
         mTextPaint = new Paint();
         mTextPaint.setColor(Color.WHITE);
         mTextPaint.setFlags(Paint.FAKE_BOLD_TEXT_FLAG);
@@ -45,8 +47,8 @@ public class TextProgressBar extends ProgressBar {
     @Override
     protected synchronized void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-        mTextPaint.setTextSize((float) ((getHeight()- getPaddingBottom() - getPaddingTop()) * 0.55));
-        int xPos = (int) Math.max(Math.min((getProgress() * getWidth() / getMax()) + mTextPadding, getWidth() - mTextPaint.measureText(mText) - mTextPadding) , mTextPadding);
+        mTextPaint.setTextSize((float) ((getHeight()- getPaddingBottom() - getPaddingTop()) * 0.38));
+        int xPos = (int) ((getWidth() - mTextPaint.measureText(mText)) / 2);
         int yPos = (int) ((getHeight() / 2) - ((mTextPaint.descent() + mTextPaint.ascent()) / 2)) ;
 
         canvas.drawText(mText, xPos, yPos, mTextPaint);

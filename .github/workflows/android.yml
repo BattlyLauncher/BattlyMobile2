@@ -1,4 +1,4 @@
-name: Android CI
+name: Battly Mobile Android CI
 
 on:
   pull_request:
@@ -14,7 +14,13 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     env:
+      FIREBASE_DEBUG_GOOGLE_SERVICES_JSON_B64: ${{ secrets.FIREBASE_DEBUG_GOOGLE_SERVICES_JSON_B64 }}
+      FIREBASE_PROD_GOOGLE_SERVICES_JSON_B64: ${{ secrets.FIREBASE_PROD_GOOGLE_SERVICES_JSON_B64 }}
+      GPLAY_KEYSTORE_B64: ${{ secrets.GPLAY_KEYSTORE_B64 }}
+      GPLAY_KEY_ALIAS: ${{ secrets.GPLAY_KEY_ALIAS }}
+      GPLAY_KEY_PASSWORD: ${{ secrets.GPLAY_KEY_PASSWORD }}
       GPLAY_KEYSTORE_PASSWORD: ${{ secrets.GPLAY_KEYSTORE_PASSWORD }}
+      GPLAY_SERVICE_JSON: ${{ secrets.GPLAY_SERVICE_JSON }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
       - name: Checkout
@@ -73,6 +79,46 @@ jobs:
           validate-wrappers: false
           gradle-version: "8.11"
 
+      - name: Prepare Firebase configs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p app_pojavlauncher/src/debug app_pojavlauncher/src/release app_pojavlauncher/src/gplay app_pojavlauncher/src/proguard app_pojavlauncher/src/proguardNoDebug
+
+          if [ -n "${FIREBASE_DEBUG_GOOGLE_SERVICES_JSON_B64:-}" ]; then
+            echo "$FIREBASE_DEBUG_GOOGLE_SERVICES_JSON_B64" | base64 -d > app_pojavlauncher/src/debug/google-services.json
+          else
+            cp app_pojavlauncher/src/debug/google-services.example.json app_pojavlauncher/src/debug/google-services.json
+          fi
+          cp app_pojavlauncher/src/debug/google-services.json app_pojavlauncher/src/proguard/google-services.json
+          cp app_pojavlauncher/src/debug/google-services.json app_pojavlauncher/src/proguardNoDebug/google-services.json
+
+          if [ -n "${FIREBASE_PROD_GOOGLE_SERVICES_JSON_B64:-}" ]; then
+            echo "$FIREBASE_PROD_GOOGLE_SERVICES_JSON_B64" | base64 -d > app_pojavlauncher/src/release/google-services.json
+            cp app_pojavlauncher/src/release/google-services.json app_pojavlauncher/src/gplay/google-services.json
+          else
+            cp app_pojavlauncher/src/release/google-services.example.json app_pojavlauncher/src/release/google-services.json
+            cp app_pojavlauncher/src/gplay/google-services.example.json app_pojavlauncher/src/gplay/google-services.json
+          fi
+
+      - name: Prepare release signing
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${GPLAY_KEYSTORE_B64:-}" ]; then
+            echo "No GPLAY_KEYSTORE_B64 secret available. Skipping release signing setup."
+            exit 0
+          fi
+          mkdir -p release-secrets
+          echo "$GPLAY_KEYSTORE_B64" | base64 -d > release-secrets/battly-upload.jks
+          cat > keystore.properties <<EOF
+          storeFile=release-secrets/battly-upload.jks
+          storePassword=${GPLAY_KEYSTORE_PASSWORD}
+          keyAlias=${GPLAY_KEY_ALIAS:-upload}
+          keyPassword=${GPLAY_KEY_PASSWORD:-$GPLAY_KEYSTORE_PASSWORD}
+          EOF
+
       - name: Build JRE JAR files
         run: |
           ./scripts/languagelist_updater.sh
@@ -82,10 +128,21 @@ jobs:
           gradle :jre_lwjgl3glfw:build --no-daemon
 
       - name: Build Google Play .aab
-        if: github.repository_owner == 'PojavLauncherTeam' && github.ref_name == 'v3_openjdk'
+        if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
+        shell: bash
         run: |
+          if [ -z "${GPLAY_KEYSTORE_B64:-}" ] || [ -z "${FIREBASE_PROD_GOOGLE_SERVICES_JSON_B64:-}" ]; then
+            echo "Skipping gplay build: release signing or production Firebase secrets are missing."
+            exit 0
+          fi
           gradle :app_pojavlauncher:bundleGplay
           mv app_pojavlauncher/build/outputs/bundle/gplay/app_pojavlauncher-gplay.aab out/app-gplay.aab
+
+      - name: Verify native 16 KB page-size compatibility
+        if: hashFiles('out/app-gplay.aab') != ''
+        shell: pwsh
+        run: |
+          ./tools/android/verify-native-16kb.ps1 -Path ./out/app-gplay.aab -SkipZipAlign
 
       - name: Build Debug .apk
         run: |
@@ -104,6 +161,7 @@ jobs:
           path: out/app-debug.*
 
       - name: Upload AAB
+        if: hashFiles('out/app-gplay.aab') != ''
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
@@ -111,11 +169,11 @@ jobs:
 
       - name: Upload onto the Google Play testing track
         continue-on-error: true
-        if: github.repository_owner == 'PojavLauncherTeam' && github.ref_name == 'v3_openjdk'
+        if: hashFiles('out/app-gplay.aab') != '' && env.GPLAY_SERVICE_JSON != ''
         uses: r0adkll/upload-google-play@v1.1.2
         with:
           serviceAccountJsonPlainText: ${{ secrets.GPLAY_SERVICE_JSON }}
-          packageName: net.kdt.pojavlaunch
+          packageName: com.tecnobros.battlylauncher
           releaseFiles: out/app-gplay.aab
           track: internal
           inAppUpdatePriority: 5

@@ -1,0 +1,313 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#0f1623">
+
+    <!-- HEADER -->
+    <LinearLayout
+        android:id="@+id/ctrl_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="#131d31"
+        android:orientation="horizontal"
+        android:gravity="center_vertical"
+        android:paddingStart="8dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp"
+        android:elevation="4dp"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/ctrl_back_btn"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:contentDescription="@string/ctrl_back"
+            android:padding="8dp"
+            android:src="@drawable/ic_arrow_back_white"
+            android:tint="#FFFFFFFF" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:layout_marginStart="4dp">
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:text="@string/ctrl_marketplace_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="17sp" />
+
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/ctrl_marketplace_subtitle"
+                android:textColor="#5a8ea8"
+                android:textSize="11sp" />
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/ctrl_upload_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_battly_button_primary"
+            android:text="@string/ctrl_upload_btn"
+            android:textColor="#FFFFFFFF"
+            android:textSize="12sp"
+            android:paddingStart="12dp"
+            android:paddingEnd="12dp" />
+    </LinearLayout>
+
+    <!-- SEARCH + SORT combined section -->
+    <LinearLayout
+        android:id="@+id/ctrl_search_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="#0f1623"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="10dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/ctrl_header"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <!-- Search row -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <EditText
+                android:id="@+id/ctrl_search_input"
+                android:layout_width="0dp"
+                android:layout_height="40dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_battly_form_field"
+                android:hint="@string/ctrl_search_hint"
+                android:textColor="#FFFFFFFF"
+                android:textColorHint="#5a7a98"
+                android:textSize="13sp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:inputType="text"
+                android:imeOptions="actionSearch"
+                android:singleLine="true"
+                android:drawableStart="@drawable/ic_search"
+                android:drawableTint="#3a7a98"
+                android:drawablePadding="8dp" />
+
+            <Button
+                android:id="@+id/ctrl_search_btn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_battly_button_secondary"
+                android:text="@string/ctrl_search_btn"
+                android:textColor="#FFFFFFFF"
+                android:textSize="12sp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- SORT CHIPS -->
+    <LinearLayout
+        android:id="@+id/ctrl_sort_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:paddingStart="12dp"
+        android:paddingEnd="12dp"
+        android:paddingTop="0dp"
+        android:paddingBottom="10dp"
+        android:background="#0f1623"
+        android:gravity="center_vertical"
+        app:layout_constraintTop_toBottomOf="@id/ctrl_search_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <HorizontalScrollView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:scrollbars="none"
+            android:overScrollMode="never">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <Button
+                    android:id="@+id/ctrl_sort_newest"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_ctrl_sort_active"
+                    android:text="@string/ctrl_sort_newest"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/ctrl_sort_popular"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_battly_version_option"
+                    android:text="@string/ctrl_sort_popular"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:layout_marginEnd="6dp" />
+
+                <Button
+                    android:id="@+id/ctrl_sort_liked"
+                    style="@style/Widget.AppCompat.Button.Borderless"
+                    android:layout_width="wrap_content"
+                    android:layout_height="32dp"
+                    android:background="@drawable/bg_battly_version_option"
+                    android:text="@string/ctrl_sort_liked"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp"
+                    android:minHeight="0dp"
+                    android:minWidth="0dp"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp" />
+
+            </LinearLayout>
+        </HorizontalScrollView>
+
+    </LinearLayout>
+
+    <!-- PROGRESS BAR -->
+    <ProgressBar
+        android:id="@+id/ctrl_progress"
+        android:layout_width="48dp"
+        android:layout_height="48dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/ctrl_sort_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+    <!-- EMPTY STATE -->
+    <LinearLayout
+        android:id="@+id/ctrl_empty_text"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/ctrl_sort_bar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:src="@drawable/ic_menu_custom_controls"
+            android:tint="#2a4a60"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:id="@+id/ctrl_empty_label"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/ctrl_empty"
+            android:textColor="#4a7a98"
+            android:textSize="14sp"
+            android:gravity="center" />
+
+    </LinearLayout>
+
+    <!-- RECYCLER -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/ctrl_recycler"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingStart="6dp"
+        android:paddingEnd="6dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="8dp"
+        app:layout_constraintTop_toBottomOf="@id/ctrl_sort_bar"
+        app:layout_constraintBottom_toTopOf="@id/ctrl_pagination"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- PAGINATION -->
+    <LinearLayout
+        android:id="@+id/ctrl_pagination"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center"
+        android:background="#131d31"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:elevation="4dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <ImageButton
+            android:id="@+id/ctrl_prev_btn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_battly_launcher_chip"
+            android:src="@drawable/ic_arrow_back_white"
+            android:padding="8dp"
+            android:contentDescription="@string/ctrl_prev"
+            android:tint="#FFFFFFFF"
+            android:enabled="false" />
+
+        <TextView
+            android:id="@+id/ctrl_page_info"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginEnd="16dp"
+            android:text="1 / 1"
+            android:textColor="#aeb8ce"
+            android:textSize="13sp" />
+
+        <ImageButton
+            android:id="@+id/ctrl_next_btn"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:background="@drawable/bg_battly_launcher_chip"
+            android:src="@drawable/ic_battly_chevron"
+            android:padding="8dp"
+            android:contentDescription="@string/ctrl_next"
+            android:tint="#FFFFFFFF"
+            android:enabled="false" />
+    </LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

@@ -308,7 +308,9 @@ public class GLFW
     GLFW_CENTER_CURSOR           = 0x20009,
     GLFW_TRANSPARENT_FRAMEBUFFER = 0x2000A,
     GLFW_HOVERED                 = 0x2000B,
-    GLFW_FOCUS_ON_SHOW           = 0x2000C;
+    GLFW_FOCUS_ON_SHOW           = 0x2000C,
+    /** IME support window attribute. Added in GLFW 3.4. */
+    GLFW_IME                     = 0x26001;
 
     /** Input options. */
     public static final int
@@ -832,6 +834,26 @@ public class GLFW
         return GLFW_PLATFORM_X11;
     }
 
+    public static boolean glfwPlatformSupported(int platform) {
+        return platform == GLFW_PLATFORM_X11;
+    }
+
+    /**
+     * Stub for IME preedit callback. Preedit events are not dispatched on Android.
+     * Added in GLFW 3.4 / LWJGL 3.3.1.
+     */
+    public static GLFWPreeditCallback glfwSetPreeditCallback(@NativeType("GLFWwindow *") long window, @Nullable @NativeType("GLFWpreeditfun") GLFWPreeditCallbackI cbfun) {
+        return null;
+    }
+
+    /**
+     * Sets the IME status callback for the specified window. No-op on Android.
+     * Added in GLFW 3.4 / LWJGL 3.3.1.
+     */
+    public static GLFWIMEStatusCallback glfwSetIMEStatusCallback(@NativeType("GLFWwindow *") long window, @Nullable @NativeType("GLFWimestatusfun") GLFWIMEStatusCallbackI cbfun) {
+        return null;
+    }
+
     @NativeType("GLFWwindow *")
     public static long glfwGetCurrentContext() {
         long __functionAddress = Functions.GetCurrentContext;
@@ -1158,7 +1180,8 @@ public class GLFW
     public static void glfwPostEmptyEvent() {}
 
     public static int glfwGetInputMode(@NativeType("GLFWwindow *") long window, int mode) {
-        return internalGetWindow(window).inputModes.get(mode);
+        Integer value = internalGetWindow(window).inputModes.get(mode);
+        return value != null ? value : 0;
     }
 
     public static void glfwSetInputMode(@NativeType("GLFWwindow *") long window, int mode, int value) {

@@ -23,11 +23,11 @@ public class NotificationDownloadListener implements ModloaderDownloadListener {
 
     @Override
     public void onDownloadFinished(File downloadedFile) {
-        if(mModLoader.requiresGuiInstallation()) {
+        if (mModLoader.requiresGuiInstallation() && downloadedFile != null) {
             ModloaderInstallTracker.saveModLoader(mContext, mModLoader, downloadedFile);
-            Intent mainActivityIntent = new Intent(mContext, LauncherActivity.class);
-            sendIntentNotification(mainActivityIntent, R.string.modpack_install_notification_success);
         }
+        Intent mainActivityIntent = new Intent(mContext, LauncherActivity.class);
+        sendIntentNotification(mainActivityIntent, R.string.modpack_install_notification_success);
     }
 
     @Override

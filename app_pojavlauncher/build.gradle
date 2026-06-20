@@ -1,5 +1,7 @@
 plugins {
     id 'com.android.application' version '8.7.2'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 static def getDate() { return new Date().format('yyyyMMdd') }
@@ -43,7 +45,7 @@ def getVersionName = {
             return ("LOCAL-" + "${getDate()}")
         }else {
             // Used by github actions
-            TAG_STRING =  'amethyst-legacy-' + "${getDate()}" + "-" + TAG_PART_COMMIT.toString().trim()
+            TAG_STRING =  'battly-mobile-' + "${getDate()}" + "-" + TAG_PART_COMMIT.toString().trim()
         }
 
     }
@@ -79,42 +81,63 @@ configurations {
     }
 }
 
+def signingProperties = new Properties()
+def signingPropertiesFile = rootProject.file("keystore.properties")
+if (signingPropertiesFile.exists()) {
+    signingPropertiesFile.withInputStream { signingProperties.load(it) }
+}
+
+def releaseStoreFile = signingProperties.getProperty("storeFile", System.getenv("GPLAY_KEYSTORE_FILE"))
+def releaseStorePassword = signingProperties.getProperty("storePassword", System.getenv("GPLAY_KEYSTORE_PASSWORD"))
+def releaseKeyAlias = signingProperties.getProperty("keyAlias", System.getenv("GPLAY_KEY_ALIAS") ?: "upload")
+def releaseKeyPassword = signingProperties.getProperty("keyPassword", System.getenv("GPLAY_KEY_PASSWORD") ?: releaseStorePassword)
+def hasReleaseSigning = releaseStoreFile != null && releaseStorePassword != null && releaseKeyAlias != null && releaseKeyPassword != null
+def localDebugKeystore = rootProject.file("app_pojavlauncher/debug.keystore")
+def legacyLocalDebugKeystore = rootProject.file("release-secrets/debug.keystore")
+def hasLocalDebugKeystore = localDebugKeystore.exists() || legacyLocalDebugKeystore.exists()
+def selectedLocalDebugKeystore = localDebugKeystore.exists() ? localDebugKeystore : legacyLocalDebugKeystore
+
 android {
     namespace 'net.kdt.pojavlaunch'
 
-    compileSdk = 34
+    compileSdk = 35
 
     lintOptions {
         abortOnError false
     }
 
     signingConfigs {
-        customDebug {
-            storeFile file("debug.keystore")
-            storePassword "android"
-            keyAlias "androiddebugkey"
-            keyPassword "android"
+        debug {
+            if (hasLocalDebugKeystore) {
+                storeFile selectedLocalDebugKeystore
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
         }
         googlePlayBuild {
-            storeFile file("upload.jks")
-            storePassword System.getenv("GPLAY_KEYSTORE_PASSWORD")
-            keyAlias "upload"
-            keyPassword System.getenv("GPLAY_KEYSTORE_PASSWORD")
+            if (hasReleaseSigning) {
+                storeFile rootProject.file(releaseStoreFile)
+                storePassword releaseStorePassword
+                keyAlias releaseKeyAlias
+                keyPassword releaseKeyPassword
+            }
         }
     }
 
     defaultConfig {
-        applicationId "org.angelauramc.amethyst"
+        applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
-        targetSdkVersion 34
-        versionCode 10000000
-        versionName getVersionName()
+        targetSdkVersion 35
+        versionCode 10000005
+        versionName "2.0.0"
         multiDexEnabled true //important
         resValue 'string', 'curseforge_api_key', getCFApiKey()
         externalNativeBuild {
             ndkBuild {
                 // Fix for Windows command line length limit
-                arguments "APP_SHORT_COMMANDS=true"
+                arguments "APP_SHORT_COMMANDS=true",
+                        "APP_LDFLAGS=-Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384"
             }
         }
     }
@@ -125,10 +148,10 @@ android {
             minifyEnabled false
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
-            signingConfig signingConfigs.customDebug
-            resValue 'string', 'application_package', 'org.angelauramc.amethyst.debug'
-            resValue 'string', 'storageProviderAuthorities', 'org.angelauramc.amethyst.scoped.gamefolder.debug'
-            resValue 'string', 'shareProviderAuthority', 'org.angelauramc.amethyst.scoped.controlfolder.debug'
+            signingConfig signingConfigs.debug
+            resValue 'string', 'application_package', 'com.tecnobros.battlylauncher.debug'
+            resValue 'string', 'storageProviderAuthorities', 'com.tecnobros.battlylauncher.scoped.gamefolder.debug'
+            resValue 'string', 'shareProviderAuthority', 'com.tecnobros.battlylauncher.scoped.controlfolder.debug'
         }
         proguard {
             initWith debug
@@ -147,8 +170,9 @@ android {
             // defaultConfig already set
             // multiDexEnabled = true
             // debuggable = true
-            resValue 'string', 'storageProviderAuthorities', 'org.angelauramc.amethyst.scoped.gamefolder'
-            resValue 'string', 'application_package', 'org.angelauramc.amethyst'
+            resValue 'string', 'storageProviderAuthorities', 'com.tecnobros.battlylauncher.scoped.gamefolder'
+            resValue 'string', 'application_package', 'com.tecnobros.battlylauncher'
+            resValue 'string', 'shareProviderAuthority', 'com.tecnobros.battlylauncher.scoped.controlfolder'
         }
         gplay {
             initWith release
@@ -157,7 +181,7 @@ android {
         }
     }
 
-    ndkVersion = "25.2.9519653"
+    ndkVersion "27.3.13750724"
 
     externalNativeBuild {
         ndkBuild {
@@ -178,6 +202,8 @@ android {
 
     packagingOptions {
         jniLibs {
+            // Pojav's JVM bridge loads native libraries from ApplicationInfo.nativeLibraryDir.
+            // Keep native libs extracted until the launcher has its own APK-native extraction path.
             useLegacyPackaging = true
         }
         doNotStrip += [
@@ -191,12 +217,22 @@ android {
         buildConfig true
     }
 
-    buildToolsVersion = '34.0.0'
+    buildToolsVersion = '36.0.0'
+
 }
 
 afterEvaluate {
     // Explicit dependencies for which the apk relies on
     tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":lwjgl2_methods_injector:jar", ":jre_lwjgl3glfw:jar")
+}
+
+gradle.taskGraph.whenReady { taskGraph ->
+    def buildsGooglePlay = taskGraph.allTasks.any { task ->
+        task.path.toLowerCase(Locale.ROOT).contains("gplay")
+    }
+    if (buildsGooglePlay && !hasReleaseSigning) {
+        throw new GradleException("Missing release signing config. Provide keystore.properties or GPLAY_KEYSTORE_* environment variables before building gplay.")
+    }
 }
 
 dependencies {
@@ -208,6 +244,7 @@ dependencies {
     implementation 'androidx.drawerlayout:drawerlayout:1.2.0'
     implementation 'androidx.viewpager2:viewpager2:1.1.0-beta01'
     implementation 'androidx.annotation:annotation:1.5.0'
+    implementation 'androidx.lifecycle:lifecycle-viewmodel-ktx:2.5.1'
 
     implementation "androidx.constraintlayout:constraintlayout:2.1.4"
 
@@ -234,4 +271,11 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar', '*.aar'])
 
     implementation project(":MobileGlues")
+    implementation project(":Terracotta")
+
+    implementation platform('com.google.firebase:firebase-bom:33.16.0')
+    implementation 'com.google.firebase:firebase-analytics'
+    implementation 'com.google.firebase:firebase-crashlytics'
+    implementation 'com.google.firebase:firebase-messaging'
+    implementation 'com.google.android.gms:play-services-auth:21.3.0'
 }

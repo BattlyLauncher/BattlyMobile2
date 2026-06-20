@@ -2,6 +2,8 @@ package net.kdt.pojavlaunch.tasks;
 
 
 import static net.kdt.pojavlaunch.Architecture.archAsString;
+import static net.kdt.pojavlaunch.Architecture.archAsStringAndroid;
+import static net.kdt.pojavlaunch.Architecture.getDeviceArchitecture;
 import static net.kdt.pojavlaunch.PojavApplication.sExecutorService;
 
 import android.content.Context;
@@ -32,6 +34,7 @@ public class AsyncAssetManager {
         /* Check if JRE is included */
         String rt_version = null;
         String current_rt_version = MultiRTUtils.readInternalRuntimeVersion("Internal");
+        String arch = archAsString(Tools.DEVICE_ARCHITECTURE);
         try {
             rt_version = Tools.read(am.open("components/jre/version"));
         } catch (IOException e) {
@@ -44,38 +47,49 @@ public class AsyncAssetManager {
 
         // Install the runtime in an async manner, hope for the best
         String finalRt_version = rt_version;
+        ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, true);
         sExecutorService.execute(() -> {
-
             try {
-                MultiRTUtils.installRuntimeNamedBinpack(
-                        am.open("components/jre/universal.tar.xz"),
-                        am.open("components/jre/bin-" + archAsString(Tools.DEVICE_ARCHITECTURE) + ".tar.xz"),
-                        "Internal", finalRt_version);
+                if (hasAsset(am, "components/jre/full-" + arch + "/release")) {
+                    MultiRTUtils.installRuntimeAssetDirectory(am, "components/jre/full-" + arch, "Internal");
+                    MultiRTUtils.writeInternalRuntimeVersion("Internal", finalRt_version);
+                } else {
+                    MultiRTUtils.installRuntimeNamedBinpack(
+                            am.open("components/jre/universal.tar.xz"),
+                            am.open("components/jre/bin-" + arch + ".tar.xz"),
+                            "Internal", finalRt_version);
+                }
                 MultiRTUtils.postPrepare("Internal");
             }catch (IOException e) {
                 Log.e("JREAuto", "Internal JRE unpack failed", e);
+            } finally {
+                ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, false);
             }
         });
     }
 
     /** Unpack single files, with no regard to version tracking */
     public static void unpackSingleFiles(Context ctx){
+        ProgressLayout.setProgressMuted(ProgressLayout.EXTRACT_SINGLE_FILES, true);
         ProgressLayout.setProgress(ProgressLayout.EXTRACT_SINGLE_FILES, 0);
         sExecutorService.execute(() -> {
             try {
                 Tools.copyAssetFile(ctx, "options.txt", Tools.DIR_GAME_NEW, false);
-                Tools.copyAssetFile(ctx, "default.json", Tools.CTRLMAP_PATH, false);
+                Tools.copyAssetFile(ctx, "default_new.json", Tools.CTRLMAP_PATH, "default.json", false);
 
                 Tools.copyAssetFile(ctx, "launcher_profiles.json", Tools.DIR_GAME_NEW, false);
                 Tools.copyAssetFile(ctx,"resolv.conf",Tools.DIR_DATA, false);
             } catch (IOException e) {
                 Log.e("AsyncAssetManager", "Failed to unpack critical components !");
+            } finally {
+                ProgressLayout.clearProgress(ProgressLayout.EXTRACT_SINGLE_FILES);
+                ProgressLayout.setProgressMuted(ProgressLayout.EXTRACT_SINGLE_FILES, false);
             }
-            ProgressLayout.clearProgress(ProgressLayout.EXTRACT_SINGLE_FILES);
         });
     }
 
     public static void unpackComponents(Context ctx){
+        ProgressLayout.setProgressMuted(ProgressLayout.EXTRACT_COMPONENTS, true);
         ProgressLayout.setProgress(ProgressLayout.EXTRACT_COMPONENTS, 0);
         sExecutorService.execute(() -> {
             try {
@@ -83,16 +97,75 @@ public class AsyncAssetManager {
                 unpackComponent(ctx, "caciocavallo17", false);
                 // Since the Java module system doesn't allow multiple JARs to declare the same module,
                 // we repack them to a single file here
-                unpackComponent(ctx, "lwjgl3", false);
+                unpackLwjglNatives(ctx);
+                unpackComponent(ctx, "lwjgl3/3.3.3", false);
+                unpackComponent(ctx, "lwjgl3/3.4.1", false);
+                unpackLwjglRootFiles(ctx);
                 unpackComponent(ctx, "security", true);
                 unpackComponent(ctx, "arc_dns_injector", true);
                 unpackComponent(ctx, "lwjgl2_methods_injector", true);
                 unpackComponent(ctx, "forge_installer", true);
             } catch (IOException e) {
                 Log.e("AsyncAssetManager", "Failed to unpack components !",e );
+            } finally {
+                ProgressLayout.clearProgress(ProgressLayout.EXTRACT_COMPONENTS);
+                ProgressLayout.setProgressMuted(ProgressLayout.EXTRACT_COMPONENTS, false);
             }
-            ProgressLayout.clearProgress(ProgressLayout.EXTRACT_COMPONENTS);
         });
+    }
+
+    private static void unpackLwjglNatives(Context ctx) throws IOException {
+        AssetManager am = ctx.getAssets();
+        String sArch = archAsStringAndroid(getDeviceArchitecture());
+        String[] lwjglVersions = {"3.3.3", "3.4.1"};
+        for (String lwjglVersion : lwjglVersions) {
+            String component = "lwjgl-" + lwjglVersion + "-natives";
+            String componentPath = component + "/" + sArch;
+            File targetDir = new File(Tools.DIR_DATA, componentPath);
+            String[] fileList = am.list("components/" + componentPath);
+            if (fileList == null || fileList.length == 0) {
+                Log.w("UnpackLwjgl", "No LWJGL natives found for " + lwjglVersion + " / " + sArch);
+                continue;
+            }
+            File versionMarker = new File(targetDir, ".version");
+            String assetVersion = Tools.read(am.open("components/lwjgl3/" + lwjglVersion + "/version"));
+            boolean shouldUpdate = true;
+            if (versionMarker.exists()) {
+                try (FileInputStream fis = new FileInputStream(versionMarker)) {
+                    shouldUpdate = !assetVersion.equals(Tools.read(fis));
+                }
+            }
+            if (!shouldUpdate) {
+                Log.i("UnpackLwjgl", componentPath + " is up-to-date with the launcher, continuing...");
+                continue;
+            }
+            if (targetDir.exists()) {
+                FileUtils.deleteDirectory(targetDir);
+            }
+            //noinspection ResultOfMethodCallIgnored
+            targetDir.mkdirs();
+            Log.i("UnpackLwjgl", "Unpacking " + componentPath);
+            for (String fileName : fileList) {
+                Tools.copyAssetFile(ctx, "components/" + componentPath + "/" + fileName,
+                        targetDir.getAbsolutePath(), true);
+            }
+            Tools.write(versionMarker.getAbsolutePath(), assetVersion);
+        }
+    }
+
+    private static void unpackLwjglRootFiles(Context ctx) throws IOException {
+        AssetManager am = ctx.getAssets();
+        String[] fileList = am.list("components/lwjgl3");
+        if (fileList == null) return;
+        File targetDir = new File(Tools.DIR_GAME_HOME, "lwjgl3");
+        //noinspection ResultOfMethodCallIgnored
+        targetDir.mkdirs();
+        for (String fileName : fileList) {
+            if (!hasAsset(am, "components/lwjgl3/" + fileName)) {
+                continue;
+            }
+            Tools.copyAssetFile(ctx, "components/lwjgl3/" + fileName, targetDir.getAbsolutePath(), true);
+        }
     }
 
     private static void unpackComponent(Context ctx, String component, boolean privateDirectory) throws IOException {
@@ -129,6 +202,15 @@ public class AsyncAssetManager {
             } else {
                 Log.i("UnpackPrep", component + ": Pack is up-to-date with the launcher, continuing...");
             }
+        }
+    }
+
+    private static boolean hasAsset(AssetManager assetManager, String path) {
+        try {
+            assetManager.open(path).close();
+            return true;
+        } catch (IOException ignored) {
+            return false;
         }
     }
 }

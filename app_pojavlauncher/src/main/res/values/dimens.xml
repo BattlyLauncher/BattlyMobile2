@@ -29,6 +29,8 @@
 
     <!-- Fragment padding -->
     <dimen name="fragment_padding_medium">@dimen/_10sdp</dimen>
+    <!-- Header top padding (portrait) -->
+    <dimen name="launcher_header_top_padding">16dp</dimen>
     <!-- Misc paddings -->
     <dimen name="profile_editor_image_padding">@dimen/padding_small</dimen>
 </resources>

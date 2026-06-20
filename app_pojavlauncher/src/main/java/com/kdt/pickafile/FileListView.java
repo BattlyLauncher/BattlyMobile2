@@ -9,7 +9,6 @@ import com.ipaulpro.afilechooser.*;
 import java.io.*;
 import java.util.*;
 import net.kdt.pojavlaunch.*;
-import android.os.*;
 
 public class FileListView extends LinearLayout
 {
@@ -96,9 +95,9 @@ public class FileListView extends LinearLayout
         });
         addView(mainLv, layParam);
 
-        try {
-            listFileAt(Environment.getExternalStorageDirectory());
-        } catch (NullPointerException e) {} // Android 10+ disallows access to sdcard
+        File appRoot = new File(Tools.DIR_GAME_HOME == null ? context.getFilesDir().getAbsolutePath() : Tools.DIR_GAME_HOME);
+        setLockPath(appRoot);
+        listFileAt(appRoot);
     }
     public void setFileSelectedListener(FileSelectedListener listener)
     {
@@ -150,7 +149,7 @@ public class FileListView extends LinearLayout
                     fileSelectedListener.onFileSelected(path, path.getAbsolutePath());
                 }
             } else {
-                Toast.makeText(context, "This folder (or file) doesn't exist", Toast.LENGTH_SHORT).show();
+                Toast.makeText(context, R.string.file_picker_missing_path, Toast.LENGTH_SHORT).show();
                 refreshPath();
             }
         } catch (Exception e){
@@ -175,6 +174,10 @@ public class FileListView extends LinearLayout
     public void lockPathAt(File path) {
         lockPath = path;
         listFileAt(path);
+    }
+
+    public void setLockPath(File path) {
+        lockPath = path;
     }
 
     public void setShowFiles(boolean showFiles){

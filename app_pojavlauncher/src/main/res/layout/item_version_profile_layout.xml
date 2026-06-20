@@ -3,18 +3,25 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    android:background="?attr/selectableItemBackground"
     android:layout_width="match_parent"
-    android:layout_height="@dimen/_52sdp"
-    android:paddingStart="@dimen/_17sdp"
-    app:drawableStartSize="@dimen/_36sdp"
-    app:drawableStartIntegerScaling="true"
-
+    android:layout_height="68dp"
+    android:layout_marginBottom="8dp"
+    android:background="@drawable/bg_battly_form_panel"
+    android:drawablePadding="16dp"
+    android:elevation="3dp"
     android:gravity="center_vertical"
-    android:drawablePadding="@dimen/_19sdp"
+    android:paddingStart="18dp"
+    android:paddingEnd="14dp"
+    android:textColor="#FFFFFFFF"
+    android:textSize="14sp"
+    android:textStyle="bold"
+    app:drawableEndIntegerScaling="true"
+    app:drawableEndSize="18dp"
+    app:drawableStartIntegerScaling="true"
+    app:drawableStartSize="34dp"
+    tools:drawableEnd="@drawable/ic_battly_chevron"
+    android:drawableEnd="@drawable/ic_battly_chevron"
+    android:drawableTint="#80FFFFFF"
     tools:drawableStart="@drawable/ic_gamepad_pointer"
-    tools:text="FORGE - Forge-1.7.10-1664"
-    tools:ignore="RtlSymmetry">
-
-
-</fr.spse.extended_view.ExtendedTextView>
+    tools:ignore="RtlSymmetry"
+    tools:text="Forge - 1.20.1" />

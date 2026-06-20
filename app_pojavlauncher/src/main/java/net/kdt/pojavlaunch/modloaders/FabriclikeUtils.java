@@ -17,6 +17,13 @@ public class FabriclikeUtils {
 
     public static final FabriclikeUtils FABRIC_UTILS = new FabriclikeUtils("https://meta.fabricmc.net/v2", "fabric", "Fabric", "fabric");
     public static final FabriclikeUtils QUILT_UTILS = new FabriclikeUtils("https://meta.quiltmc.org/v3", "quilt", "Quilt", "quilt");
+    public static final FabriclikeUtils LEGACY_FABRIC_UTILS = new FabriclikeUtils(
+            "https://meta.legacyfabric.net/v2",
+            "legacyfabric",
+            "LegacyFabric",
+            "legacyfabric",
+            true
+    );
 
     private static final String LOADER_METADATA_URL = "%s/versions/loader/%s";
     private static final String GAME_METADATA_URL = "%s/versions/game";
@@ -27,16 +34,26 @@ public class FabriclikeUtils {
     private final String mCachePrefix;
     private final String mName;
     private final String mIconName;
+    private final boolean mLegacyMetadata;
 
     private FabriclikeUtils(String mApiUrl, String cachePrefix, String mName, String iconName) {
+        this(mApiUrl, cachePrefix, mName, iconName, false);
+    }
+
+    private FabriclikeUtils(String mApiUrl, String cachePrefix, String mName, String iconName, boolean legacyMetadata) {
         this.mApiUrl = mApiUrl;
         this.mCachePrefix = cachePrefix;
         this.mIconName = iconName;
         this.mName = mName;
+        this.mLegacyMetadata = legacyMetadata;
     }
 
     public FabricVersion[] downloadGameVersions() throws IOException{
         try {
+            if (mLegacyMetadata) {
+                return DownloadUtils.downloadStringCached(String.format("%s/versions", mApiUrl), mCachePrefix + "_versions",
+                        input -> deserializeLegacyMetadata(input, "game"));
+            }
             return DownloadUtils.downloadStringCached(String.format(GAME_METADATA_URL, mApiUrl), mCachePrefix+"_game_versions",
                     FabriclikeUtils::deserializeRawVersions
             );
@@ -46,6 +63,10 @@ public class FabriclikeUtils {
 
     public FabricVersion[] downloadLoaderVersions(String gameVersion) throws IOException{
         try {
+            if (mLegacyMetadata) {
+                return DownloadUtils.downloadStringCached(String.format("%s/versions", mApiUrl), mCachePrefix + "_versions",
+                        input -> deserializeLegacyMetadata(input, "loader"));
+            }
             String urlEncodedGameVersion = URLEncoder.encode(gameVersion, "UTF-8");
             return DownloadUtils.downloadStringCached(String.format(LOADER_METADATA_URL, mApiUrl, urlEncodedGameVersion),
                     mCachePrefix+"_loader_versions."+urlEncodedGameVersion,
@@ -102,6 +123,24 @@ public class FabriclikeUtils {
         }catch (JsonSyntaxException e) {
             e.printStackTrace();
             throw new DownloadUtils.ParseException(null);
+        }
+    }
+
+    private static FabricVersion[] deserializeLegacyMetadata(String input, String key) throws DownloadUtils.ParseException {
+        try {
+            JSONObject root = new JSONObject(input);
+            JSONArray versions = root.getJSONArray(key);
+            FabricVersion[] fabricVersions = new FabricVersion[versions.length()];
+            for (int i = 0; i < versions.length(); i++) {
+                JSONObject jsonObject = versions.getJSONObject(i);
+                FabricVersion fabricVersion = new FabricVersion();
+                fabricVersion.version = jsonObject.getString("version");
+                fabricVersion.stable = jsonObject.optBoolean("stable", !fabricVersion.version.toLowerCase().contains("beta"));
+                fabricVersions[i] = fabricVersion;
+            }
+            return fabricVersions;
+        } catch (JSONException e) {
+            throw new DownloadUtils.ParseException(e);
         }
     }
 }

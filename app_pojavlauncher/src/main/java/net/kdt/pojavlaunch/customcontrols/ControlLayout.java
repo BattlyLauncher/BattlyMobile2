@@ -520,7 +520,7 @@ public class ControlLayout extends FrameLayout {
 		edit.setSingleLine();
 		edit.setText(mLayoutFileName);
 
-		AlertDialog.Builder builder = new AlertDialog.Builder(context);
+		AlertDialog.Builder builder = new AlertDialog.Builder(context, R.style.BattlyDialog);
 		builder.setTitle(R.string.global_save);
 		builder.setView(edit);
 		builder.setPositiveButton(android.R.string.ok, null);
@@ -528,6 +528,7 @@ public class ControlLayout extends FrameLayout {
 		if(editorExitable != null) builder.setNeutralButton(R.string.global_save_and_exit, null);
 		final AlertDialog dialog = builder.create();
 		dialog.setOnShowListener(dialogInterface -> {
+			Tools.styleDialog(dialog);
 			dialog.getButton(AlertDialog.BUTTON_POSITIVE)
 					.setOnClickListener(new OnClickExitListener(dialog, edit, null));
 			if(editorExitable != null) dialog.getButton(AlertDialog.BUTTON_NEUTRAL)
@@ -537,14 +538,14 @@ public class ControlLayout extends FrameLayout {
 	}
 
 	public void openLoadDialog() {
-		AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+		AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.BattlyDialog);
 		builder.setTitle(R.string.global_load);
 		builder.setPositiveButton(android.R.string.cancel, null);
 
 		final AlertDialog dialog = builder.create();
+		Tools.styleDialog(dialog);
 		FileListView flv = new FileListView(dialog, "json");
-		if(Build.VERSION.SDK_INT < 29)flv.listFileAt(new File(Tools.CTRLMAP_PATH));
-		else flv.lockPathAt(new File(Tools.CTRLMAP_PATH));
+		configureControlPicker(flv);
 		flv.setFileSelectedListener(new FileSelectedListener(){
 
 			@Override
@@ -562,13 +563,14 @@ public class ControlLayout extends FrameLayout {
 	}
 
 	public void openSetDefaultDialog() {
-		AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+		AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.BattlyDialog);
 		builder.setTitle(R.string.customctrl_selectdefault);
 		builder.setPositiveButton(android.R.string.cancel, null);
 
 		final AlertDialog dialog = builder.create();
+		Tools.styleDialog(dialog);
 		FileListView flv = new FileListView(dialog, "json");
-		flv.lockPathAt(new File(Tools.CTRLMAP_PATH));
+		configureControlPicker(flv);
 		flv.setFileSelectedListener(new FileSelectedListener(){
 
 			@Override
@@ -586,13 +588,18 @@ public class ControlLayout extends FrameLayout {
 		dialog.show();
 	}
 
+	private void configureControlPicker(FileListView fileListView) {
+		File controlMapDir = new File(Tools.CTRLMAP_PATH);
+		fileListView.lockPathAt(controlMapDir);
+	}
+
 	public void openExitDialog(EditorExitable exitListener) {
-		AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+		AlertDialog.Builder builder = new AlertDialog.Builder(getContext(), R.style.BattlyDialog);
 		builder.setTitle(R.string.customctrl_editor_exit_title);
 		builder.setMessage(R.string.customctrl_editor_exit_msg);
 		builder.setPositiveButton(R.string.global_yes, (d,w)->exitListener.exitEditor());
 		builder.setNegativeButton(R.string.global_no, (d,w)->{});
-		builder.show();
+		Tools.showStyledDialog(builder);
 	}
 
 	public boolean areControlVisible(){

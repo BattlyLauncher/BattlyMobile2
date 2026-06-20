@@ -105,7 +105,7 @@ public class RTRecyclerViewAdapter extends RecyclerView.Adapter<RTRecyclerViewAd
                 if (mCurrentRuntime == null) return;
 
                 if(MultiRTUtils.getRuntimes().size() < 2) {
-                    new AlertDialog.Builder(mContext)
+                    new AlertDialog.Builder(mContext, R.style.BattlyDialog)
                             .setTitle(R.string.global_error)
                             .setMessage(R.string.multirt_config_removeerror_last)
                             .setPositiveButton(android.R.string.ok,(adapter, which)->adapter.dismiss())
@@ -160,8 +160,8 @@ public class RTRecyclerViewAdapter extends RecyclerView.Adapter<RTRecyclerViewAd
         }
 
         private void updateButtonsVisibility(){
-            mSetDefaultButton.setVisibility(mIsDeleting ? View.GONE : View.VISIBLE);
-            mDeleteButton.setVisibility(mIsDeleting ? View.VISIBLE : View.GONE);
+            mSetDefaultButton.setVisibility(View.VISIBLE);
+            mDeleteButton.setVisibility(View.VISIBLE);
         }
     }
 }

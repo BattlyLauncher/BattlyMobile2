@@ -45,7 +45,7 @@ public class CropperUtils {
     private static void openCropperDialog(Context context, Uri selectedUri,
                                           final CropperListener cropperListener) {
         ContentResolver contentResolver = context.getContentResolver();
-        AlertDialog dialog = new AlertDialog.Builder(context)
+        AlertDialog dialog = new AlertDialog.Builder(context, R.style.BattlyDialog)
                 .setTitle(R.string.cropper_title)
                 .setView(R.layout.dialog_cropper)
                 .setPositiveButton(android.R.string.ok, null)

@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <!-- App name part -->
     <string name="app_name">Ametiszt</string>
@@ -8,13 +8,13 @@
     <string name="login_online_username_hint">Felhasználónév</string>
     <string name="login_online_login_label">Bejelentkezés</string>
     <!-- Hint -->
-    <string name="hint_control_mapping">"Nyomdd meg a felső középső fogaskereket a helyi menü megnyitáshoz ⚙\n Koppints egy gombra a testreszabáshoz: szerkesztés, méretezés, eltávolítás vagy állítsd át a a billentyűparancsot."</string>
+    <string name="hint_control_mapping">"Nyomdd meg a felső középső fogaskereket a helyi menü megnyitáshoz \n Koppints egy gombra a testreszabáshoz: szerkesztés, méretezés, eltávolítás vagy állítsd át a a billentyűparancsot."</string>
     <!-- Warnings -->
     <string name="warning_remove_account">Ez a fiók törölve lesz!</string>
     <!-- AlertDialog title -->
     <string name="alerttitle_installmod">Válassz ki egy mod telepítőt</string>
     <!-- Error messages -->
-    <string name="error_fatal">A Amethyst váratlanul kicrashelt</string>
+    <string name="error_fatal">A Battly Launcher váratlanul kicrashelt</string>
     <string name="error_no_version">Nincs verzió!</string>
     <string name="error_show_more">Mutass többet</string>
     <string name="error_show_less">Mutass kevesebbet</string>

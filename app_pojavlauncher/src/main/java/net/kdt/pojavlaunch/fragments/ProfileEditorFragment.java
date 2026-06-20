@@ -98,14 +98,20 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         });
 
         mDeleteButton.setOnClickListener(v -> {
-            if(LauncherProfiles.mainProfileJson.profiles.size() > 1){
-                ProfileIconCache.dropIcon(mProfileKey);
-                LauncherProfiles.mainProfileJson.profiles.remove(mProfileKey);
-                LauncherProfiles.write();
-                ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, DELETED_PROFILE);
-            }
-
-            Tools.removeCurrentFragment(requireActivity());
+            new androidx.appcompat.app.AlertDialog.Builder(requireContext(), R.style.BattlyDialog)
+                .setTitle(R.string.global_delete)
+                .setMessage(R.string.profile_delete_confirm)
+                .setPositiveButton(R.string.global_yes, (dialog, which) -> {
+                    if(LauncherProfiles.mainProfileJson.profiles.size() > 1){
+                        ProfileIconCache.dropIcon(mProfileKey);
+                        LauncherProfiles.mainProfileJson.profiles.remove(mProfileKey);
+                        LauncherProfiles.write();
+                        ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, DELETED_PROFILE);
+                    }
+                    Tools.removeCurrentFragment(requireActivity());
+                })
+                .setNegativeButton(R.string.global_no, null)
+                .show();
         });
 
 
@@ -175,8 +181,8 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         // Runtime spinner
         List<Runtime> runtimes = MultiRTUtils.getRuntimes();
         int jvmIndex = runtimes.indexOf(new Runtime("<Default>"));
-        if (mTempProfile.javaDir != null) {
-            String selectedRuntime = mTempProfile.javaDir.substring(Tools.LAUNCHERPROFILES_RTPREFIX.length());
+        String selectedRuntime = Tools.getRuntimeName(mTempProfile.javaDir);
+        if (selectedRuntime != null) {
             int nindex = runtimes.indexOf(new Runtime(selectedRuntime));
             if (nindex != -1) jvmIndex = nindex;
         }

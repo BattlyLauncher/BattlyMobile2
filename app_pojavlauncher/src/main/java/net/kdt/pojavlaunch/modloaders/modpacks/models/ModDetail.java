@@ -10,14 +10,22 @@ public class ModDetail extends ModItem {
     public String[] versionNames;
     public String [] mcVersionNames;
     public String[] versionUrls;
+    public String[] versionFileNames;
+    public String[][] versionLoaders;
+    public ModDependency[][] versionDependencies;
     /* SHA 1 hashes, null if a hash is unavailable */
     public String[] versionHashes;
-    public ModDetail(ModItem item, String[] versionNames, String[] mcVersionNames, String[] versionUrls, String[] hashes) {
-        super(item.apiSource, item.isModpack, item.id, item.title, item.description, item.imageUrl);
+    public ModDetail(ModItem item, String[] versionNames, String[] mcVersionNames, String[] versionUrls, String[] versionFileNames, String[] hashes, String[][] versionLoaders, ModDependency[][] versionDependencies) {
+        super(item.apiSource, item.contentType, item.id, item.title, item.description, item.imageUrl);
+        this.categories = item.categories;
+        this.loaders = item.loaders;
         this.versionNames = versionNames;
         this.mcVersionNames = mcVersionNames;
         this.versionUrls = versionUrls;
+        this.versionFileNames = versionFileNames;
         this.versionHashes = hashes;
+        this.versionLoaders = versionLoaders;
+        this.versionDependencies = versionDependencies;
 
         // Add the mc version to the version model
         for (int i=0; i<versionNames.length; i++){
@@ -38,6 +46,7 @@ public class ModDetail extends ModItem {
                 ", description='" + description + '\'' +
                 ", imageUrl='" + imageUrl + '\'' +
                 ", apiSource=" + apiSource +
+                ", contentType=" + contentType +
                 ", isModpack=" + isModpack +
                 '}';
     }

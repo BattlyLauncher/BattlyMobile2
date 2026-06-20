@@ -19,6 +19,7 @@ import net.kdt.pojavlaunch.JMinecraftVersionList;
 import net.kdt.pojavlaunch.NewJREUtil;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.mirrors.DownloadMirror;
 import net.kdt.pojavlaunch.mirrors.MirrorTamperedException;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
@@ -37,7 +38,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicLong;
@@ -86,7 +87,7 @@ public class MinecraftDownloader {
 
         sExecutorService.execute(() -> {
             try {
-                if(isLocalProfile || !isOnline) {
+                if(!isOnline) {
                     String versionMessage = realVersion; // Use provided version unless we find its a modded instance
 
                     // See if provided version is a modded version and if that version depends on another jar, check for presence of both jar's .json.
@@ -105,14 +106,15 @@ public class MinecraftDownloader {
 
                         listener.onDownloadDone();
                     } catch (Exception e) {
-                        String tryagain = !isOnline ? "Please ensure you have an internet connection" : "Please try again on your Microsoft Account";
-                        Tools.showErrorRemote(versionMessage + " is not currently installed. "+ tryagain, e);
+                        Tools.showErrorRemote(versionMessage + " is not currently installed. Please ensure you have an internet connection.", e);
                     }
                 }else {
                 downloadGame(activity, version, realVersion);
+                Telemetry.logVersionDownload(realVersion, true, null);
                 listener.onDownloadDone();
                 }
             }catch (Exception e) {
+                Telemetry.logVersionDownload(realVersion, false, e);
                 listener.onDownloadFailed(e);
             }
             ProgressLayout.clearProgress(ProgressLayout.DOWNLOAD_MINECRAFT);
@@ -142,13 +144,19 @@ public class MinecraftDownloader {
         mUseFileCounter = false;
 
         if(!downloadAndProcessMetadata(activity, verInfo, versionName)) {
-            throw new RuntimeException(activity.getString(R.string.exception_failed_to_unpack_jre17));
+            throw new RuntimeException("Failed to install required JRE");
         }
 
-        ArrayBlockingQueue<Runnable> taskQueue =
-                new ArrayBlockingQueue<>(mScheduledDownloadTasks.size(), false);
+        if(mScheduledDownloadTasks.isEmpty()) {
+            ensureJarFileCopy();
+            extractNatives(versionName);
+            return;
+        }
+
+        int threadCount = Math.max(2, Math.min(16, LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT));
         ThreadPoolExecutor downloaderPool =
-                new ThreadPoolExecutor(4, 4, 500, TimeUnit.MILLISECONDS, taskQueue);
+                new ThreadPoolExecutor(threadCount, threadCount, 500, TimeUnit.MILLISECONDS,
+                        new LinkedBlockingQueue<>());
 
         // I have tried pre-filling the queue directly instead of doing this, but it didn't work.
         // What a shame.
@@ -284,6 +292,9 @@ public class MinecraftDownloader {
      */
     private boolean downloadAndProcessMetadata(Activity activity, JMinecraftVersionList.Version verInfo, String versionName) throws IOException, MirrorTamperedException {
         File versionJsonFile;
+        if (verInfo == null) {
+            verInfo = AsyncMinecraftDownloader.getListedVersion(versionName);
+        }
         if(verInfo != null) versionJsonFile = downloadGameJson(verInfo);
         else versionJsonFile = createGameJsonPath(versionName);
         if(versionJsonFile.canRead())  {
@@ -323,16 +334,13 @@ public class MinecraftDownloader {
                                   long size, boolean skipIfFailed) throws IOException {
         FileUtils.ensureParentDirectory(targetFile);
         mTotalFileCount++;
-        // Only attempt to check size if we still use the size counter and didn't switch to file counter.
-        if(size <= 0 && !mUseFileCounter) {
-            size = DownloadMirror.getContentLengthMirrored(downloadClass, url);
-        }
-        if(size < 0) {
-            // If we were unable to get the content length ourselves, we automatically fall back
-            // to tracking the progress using the file counter.
+        if(size <= 0) {
+            // Avoid serial content-length probes for files that do not declare a size in metadata.
+            // Those probes dominate install time on versions with many legacy libraries, so fall
+            // back to file-count progress and let the real downloads start immediately.
             size = 0;
             mUseFileCounter = true;
-            Log.i("MinecraftDownloader", "Failed to determine size of "+targetFile.getName()+", switching to file counter");
+            Log.i("MinecraftDownloader", "Unknown size for " + targetFile.getName() + ", using file counter progress");
         }else {
             mTotalSize += size;
         }

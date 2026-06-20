@@ -1,24 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    A modified version of the simple_list_item_1 android offers
-    So I could modify it to suit the standard look and feel of the app
--->
-
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@android:id/text1"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-
-    android:paddingTop="@dimen/padding_input_top"
-    android:paddingBottom="@dimen/padding_input_bottom"
-    android:textAppearance="?android:attr/textAppearanceListItemSmall"
-
-
-    android:textSize="@dimen/_13ssp"
+    android:background="@drawable/bg_battly_form_field"
     android:gravity="center_vertical"
-    android:paddingStart="?android:attr/listPreferredItemPaddingStart"
-    android:paddingEnd="?android:attr/listPreferredItemPaddingEnd"
-
-    tools:text="PojavLauncher version: Foxglove"
-    />
+    android:minHeight="48dp"
+    android:paddingStart="16dp"
+    android:paddingTop="12dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="12dp"
+    android:textColor="#FFFFFFFF"
+    android:textSize="14sp"
+    tools:text="Runtime - Java 17" />

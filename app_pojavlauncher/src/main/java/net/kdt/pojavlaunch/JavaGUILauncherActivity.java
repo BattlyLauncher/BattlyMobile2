@@ -35,6 +35,8 @@ import org.lwjgl.glfw.CallbackBridge;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
@@ -258,7 +260,7 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
     }
 
     private void finalErrorDialog(CharSequence msg) {
-        runOnUiThread(()-> new AlertDialog.Builder(this)
+        runOnUiThread(()-> new AlertDialog.Builder(this, R.style.BattlyDialog)
                 .setTitle(R.string.global_error)
                 .setMessage(msg)
                 .setPositiveButton(android.R.string.ok, (d,w)->this.finish())
@@ -360,6 +362,13 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
 
             // Enable Caciocavallo
             Tools.getCacioJavaArgs(javaArgList,runtime.javaVersion == 8, this);
+            // The JAR installer sandbox must be able to create Swing/AWT windows.
+            // getCacioJavaArgs adds headless=true to load libawt_headless instead of libawt_xawt,
+            // but cacio's CTCToolkit handles actual rendering regardless of this flag, so it is
+            // safe to switch it to false here so that GraphicsEnvironment.isHeadless() returns false
+            // and Swing GUIs (JOptionPane, JFrame, etc.) no longer throw HeadlessException.
+            javaArgList.replaceAll(arg ->
+                    "-Djava.awt.headless=true".equals(arg) ? "-Djava.awt.headless=false" : arg);
             if(javaArgs != null) {
                 javaArgList.addAll(javaArgs);
             }
@@ -369,6 +378,31 @@ public class JavaGUILauncherActivity extends BaseActivity implements View.OnTouc
             }
             
             if (LauncherPreferences.PREF_JAVA_SANDBOX) {
+                // Write the policy file programmatically so it is always current regardless
+                // of whether the async component extraction has finished. execute is granted
+                // so that installer JARs (LabyMod, Forge, etc.) can spawn subprocesses;
+                // Android's own sandbox still limits what those processes can actually do.
+                File policyFile = new File(Tools.DIR_DATA + "/security/java_sandbox.policy");
+                policyFile.getParentFile().mkdirs();
+                String policyContent =
+                    "priority \"grant\";\n\n" +
+                    "grant {\n" +
+                    "    permission java.io.FilePermission \"./-\", \"read, write, delete\";\n" +
+                    "    permission java.io.FilePermission \"${java.io.tmpdir}/-\", \"read, write, delete\";\n" +
+                    "    permission java.io.FilePermission \"${user.home}/-\", \"read, write, delete\";\n" +
+                    "    permission java.io.FilePermission \"<<ALL FILES>>\", \"execute\";\n" +
+                    "};\n\n" +
+                    "deny {\n" +
+                    "    permission java.io.FilePermission \"${pojav.path.private.account}/-\", \"read, write, delete\";\n" +
+                    "    permission java.io.FilePermission \"<<ALL FILES>>\", \"write, delete\";\n" +
+                    "};\n";
+                try (OutputStreamWriter osw = new OutputStreamWriter(
+                        new FileOutputStream(policyFile), StandardCharsets.UTF_8)) {
+                    osw.write(policyContent);
+                } catch (IOException e) {
+                    Log.e(Tools.APP_NAME, "Failed to write sandbox policy", e);
+                }
+
                 Collections.reverse(javaArgList);
                 javaArgList.add("-Xbootclasspath/a:" + Tools.DIR_DATA + "/security/pro-grade.jar");
                 javaArgList.add("-Djava.security.manager=net.sourceforge.prograde.sm.ProGradeJSM");

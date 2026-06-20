@@ -25,12 +25,18 @@ public class OptiFineDownloadTask implements Runnable, Tools.DownloaderFeedback,
     private final Object mMinecraftDownloadLock = new Object();
     private Throwable mDownloaderThrowable;
     private final Activity activity;
+    private final boolean mCreateProfile;
 
     public OptiFineDownloadTask(OptiFineUtils.OptiFineVersion mOptiFineVersion, ModloaderDownloadListener mListener, Activity activity) {
+        this(mOptiFineVersion, mListener, activity, true);
+    }
+
+    public OptiFineDownloadTask(OptiFineUtils.OptiFineVersion mOptiFineVersion, ModloaderDownloadListener mListener, Activity activity, boolean createProfile) {
         this.mOptiFineVersion = mOptiFineVersion;
         this.mDestinationFile = new File(Tools.DIR_CACHE, "optifine-installer.jar");
         this.mListener = mListener;
         this.activity = activity;
+        this.mCreateProfile = createProfile;
     }
 
     @Override
@@ -59,6 +65,8 @@ public class OptiFineDownloadTask implements Runnable, Tools.DownloaderFeedback,
             return false;
         }
         DownloadUtils.downloadFileMonitored(downloadUrl, mDestinationFile, new byte[8192], this);
+        ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
+        OptiFineInstaller.install(activity.getApplicationContext(), mDestinationFile, mOptiFineVersion, mCreateProfile);
         return true;
     }
 

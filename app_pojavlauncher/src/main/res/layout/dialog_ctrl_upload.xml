@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="16dp">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ctrl_upload_name_label"
+        android:textColor="#aeb8ce"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/ctrl_upload_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:maxLines="1"
+        android:maxLength="64"
+        android:textColor="#FFFFFFFF"
+        android:textColorHint="#7a8fa8"
+        android:hint="@string/ctrl_upload_name_hint"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ctrl_upload_desc_label"
+        android:textColor="#aeb8ce"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/ctrl_upload_desc"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="textMultiLine"
+        android:maxLines="3"
+        android:maxLength="512"
+        android:textColor="#FFFFFFFF"
+        android:textColorHint="#7a8fa8"
+        android:hint="@string/ctrl_upload_desc_hint"
+        android:layout_marginBottom="12dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/ctrl_upload_tags_label"
+        android:textColor="#aeb8ce"
+        android:textSize="12sp"
+        android:layout_marginBottom="4dp" />
+
+    <EditText
+        android:id="@+id/ctrl_upload_tags"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="text"
+        android:maxLines="1"
+        android:maxLength="128"
+        android:textColor="#FFFFFFFF"
+        android:textColorHint="#7a8fa8"
+        android:hint="@string/ctrl_upload_tags_hint" />
+
+</LinearLayout>

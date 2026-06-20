@@ -7,7 +7,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 
+import androidx.core.view.ViewCompat;
 import androidx.core.graphics.ColorUtils;
+import android.content.res.ColorStateList;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -111,18 +113,20 @@ public class ProfileAdapter extends BaseAdapter {
             extendedTextView.setText(versionName);
         else extendedTextView.setText(String.format("%s - %s", profileName, versionName));
 
-        // Set selected background if needed
+        // Keep the custom card background and only tint it when selected
         if(displaySelection){
             String selectedProfile = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,"");
-            extendedTextView.setBackgroundColor(selectedProfile.equals(nm) ? ColorUtils.setAlphaComponent(Color.WHITE,60) : Color.TRANSPARENT);
-        }else extendedTextView.setBackgroundColor(Color.TRANSPARENT);
+            ViewCompat.setBackgroundTintList(extendedTextView, selectedProfile.equals(nm)
+                    ? ColorStateList.valueOf(ColorUtils.setAlphaComponent(Color.WHITE, 22))
+                    : null);
+        }else ViewCompat.setBackgroundTintList(extendedTextView, null);
     }
 
     public void setViewExtra(View v, ProfileAdapterExtra extra) {
         ExtendedTextView extendedTextView = (ExtendedTextView) v;
         extendedTextView.setCompoundDrawablesRelative(extra.icon, null, extendedTextView.getCompoundsDrawables()[2], null);
         extendedTextView.setText(extra.name);
-        extendedTextView.setBackgroundColor(Color.TRANSPARENT);
+        ViewCompat.setBackgroundTintList(extendedTextView, null);
     }
 
     public void setView(View v, Object object, boolean displaySelection) {

@@ -56,6 +56,8 @@ public class ControlData {
     public String dynamicX, dynamicY;
     public boolean isToggle, passThruEnabled;
     public String name;
+    public String displayType;
+    public String displayValue;
     public int[] keycodes;      //Should store up to 4 keys
     public float opacity;       //Alpha value from 0 to 1;
     public int bgColor;
@@ -129,6 +131,8 @@ public class ControlData {
         this.displayInMenu = displayInMenu;
         this.isSwipeable = isSwipable;
         this.passThruEnabled = mousePassthrough;
+        this.displayType = ControlDisplayUtils.TYPE_TEXT;
+        this.displayValue = "";
     }
 
     //Deep copy constructor
@@ -151,6 +155,8 @@ public class ControlData {
                 controlData.isSwipeable,
                 controlData.passThruEnabled
         );
+        this.displayType = controlData.displayType;
+        this.displayValue = controlData.displayValue;
     }
 
     public static ControlData[] getSpecialButtons() {

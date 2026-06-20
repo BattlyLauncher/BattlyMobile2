@@ -19,6 +19,27 @@ public class LocaleUtils extends ContextWrapper {
     }
 
     public static ContextWrapper setLocale(Context context) {
+        Locale targetLocale = getCurrentLocale(context);
+        Resources resources = context.getResources();
+        Configuration configuration = new Configuration(resources.getConfiguration());
+
+        Locale.setDefault(targetLocale);
+        configuration.setLocale(targetLocale);
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
+            LocaleList localeList = new LocaleList(targetLocale);
+            LocaleList.setDefault(localeList);
+            configuration.setLocales(localeList);
+        }
+
+        resources.updateConfiguration(configuration, resources.getDisplayMetrics());
+        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1){
+            context = context.createConfigurationContext(configuration);
+        }
+
+        return new LocaleUtils(context);
+    }
+
+    public static Locale getCurrentLocale(Context context) {
         if (DEFAULT_PREF == null) {
             DEFAULT_PREF = PreferenceManager.getDefaultSharedPreferences(context);
             // Too early to initialize all prefs here, as this is called by PojavApplication
@@ -27,24 +48,21 @@ public class LocaleUtils extends ContextWrapper {
             PREF_FORCE_ENGLISH = DEFAULT_PREF.getBoolean("force_english", false);
         }
 
-        if(PREF_FORCE_ENGLISH){
-            Resources resources = context.getResources();
-            Configuration configuration = resources.getConfiguration();
-
-            configuration.setLocale(Locale.ENGLISH);
-            Locale.setDefault(Locale.ENGLISH);
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N){
-                LocaleList localeList = new LocaleList(Locale.ENGLISH);
-                LocaleList.setDefault(localeList);
-                configuration.setLocales(localeList);
-            }
-
-            resources.updateConfiguration(configuration, resources.getDisplayMetrics());
-            if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.N_MR1){
-                context = context.createConfigurationContext(configuration);
-            }
+        if (PREF_FORCE_ENGLISH) {
+            return Locale.ENGLISH;
         }
 
-        return new LocaleUtils(context);
+        Locale locale = getPrimaryLocale(Resources.getSystem().getConfiguration());
+        if (locale == null) locale = getPrimaryLocale(context.getResources().getConfiguration());
+        return locale != null ? locale : Locale.getDefault();
+    }
+
+    private static Locale getPrimaryLocale(Configuration configuration) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+            LocaleList locales = configuration.getLocales();
+            if (locales != null && !locales.isEmpty()) return locales.get(0);
+            return null;
+        }
+        return configuration.locale;
     }
 }

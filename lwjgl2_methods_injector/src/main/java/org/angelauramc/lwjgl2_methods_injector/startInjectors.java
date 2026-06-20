@@ -14,7 +14,7 @@ public class startInjectors {
             Package asmPackage = org.objectweb.asm.Opcodes.class.getPackage();
             String implVersion = asmPackage.getImplementationVersion();
             if (implVersion == null) implVersion = "not found";
-            System.out.println("Amethyst-Android: Detected ASM version: " + implVersion);
+            System.out.println("Battly Mobile: Detected ASM version: " + implVersion);
             ALC10Injector.premain(args, inst);
             // This is the version we override old asm vers with. So we add the patches
             // so the older version bugs are ported.

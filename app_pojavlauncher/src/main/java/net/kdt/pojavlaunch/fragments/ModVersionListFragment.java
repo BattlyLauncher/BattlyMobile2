@@ -2,38 +2,43 @@ package net.kdt.pojavlaunch.fragments;
 
 import android.content.Context;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ExpandableListAdapter;
 import android.widget.ExpandableListView;
 import android.widget.ProgressBar;
-import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.extra.ExtraCore;
+import net.kdt.pojavlaunch.modloaders.DetachedModloaderDownloadListener;
 import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
-import net.kdt.pojavlaunch.modloaders.ModloaderListenerProxy;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
+import net.kdt.pojavlaunch.tasks.AsyncMinecraftDownloader;
+import net.kdt.pojavlaunch.tasks.MinecraftDownloader;
 
 import java.io.File;
 import java.io.IOException;
 
-public abstract class ModVersionListFragment<T> extends Fragment implements Runnable, View.OnClickListener, ExpandableListView.OnChildClickListener, ModloaderDownloadListener {
-    private final String mExtraTag;
+public abstract class ModVersionListFragment<T> extends Fragment implements Runnable, View.OnClickListener, ExpandableListView.OnChildClickListener {
     private ExpandableListView mExpandableListView;
     private ProgressBar mProgressBar;
+    private EditText mSearchField;
     private LayoutInflater mInflater;
     private View mRetryView;
+    private T mLoadedVersions;
 
     public ModVersionListFragment(String mFragmentTag) {
         super(R.layout.fragment_mod_version_list);
-        this.mExtraTag = mFragmentTag + "_proxy";
     }
 
     @Override
@@ -45,25 +50,20 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        ((TextView)view.findViewById(R.id.title_textview)).setText(getTitleText());
         mProgressBar = view.findViewById(R.id.mod_dl_list_progress);
+        mSearchField = view.findViewById(R.id.mod_dl_version_search);
         mExpandableListView = view.findViewById(R.id.mod_dl_expandable_version_list);
         mExpandableListView.setOnChildClickListener(this);
         mRetryView = view.findViewById(R.id.mod_dl_retry_layout);
         view.findViewById(R.id.forge_installer_retry_button).setOnClickListener(this);
-        ModloaderListenerProxy taskProxy = getTaskProxy();
-        if(taskProxy != null) {
-            mExpandableListView.setEnabled(false);
-            taskProxy.attachListener(this);
-        }
+        mSearchField.addTextChangedListener(new TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                updateAdapter(s == null ? "" : s.toString());
+            }
+            @Override public void afterTextChanged(Editable s) {}
+        });
         new Thread(this).start();
-    }
-
-    @Override
-    public void onStop() {
-        ModloaderListenerProxy taskProxy = getTaskProxy();
-        if(taskProxy != null) taskProxy.detachListener();
-        super.onStop();
     }
 
     @Override
@@ -72,7 +72,8 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
             T versions = loadVersionList();
             Tools.runOnUiThread(()->{
                 if(versions != null) {
-                    mExpandableListView.setAdapter(createAdapter(versions, mInflater));
+                    mLoadedVersions = versions;
+                    updateAdapter(mSearchField == null ? "" : mSearchField.getText().toString());
                 }else{
                     mRetryView.setVisibility(View.VISIBLE);
                 }
@@ -96,68 +97,71 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
         new Thread(this).start();
     }
 
+    private void updateAdapter(String query) {
+        if (mLoadedVersions == null || mExpandableListView == null || mInflater == null) {
+            return;
+        }
+        T filteredVersions = filterVersionList(mLoadedVersions, query == null ? "" : query.trim());
+        ExpandableListAdapter adapter = createAdapter(filteredVersions, mInflater);
+        mExpandableListView.setAdapter(adapter);
+        if (query != null && !query.trim().isEmpty()) {
+            for (int i = 0; i < adapter.getGroupCount(); i++) {
+                mExpandableListView.expandGroup(i);
+            }
+        } else if (adapter.getGroupCount() > 0) {
+            mExpandableListView.expandGroup(0);
+        }
+    }
+
     @Override
     public boolean onChildClick(ExpandableListView expandableListView, View view, int i, int i1, long l) {
         if(ProgressKeeper.hasOngoingTasks()) {
             Toast.makeText(expandableListView.getContext(), R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
             return true;
         }
-        Object forgeVersion = expandableListView.getExpandableListAdapter().getChild(i, i1);
-        ModloaderListenerProxy taskProxy = new ModloaderListenerProxy();
-        Runnable downloadTask = createDownloadTask(forgeVersion, taskProxy);
-        setTaskProxyValue(taskProxy);
-        taskProxy.attachListener(this);
-        mExpandableListView.setEnabled(false);
-        new Thread(downloadTask).start();
+        Object selectedVersion = expandableListView.getExpandableListAdapter().getChild(i, i1);
+        ModloaderDownloadListener listener = new DetachedModloaderDownloadListener(
+                requireContext(),
+                getString(getNoDataMsg()),
+                getSuccessMessageLabel(selectedVersion)
+        );
+
+        String vanillaVersion = extractVanillaVersion(selectedVersion);
+        if (vanillaVersion != null) {
+            JMinecraftVersionList.Version versionInfo = AsyncMinecraftDownloader.getListedVersion(vanillaVersion);
+            if (requireActivity() instanceof LauncherActivity) {
+                ((LauncherActivity) requireActivity()).showMainMenuProgress();
+            }
+            Runnable modloaderTask = createDownloadTask(selectedVersion, listener);
+            new MinecraftDownloader().start(requireActivity(), versionInfo, vanillaVersion,
+                    new AsyncMinecraftDownloader.DoneListener() {
+                        @Override
+                        public void onDownloadDone() {
+                            new Thread(modloaderTask).start();
+                        }
+                        @Override
+                        public void onDownloadFailed(Throwable throwable) {
+                            Tools.showError(requireContext(),
+                                    throwable instanceof Exception ? (Exception) throwable : new Exception(throwable));
+                        }
+                    });
+        } else {
+            Runnable downloadTask = createDownloadTask(selectedVersion, listener);
+            new Thread(downloadTask).start();
+            if (requireActivity() instanceof LauncherActivity) {
+                ((LauncherActivity) requireActivity()).showMainMenuProgress();
+            }
+        }
         return true;
     }
 
-    @Override
-    public void onDownloadFinished(File downloadedFile) {
-        Tools.runOnUiThread(()->{
-            Context context = requireContext();
-            getTaskProxy().detachListener();
-            deleteTaskProxy();
-            mExpandableListView.setEnabled(true);
-            // Read the comment in FabricInstallFragment.onDownloadFinished() to see how this works
-            getParentFragmentManager().popBackStackImmediate();
-            onDownloadFinished(context, downloadedFile);
-        });
-    }
-
-    @Override
-    public void onDataNotAvailable() {
-        Tools.runOnUiThread(()->{
-            Context context = requireContext();
-            getTaskProxy().detachListener();
-            deleteTaskProxy();
-            mExpandableListView.setEnabled(true);
-            Tools.dialog(context,
-                    context.getString(R.string.global_error),
-                    context.getString(getNoDataMsg()));
-        });
-    }
-
-    @Override
-    public void onDownloadError(Exception e) {
-        Tools.runOnUiThread(()->{
-            Context context = requireContext();
-            getTaskProxy().detachListener();
-            deleteTaskProxy();
-            mExpandableListView.setEnabled(true);
-            Tools.showError(context, e);
-        });
-    }
-
-    private void setTaskProxyValue(ModloaderListenerProxy proxy) {
-        ExtraCore.setValue(mExtraTag, proxy);
-    }
-    private void deleteTaskProxy(){
-        ExtraCore.removeValue(mExtraTag);
-    }
-
-    private ModloaderListenerProxy getTaskProxy() {
-        return (ModloaderListenerProxy) ExtraCore.getValue(mExtraTag);
+    /**
+     * Override to return the vanilla Minecraft version that must be pre-downloaded
+     * before the modloader installer runs. Return null to skip pre-download.
+     */
+    @Nullable
+    protected String extractVanillaVersion(Object selectedVersion) {
+        return null;
     }
 
     public abstract int getTitleText();
@@ -166,6 +170,14 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
     public abstract T loadVersionList() throws IOException;
 
     public abstract ExpandableListAdapter createAdapter(T versionList, LayoutInflater layoutInflater);
-    public abstract Runnable createDownloadTask(Object selectedVersion, ModloaderListenerProxy listenerProxy);
-    public abstract void onDownloadFinished(Context context, File downloadedFile);
+    public abstract Runnable createDownloadTask(Object selectedVersion, ModloaderDownloadListener listener);
+
+    protected T filterVersionList(T versionList, String query) {
+        return versionList;
+    }
+
+    @Nullable
+    protected String getSuccessMessageLabel(Object selectedVersion) {
+        return null;
+    }
 }

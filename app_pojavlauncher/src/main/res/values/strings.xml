@@ -1,18 +1,221 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <!-- App name part -->
-    <string name="app_name">Amethyst</string>
+    <string name="app_name">Battly Launcher</string>
+    <string name="launcher_mobile_badge">Mobile 2.0.0</string>
+    <string name="launcher_versions_button">Versions</string>
+    <string name="library_button_desc">Open library</string>
+    <string name="battly_login_error_credentials">Incorrect username or password.</string>
+    <string name="battly_login_error_network">Network error. Check your connection.</string>
+    <string name="profile_delete_confirm">Are you sure you want to delete this profile?</string>
+    <string name="launcher_download">Download</string>
+    <string name="launcher_execute">Play</string>
+    <string name="launcher_starting_minecraft">Starting Minecraft</string>
+    <string name="launcher_starting_minecraft_desc">Preparing the game window...</string>
+    <string name="launcher_starting_minecraft_enjoy">Enjoy your game. Battly is preparing everything.</string>
+    <string name="launcher_starting_minecraft_readying">Loading Java, assets and the game UI...</string>
+    <string name="launcher_starting_stage_surface">Preparing the game surface...</string>
+    <string name="launcher_starting_stage_profile">Loading profile and assets...</string>
+    <string name="launcher_starting_stage_renderer">Checking renderer compatibility...</string>
+    <string name="launcher_starting_stage_jre">Starting Java runtime...</string>
+    <string name="launcher_starting_stage_first_frame">Waiting for the first Minecraft frame...</string>
+    <string name="launcher_starting_stage_ready">Minecraft is ready.</string>
+    <string name="launcher_starting_short">Starting...</string>
+    <string name="launcher_starting_hint">Preparing Minecraft</string>
+    <string name="launcher_open_tools">Tools</string>
+    <string name="launcher_open_credits">Credits</string>
+    <string name="launcher_select_instance">Select instance</string>
+    <string name="launcher_nav_back">Go back</string>
+    <string name="launcher_nav_home">Return to home</string>
+    <string name="launcher_nav_workspace">Battly Workspace</string>
+    <string name="launcher_status_online">Microsoft</string>
+    <string name="launcher_status_offline">No connection</string>
+    <string name="launcher_status_microsoft">Microsoft</string>
+    <string name="launcher_status_local">Local account</string>
+    <string name="launcher_status_battly" translatable="false">Battly account</string>
+    <string name="launcher_status_battly_plus" translatable="false">Battly+ account</string>
+    <string name="version_not_installed_local">%1$s is not installed. Go to Downloads to install it first.</string>
+    <string name="launcher_version_format">Version %1$s</string>
+    <string name="launcher_version_unknown">Unknown</string>
+    <string name="launcher_version_fallback">Version 1.21.9</string>
+    <string name="launcher_download_modpack">Import modpack</string>
+    <string name="launcher_credits_title">Battly Launcher 2.0.0</string>
+    <string name="launcher_news_title">Latest Battly news</string>
+    <string name="launcher_news_battly">Battly news</string>
+    <string name="launcher_news_minecraft">Minecraft news</string>
+    <string name="launcher_news_loading">Loading news...</string>
+    <string name="launcher_news_unavailable">Could not load news.</string>
+    <string name="launcher_news_unknown_author">Battly Staff</string>
+    <string name="account_manager_title">Account Manager</string>
+    <string name="account_manager_subtitle">To use Battly, choose how you want to sign in and manage saved Java accounts.</string>
+    <string name="auth_method_microsoft">Microsoft Account</string>
+    <string name="auth_method_battly">Battly Account</string>
+    <string name="auth_method_local">Local account</string>
+    <string name="battly_login_subtitle">Sign in with your Battly account to access your profile and premium benefits.</string>
+    <string name="battly_login_username_label">Username</string>
+    <string name="battly_login_username_hint">Your Battly username</string>
+    <string name="battly_login_password_label">Password</string>
+    <string name="battly_login_password_hint">Your password</string>
+    <string name="battly_login_button">Sign in</string>
+    <string name="battly_register_button">Create Battly account</string>
+    <string name="battly_login_missing_fields">Please enter username and password.</string>
+    <string name="battly_background_title">Choose background</string>
+    <string name="battly_background_short">Background</string>
+    <string name="battly_background_subtitle">Pick the image Battly will use behind the launcher panels.</string>
+    <string name="battly_background_default">Default background</string>
+    <string name="battly_background_custom">Background %1$d</string>
+    <string name="battly_background_applied">Background applied.</string>
+    <string name="battly_background_settings_title">Launcher background</string>
+    <string name="battly_background_settings_summary">Choose the background image used on Battly screens.</string>
+    <string name="battly_background_choose">Choose background</string>
+    <string name="battly_background_animated_plus">Animated Battly+ background</string>
+    <string name="battly_background_custom_file">Use my own image, GIF or video</string>
+    <string name="battly_background_custom_failed">Could not import the selected background.</string>
+    <string name="battly_background_custom_picker_unavailable">Open this option from Settings to import an image.</string>
+    <string name="battly_background_active_badge">Active</string>
+    <string name="battly_background_plus_active">Battly+ active: custom and animated backgrounds are unlocked.</string>
+    <string name="battly_background_plus_locked_desc">Battly+ unlocks animated backgrounds and your own launcher background image.</string>
+    <string name="battly_plus_title">Battly+</string>
+    <string name="battly_plus_subtitle">Premium launcher benefits for Battly Mobile.</string>
+    <string name="battly_plus_status_active">Active on this account</string>
+    <string name="battly_plus_status_locked">Sign in with a Battly+ account to unlock these options.</string>
+    <string name="battly_plus_locked_short">Locked</string>
+    <string name="battly_plus_required">This option requires Battly+.</string>
+    <string name="battly_plus_included">Battly+ included</string>
+    <string name="battly_plus_locked">Battly+ feature</string>
+    <string name="battly_plus_unlocked_badge">Unlocked</string>
+    <string name="battly_plus_locked_badge">Plus</string>
+    <string name="battly_plus_cta_backgrounds">Open backgrounds</string>
+    <string name="battly_plus_cta_locked">Battly+ required</string>
+    <string name="battly_plus_chip_backgrounds">Animated backgrounds</string>
+    <string name="battly_plus_chip_worlds">Better BattlyWorlds</string>
+    <string name="battly_plus_chip_cosmetics">Profile perks</string>
+    <string name="battly_plus_action_backgrounds">Launcher style</string>
+    <string name="battly_plus_action_backgrounds_desc">Change custom and animated backgrounds.</string>
+    <string name="battly_plus_action_status">Account status</string>
+    <string name="battly_plus_perks_title">Included benefits</string>
+    <string name="battly_plus_perks_subtitle">Useful upgrades that stay out of the way while you play.</string>
+    <string name="battly_plus_feature_backgrounds_title">Custom and animated backgrounds</string>
+    <string name="battly_plus_feature_backgrounds_desc">Use your own image, GIF, video or an animated Battly background behind every launcher panel.</string>
+    <string name="battly_plus_feature_worlds_title">BattlyWorlds priority</string>
+    <string name="battly_plus_feature_worlds_desc">Priority nodes, persistent rooms and higher friend invite limits when hosting LAN worlds.</string>
+    <string name="battly_plus_feature_more_title">More Plus perks</string>
+    <string name="battly_plus_feature_more_desc">A dedicated place for future Battly+ benefits, cosmetics and profile options.</string>
+    <string name="battly_plus_worlds_limits_title">Worlds Plus</string>
+    <string name="battly_plus_worlds_priority">Priority node routing</string>
+    <string name="battly_plus_worlds_persistent">Persistent room support</string>
+    <string name="battly_plus_worlds_invites">More direct invites</string>
+    <string name="onboarding_background_title">Customize your background</string>
+    <string name="onboarding_background_desc">Choose the image Battly will use behind the launcher panels. You can change it later in settings.</string>
+    <string name="onboarding_controls_title">Choose your controls</string>
+    <string name="onboarding_controls_desc">Pick the classic layout or the newer Battly layout before your first game. You can change it later in custom controls.</string>
+    <string name="onboarding_controls_classic_title">Classic controls</string>
+    <string name="onboarding_controls_classic_desc">The traditional layout with compact buttons and familiar labels.</string>
+    <string name="onboarding_controls_modern_title">Modern controls</string>
+    <string name="onboarding_controls_modern_desc">A cleaner Battly layout with larger touch zones and fewer labels.</string>
+    <string name="onboarding_controls_selected">%1$s selected</string>
+    <string name="onboarding_controls_applied">Controls applied</string>
+    <string name="microsoft_login_started">Microsoft login started</string>
+    <string name="local_login_subtitle">Create a local offline account for quick testing and custom instances.</string>
+    <string name="profile_manager_title">Version Manager</string>
+    <string name="profile_manager_subtitle">Create, customize and organize your launcher profiles with the new Battly layout.</string>
+    <string name="profile_editor_title">Profile Editor</string>
+    <string name="profile_editor_subtitle">Fine-tune version, runtime, controls and storage for this profile.</string>
+    <string name="settings_panel_title">Launcher settings</string>
+    <string name="settings_panel_subtitle">Adjust video, controls, Java and launcher behavior from one modern workspace.</string>
+    <string name="download_panel_title">Version Manager</string>
+    <string name="download_panel_subtitle">Install Minecraft versions, loaders, and tools from one place.</string>
+    <string name="download_action_versions_title">Download Minecraft</string>
+    <string name="download_action_versions_subtitle">Install the base game version you need.</string>
+    <string name="download_action_browse_modpacks_title">Browse modpacks</string>
+    <string name="download_action_browse_modpacks_subtitle">Search CurseForge and Modrinth modpacks and create a ready-to-play installation.</string>
+    <string name="download_action_browse_mods_title">Browse mods</string>
+    <string name="download_action_browse_mods_subtitle">Install `.jar` mods into the instance you choose.</string>
+    <string name="download_action_browse_resourcepacks_title">Browse resource packs</string>
+    <string name="download_action_browse_resourcepacks_subtitle">Download texture and resource packs for your profiles.</string>
+    <string name="download_action_browse_shaders_title">Browse shaders</string>
+    <string name="download_action_browse_shaders_subtitle">Download shader packs into the instance you choose.</string>
+    <string name="download_action_browse_datapacks_title">Browse datapacks</string>
+    <string name="download_action_browse_datapacks_subtitle">Download datapacks into the instance you choose.</string>
+    <string name="download_action_modpack_title">Import modpack</string>
+    <string name="download_action_modpack_subtitle">Open a `.zip` or `.mrpack` and create a Battly-ready instance.</string>
+    <string name="download_action_installer_title">Run installer JAR</string>
+    <string name="download_action_installer_subtitle">Launch Forge, OptiFine or any compatible Java installer.</string>
+    <string name="download_action_directory_title">Open instance folder</string>
+    <string name="download_action_directory_subtitle">Jump straight to the active profile directory in storage.</string>
+    <string name="download_action_logs_title">Open logs</string>
+    <string name="download_action_logs_subtitle">Open launcher and installer logs, then copy or share the exact file you need.</string>
+    <string name="library_workspace_title">Library</string>
+    <string name="library_workspace_subtitle">Import modpacks, download content and review what is installed in the active instance.</string>
+    <string name="library_installed_title">Installed content</string>
+    <string name="library_installed_subtitle">Tap a section to open its folder in storage.</string>
+    <string name="library_installed_mods">Mods</string>
+    <string name="library_installed_resourcepacks">Resource packs</string>
+    <string name="library_installed_shaders">Shaders</string>
+    <string name="library_installed_datapacks">Datapacks</string>
+    <string name="library_installed_empty">No files installed yet.</string>
+    <string name="library_installed_more"> · +%1$d more</string>
+    <string name="library_installed_detail">%1$s installed.</string>
+    <string name="library_installed_detail_with_folders">%1$s installed · %2$d folders.</string>
+    <plurals name="library_installed_count">
+        <item quantity="one">%1$d file</item>
+        <item quantity="other">%1$d files</item>
+    </plurals>
+    <string name="log_viewer_title">Logs and errors</string>
+    <string name="log_viewer_subtitle">Open the latest runtime log, recent crashes and installer logs from one fullscreen panel.</string>
+    <string name="log_viewer_refresh">Refresh</string>
+    <string name="log_viewer_copy">Copy</string>
+    <string name="log_viewer_share">Share</string>
+    <string name="log_viewer_loading">Loading log...</string>
+    <string name="log_viewer_empty">No log files available yet.</string>
+    <string name="log_viewer_empty_file">The selected log file is empty.</string>
+    <string name="log_viewer_read_failed">Failed to read log: %1$s</string>
+    <string name="log_viewer_no_selection">No log selected.</string>
+    <string name="log_viewer_copied">Log copied to clipboard.</string>
+    <string name="log_viewer_latest_log">Latest log</string>
+    <string name="log_viewer_latest_crash">Latest crash</string>
+    <string name="log_viewer_installer_log">Installer log</string>
+    <string name="log_viewer_log_file">Log file</string>
+    <string name="log_viewer_meta">%1$s\n%2$d KB · %3$s</string>
+    <string name="progresslayout_title">Downloads and installs</string>
+    <string name="modloader_installing">Installing loader files...</string>
+    <string name="launcher_credits_html"><![CDATA[
+        <b>Battly Launcher 2.0.0</b><br/><br/>
+        Launcher based on PojavLauncher and Boardwalk.<br/><br/>
+        <b>Credits</b><br/>
+        &bull; Battly<br/>
+        &bull; PojavLauncherTeam<br/>
+        &bull; Tran Khanh Duy<br/>
+        &bull; Boardwalk<br/><br/>
+        <b>License and third parties</b><br/>
+        &bull; GNU GPLv3 and third-party components included in the project.<br/>
+        &bull; OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j and more under their original licenses.<br/><br/>
+        This app is not affiliated with Minecraft, Mojang or Microsoft.
+    ]]></string>
+    <string name="credits_version">Version 2.0.0</string>
+    <string name="credits_based_on">Based on PojavLauncher and Boardwalk</string>
+    <string name="credits_section_title">Credits</string>
+    <string name="credits_primary_development">Main development</string>
+    <string name="credits_base_fork">Base fork</string>
+    <string name="credits_game_engine">Game engine</string>
+    <string name="credits_pojav_founder">PojavLauncher founder</string>
+    <string name="credits_inspiration">Inspiration</string>
+    <string name="credits_license_title">License</string>
+    <string name="credits_license_text">GNU GPLv3 and third-party components included in the project. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j and more under their original licenses.</string>
+    <string name="credits_unaffiliated">This app is not affiliated with Minecraft, Mojang or Microsoft.</string>
 
     <!-- Action bar part -->
 
     <!-- Languages list part -->
 
     <!-- Login strings -->
+    <string name="login_error_invalid_username">Invalid name. Use 3-16 characters: letters, numbers, and underscores.</string>
+    <string name="login_microsoft">Microsoft login</string>
     <string name="login_online_username_hint">Username</string>
     <string name="login_online_login_label">Login</string>
 
     <!-- Hint -->
-    <string name="hint_control_mapping">"Touch the top center cogwheel to open the context menu ⚙\nTap a button to customize: edit, resize, remove, or change its keybinds."</string>
+    <string name="hint_control_mapping">Tap the top control to open the editor menu.\nTap any button to edit, resize, remove or remap it.</string>
 
     <!-- Warnings -->
     <string name="warning_remove_account">This account will be removed!</string>
@@ -21,13 +224,14 @@
     <string name="alerttitle_installmod">Select a mod installer</string>
 
     <!-- Error messages -->
-    <string name="error_fatal">Amethyst has unexpectedly crashed</string>
+    <string name="error_fatal">Battly Launcher has unexpectedly crashed</string>
     <string name="error_no_version">No version!</string>
     <string name="error_show_more">Show more</string>
     <string name="error_show_less">Show less</string>
 
     <!-- Toast messages -->
     <string name="toast_permission_denied">The read/write to storage permission is required!</string>
+    <string name="file_picker_missing_path">Could not open this path</string>
     <string name="toast_optifine_success">Install successful</string>
     <!--
     <string name="toast_3">Exit</string>
@@ -64,6 +268,8 @@
     <string name="mcl_setting_subtitle_javaargs">Be careful, this may make game crash if modified without knowledge.</string>
     <string name="mcl_setting_title_renderer_settings">Extra Renderer Settings</string>
     <string name="mcl_setting_title_renderer_subtitle">Renderer specific settings</string>
+    <string name="preference_renderer_title">Renderer</string>
+    <string name="preference_renderer_auto">Automatic</string>
     <string name="mcl_setting_category_renderer">Renderer</string>
     <string name="mcl_setting_renderer_gles2_4">Holy GL4ES - (1.21.4&lt; only, fast)</string>
     <string name="mcl_setting_renderer_vulkan_zink">Zink (Vulkan) - (all versions, mid)</string>
@@ -90,6 +296,8 @@
     <string name="global_error_field_empty">This field can\'t be empty</string>
     <string name="global_waiting">Wait</string>
     <string name="global_select">Select</string>
+    <string name="global_cancel">Cancel</string>
+    <string name="global_later">Later</string>
     <string name="global_retry">Retry</string>
     <string name="global_default">Default</string>
     <string name="global_off">Off</string>
@@ -115,6 +323,9 @@
     <string name="control_thirdperson">3rd</string>
     <string name="control_listplayers">Tab</string>
     <string name="control_mouse">Mouse</string>
+    <string name="control_keyboard">Keyboard</string>
+    <string name="control_copy">Copy</string>
+    <string name="control_paste">Paste</string>
     <string name="control_mouseoff">Mouse: off</string>
     <string name="control_mouseon">Mouse: on </string>
 
@@ -126,6 +337,8 @@
 
     <!-- ImportControlActivity Strings -->
     <string name="import_control_label">Import controls</string>
+    <string name="import_control_file_name_label">File name:</string>
+    <string name="import_control_file_name_hint">File name</string>
     <string name="import_control_invalid_file">Invalid or corrupted file</string>
     <string name="import_control_import_button">import controls</string>
     <string name="import_control_verifying_file">File is being verified, please wait and try again…</string>
@@ -138,6 +351,16 @@
 
     <string name="customctrl_toggle">Toggleable</string>
     <string name="customctrl_size">Size</string>
+    <string name="customctrl_display">Button content</string>
+    <string name="customctrl_display_text">Text</string>
+    <string name="customctrl_display_emoji">Emoji</string>
+    <string name="customctrl_display_icon">Icon</string>
+    <string name="customctrl_display_value_hint">Text or emoji</string>
+    <string name="customctrl_button_name_hint">Button name</string>
+    <string name="customctrl_icon_value_hint">Icon name</string>
+    <string name="customctrl_pick_icon">Icon</string>
+    <string name="customctrl_icon_picker_title">Choose icon</string>
+    <string name="customctrl_icon_search_hint">Search item name...</string>
 
     <string name="customctrl_mapping">Mapping</string>
     <string name="customctrl_orientation">Orientation</string>
@@ -155,6 +378,13 @@
 
     <string name="customctrl_selectdefault">Select default controlmap</string>
     <string name="customctrl_export">Export controlmap</string>
+    <string name="customctrl_editor_title">Control editor</string>
+    <string name="customctrl_installed_controls">Installed controls</string>
+    <string name="customctrl_no_installed_controls">No installed controls yet.</string>
+    <string name="customctrl_editor_actions">Editor actions</string>
+    <string name="customctrl_preview_hint">Preview mode. Return to the marketplace when you finish inspecting this layout.</string>
+    <string name="customctrl_preview_badge">Preview: %1$s</string>
+    <string name="customctrl_preview_fallback_name">Control layout</string>
 
     <string name="main_share_logs">Share log file</string>
     <string name="main_install_jar_file">Execute a .jar</string>
@@ -162,6 +392,8 @@
     <string name="autoram_info_msg">Memory set to %d MB</string>
     <string name="mcl_setting_check_libraries">Check libraries after downloading</string>
     <string name="mcl_setting_check_libraries_subtitle">This option forces the launcher to check the library hash if it\'s available. Prevents broken downloads.</string>
+    <string name="preference_download_threads_title">Simultaneous downloads</string>
+    <string name="preference_download_threads_description">Controls how many game files Battly downloads at the same time. Higher values are faster on good networks.</string>
     <string name="dl_library_sha_fail">Library %s is damaged and will be redownloaded</string>
     <string name="dl_library_sha_unknown">Library %s can\'t be checked, have to assume it\'s good</string>
     <string name="dl_library_sha_pass">Library %s is fine and usable</string>
@@ -181,6 +413,7 @@
     <string name="customctrl_absolute_tracking">Absolute finger tracking</string>
     <string name="memory_warning_msg">The current amount of free RAM (%d) is lower than allocated RAM (%d), which may lead to crashes. Change the allocation if the game crashes.</string>
     <string name="address_memory_warning_msg">The current amount of free addressable RAM space (%d) is lower than the allocated RAM (%d), which will lead to crashes. Change the allocation if the game crashes.</string>
+    <string name="memory_warning_title">RAM warning</string>
     <string name="mcl_memory_allocation">Memory allocation</string>
     <string name="mcl_memory_allocation_subtitle">Controls how much memory is given to Minecraft.</string>
     <string name="multirt_runtime_corrupt">Corrupted Java Runtime</string>
@@ -196,6 +429,10 @@
     <string name="multirt_nocompatiblert">Can\'t find any compatible Java Runtime. This version requires Java %d or newer.</string>
     <string name="multirt_nojava8rt">Can\'t find Java 8. In order to use this option, you need to install Java 8.</string>
     <string name="multirt_delete_runtime">Delete runtime</string>
+    <string name="multirt_download_subtitle">Download the Java runtime needed by each Minecraft version directly from Battly\'s Android builds.</string>
+    <string name="multirt_installed_title">Installed runtimes</string>
+    <string name="multirt_download_started">Downloading Java %1$d...</string>
+    <string name="multirt_download_finished">%1$s is ready.</string>
     <string name="pvc_gameDirectory">Game directory</string>
     <string name="pvc_jvmArgs">JVM arguments</string>
 
@@ -243,7 +480,7 @@
     <string name="color_default_hex" translatable="false">FFFF0000</string>
     <string name="notif_channel_name">General</string>
     <string name="notif_channel_id" translatable="false">channel_id</string>
-    <string name="lazy_service_default_title">Amethyst Foreground Service</string>
+    <string name="lazy_service_default_title">Battly Launcher Foreground Service</string>
     <string name="mcl_setting_veroption_installed">Installed</string>
     <string name="use_global_default">(Use global default)</string>
     <string name="default_control">Default controlmap</string>
@@ -273,7 +510,7 @@
     <string name="preference_gyro_sample_rate_title">Gyroscope sampling rate</string>
     <string name="preference_gyro_sample_rate_description">If you have performance issues with gyroscope controls, increase this.</string>
     <string name="microsoft_login_retry_later">Too many requests, please try again later.</string>
-    <string name="storage_required">PojavLauncher requires external storage to be attached. Please reconnect it and restart the app.</string>
+    <string name="storage_required">Battly Launcher requires external storage to be attached. Please reconnect it and restart the app.</string>
     <string name="mcl_setting_title_buttonallcaps">Only use capital letters in button labels</string>
     <string name="mcl_setting_subtitle_buttonallcaps">Disable this if you want to use lowercase letters in your controls.</string>
     <string name="create_profile">Create new profile</string>
@@ -313,8 +550,8 @@
     <string name="modloader_dl_install_fabric">Create Fabric profile</string>
     <string name="modloader_dl_install_quilt">Create Quilt profile</string>
     <string name="modloader_dl_install_forge">Create Forge profile</string>
-    <string name="create_profile_vanilla">Create vanilla profile</string>
-    <string name="create_profile_vanilla_like_versions">Vanilla-like versions</string>
+    <string name="create_profile_vanilla">Vanilla</string>
+    <string name="create_profile_vanilla_like_versions">Vanilla</string>
     <string name="create_profile_modded_versions">Modded versions</string>
     <string name="fabric_dl_loader_title">Select versions</string>
     <string name="of_dl_select_version">Select OptiFine version</string>
@@ -322,8 +559,63 @@
     <string name="of_dl_progress">Downloading %s</string>
     <string name="create_profile_optifine">Create OptiFine profile</string>
 
-
+    <string name="search_modpack_title">Browse Modpacks</string>
+    <string name="search_modpack_subtitle">Create full Battly instances from CurseForge and Modrinth packs.</string>
+    <string name="search_mod_title">Browse Mods</string>
+    <string name="search_mod_subtitle">Install loader-compatible mods into the instance you choose.</string>
+    <string name="search_resourcepack_title">Browse Resourcepacks</string>
+    <string name="search_resourcepack_subtitle">Download textures and assets into the instance you choose.</string>
+    <string name="search_shader_title">Browse Shaders</string>
+    <string name="search_shader_subtitle">Download shader packs into the instance you choose.</string>
+    <string name="search_datapack_title">Browse Datapacks</string>
+    <string name="search_datapack_subtitle">Download datapacks into the instance you choose.</string>
+    <string name="hint_search_mod">Search for mods</string>
+    <string name="hint_search_resourcepack">Search for resourcepacks</string>
+    <string name="hint_search_shader">Search for shaders</string>
+    <string name="hint_search_datapack">Search for datapacks</string>
     <string name="hint_search_modpack">Search for modpacks</string>
+    <string name="search_filter_title">Search filters</string>
+    <string name="search_filter_subtitle">Narrow the catalog by source, loader, category and Minecraft version.</string>
+    <string name="search_filter_source_label">Source</string>
+    <string name="search_filter_loader_label">Loader</string>
+    <string name="search_filter_category_label">Category</string>
+    <string name="search_filter_source_any">Any source</string>
+    <string name="search_filter_source_modrinth">Modrinth</string>
+    <string name="search_filter_source_curseforge">CurseForge</string>
+    <string name="search_filter_loader_any">Any loader</string>
+    <string name="search_filter_all_categories">All categories</string>
+    <string name="search_filter_loading_categories">Loading categories…</string>
+    <string name="search_filter_reset">Reset</string>
+    <string name="search_filter_summary_default">All sources · all loaders · latest compatible results</string>
+    <string name="download_version_title">Download a Minecraft version</string>
+    <string name="download_version_subtitle">Select the version type you want to download</string>
+    <string name="download_version_search_hint">Search version, snapshot or loader...</string>
+    <string name="download_version_empty_search">No versions match your search.</string>
+    <string name="download_version_disclaimer">Remember that all Vanilla versions are official and unmodified. Modded options like Forge, Fabric, Quilt, NeoForge and OptiFine are community projects and not published by Mojang.</string>
+    <string name="download_version_clients">Clients</string>
+    <string name="download_version_vanilla_desc">Official version without modifications.</string>
+    <string name="download_version_forge">Forge</string>
+    <string name="download_version_forge_desc">Classic mod compatibility.</string>
+    <string name="download_version_neoforge">NeoForge</string>
+    <string name="download_version_neoforge_desc">Modern fork of Forge.</string>
+    <string name="download_version_fabric">Fabric</string>
+    <string name="download_version_fabric_desc">Lightweight, fast and modern.</string>
+    <string name="download_version_quilt">Quilt</string>
+    <string name="download_version_quilt_desc">Community loader based on Fabric.</string>
+    <string name="download_version_optifine">OptiFine</string>
+    <string name="download_version_optifine_desc">Graphics optimization and shaders.</string>
+    <string name="download_version_legacyfabric">LegacyFabric</string>
+    <string name="download_version_legacyfabric_desc">Support for older versions.</string>
+    <string name="download_version_clients_desc">Community modified clients.</string>
+    <string name="download_clients_subtitle">Choose a Battly client, search by name and install it as a ready-to-play profile.</string>
+    <string name="download_client_preparing">Preparing %1$s...</string>
+    <string name="download_client_downloading">Downloading %1$s</string>
+    <string name="download_client_installing">Installing %1$s...</string>
+    <string name="download_client_progress">%1$s (%2$.2f MB / %3$.2f MB)</string>
+    <string name="download_client_ready">%1$s · ready to install</string>
+    <string name="download_client_missing_url">%1$s · no download available</string>
+    <string name="download_client_no_download">This client has no download available in the catalog.</string>
+    <string name="download_version_coming_soon">This installer is not available yet in Battly</string>
 
     <string name="preference_vulkan_driver_system_title">Use system Vulkan driver</string>
     <string name="preference_vulkan_driver_system_description">Force the launcher to use the system Vulkan driver instead of Turnip on Adreno GPUs. Only affects Zink and mods that use Vulkan.</string>
@@ -332,15 +624,50 @@
     <string name="generic_apply">Apply</string>
     <string name="generic_debug">Debug</string>
 
+    <string name="search_mod_no_result">No mods found</string>
+    <string name="search_mod_error">Failed to find mods</string>
+    <string name="search_mod_download_error">Failed to download mod metadata</string>
+    <string name="search_resourcepack_no_result">No resourcepacks found</string>
+    <string name="search_resourcepack_error">Failed to find resourcepacks</string>
+    <string name="search_resourcepack_download_error">Failed to download resourcepack metadata</string>
+    <string name="search_shader_no_result">No shaders found</string>
+    <string name="search_shader_error">Failed to find shaders</string>
+    <string name="search_shader_download_error">Failed to download shader metadata</string>
+    <string name="search_datapack_no_result">No datapacks found</string>
+    <string name="search_datapack_error">Failed to find datapacks</string>
+    <string name="search_datapack_download_error">Failed to download datapack metadata</string>
     <string name="search_modpack_no_result">No modpacks found</string>
     <string name="search_modpack_error">Failed to find modpacks</string>
     <string name="search_modpack_download_error">Failed to download modpack metadata</string>
+    <string name="mod_version_loading">Loading build metadata…</string>
+    <string name="mod_version_summary">Minecraft %1$s · %2$s</string>
+    <string name="mod_dependency_loading">Checking dependencies…</string>
+    <string name="mod_dependency_none">No required dependencies detected for this build.</string>
+    <string name="mod_dependency_summary">Requires %1$d dependencies</string>
+    <string name="mod_dependency_install_button">Install dependencies</string>
+    <string name="mod_detail_label_compat">Compatibility</string>
+    <string name="mod_detail_label_version">Version to install</string>
+    <string name="mod_detail_label_deps">Dependencies</string>
+    <string name="mod_detail_close">Close</string>
+    <string name="mod_detail_no_description">No description available.</string>
+    <string name="mod_dependency_installing_progress">Installing dependency %1$s</string>
+    <string name="mod_dependency_install_failed">Failed to install dependencies</string>
+    <string name="mod_dependency_install_success">Installed %1$d dependencies</string>
+    <string name="content_download_downloading">Downloading %1$s (%2$.2f MB / %3$.2f MB)</string>
+    <string name="mod_install_button">Install mod</string>
+    <string name="resourcepack_install_button">Install resourcepack</string>
+    <string name="shader_install_button">Install shader</string>
+    <string name="datapack_install_button">Install datapack</string>
+    <string name="mod_install_success">%1$s installed into mods</string>
+    <string name="resourcepack_install_success">%1$s installed into resourcepacks</string>
+    <string name="shader_install_success">%1$s installed into shaderpacks</string>
+    <string name="datapack_install_success">%1$s installed into datapacks</string>
 
     <string name="modpack_download_downloading_metadata">Downloading modpack metadata (%.2f MB / %.2f MB)</string>
     <string name="modpack_download_downloading_mods">Downloading mods (%.2f MB / %.2f MB)</string>
     <string name="modpack_download_downloading_mods_fc">Downloading mods (File %d out of %d)</string>
     <string name="modpack_download_applying_overrides">Applying overrides (%d/%d)</string>
-    <string name="modpack_install_notification_title">Pojav Modpack Installer</string>
+    <string name="modpack_install_notification_title">Battly Modpack Installer</string>
     <string name="modpack_install_notification_success">Click here to finish modpack installation</string>
     <string name="modpack_install_notification_data_not_available">Failed to download mod loader information</string>
     <string name="modpack_install_modloader_download_failed">Failed to download the mod loader files</string>
@@ -366,14 +693,14 @@
     <string name="notif_download_finished_desc">Click here to start it!</string>
     <string name="preference_category_gestures">Gestures</string>
     <string name="preference_category_buttons">Buttons</string>
-    <string name="preference_category_experimental_settings">Experimental fuckury</string>
+    <string name="preference_category_experimental_settings">Experimental settings</string>
     <string name="preference_category_java_tweaks">Java Tweaks</string>
     <string name="preference_category_main_categories">Categories</string>
     <string name="preference_category_miscellaneous">Miscellaneous settings</string>
     <string name="preference_category_video">Video settings</string>
     <string name="notification_permission_dialog_title">Permission request</string>
-    <string name="notification_permission_dialog_text">PojavLauncher requires a permission to post notifications to prevent game/modpack downloads from stopping when you leave the app. Without this permission, Android may shut down your downloads when you put PojavLauncher in background mode.</string>
-    <string name="notification_permission_toast">You can always change your mind later by going into Settings</string>
+    <string name="notification_permission_dialog_text">Battly uses notifications for friend invites, BattlyWorlds alerts, important news and background downloads. Enable them so you do not miss Battly updates or messages from friends.</string>
+    <string name="notification_permission_toast">Enable notifications from Android settings to receive Battly news and friend alerts.</string>
     <string name="preference_ask_for_notification_title">Allow notifications</string>
     <string name="preference_ask_for_notification_description">Click to re-request the notification permission, required for game/modpack background downloads to work properly.</string>
     <string name="preference_vsync_in_zink_title">Allow V-Sync with Zink</string>
@@ -395,6 +722,9 @@
     <string name="log_view_label_log_output">Log output:</string>
     <string name="execute_jar_failed_to_read_file">Failed to read the .jar file</string>
     <string name="execute_jar_incompatible_runtime">Execute .jar feature is not compatible with Java %d</string>
+    <string name="installer_internal_running">Analyzing installer…</string>
+    <string name="installer_internal_success">%1$s installed directly inside Battly</string>
+    <string name="installer_internal_fallback">Unsupported installer, opening the legacy Java UI</string>
     <string name="controller_button_a">A</string>
     <string name="controller_button_b">B</string>
     <string name="controller_button_x">X</string>
@@ -434,6 +764,41 @@
     <string name="create_bta_profile">Create \"Better than Adventure!\" profile</string>
     <string name="select_bta_version">Select \"Better than Adventure!\" version</string>
     <string name="bta_installer_available_versions">Supported BTA versions</string>
+
+    <!-- Onboarding strings -->
+    <string name="onboarding_welcome_title">Welcome to Battly Mobile</string>
+    <string name="onboarding_welcome_desc">Play, install versions, manage profiles and customise Minecraft from your phone.</string>
+
+    <string name="onboarding_library_title">Mods, modpacks and resource packs</string>
+    <string name="onboarding_library_desc">Browse content from Modrinth and CurseForge, review its details and install it into your profiles.</string>
+
+    <string name="onboarding_versions_title">Versions and loaders</string>
+    <string name="onboarding_versions_desc">Install Vanilla, Forge, Fabric, NeoForge, Quilt or OptiFine easily.</string>
+
+    <string name="onboarding_profiles_title">Ready-to-play profiles</string>
+    <string name="onboarding_profiles_desc">Create and configure profiles with version, Java, controls, folders and custom settings.</string>
+
+    <string name="onboarding_finish_title">All set</string>
+    <string name="onboarding_finish_desc">You can now start using Battly Mobile.</string>
+
+    <string name="onboarding_action_start">Start</string>
+    <string name="onboarding_action_enter">Enter Battly</string>
+    <string name="onboarding_action_configure">Configure now</string>
+    <string name="onboarding_action_next">Next</string>
+    <string name="onboarding_action_back">Back</string>
+    <string name="onboarding_action_skip">Skip</string>
+    <string name="onboarding_show_again">Show welcome again</string>
+    <string name="onboarding_transition_title">Welcome to Battly</string>
+    <string name="onboarding_transition_desc">Preparing your launcher...</string>
+    <!-- Vanilla installer strings -->
+    <string name="vanilla_install_version_label">Minecraft version</string>
+    <string name="vanilla_install_tap_to_select">Tap to select a version…</string>
+    <string name="vanilla_install_profile_name_label">Profile name</string>
+    <string name="vanilla_install_profile_name_hint">e.g. Survival 1.21</string>
+    <string name="vanilla_install_create">Create profile</string>
+    <string name="vanilla_install_pick_version">Please select a version first</string>
+    <string name="vanilla_install_created">Profile created</string>
+    <string name="vanilla_install_downloading">Downloading Minecraft…</string>
     <string name="bta_installer_untested_versions">Untested BTA versions</string>
     <string name="bta_installer_nightly_versions">Nightly BTA versions</string>
     <string name="newdl_extracting_native_libraries">Extracting native libraries (%d/%d)</string>
@@ -456,7 +821,7 @@
     <string name="mg_renderer_summary_computeShaderext">May help with shaderpack glitches. Disable if not needed, can cause crashes.</string>
     <string name="mg_renderer_title_multidrawCompute">Use Compute Multidraw Emulation</string>
     <string name="mg_renderer_summary_multidrawCompute">Uses compute shaders for multidraw emulation</string>
-    <string name="app_short_name">Amethyst</string>
+    <string name="app_short_name">Battly Launcher</string>
     <string name="demo_versions_supported">Only Vanilla 1.3.1 and above are supported on demo accounts</string>
     <string name="demo_unsupported">Demo Profile not supported</string>
     <string name="change_account">Please change accounts to use this function</string>
@@ -494,11 +859,264 @@
     <string name="sodium_override_title">Run sodium forcefully</string>
     <string name="sodium_override_summaryOff">Using sodium may cause visual bugs and crashes. You have been warned.</string>
     <string name="sodium_override_summaryOn">Sodium is not supported. No help will be given if you encounter any issues.</string>
-    <!--  Make sure the people turning this on can read English.  -->
-    <string name="sodium_math_warning_title" translatable="false">Solve the math question to enable</string>
-    <string name="sodium_math_warning_message" translatable="false">
-    Sodium is unsupported, you are on your own. No support will be given in the discord server.\nUsing sodium may result in bugs, glitches, and crashes. No help will be given even if you lose any of your worlds or saves.\n\nNow what\'s %1$s multiplied by %2$s plus %3$s minus %4$s?
-    </string>
+    <string name="sodium_confirm_title" translatable="false">Enable Sodium?</string>
+    <string name="sodium_confirm_message" translatable="false">Sodium is not officially supported by Battly Launcher.\n\nEnabling it may cause graphical bugs, glitches and crashes. No support will be provided in the Discord server for any Sodium-related issues, and no help will be given if you lose worlds or save data.\n\nBy accepting, you acknowledge that you enable this at your own risk.</string>
+    <string name="sodium_confirm_accept" translatable="false">I accept the risks</string>
+    <string name="sodium_launch_anyway" translatable="false">Launch anyway</string>
     <string name="not_modpack_file">Not a modpack file!</string>
+    <string name="create_modpack_import_archive">Import ZIP or MRPACK</string>
+    <string name="profile_custom_path">Custom path</string>
+    <string name="preference_disable_autojre_select">Disable automatic JRE selection</string>
+    <string name="content_install_select_profile_title">Select target instance</string>
+    <string name="content_install_select_profile_subtitle">Choose where this content and its dependencies will be installed.</string>
+    <string name="content_install_profile_label">%1$s - %2$s</string>
+    <string name="content_install_profile_version">Minecraft %1$s</string>
+    <string name="content_install_current_badge">Current</string>
+    <string name="content_install_current_profile">%1$s (current)</string>
+    <string name="content_install_no_profiles">No launcher instances found.</string>
+
+    <!-- Controls Marketplace -->
+    <string name="ctrl_marketplace_title">Controls Marketplace</string>
+    <string name="ctrl_search_hint">Search controls…</string>
+    <string name="ctrl_search_btn">Search</string>
+    <string name="ctrl_upload_btn">Upload</string>
+    <string name="ctrl_sort_label">Sort:</string>
+    <string name="ctrl_sort_newest">Newest</string>
+    <string name="ctrl_sort_popular">Most downloaded</string>
+    <string name="ctrl_sort_liked">Most liked</string>
+    <string name="ctrl_empty">No controls found.</string>
+    <string name="ctrl_back">Back</string>
+    <string name="ctrl_prev">Previous page</string>
+    <string name="ctrl_next">Next page</string>
+    <string name="ctrl_page_info">%1$d / %2$d</string>
+    <string name="ctrl_apply_btn">Apply control</string>
+    <string name="ctrl_preview_btn">Preview</string>
+    <string name="ctrl_apply_title">Apply control</string>
+    <string name="ctrl_apply_msg">Download and apply "%1$s" as your control layout?</string>
+    <string name="ctrl_applied_success">Control "%1$s" applied successfully.</string>
+    <string name="ctrl_upload_auth_title">Login required</string>
+    <string name="ctrl_upload_auth_msg">You must log in with your Battly account to upload controls.</string>
+    <string name="ctrl_upload_no_files">No local control files found in your control folder.</string>
+    <string name="ctrl_upload_select">Select a control to upload</string>
+    <string name="ctrl_upload_details">Upload details</string>
+    <string name="ctrl_upload_publish">Publish</string>
+    <string name="ctrl_upload_name_label">Control name</string>
+    <string name="ctrl_upload_name_hint">My awesome control</string>
+    <string name="ctrl_upload_name_required">Name is required.</string>
+    <string name="ctrl_upload_desc_label">Description (optional)</string>
+    <string name="ctrl_upload_desc_hint">Describe your control layout…</string>
+    <string name="ctrl_upload_tags_label">Tags (comma separated, optional)</string>
+    <string name="ctrl_upload_tags_hint">pvp, survival, bedwars</string>
+    <string name="ctrl_upload_success">Control uploaded successfully!</string>
+    <string name="ctrl_upload_pending_review">Control submitted! It will be visible once a moderator reviews it.</string>
+    <string name="ctrl_marketplace_subtitle">Browse community controls</string>
+    <string name="ctrl_set_default_title">Set as default?</string>
+    <string name="ctrl_set_default_msg">Do you want "%s" to be the default control layout in the launcher?</string>
+    <string name="ctrl_set_default_yes">Yes, set as default</string>
+    <string name="ctrl_set_default_no">Not now</string>
+    <string name="ctrl_error_load">Failed to load controls.</string>
+    <string name="ctrl_error_network">Network error. Check your connection.</string>
+    <string name="ctrl_error_download">Failed to download control.</string>
+    <string name="ctrl_error_preview">Failed to preview control.</string>
+    <string name="ctrl_error_upload">Failed to upload control.</string>
+    <string name="ctrl_item_unnamed">Unnamed</string>
+    <string name="ctrl_item_by_author">by %1$s</string>
+    <string name="ctrl_item_anonymous">Anonymous</string>
+    <string name="ctrl_item_no_description">No description</string>
+
+    <!-- BattlyWorlds -->
+    <string name="global_copy">Copy</string>
+    <string name="battlyworlds_title">BattlyWorlds</string>
+    <string name="battlyworlds_temporarily_disabled_title">BattlyWorlds temporarily disabled</string>
+    <string name="battlyworlds_temporarily_disabled_short">BattlyWorlds is temporarily disabled.</string>
+    <string name="battlyworlds_temporarily_disabled_message">BattlyWorlds is disabled while we resolve Google Play VPNService access. The feature will return once the review issue is cleared.</string>
+    <string name="battlyworlds_temporarily_disabled_settings">BattlyWorlds will remain disabled until Google grants VPNService access. The code is still included, but the feature cannot start right now.</string>
+    <string name="battlyworlds_description">Invite friends to your LAN world or join a friend using an invite code. Open the world to LAN in Minecraft after hosting.</string>
+    <string name="battlyworlds_metadata">Terracotta %1$s · EasyTier %2$s</string>
+    <string name="battlyworlds_metadata_unknown">Terracotta metadata unavailable</string>
+    <string name="battlyworlds_host">Host</string>
+    <string name="battlyworlds_join">Join</string>
+    <string name="battlyworlds_invite_friend">Invite friend</string>
+    <string name="battlyworlds_invite_friend_row">%1$s (%2$s)</string>
+    <string name="battlyworlds_invite_no_room">Host a BattlyWorlds room before inviting friends.</string>
+    <string name="battlyworlds_invite_login_required">Sign in with Battly to invite friends directly.</string>
+    <string name="battlyworlds_invite_no_friends">No Battly friends available.</string>
+    <string name="battlyworlds_invite_sent">Invite sent to %1$s.</string>
+    <string name="battlyworlds_search_friend">Search friend</string>
+    <string name="battlyworlds_search_action">Search</string>
+    <string name="battlyworlds_search_friend_hint">Battly username</string>
+    <string name="battlyworlds_search_no_results">No Battly users found.</string>
+    <string name="battlyworlds_friend_request_title">Send friend request</string>
+    <string name="battlyworlds_friend_request_message">Send a friend request to %1$s?</string>
+    <string name="battlyworlds_friend_request_sent">Friend request sent to %1$s.</string>
+    <string name="battlyworlds_logs">Logs</string>
+    <string name="battlyworlds_join_hint">Invite code</string>
+    <string name="battlyworlds_invalid_code">Invalid invite code.</string>
+    <string name="battlyworlds_tip">Host first, then open the world to LAN. Guests should join the Terracotta Lobby server in Multiplayer.</string>
+    <string name="battlyworlds_host_code">Invite code: %1$s</string>
+    <string name="battlyworlds_guest_url">Backup address: %1$s</string>
+    <string name="battlyworlds_nothing_to_copy">There is no invite code or address to copy yet.</string>
+    <string name="battlyworlds_copied">Copied.</string>
+    <string name="battlyworlds_player_anonymous">BattlyPlayer</string>
+    <string name="battlyworlds_vpn_permission_denied">BattlyWorlds needs VPN permission to create the virtual LAN.</string>
+    <string name="battlyworlds_vpn_session">BattlyWorlds LAN</string>
+    <string name="battlyworlds_notification_title">BattlyWorlds active</string>
+    <string name="battlyworlds_notification_text">%1$s · %2$s</string>
+    <string name="battlyworlds_mode_host">Host</string>
+    <string name="battlyworlds_mode_guest">Guest</string>
+    <string name="battlyworlds_state_unknown">Unknown state</string>
+    <string name="battlyworlds_state_starting">Starting VPN…</string>
+    <string name="battlyworlds_state_loading_nodes">Loading BattlyWorlds nodes…</string>
+    <string name="battlyworlds_state_waiting">Ready.</string>
+    <string name="battlyworlds_state_host_scanning">Looking for the LAN world. Open your world to LAN in Minecraft.</string>
+    <string name="battlyworlds_state_host_starting">Creating invite tunnel…</string>
+    <string name="battlyworlds_state_host_ok">Ready. Invite code: %1$s</string>
+    <string name="battlyworlds_state_guest_connecting">Connecting to invite…</string>
+    <string name="battlyworlds_state_guest_starting">Starting virtual LAN…</string>
+    <string name="battlyworlds_state_guest_ok">Connected. Use Multiplayer and join Terracotta Lobby. Backup: %1$s</string>
+    <string name="battlyworlds_state_exception">BattlyWorlds error type %1$d</string>
+    <string name="battlyworlds_error_ping_host_fail">Failed to join: the room is closed or the network is unstable.</string>
+    <string name="battlyworlds_error_ping_host_rst">Room connection lost: the host closed the room or the network is unstable.</string>
+    <string name="battlyworlds_error_guest_et_crash">Failed to join: EasyTier crashed on the guest device.</string>
+    <string name="battlyworlds_error_host_et_crash">Failed to create room: EasyTier crashed on the host device.</string>
+    <string name="battlyworlds_error_ping_server_rst">Room closed: the host left the game world, so the room closed automatically.</string>
+    <string name="battlyworlds_error_scaffolding_invalid_response">Invalid protocol: the host sent an invalid response.</string>
+    <string name="battlyworlds_invite_title">BattlyWorlds invite</string>
+    <string name="battlyworlds_invite_message">%1$s invited you to a BattlyWorlds room for Minecraft %2$s.</string>
+    <string name="battlyworlds_invite_ingame_message">%1$s invited you to a BattlyWorlds room.</string>
+    <string name="battlyworlds_invite_accept">Join</string>
+    <string name="battlyworlds_invite_launching">Preparing Minecraft version...</string>
+    <string name="battlyworlds_invite_notification_title">BattlyWorlds invite</string>
+    <string name="battlyworlds_invite_notification_text">%1$s invited you to a world.</string>
+    <string name="battlyworlds_description_simple">Play with friends through a private LAN room. Host, open your world to LAN, then invite or share the code.</string>
+    <string name="battlyworlds_ready">Ready to play</string>
+    <string name="battlyworlds_ready_to_invite">Room ready</string>
+    <string name="battlyworlds_connected">Connected</string>
+    <string name="battlyworlds_host_code_simple">Code: %1$s</string>
+    <string name="battlyworlds_preparing_code">Preparing invite code...</string>
+    <string name="battlyworlds_short_code_failed">Could not create the short invite code.</string>
+    <string name="battlyworlds_share">Share</string>
+    <string name="battlyworlds_share_message">%1$s invited you to a BattlyWorlds room.\nCode: %2$s</string>
+    <string name="battlyworlds_join_status_title">Joining BattlyWorlds</string>
+    <string name="battlyworlds_join_status_preparing">Preparing the private LAN connection...</string>
+    <string name="battlyworlds_join_status_ready">Connected. In Multiplayer, open the LAN server named Terracotta Lobby. It may appear with Chinese text.</string>
+    <string name="battlyworlds_host_hint_simple">Open the world to LAN in Minecraft. Friends can join from their invitation.</string>
+    <string name="battlyworlds_guest_connected_simple">Open Multiplayer and join Terracotta Lobby. It may appear with Chinese text.</string>
+    <string name="battlyworlds_guest_hint_simple">If the server does not appear, wait a few seconds and refresh Multiplayer.</string>
+    <string name="battlyworlds_tip_simple">Host a room or join with a code. Battly handles the virtual LAN in the background.</string>
+    <string name="battlyworlds_free_summary">Free room · %1$d direct invites · %2$d h code duration</string>
+    <string name="battlyworlds_plus_summary">BattlyWorlds Plus · priority nodes · %1$d direct invites · %2$d h persistent room</string>
+    <string name="battlyworlds_friend_online">Online</string>
+    <string name="battlyworlds_friend_offline">Offline</string>
+    <string name="battlyworlds_logs_search_hint">Search logs</string>
+    <string name="battlyworlds_logs_live">Live logs</string>
+    <string name="battlyworlds_logs_empty">No relevant BattlyWorlds log lines yet.</string>
+    <string name="battlyworlds_logs_saved">Saved as %1$s.</string>
+    <string name="ingame_menu_force_close_desc">Close the current Minecraft process.</string>
+    <string name="ingame_menu_logs_desc">Open the launcher output.</string>
+    <string name="ingame_menu_custom_key_desc">Send a keyboard shortcut.</string>
+    <string name="ingame_menu_quick_settings_desc">Change common game options.</string>
+    <string name="ingame_menu_controls_desc">Edit touch controls.</string>
+    <string name="ingame_menu_battlyworlds_desc">Invite friends to this world.</string>
+    <string name="battlyworlds_lan_prompt_title">LAN world detected</string>
+    <string name="battlyworlds_lan_prompt_message">Use BattlyWorlds to invite friends without sharing your network.</string>
+    <string name="battlyworlds_lan_prompt_action">Invite</string>
+    <string name="battlyworlds_invite_channel_name">BattlyWorlds invites</string>
+    <string name="battlyworlds_invite_channel_description">High-priority notifications for BattlyWorlds friend invites.</string>
+
+    <string name="battly_plus_chip_cloud">Full cloud sync</string>
+    <string name="battly_plus_chip_queue">Premium queue</string>
+    <string name="battly_plus_action_cloud_sync">Cloud Sync</string>
+    <string name="battly_plus_action_cloud_sync_desc">Save profiles, controls and launcher settings in Battly Cloud.</string>
+    <string name="battly_plus_action_cloud_restore">Restore Cloud</string>
+    <string name="battly_plus_action_cloud_restore_desc">Recover the latest setup saved in Battly Cloud.</string>
+    <string name="battly_plus_action_boost">Battly Boost</string>
+    <string name="battly_plus_action_boost_desc">Apply a mobile performance profile tuned for Minecraft.</string>
+    <string name="battly_plus_feature_cloud_sync_title">Cloud Sync Complete</string>
+    <string name="battly_plus_feature_cloud_sync_desc">Profiles, selected controls, backgrounds and launcher settings are synced with Battly CDN.</string>
+    <string name="battly_plus_feature_backups_title">Automatic cloud backups</string>
+    <string name="battly_plus_feature_backups_desc">Premium Google Drive backup history for worlds and profiles, tracked from Battly Cloud.</string>
+    <string name="battly_plus_feature_shared_installs_title">Shareable installations</string>
+    <string name="battly_plus_feature_shared_installs_desc">Create a Battly link with your current instance metadata so friends can recreate it faster.</string>
+    <string name="battly_plus_feature_mod_updates_title">One-click mod updates</string>
+    <string name="battly_plus_feature_mod_updates_desc">Scan installed mods and prepare provider-based updates from the active instance.</string>
+    <string name="battly_plus_feature_boost_title">Battly Boost</string>
+    <string name="battly_plus_feature_boost_desc">Applies sustained performance, lower render load and safer mobile defaults in one tap.</string>
+    <string name="battly_plus_feature_queue_title">Premium download queue</string>
+    <string name="battly_plus_feature_queue_desc_plus">Install modpacks and content in the background while you keep using Battly. Multiple installs can be queued safely.</string>
+    <string name="battly_plus_feature_queue_desc_free">Free accounts wait on the installation screen until the current modpack finishes.</string>
+    <string name="battly_plus_feature_app_icons_title">Custom app icons</string>
+    <string name="battly_plus_feature_app_icons_desc">Choose how Battly appears on your Android home screen and app drawer.</string>
+    <string name="battly_plus_app_icon_title">App icon</string>
+    <string name="battly_plus_app_icon_desc">Battly+ lets you pick the icon shown in Android launcher. The change is applied immediately.</string>
+    <string name="battly_plus_app_icon_default">Classic Battly</string>
+    <string name="battly_plus_app_icon_custom_1">Battly icon 1</string>
+    <string name="battly_plus_app_icon_custom_2">Battly icon 2</string>
+    <string name="battly_plus_app_icon_custom_3">Battly icon 3</string>
+    <string name="battly_plus_app_icon_custom_4">Battly icon 4</string>
+    <string name="battly_plus_app_icon_custom_5">Battly icon 5</string>
+    <string name="battly_plus_app_icon_custom_6">Battly icon 6</string>
+    <string name="battly_plus_app_icon_selected">Selected</string>
+    <string name="battly_plus_app_icon_choose">Use icon</string>
+    <string name="battly_plus_app_icon_applied">Battly icon updated.</string>
+    <string name="control_hub_title">Battly controls</string>
+    <string name="control_hub_kicker">Controls center</string>
+    <string name="control_hub_desc">Edit your touch controls or download community layouts from the Battly marketplace.</string>
+    <string name="control_hub_section">Choose what you want to adjust</string>
+    <string name="control_hub_customize_title">Customize controls</string>
+    <string name="control_hub_customize_desc">Edit installed touch layouts and choose the one you use in game.</string>
+    <string name="control_hub_customize_action">Edit</string>
+    <string name="control_hub_marketplace_title">Controls marketplace</string>
+    <string name="control_hub_marketplace_desc">Download community layouts and set them as your default controls.</string>
+    <string name="control_hub_marketplace_action">Browse</string>
+    <string name="control_hub_mapper_title">Controller mapping</string>
+    <string name="control_hub_mapper_desc">Configure physical controller and keyboard mapping options.</string>
+    <string name="battly_plus_cloud_sync_done">Cloud Sync completed.</string>
+    <string name="battly_plus_cloud_restore_done">Cloud Sync restored.</string>
+    <string name="battly_plus_cloud_restore_empty">No Cloud Sync snapshot found.</string>
+    <string name="battly_plus_backup_ready">Backup record prepared for Google Drive.</string>
+    <string name="battly_plus_backup_recorded">Backup registered for %1$s.</string>
+    <string name="battly_plus_drive_login_cancelled">Google Drive sign-in was cancelled.</string>
+    <string name="battly_plus_drive_account_required">Choose a Google account to upload the backup.</string>
+    <string name="battly_plus_drive_backup_started">Preparing Google Drive backup...</string>
+    <string name="battly_plus_drive_backup_no_worlds">No worlds found in any profile.</string>
+    <string name="battly_plus_drive_backup_uploaded">Google Drive backup uploaded for %1$s.</string>
+    <string name="battly_plus_shared_installation_done">Battly installation code %1$s\n%2$s</string>
+    <string name="battly_plus_mod_updates_done">Checked %1$d mods. Updates ready: %2$d.</string>
+    <string name="battly_plus_select_install_profile_title">Choose installation to share</string>
+    <string name="battly_plus_select_mod_profile_title">Choose instance to update</string>
+    <string name="battly_plus_profile_option">%1$s - %2$s</string>
+    <string name="battly_plus_shared_import_invalid">This Battly installation link is not valid.</string>
+    <string name="battly_plus_shared_import_done">Imported %1$s.</string>
+    <string name="battly_plus_boost_done">Battly Boost applied.</string>
+    <string name="battly_plus_api_error">Battly+ could not connect to the API. HTTP %1$d.</string>
+    <string name="battly_plus_share_installation">Share Battly installation</string>
+    <string name="battly_plus_settings_summary">Cloud sync, backups, Battly Boost and premium install queue.</string>
+    <string name="battly_plus_install_block_title">Installing content</string>
+    <string name="battly_plus_install_block_message">Battly is installing this content. Battly+ lets you keep using the launcher and run multiple installations in the background.</string>
+    <string name="battly_plus_install_queue_message">Battly+ queue active: installing in the background. You can keep using Battly and start more compatible installs.</string>
+    <string name="battly_plus_welcome_title">Welcome to Battly+</string>
+    <string name="battly_plus_welcome_desc">Your account now has premium tools built for faster setup, better worlds and more control over Battly Mobile.</string>
+    <string name="battly_plus_welcome_worlds_title">BattlyWorlds Plus</string>
+    <string name="battly_plus_welcome_worlds_desc">Priority rooms, more guests and persistent sessions.</string>
+    <string name="battly_plus_welcome_cloud_title">Cloud Sync and backups</string>
+    <string name="battly_plus_welcome_cloud_desc">Keep profiles, controls and launcher settings synced.</string>
+    <string name="battly_plus_welcome_boost_title">Battly Boost</string>
+    <string name="battly_plus_welcome_boost_desc">Apply optimized mobile settings in one tap.</string>
+    <string name="battly_plus_welcome_cta">Explore Battly+</string>
+    <string name="battly_update_video_title">Battly Mobile 2.0 is here</string>
+    <string name="battly_update_video_desc">Watch the update video once and discover what changed in this version.</string>
+    <string name="battly_update_video_loading">Loading video...</string>
+    <string name="battly_update_video_error">The video could not be loaded right now.</string>
+    <string name="battly_update_video_continue">Continue</string>
+    <string name="battly_update_welcome_title">Welcome to Battly Mobile 2</string>
+    <string name="battly_update_welcome_desc">A cleaner, faster and more complete Battly experience is ready for you.</string>
+    <string name="legacy_mixin_missing_title">Legacy Mixin dependency missing</string>
+    <string name="legacy_mixin_missing_message">One of your Forge 1.7.10 mods requests Sponge Mixin, but no Mixin or UniMixins provider is installed. Install UniMixins/Mixin for 1.7.10 or remove that mod before starting Minecraft.</string>
+    <string name="minecraft_crash_title">Minecraft closed unexpectedly</string>
+    <string name="minecraft_crash_message">Minecraft returned exit code %1$d. Battly reopened so you can review the latest log.</string>
+    <string name="minecraft_crash_view_logs">View logs</string>
+    <string name="battly_in_app_title">Battly</string>
+    <string name="battly_in_app_open">Open</string>
 
 </resources>

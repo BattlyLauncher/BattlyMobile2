@@ -1,6 +1,7 @@
 package net.kdt.pojavlaunch.modloaders.modpacks.api;
 
 import android.app.Activity;
+import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
@@ -12,8 +13,10 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.Constants;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDetail;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModItem;
+import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchCategory;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchResult;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import org.jdom2.IllegalDataException;
 
@@ -54,6 +57,7 @@ public class CommonApi implements ModpackApi {
 
         Future<?>[] futures = new Future<?>[mModpackApis.length];
         for(int i = 0; i < mModpackApis.length; i++) {
+            if (!shouldQuerySource(searchFilters, i)) continue;
             // If there is an array and its length is zero, this means that we've exhausted the results for this
             // search query and we don't need to actually do the search
             if(results[i] != null && results[i].results.length == 0) continue;
@@ -119,8 +123,37 @@ public class CommonApi implements ModpackApi {
     }
 
     @Override
-    public ModLoader installMod(ModDetail modDetail, int selectedVersion) throws IOException {
-        return getModpackApi(modDetail.apiSource).installMod(modDetail, selectedVersion);
+    public ModItem getModById(int contentType, String projectId) {
+        if (mModpackApis.length == 0) return null;
+        throw new UnsupportedOperationException("Use a source-specific api to resolve dependencies");
+    }
+
+    @Override
+    public SearchCategory[] getCategories(SearchFilters searchFilters) {
+        if (searchFilters.source == SearchFilters.SOURCE_ANY) {
+            return new SearchCategory[0];
+        }
+        return getModpackApi(searchFilters.source).getCategories(searchFilters);
+    }
+
+    @Override
+    public ModLoader installMod(Context context, ModDetail modDetail, int selectedVersion) throws IOException {
+        return getModpackApi(modDetail.apiSource).installMod(context, modDetail, selectedVersion);
+    }
+
+    @Override
+    public ModLoader installMod(Context context, ModDetail modDetail, int selectedVersion, MinecraftProfile targetProfile) throws IOException {
+        return getModpackApi(modDetail.apiSource).installMod(context, modDetail, selectedVersion, targetProfile);
+    }
+
+    @Override
+    public void installDependencies(Context context, ModDetail modDetail, int selectedVersion) throws IOException {
+        getModpackApi(modDetail.apiSource).installDependencies(context, modDetail, selectedVersion);
+    }
+
+    @Override
+    public void installDependencies(Context context, ModDetail modDetail, int selectedVersion, MinecraftProfile targetProfile) throws IOException {
+        getModpackApi(modDetail.apiSource).installDependencies(context, modDetail, selectedVersion, targetProfile);
     }
 
     @Override
@@ -137,6 +170,19 @@ public class CommonApi implements ModpackApi {
             default:
                 throw new UnsupportedOperationException("Unknown API source: " + apiSource);
         }
+    }
+
+    private boolean shouldQuerySource(SearchFilters filters, int index) {
+        if (filters.source == SearchFilters.SOURCE_ANY) {
+            return true;
+        }
+        if (filters.source == Constants.SOURCE_MODRINTH) {
+            return index == 0;
+        }
+        if (filters.source == Constants.SOURCE_CURSEFORGE) {
+            return index == 1;
+        }
+        return false;
     }
 
     private @NonNull ModpackApi getModpackApi(Activity activity, Uri zipUri){

@@ -42,6 +42,7 @@ do {                                                                       \
 } while(0)
 
 static void registerFunctions(JNIEnv *env);
+static void ensureRuntimeGlfwBridge(JNIEnv *env, jclass glfwClass);
 
 jint JNI_OnLoad(JavaVM* vm, __attribute__((unused)) void* reserved) {
     if (pojav_environ->dalvikJavaVMPtr == NULL) {
@@ -60,16 +61,6 @@ jint JNI_OnLoad(JavaVM* vm, __attribute__((unused)) void* reserved) {
         pojav_environ->runtimeJavaVMPtr = vm;
         JNIEnv *vmEnv;
         (*vm)->GetEnv(vm, (void**) &vmEnv, JNI_VERSION_1_4);
-        pojav_environ->vmGlfwClass = (*vmEnv)->NewGlobalRef(vmEnv, (*vmEnv)->FindClass(vmEnv, "org/lwjgl/glfw/GLFW"));
-        pojav_environ->method_glftSetWindowAttrib = (*vmEnv)->GetStaticMethodID(vmEnv, pojav_environ->vmGlfwClass, "glfwSetWindowAttrib", "(JII)V");
-        pojav_environ->method_internalWindowSizeChanged = (*vmEnv)->GetStaticMethodID(vmEnv, pojav_environ->vmGlfwClass, "internalWindowSizeChanged", "(J)V");
-        pojav_environ->method_internalChangeMonitorSize = (*vmEnv)->GetStaticMethodID(vmEnv, pojav_environ->vmGlfwClass, "internalChangeMonitorSize", "(II)V");
-        jfieldID field_keyDownBuffer = (*vmEnv)->GetStaticFieldID(vmEnv, pojav_environ->vmGlfwClass, "keyDownBuffer", "Ljava/nio/ByteBuffer;");
-        jobject keyDownBufferJ = (*vmEnv)->GetStaticObjectField(vmEnv, pojav_environ->vmGlfwClass, field_keyDownBuffer);
-        pojav_environ->keyDownBuffer = (*vmEnv)->GetDirectBufferAddress(vmEnv, keyDownBufferJ);
-        jfieldID field_mouseDownBuffer = (*vmEnv)->GetStaticFieldID(vmEnv, pojav_environ->vmGlfwClass, "mouseDownBuffer", "Ljava/nio/ByteBuffer;");
-        jobject mouseDownBufferJ = (*vmEnv)->GetStaticObjectField(vmEnv, pojav_environ->vmGlfwClass, field_mouseDownBuffer);
-        pojav_environ->mouseDownBuffer = (*vmEnv)->GetDirectBufferAddress(vmEnv, mouseDownBufferJ);
         hookExec(vmEnv);
         installLwjglDlopenHook(vmEnv);
         installEMUIIteratorMititgation(vmEnv);
@@ -86,8 +77,25 @@ jint JNI_OnLoad(JavaVM* vm, __attribute__((unused)) void* reserved) {
     return JNI_VERSION_1_4;
 }
 
+static void ensureRuntimeGlfwBridge(JNIEnv *env, jclass glfwClass) {
+    if (pojav_environ->vmGlfwClass != NULL) {
+        return;
+    }
+    pojav_environ->vmGlfwClass = (*env)->NewGlobalRef(env, glfwClass);
+    pojav_environ->method_glftSetWindowAttrib = (*env)->GetStaticMethodID(env, pojav_environ->vmGlfwClass, "glfwSetWindowAttrib", "(JII)V");
+    pojav_environ->method_internalWindowSizeChanged = (*env)->GetStaticMethodID(env, pojav_environ->vmGlfwClass, "internalWindowSizeChanged", "(J)V");
+    pojav_environ->method_internalChangeMonitorSize = (*env)->GetStaticMethodID(env, pojav_environ->vmGlfwClass, "internalChangeMonitorSize", "(II)V");
+    jfieldID field_keyDownBuffer = (*env)->GetStaticFieldID(env, pojav_environ->vmGlfwClass, "keyDownBuffer", "Ljava/nio/ByteBuffer;");
+    jobject keyDownBufferJ = (*env)->GetStaticObjectField(env, pojav_environ->vmGlfwClass, field_keyDownBuffer);
+    pojav_environ->keyDownBuffer = (*env)->GetDirectBufferAddress(env, keyDownBufferJ);
+    jfieldID field_mouseDownBuffer = (*env)->GetStaticFieldID(env, pojav_environ->vmGlfwClass, "mouseDownBuffer", "Ljava/nio/ByteBuffer;");
+    jobject mouseDownBufferJ = (*env)->GetStaticObjectField(env, pojav_environ->vmGlfwClass, field_mouseDownBuffer);
+    pojav_environ->mouseDownBuffer = (*env)->GetDirectBufferAddress(env, mouseDownBufferJ);
+}
+
 #define ADD_CALLBACK_WWIN(NAME) \
 JNIEXPORT jlong JNICALL Java_org_lwjgl_glfw_GLFW_nglfwSet##NAME##Callback(JNIEnv * env, jclass cls, jlong window, jlong callbackptr) { \
+    ensureRuntimeGlfwBridge(env, cls); \
     void** oldCallback = (void**) &pojav_environ->GLFW_invoke_##NAME; \
     pojav_environ->GLFW_invoke_##NAME = (GLFW_invoke_##NAME##_func*) (uintptr_t) callbackptr; \
     return (jlong) (uintptr_t) *oldCallback; \
@@ -102,6 +110,15 @@ ADD_CALLBACK_WWIN(MouseButton)
 ADD_CALLBACK_WWIN(Scroll)
 
 #undef ADD_CALLBACK_WWIN
+
+JNIEXPORT void JNICALL
+Java_org_lwjgl_glfw_GLFW_nativeInitializeGLFWNativeBridge(__attribute__((unused)) JNIEnv* env,
+                                                         jclass clazz) {
+    // LWJGL 3.3.3/3.4.1 merged modules call this after System.loadLibrary("pojavexec").
+    // Initialize here instead of JNI_OnLoad: JRE 25 can crash if JNI_OnLoad calls
+    // FindClass("org/lwjgl/glfw/GLFW") while GLFW is already being initialized.
+    ensureRuntimeGlfwBridge(env, clazz);
+}
 
 void updateMonitorSize(int width, int height) {
     (*pojav_environ->glfwThreadVmEnv)->CallStaticVoidMethod(pojav_environ->glfwThreadVmEnv, pojav_environ->vmGlfwClass, pojav_environ->method_internalChangeMonitorSize, width, height);
@@ -305,6 +322,14 @@ Java_org_lwjgl_glfw_CallbackBridge_nativeEnableGamepadDirectInput(__attribute__(
     return JNI_TRUE;
 }
 
+JNIEXPORT jfloat JNICALL
+Java_org_lwjgl_glfw_CallbackBridge_nativeGetAndroidDPI(__attribute__((unused)) JNIEnv *env,
+                                                       __attribute__((unused)) jclass clazz) {
+    // The launcher already feeds the actual framebuffer/window dimensions through
+    // CallbackBridge. A neutral scale keeps the patched GLFW 3.4.1 bootstrap happy.
+    return 1.0f;
+}
+
 jboolean critical_send_char(jchar codepoint) {
     if (pojav_environ->GLFW_invoke_Char && pojav_environ->isInputReady) {
         if (pojav_environ->isUseStackQueueCall) {
@@ -464,7 +489,7 @@ JNIEXPORT void JNICALL Java_org_lwjgl_glfw_CallbackBridge_nativeSetWindowAttrib(
     // in environ for the Android UI thread but this is the only place that uses it
     // (very rarely, only in lifecycle callbacks) so i dont care
 
-    TRY_ATTACH_ENV(jvm_env, pojav_environ->runtimeJavaVMPtr, "nativeSetWindowAttrib failed: %i", return;);
+    TRY_ATTACH_ENV(jvm_env, pojav_environ->runtimeJavaVMPtr, "nativeSetWindowAttrib failed", return;);
 
     (*jvm_env)->CallStaticVoidMethod(
             jvm_env, pojav_environ->vmGlfwClass,

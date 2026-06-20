@@ -1,295 +1,363 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/background_app"
-    android:orientation="vertical"
-    >
+    android:background="@drawable/bg_battly_form_panel">
+
     <ScrollView
+        android:id="@+id/vprof_editor_scrollview"
         android:layout_width="match_parent"
         android:layout_height="0dp"
-        android:layout_weight="1"
-        android:fadeScrollbars="true"
-        android:scrollbarThumbVertical="@color/minebutton_color">
+        android:fadeScrollbars="false"
+        android:fillViewport="true"
+        android:paddingHorizontal="20dp"
+        android:paddingTop="20dp"
+        android:paddingBottom="80dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
 
-        <androidx.constraintlayout.widget.ConstraintLayout
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:paddingHorizontal="@dimen/fragment_padding_medium">
-
-            <ImageView
-                android:id="@+id/vprof_editor_profile_icon"
-                android:layout_width="@dimen/_50sdp"
-                android:layout_height="@dimen/_50sdp"
-                android:layout_marginTop="@dimen/padding_heavy"
-                android:paddingHorizontal="@dimen/profile_editor_image_padding"
-
-                android:paddingVertical="@dimen/profile_editor_image_padding"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                tools:src="@tools:sample/avatars" />
-
-            <ImageView
-                android:layout_width="@dimen/_14sdp"
-                android:layout_height="@dimen/_14sdp"
-                android:src="@drawable/ic_edit_profile"
-                android:background="@drawable/background_icon_edit"
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_profile_icon"
-                app:layout_constraintEnd_toEndOf="@+id/vprof_editor_profile_icon"/>
+            android:orientation="vertical">
 
             <TextView
-                android:id="@+id/vprof_editor_profile_name_sub"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="@string/profiles_profile_name"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_profile_name"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_profile_name" />
+                android:fontFamily="@font/noto_sans_bold"
+                android:text="@string/profile_editor_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="22sp" />
 
-            <EditText
-                android:id="@+id/vprof_editor_profile_name"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/padding_large"
-                android:background="@drawable/background_line"
-                android:textSize="@dimen/_13ssp"
+                android:layout_marginTop="4dp"
+                android:text="@string/profile_editor_subtitle"
+                android:textColor="#C7D4DF"
+                android:textSize="13sp" />
 
-                android:ems="10"
-                android:hint="@string/unnamed"
-                android:inputType="textPersonName"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                app:layout_constraintTop_toBottomOf="@id/vprof_editor_profile_icon" />
-
-
-            <TextView
-                android:id="@+id/textView4"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/profiles_profile_version"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_version_spinner"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_version_spinner" />
-
-            <TextView
-                android:id="@+id/vprof_editor_version_spinner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="@dimen/padding_medium"
-                android:background="@drawable/background_line"
-                android:hint="@string/version_select_hint"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
-
-                app:layout_constraintEnd_toStartOf="@+id/vprof_editor_version_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_profile_name" />
-
-            <Button
-                android:id="@+id/vprof_editor_version_button"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:paddingHorizontal="@dimen/padding_large"
-                android:paddingVertical="0px"
-
-
-                android:text="@string/global_select"
-
-                app:layout_constraintBottom_toBottomOf="@+id/vprof_editor_version_spinner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@+id/vprof_editor_version_spinner" />
-
-
-            <TextView
-                android:id="@+id/textView7"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/default_control"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_ctrl_spinner"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_ctrl_spinner" />
-
-            <TextView
-                android:id="@+id/vprof_editor_ctrl_spinner"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="@dimen/padding_medium"
-
-                android:background="@drawable/background_line"
-                android:hint="@string/use_global_default"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
-
-                app:layout_constraintEnd_toStartOf="@id/vprof_editor_ctrl_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_version_spinner" />
-
-            <Button
-                android:id="@+id/vprof_editor_ctrl_button"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:paddingHorizontal="@dimen/padding_large"
-                android:text="@string/global_select"
-
-
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_ctrl_spinner"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_ctrl_spinner" />
-
-
-            <TextView
-                android:id="@+id/textView6"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pvc_jvmArgs"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_jre_args"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_jre_args" />
-
-            <EditText
-                android:id="@+id/vprof_editor_jre_args"
+            <!-- Profile Info (Icon & Name) -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/background_line"
-                android:ems="10"
-                android:hint="@string/use_global_default"
-                android:inputType="text"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_battly_form_section"
+                android:gravity="center_vertical"
+                android:orientation="horizontal"
+                android:padding="16dp">
 
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_ctrl_spinner" />
+                <FrameLayout
+                    android:layout_width="60dp"
+                    android:layout_height="60dp">
 
-            <TextView
-                android:id="@+id/vprof_editor_beginPathView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
+                    <ImageView
+                        android:id="@+id/vprof_editor_profile_icon"
+                        android:layout_width="52dp"
+                        android:layout_height="52dp"
+                        android:layout_gravity="center"
+                        android:background="@drawable/bg_battly_profile_icon"
+                        android:padding="6dp"
+                        tools:src="@tools:sample/avatars" />
 
-                android:text="Custom path"
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:layout_gravity="bottom|end"
+                        android:background="@drawable/bg_battly_button_secondary"
+                        android:padding="4dp"
+                        android:src="@drawable/minecraft_name_tag" />
+                </FrameLayout>
 
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_path"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_path" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
 
-            <TextView
-                android:id="@+id/vprof_editor_path"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:layout_marginEnd="@dimen/padding_medium"
-                android:background="@drawable/background_line"
-                android:ems="10"
-                android:maxLines="2"
-                android:ellipsize="end"
+                    <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:text="@string/profiles_profile_name"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
 
-                android:hint=".minecraft"
-                android:paddingHorizontal="@dimen/padding_heavy"
-                android:textSize="@dimen/_13ssp"
+                    <EditText
+                        android:id="@+id/vprof_editor_profile_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="44dp"
+                        android:layout_marginTop="6dp"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:hint="@string/unnamed"
+                        android:inputType="textPersonName"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#93B1C0"
+                        android:textSize="14sp" />
+                </LinearLayout>
+            </LinearLayout>
 
-                app:layout_constraintEnd_toStartOf="@id/vprof_editor_path_button"
-                app:layout_constraintStart_toStartOf="parent"
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_jre_args" />
-
-            <Button
-                android:id="@+id/vprof_editor_path_button"
-                android:layout_width="wrap_content"
-                android:layout_height="0dp"
-                android:paddingHorizontal="@dimen/padding_large"
-                android:text="@string/global_select"
-
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_path"
-                app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_path" />
-
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pedit_java_runtime"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_spinner_runtime"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_spinner_runtime" />
-
-            <Spinner
-                android:id="@+id/vprof_editor_spinner_runtime"
+            <!-- Version & Controls -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/background_line"
-                android:paddingVertical="0px"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_battly_form_section"
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/profiles_profile_version"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp" />
 
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_path"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
 
-                tools:paddingVertical="@dimen/_12sdp" />
+                    <TextView
+                        android:id="@+id/vprof_editor_version_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:gravity="center_vertical"
+                        android:hint="@string/version_select_hint"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#93B1C0"
+                        android:textSize="13sp" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_8sdp"
-                android:rotation="180"
-                android:src="@drawable/spinner_arrow"
+                    <Button
+                        android:id="@+id/vprof_editor_version_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_battly_button_secondary"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:text="@string/global_select"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
 
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_spinner_runtime"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_spinner_runtime"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_spinner_runtime" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/default_control"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp" />
 
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/textView3"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/pedit_renderer"
-                app:layout_constraintBottom_toTopOf="@+id/vprof_editor_profile_renderer"
-                app:layout_constraintStart_toStartOf="@+id/vprof_editor_profile_renderer" />
+                    <TextView
+                        android:id="@+id/vprof_editor_ctrl_spinner"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:gravity="center_vertical"
+                        android:hint="@string/use_global_default"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#93B1C0"
+                        android:textSize="13sp" />
 
-            <Spinner
-                android:id="@+id/vprof_editor_profile_renderer"
+                    <Button
+                        android:id="@+id/vprof_editor_ctrl_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_battly_button_secondary"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:text="@string/global_select"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- Java & Runtime -->
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="32dp"
-                android:background="@drawable/background_line"
-                android:dropDownWidth="match_parent"
-                android:paddingVertical="0px"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_battly_form_section"
+                android:orientation="vertical"
+                android:padding="16dp">
 
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/pedit_java_runtime"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp" />
 
-                app:layout_constraintTop_toBottomOf="@+id/vprof_editor_spinner_runtime"
-                tools:paddingVertical="@dimen/_12sdp" />
+                <Spinner
+                    android:id="@+id/vprof_editor_spinner_runtime"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:paddingHorizontal="12dp"
+                    android:spinnerMode="dropdown"
+                    tools:ignore="UseAppTint" />
 
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="@dimen/_8sdp"
-                android:paddingHorizontal="@dimen/_8sdp"
-                android:rotation="180"
-                android:src="@drawable/spinner_arrow"
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/pvc_jvmArgs"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp" />
 
-                app:layout_constraintBottom_toBottomOf="@id/vprof_editor_profile_renderer"
-                app:layout_constraintEnd_toEndOf="@id/vprof_editor_profile_renderer"
-                app:layout_constraintTop_toTopOf="@id/vprof_editor_profile_renderer" />
+                <EditText
+                    android:id="@+id/vprof_editor_jre_args"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:hint="@string/use_global_default"
+                    android:inputType="text"
+                    android:paddingHorizontal="14dp"
+                    android:textColor="#FFFFFFFF"
+                    android:textColorHint="#93B1C0"
+                    android:textSize="13sp" />
+            </LinearLayout>
 
+            <!-- Advanced (Path & Renderer) -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:background="@drawable/bg_battly_form_section"
+                android:orientation="vertical"
+                android:padding="16dp">
 
-        </androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/profile_custom_path"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:id="@+id/vprof_editor_path"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:ellipsize="end"
+                        android:gravity="center_vertical"
+                        android:hint=".minecraft"
+                        android:maxLines="1"
+                        android:paddingHorizontal="14dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#93B1C0"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/vprof_editor_path_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="8dp"
+                        android:background="@drawable/bg_battly_button_secondary"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:text="@string/global_select"
+                        android:textAllCaps="false"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp" />
+                </LinearLayout>
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/pedit_renderer"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="12sp" />
+
+                <Spinner
+                    android:id="@+id/vprof_editor_profile_renderer"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:dropDownWidth="match_parent"
+                    android:paddingHorizontal="12dp"
+                    android:spinnerMode="dropdown"
+                    tools:ignore="UseAppTint" />
+            </LinearLayout>
+
+        </LinearLayout>
     </ScrollView>
+
+    <!-- Bottom Bar -->
     <LinearLayout
+        android:id="@+id/vprof_editor_bottom_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:background="#121E2C"
         android:orientation="horizontal"
-        android:paddingHorizontal="@dimen/fragment_padding_medium"
-        android:layout_marginVertical="13dp"
-        >
-        <com.kdt.mcgui.MineButton
-            android:id="@+id/vprof_editor_save_button"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/global_save"
-            android:layout_marginEnd="@dimen/padding_medium" />
+        android:paddingHorizontal="20dp"
+        android:paddingVertical="14dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
 
-        <com.kdt.mcgui.MineButton
+        <Button
             android:id="@+id/vprof_editor_delete_button"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:background="@android:color/transparent"
+            android:fontFamily="@font/noto_sans_bold"
+            android:text="@string/global_delete"
+            android:textAllCaps="false"
+            android:textColor="#FF6B6B"
+            android:textSize="14sp" />
+
+        <Space
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:layout_marginStart="@dimen/padding_medium"
-            android:text="@string/global_delete" />
+            android:layout_weight="1" />
+
+        <Button
+            android:id="@+id/vprof_editor_save_button"
+            android:layout_width="wrap_content"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_battly_button_primary"
+            android:fontFamily="@font/noto_sans_bold"
+            android:paddingHorizontal="24dp"
+            android:text="@string/global_save"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp" />
     </LinearLayout>
-</LinearLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

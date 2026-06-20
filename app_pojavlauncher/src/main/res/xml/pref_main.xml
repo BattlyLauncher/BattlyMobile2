@@ -7,11 +7,25 @@
     app:key=""
     >
 
-    <net.kdt.pojavlaunch.prefs.BackButtonPreference/>
-
     <PreferenceCategory
         android:title="@string/preference_category_main_categories"
         >
+
+        <Preference
+            android:key="battlyworlds_disabled_warning"
+            android:title="@string/battlyworlds_temporarily_disabled_title"
+            android:summary="@string/battlyworlds_temporarily_disabled_settings"
+            android:selectable="false"
+            android:icon="@drawable/ic_battly_worlds_line" />
+
+
+        <Preference
+            android:key="battly_plus_screen"
+            android:title="@string/battly_plus_title"
+            android:summary="@string/battly_plus_settings_summary"
+            android:fragment="net.kdt.pojavlaunch.fragments.BattlyPlusFragment"
+            android:icon="@drawable/logo"
+            />
 
         <Preference
             android:key="video_screen_setting"
@@ -70,6 +84,19 @@
         android:title="@string/preference_ask_for_microphone_title"
         android:summary="@string/preference_ask_for_microphone_description"
         android:key="microphone_permission_request"
+        />
+
+    <Preference
+        android:title="@string/onboarding_show_again"
+        android:key="show_onboarding_again"
+        android:icon="@drawable/ic_setting_engine"
+        />
+
+    <Preference
+        android:title="@string/launcher_open_credits"
+        android:key="show_credits"
+        android:fragment="net.kdt.pojavlaunch.fragments.CreditsFragment"
+        android:icon="@drawable/minecraft_book"
         />
 
 

@@ -1,5 +1,7 @@
 package net.kdt.pojavlaunch.modloaders;
 
+import android.content.Context;
+
 import com.kdt.mcgui.ProgressLayout;
 
 import net.kdt.pojavlaunch.R;
@@ -17,17 +19,32 @@ public class ForgeDownloadTask implements Runnable, Tools.DownloaderFeedback {
     private String mFullVersion;
     private String mLoaderVersion;
     private String mGameVersion;
+    private final Context mContext;
     private final ModloaderDownloadListener mListener;
-    public ForgeDownloadTask(ModloaderDownloadListener listener, String forgeVersion) {
+    private final boolean mCreateProfile;
+
+    public ForgeDownloadTask(Context context, ModloaderDownloadListener listener, String forgeVersion) {
+        this(context, listener, forgeVersion, true);
+    }
+
+    public ForgeDownloadTask(Context context, ModloaderDownloadListener listener, String forgeVersion, boolean createProfile) {
+        this.mContext = context.getApplicationContext();
         this.mListener = listener;
         this.mDownloadUrl = ForgeUtils.getInstallerUrl(forgeVersion);
         this.mFullVersion = forgeVersion;
+        this.mCreateProfile = createProfile;
     }
 
-    public ForgeDownloadTask(ModloaderDownloadListener listener, String gameVersion, String loaderVersion) {
+    public ForgeDownloadTask(Context context, ModloaderDownloadListener listener, String gameVersion, String loaderVersion) {
+        this(context, listener, gameVersion, loaderVersion, false);
+    }
+
+    public ForgeDownloadTask(Context context, ModloaderDownloadListener listener, String gameVersion, String loaderVersion, boolean createProfile) {
+        this.mContext = context.getApplicationContext();
         this.mListener = listener;
         this.mLoaderVersion = loaderVersion;
         this.mGameVersion = gameVersion;
+        this.mCreateProfile = createProfile;
     }
     @Override
     public void run() {
@@ -49,7 +66,9 @@ public class ForgeDownloadTask implements Runnable, Tools.DownloaderFeedback {
             File destinationFile = new File(Tools.DIR_CACHE, "forge-installer.jar");
             byte[] buffer = new byte[8192];
             DownloadUtils.downloadFileMonitored(mDownloadUrl, destinationFile, buffer, this);
-            mListener.onDownloadFinished(destinationFile);
+            ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
+            ForgeInstaller.install(mContext, destinationFile, mCreateProfile);
+            mListener.onDownloadFinished(null);
         }catch (FileNotFoundException e) {
             mListener.onDataNotAvailable();
         } catch (IOException e) {

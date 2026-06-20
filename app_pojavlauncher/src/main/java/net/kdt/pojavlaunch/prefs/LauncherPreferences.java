@@ -13,6 +13,8 @@ import android.os.Build;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
+import androidx.preference.PreferenceManager;
+
 import net.kdt.pojavlaunch.*;
 import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
@@ -48,7 +50,9 @@ public class LauncherPreferences {
     public static boolean PREF_SUSTAINED_PERFORMANCE = false;
     public static boolean PREF_VIRTUAL_MOUSE_START = false;
     public static boolean PREF_ARC_CAPES = false;
+    public static boolean PREF_BATTLY_ONBOARDING_COMPLETED = false;
     public static boolean PREF_USE_ALTERNATE_SURFACE = true;
+    public static String PREF_RENDERER = "auto";
     public static boolean PREF_JAVA_SANDBOX = true;
     public static float PREF_SCALE_FACTOR = 1f;
 
@@ -69,6 +73,7 @@ public class LauncherPreferences {
     
     public static boolean PREF_VERIFY_MANIFEST = true;
     public static String PREF_DOWNLOAD_SOURCE = "default";
+    public static int PREF_DOWNLOAD_THREAD_COUNT = 8;
     public static boolean PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = false;
     public static boolean PREF_VSYNC_IN_ZINK = true;
     public static boolean PREF_FORCE_ENABLE_TOUCHCONTROLLER = false;
@@ -78,6 +83,9 @@ public class LauncherPreferences {
 
 
     public static void loadPreferences(Context ctx) {
+        if (DEFAULT_PREF == null) {
+            DEFAULT_PREF = PreferenceManager.getDefaultSharedPreferences(ctx);
+        }
         //Required for CTRLDEF_FILE and MultiRT
         Tools.initStorageConstants(ctx);
         boolean isDevicePowerful = isDevicePowerful(ctx);
@@ -95,11 +103,13 @@ public class LauncherPreferences {
         PREF_GAMEPAD_FORCEDSDL_PASSTHRU = DEFAULT_PREF.getBoolean("gamepadPassthruForced",false);
         PREF_DISABLE_SWAP_HAND = DEFAULT_PREF.getBoolean("disableDoubleTap", false);
         PREF_RAM_ALLOCATION = DEFAULT_PREF.getInt("allocation", findBestRAMAllocation(ctx));
+        PREF_BATTLY_ONBOARDING_COMPLETED = DEFAULT_PREF.getBoolean("battly_onboarding_completed", false);
         PREF_CUSTOM_JAVA_ARGS = DEFAULT_PREF.getString("javaArgs", "");
         PREF_SUSTAINED_PERFORMANCE = DEFAULT_PREF.getBoolean("sustainedPerformance", isDevicePowerful);
         PREF_VIRTUAL_MOUSE_START = DEFAULT_PREF.getBoolean("mouse_start", false);
         PREF_ARC_CAPES = DEFAULT_PREF.getBoolean("arc_capes",false);
         PREF_USE_ALTERNATE_SURFACE = DEFAULT_PREF.getBoolean("alternate_surface", isDevicePowerful);
+        PREF_RENDERER = DEFAULT_PREF.getString("renderer", "auto");
         PREF_JAVA_SANDBOX = DEFAULT_PREF.getBoolean("java_sandbox", true);
         PREF_SCALE_FACTOR = DEFAULT_PREF.getInt("resolutionRatio", findBestResolution(ctx, isDevicePowerful))/100f;
         PREF_ENABLE_GYRO = DEFAULT_PREF.getBoolean("enableGyro", false);
@@ -114,7 +124,11 @@ public class LauncherPreferences {
         PREF_DEADZONE_SCALE = ((float) DEFAULT_PREF.getInt("gamepad_deadzone_scale", 100))/100f;
         PREF_BIG_CORE_AFFINITY = DEFAULT_PREF.getBoolean("bigCoreAffinity", false);
         PREF_ZINK_PREFER_SYSTEM_DRIVER = DEFAULT_PREF.getBoolean("zinkPreferSystemDriver", false);
-        PREF_DOWNLOAD_SOURCE = DEFAULT_PREF.getString("downloadSource", "default");
+        PREF_DOWNLOAD_SOURCE = "default";
+        if (DEFAULT_PREF.contains("downloadSource")) {
+            DEFAULT_PREF.edit().remove("downloadSource").apply();
+        }
+        PREF_DOWNLOAD_THREAD_COUNT = clamp(DEFAULT_PREF.getInt("downloadThreadCount", 8), 2, 16);
         PREF_VERIFY_MANIFEST = DEFAULT_PREF.getBoolean("verifyManifest", true);
         PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = DEFAULT_PREF.getBoolean(PREF_KEY_SKIP_NOTIFICATION_CHECK, false);
         PREF_VSYNC_IN_ZINK = DEFAULT_PREF.getBoolean("vsync_in_zink", true);
@@ -140,6 +154,10 @@ public class LauncherPreferences {
             PREF_DEFAULT_RUNTIME = MultiRTUtils.getRuntimes().get(0).name;
             LauncherPreferences.DEFAULT_PREF.edit().putString("defaultRuntime",LauncherPreferences.PREF_DEFAULT_RUNTIME).apply();
         }
+    }
+
+    private static int clamp(int value, int min, int max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     /**
@@ -230,11 +248,16 @@ public class LauncherPreferences {
     }
     public static void writeMGRendererSettings() throws IOException {
         LinkedHashMap<String, Object> MGConfigJson = new LinkedHashMap<>();
+        boolean androidEmulator = Tools.isAndroidEmulator();
         // Copying the defaultValues from pref_renderer.xml to use as defaults here too
 
         // We need to get the string and convert it to int because the android:defaultValues only takes in string-arrays.
         // Using .getInt() leads to a class cast exception and using integer-arrays will just crash the layout/fragment.
-        MGConfigJson.put("enableANGLE", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_angle", "0")));
+        String angleSetting = DEFAULT_PREF.getString("mg_renderer_setting_angle", "0");
+        if (androidEmulator) {
+            angleSetting = "3";
+        }
+        MGConfigJson.put("enableANGLE", Integer.parseInt(angleSetting));
         MGConfigJson.put("enableNoError", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_errorSetting", "0")));
         MGConfigJson.put("fsr1Setting", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_fsr", "0")));
 
@@ -249,9 +272,18 @@ public class LauncherPreferences {
         MGConfigJson.put("angleDepthClearFixMode", angleDepthClearFixMode);
         MGConfigJson.put("enableExtTimerQuery", timerQueryExt);
         MGConfigJson.put("enableExtDirectStateAccess", dsaExt);
-        if (DEFAULT_PREF.getBoolean("mg_renderer_multidrawCompute", false)) {
+        if (DEFAULT_PREF.getBoolean("mg_renderer_multidrawCompute", false) && !androidEmulator) {
             MGConfigJson.put("multidrawMode", 5); // Special handling for the (special mayhaps) compute emulation
-        } else MGConfigJson.put("multidrawMode", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_multidraw", "0")));
+        } else {
+            String multidrawMode = DEFAULT_PREF.getString("mg_renderer_setting_multidraw", "0");
+            if (androidEmulator && "0".equals(multidrawMode)) {
+                multidrawMode = "4";
+            }
+            MGConfigJson.put("multidrawMode", Integer.parseInt(multidrawMode));
+        }
+        if (androidEmulator) {
+            MGConfigJson.put("customGLVersion", 33);
+        }
         MGConfigJson.put("maxGlslCacheSize", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_glsl_cache_size", "128")));
         File configFile = new File(Tools.DIR_DATA + "/MobileGlues", "config.json");
         FileUtils.ensureParentDirectory(configFile);

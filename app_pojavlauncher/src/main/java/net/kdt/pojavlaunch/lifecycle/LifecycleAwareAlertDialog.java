@@ -38,12 +38,13 @@ public abstract class LifecycleAwareAlertDialog implements LifecycleEventObserve
             dialogHidden(mLifecycleEnded);
             return;
         }
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        AlertDialog.Builder builder = new AlertDialog.Builder(context, net.kdt.pojavlaunch.R.style.BattlyDialog);
         // Install the default cancel/dismiss handling
         builder.setOnDismissListener(wrapDismissListener(null));
         dialogCreator.createDialog(this, builder);
         mLifecycle.addObserver(this);
         mDialog = builder.show();
+        Tools.styleDialog(mDialog);
     }
 
     /**

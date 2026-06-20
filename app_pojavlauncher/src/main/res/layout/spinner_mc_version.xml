@@ -4,10 +4,11 @@
     android:id="@+id/list_view"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@drawable/bg_battly_popup"
     android:scrollbars="vertical"
     android:fadeScrollbars="false"
     android:scrollbarThumbVertical="@color/minebutton_color"
-    android:paddingVertical="@dimen/_14sdp"
+    android:padding="12dp"
     android:scrollbarSize="@dimen/padding_medium"
-    android:background="@color/background_bottom_bar"
-    android:divider="@null" />
+    android:divider="@android:color/transparent"
+    android:dividerHeight="8dp" />

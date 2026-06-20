@@ -7,7 +7,10 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.TextView;
 
+import net.kdt.pojavlaunch.R;
+
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class ForgeVersionListAdapter extends BaseExpandableListAdapter implements ExpandableListAdapter {
@@ -19,6 +22,7 @@ public class ForgeVersionListAdapter extends BaseExpandableListAdapter implement
         this.mLayoutInflater = layoutInflater;
         mGameVersions = new ArrayList<>();
         mForgeVersions = new ArrayList<>();
+        Collections.sort(forgeVersions, ForgeVersionListAdapter::compareVersionDesc);
         for(String version : forgeVersions) {
             int dashIndex = version.indexOf("-");
             String gameVersion = version.substring(0, dashIndex);
@@ -32,6 +36,24 @@ public class ForgeVersionListAdapter extends BaseExpandableListAdapter implement
             }
             versionList.add(version);
         }
+    }
+
+    private static int compareVersionDesc(String left, String right) {
+        return compareVersion(right, left);
+    }
+
+    private static int compareVersion(String left, String right) {
+        String[] leftParts = left.split("[^0-9]+");
+        String[] rightParts = right.split("[^0-9]+");
+        int max = Math.max(leftParts.length, rightParts.length);
+        for (int i = 0; i < max; i++) {
+            int leftValue = i < leftParts.length && leftParts[i].length() > 0 ? Integer.parseInt(leftParts[i]) : 0;
+            int rightValue = i < rightParts.length && rightParts[i].length() > 0 ? Integer.parseInt(rightParts[i]) : 0;
+            if (leftValue != rightValue) {
+                return Integer.compare(leftValue, rightValue);
+            }
+        }
+        return left.compareTo(right);
     }
 
     @Override
@@ -72,9 +94,10 @@ public class ForgeVersionListAdapter extends BaseExpandableListAdapter implement
     @Override
     public View getGroupView(int i, boolean b, View convertView, ViewGroup viewGroup) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, viewGroup, false);
+            convertView = mLayoutInflater.inflate(R.layout.item_modloader_group, viewGroup, false);
 
-        ((TextView) convertView).setText(getGameVersion(i));
+        ((TextView) convertView.findViewById(R.id.modloader_group_title)).setText(getGameVersion(i));
+        convertView.findViewById(R.id.modloader_group_arrow).setRotation(b ? 180f : 0f);
 
         return convertView;
     }
@@ -82,8 +105,8 @@ public class ForgeVersionListAdapter extends BaseExpandableListAdapter implement
     @Override
     public View getChildView(int i, int i1, boolean b, View convertView, ViewGroup viewGroup) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, viewGroup, false);
-        ((TextView) convertView).setText(getForgeVersion(i, i1));
+            convertView = mLayoutInflater.inflate(R.layout.item_modloader_child, viewGroup, false);
+        ((TextView) convertView.findViewById(R.id.modloader_child_title)).setText(getForgeVersion(i, i1));
         return convertView;
     }
 

@@ -18,26 +18,27 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 
+import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.extra.ExtraCore;
+import net.kdt.pojavlaunch.modloaders.DetachedModloaderDownloadListener;
 import net.kdt.pojavlaunch.modloaders.FabriclikeDownloadTask;
 import net.kdt.pojavlaunch.modloaders.FabriclikeUtils;
 import net.kdt.pojavlaunch.modloaders.FabricVersion;
-import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
-import net.kdt.pojavlaunch.modloaders.ModloaderListenerProxy;
 import net.kdt.pojavlaunch.modloaders.modpacks.SelfReferencingFuture;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
+import net.kdt.pojavlaunch.tasks.AsyncMinecraftDownloader;
+import net.kdt.pojavlaunch.tasks.MinecraftDownloader;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.concurrent.Future;
 
-public abstract class FabriclikeInstallFragment extends Fragment implements ModloaderDownloadListener, CompoundButton.OnCheckedChangeListener {
+public abstract class FabriclikeInstallFragment extends Fragment implements CompoundButton.OnCheckedChangeListener {
     private final FabriclikeUtils mFabriclikeUtils;
-    private final String mExtraTag;
     private Spinner mGameVersionSpinner;
     private FabricVersion[] mGameVersionArray;
     private Future<?> mGameVersionFuture;
@@ -53,7 +54,6 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
     protected FabriclikeInstallFragment(FabriclikeUtils mFabriclikeUtils, String mFragmentTag) {
         super(R.layout.fragment_fabric_install);
         this.mFabriclikeUtils = mFabriclikeUtils;
-        this.mExtraTag = mFragmentTag + "_proxy";
     }
 
     @Override
@@ -76,11 +76,6 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
         mOnlyStableCheckbox.setOnCheckedChangeListener(this);
         view.findViewById(R.id.fabric_installer_retry_button).setOnClickListener(this::onClickRetry);
         ((TextView)view.findViewById(R.id.fabric_installer_label_loader_ver)).setText(getString(R.string.fabric_dl_loader_version, mFabriclikeUtils.getName()));
-        ModloaderListenerProxy proxy = getListenerProxy();
-        if(proxy != null) {
-            mStartButton.setEnabled(false);
-            proxy.attachListener(this);
-        }
         updateGameVersions();
     }
 
@@ -88,10 +83,6 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
     public void onStop() {
         cancelFutureChecked(mGameVersionFuture);
         cancelFutureChecked(mLoaderVersionFuture);
-        ModloaderListenerProxy proxy = getListenerProxy();
-        if(proxy != null) {
-            proxy.detachListener();
-        }
         super.onStop();
     }
 
@@ -100,13 +91,36 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
             Toast.makeText(v.getContext(), R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
             return;
         }
-        ModloaderListenerProxy proxy = new ModloaderListenerProxy();
-        FabriclikeDownloadTask fabricDownloadTask = new FabriclikeDownloadTask(proxy, mFabriclikeUtils,
-                mSelectedGameVersion, mSelectedLoaderVersion, true);
-        proxy.attachListener(this);
-        setListenerProxy(proxy);
-        mStartButton.setEnabled(false);
-        new Thread(fabricDownloadTask).start();
+        Context appContext = requireContext().getApplicationContext();
+        String metadataError = getString(R.string.fabric_dl_cant_read_meta, mFabriclikeUtils.getName());
+        String modloaderName = mFabriclikeUtils.getName();
+        if (requireActivity() instanceof LauncherActivity) {
+            ((LauncherActivity) requireActivity()).showMainMenuProgress();
+        }
+        // Download vanilla Minecraft first, then install the modloader on top
+        String vanillaVersion = mSelectedGameVersion;
+        JMinecraftVersionList.Version vanillaVersionInfo = AsyncMinecraftDownloader.getListedVersion(vanillaVersion);
+        new MinecraftDownloader().start(requireActivity(), vanillaVersionInfo, vanillaVersion,
+                new AsyncMinecraftDownloader.DoneListener() {
+                    @Override
+                    public void onDownloadDone() {
+                        FabriclikeDownloadTask fabricDownloadTask = new FabriclikeDownloadTask(
+                                new DetachedModloaderDownloadListener(
+                                        appContext,
+                                        metadataError,
+                                        modloaderName
+                                ),
+                                mFabriclikeUtils,
+                                mSelectedGameVersion, mSelectedLoaderVersion, true);
+                        new Thread(fabricDownloadTask).start();
+                    }
+
+                    @Override
+                    public void onDownloadFailed(Throwable throwable) {
+                        Tools.showError(appContext,
+                                throwable instanceof Exception ? (Exception) throwable : new Exception(throwable));
+                    }
+                });
     }
 
     private void onClickRetry(View v) {
@@ -119,47 +133,6 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
             return;
         }
         updateLoaderVersions();
-    }
-
-    @Override
-    public void onDownloadFinished(File downloadedFile) {
-        Tools.runOnUiThread(()->{
-
-            getListenerProxy().detachListener();
-            setListenerProxy(null);
-            mStartButton.setEnabled(true);
-            // This works because the due to the fact that we have transitioned here
-            // without adding a transaction to the back stack, which caused the previous
-            // transaction to be amended (i guess?? thats how the back stack dump looks like)
-            // we can get back to the main fragment with just one back stack pop.
-            // For some reason that amendment causes the transaction to lose its tag
-            // so we cant use the tag here.
-            getParentFragmentManager().popBackStackImmediate();
-        });
-    }
-
-    @Override
-    public void onDataNotAvailable() {
-        Tools.runOnUiThread(()->{
-            Context context = requireContext();
-            getListenerProxy().detachListener();
-            setListenerProxy(null);
-            mStartButton.setEnabled(true);
-            Tools.dialog(context,
-                    context.getString(R.string.global_error),
-                    context.getString(R.string.fabric_dl_cant_read_meta, mFabriclikeUtils.getName()));
-        });
-    }
-
-    @Override
-    public void onDownloadError(Exception e) {
-        Tools.runOnUiThread(()-> {
-            Context context = requireContext();
-            getListenerProxy().detachListener();
-            setListenerProxy(null);
-            mStartButton.setEnabled(true);
-            Tools.showError(context, e);
-        });
     }
 
     private void cancelFutureChecked(Future<?> future) {
@@ -182,7 +155,9 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
             if(!onlyStable || fabricVersion.stable) filteredVersions.add(fabricVersion);
         }
         filteredVersions.trimToSize();
-        return new ArrayAdapter<>(requireContext(), android.R.layout.simple_spinner_dropdown_item, filteredVersions);
+        ArrayAdapter<FabricVersion> adapter = new ArrayAdapter<>(requireContext(), R.layout.item_simple_list_1, filteredVersions);
+        adapter.setDropDownViewResource(R.layout.item_simple_list_1);
+        return adapter;
     }
 
     private void onException(Future<?> myFuture, Exception e) {
@@ -291,12 +266,5 @@ public abstract class FabriclikeInstallFragment extends Fragment implements Modl
     private void updateGameSpinner() {
         if(mGameVersionArray == null) return;
         mGameVersionSpinner.setAdapter(createAdapter(mGameVersionArray, mOnlyStableCheckbox.isChecked()));
-    }
-
-    private ModloaderListenerProxy getListenerProxy() {
-        return (ModloaderListenerProxy) ExtraCore.getValue(mExtraTag);
-    }
-    private void setListenerProxy(ModloaderListenerProxy listenerProxy) {
-        ExtraCore.setValue(mExtraTag, listenerProxy);
     }
 }

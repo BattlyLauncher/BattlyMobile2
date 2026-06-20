@@ -13,6 +13,8 @@ import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_ZINK_PREFER_SYS
 import android.app.*;
 import android.content.*;
 import android.os.Build;
+import android.os.Handler;
+import android.os.Looper;
 import android.system.*;
 import android.util.*;
 import android.widget.Toast;
@@ -23,6 +25,7 @@ import com.oracle.dalvik.*;
 import java.io.*;
 import java.util.*;
 import net.kdt.pojavlaunch.*;
+import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.lifecycle.LifecycleAwareAlertDialog;
@@ -30,6 +33,7 @@ import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.multirt.Runtime;
 import net.kdt.pojavlaunch.plugins.FFmpegPlugin;
 import net.kdt.pojavlaunch.prefs.*;
+import net.kdt.pojavlaunch.utils.FileUtils;
 
 import org.lwjgl.glfw.*;
 
@@ -167,6 +171,9 @@ public class JREUtils {
                 .append("/vendor/").append(libName).append(":")
                 .append("/vendor/").append(libName).append("/hw:")
                 .append(NATIVE_LIB_DIR);
+        if (Tools.isValidString(Tools.lwjglNativesDir)) {
+            ldLibraryPath.append(":").append(Tools.lwjglNativesDir);
+        }
         LD_LIBRARY_PATH = ldLibraryPath.toString();
     }
 
@@ -311,6 +318,7 @@ public class JREUtils {
         purgeArg(userArgs, "-XX:+UseLargePagesInMetaspace");
         purgeArg(userArgs, "-XX:+UseLargePages");
         purgeArg(userArgs, "-Dorg.lwjgl.opengl.libname");
+        purgeArg(userArgs, "-Dorg.lwjgl.spvc.libname");
         // Don't let the user specify a custom Freetype library (as the user is unlikely to specify a version compiled for Android)
         purgeArg(userArgs, "-Dorg.lwjgl.freetype.libname");
         // Overridden by us to specify the exact number of cores that the android system has
@@ -323,7 +331,9 @@ public class JREUtils {
 
         // Force LWJGL to use the Freetype library intended for it, instead of using the one
         // that we ship with Java (since it may be older than what's needed)
-        userArgs.add("-Dorg.lwjgl.freetype.libname="+ NATIVE_LIB_DIR+"/libfreetype.so");
+        String freetypeDir = Tools.isValidString(Tools.lwjglNativesDir) ? Tools.lwjglNativesDir : NATIVE_LIB_DIR;
+        userArgs.add("-Dorg.lwjgl.freetype.libname="+ freetypeDir +"/libfreetype.so");
+        userArgs.add("-Dorg.lwjgl.spvc.libname="+ NATIVE_LIB_DIR +"/libspirv-cross-c-shared.so");
 
         // Some phones are not using the right number of cores, fix that
         userArgs.add("-XX:ActiveProcessorCount=" + java.lang.Runtime.getRuntime().availableProcessors());
@@ -342,14 +352,60 @@ public class JREUtils {
 
         final int exitCode = VMLauncher.launchJVM(userArgs.toArray(new String[0]));
         Logger.appendToLog("Java Exit code: " + exitCode);
-        if (exitCode != 0) {
-            LifecycleAwareAlertDialog.DialogCreator dialogCreator = (dialog, builder)->
-                    builder.setMessage(activity.getString(R.string.mcn_exit_title, exitCode))
-                    .setPositiveButton(R.string.main_share_logs, (dialogInterface, which)-> shareLog(activity));
+        Telemetry.logGameExit(exitCode);
+        net.kdt.pojavlaunch.LauncherActivity.openAfterGameExit(activity, exitCode, null);
+        activity.finish();
+        new Handler(Looper.getMainLooper()).postDelayed(
+                () -> android.os.Process.killProcess(android.os.Process.myPid()),
+                450
+        );
+    }
 
-            LifecycleAwareAlertDialog.haltOnDialog(activity.getLifecycle(), activity, dialogCreator);
+    public static int launchApiInstaller(Context context, Runtime runtime, File workDirectory, ArrayList<String> args) {
+        try {
+            String runtimeHome = MultiRTUtils.getRuntimeHome(runtime.name).getAbsolutePath();
+            redirectAndPrintJRELog();
+            relocateLibPath(runtime, runtimeHome);
+            setHeadlessJavaEnvironment(runtimeHome);
+            File serverFile = new File(runtimeHome + "/" + Tools.DIRNAME_HOME_JRE + "/server/libjvm.so");
+            jvmLibraryPath = runtimeHome + "/" + Tools.DIRNAME_HOME_JRE + "/" + (serverFile.exists() ? "server" : "client");
+            Log.d("DynamicLoader", "Base LD_LIBRARY_PATH: " + LD_LIBRARY_PATH);
+            Log.d("DynamicLoader", "Internal LD_LIBRARY_PATH: " + jvmLibraryPath + ":" + LD_LIBRARY_PATH);
+            setLdLibraryPath(jvmLibraryPath + ":" + LD_LIBRARY_PATH);
+            initJavaRuntime(runtimeHome);
+            setupExitMethod(context);
+            FileUtils.ensureDirectory(workDirectory);
+            chdir(workDirectory.getAbsolutePath());
+
+            ArrayList<String> userArgs = new ArrayList<>(args);
+            addHeadlessJvmArg(userArgs, "-Djava.home=", runtimeHome);
+            addHeadlessJvmArg(userArgs, "-Djava.io.tmpdir=", Tools.DIR_CACHE.getAbsolutePath());
+            addHeadlessJvmArg(userArgs, "-Duser.home=", Tools.DIR_GAME_HOME);
+            addHeadlessJvmArg(userArgs, "-Dos.name=", "Linux");
+            addHeadlessJvmArg(userArgs, "-Dos.version=", "Android-" + Build.VERSION.RELEASE);
+            addHeadlessJvmArg(userArgs, "-Duser.language=", System.getProperty("user.language"));
+            addHeadlessJvmArg(userArgs, "-Duser.timezone=", TimeZone.getDefault().getID());
+            addHeadlessJvmArg(userArgs, "-Djdk.lang.Process.launchMechanism=", "FORK");
+            Logger.appendToLog("Launching headless installer in " + workDirectory.getAbsolutePath());
+            Logger.appendToLog("Headless installer args: " + userArgs);
+            userArgs.add(0, "java");
+            int exitCode = VMLauncher.launchJVM(userArgs.toArray(new String[0]));
+            Logger.appendToLog("Java Exit code: " + exitCode);
+            return exitCode;
+        } catch (Throwable throwable) {
+            Log.e("JREUtils", "Failed to launch headless installer", throwable);
+            Logger.appendToLog("Headless installer failed:\n" + Log.getStackTraceString(throwable));
+            return -1;
         }
-        Tools.fullyExit();
+    }
+
+    private static void addHeadlessJvmArg(List<String> args, String prefix, String value) {
+        for (String arg : args) {
+            if (arg.startsWith(prefix)) {
+                return;
+            }
+        }
+        args.add(0, prefix + value);
     }
 
     /**
@@ -362,10 +418,15 @@ public class JREUtils {
         List<String> userArguments = parseJavaArguments(userArgumentsString);
         String resolvFile;
         resolvFile = new File(Tools.DIR_DATA,"resolv.conf").getAbsolutePath();
+        File nativeExtractDir = getNativeExtractDir();
 
         ArrayList<String> overridableArguments = new ArrayList<>(Arrays.asList(
                 "-Djava.home=" + runtimeHome,
                 "-Djava.io.tmpdir=" + Tools.DIR_CACHE.getAbsolutePath(),
+                "-Djna.tmpdir=" + nativeExtractDir.getAbsolutePath(),
+                "-Dorg.lwjgl.system.SharedLibraryExtractPath=" + nativeExtractDir.getAbsolutePath(),
+                "-Dorg.lwjgl.system.SharedLibraryExtractDirectory=lwjgl",
+                "-Dio.netty.native.workdir=" + nativeExtractDir.getAbsolutePath(),
                 "-Djna.boot.library.path=" + NATIVE_LIB_DIR,
                 "-Duser.home=" + Tools.DIR_GAME_HOME,
                 "-Duser.language=" + System.getProperty("user.language"),
@@ -416,6 +477,13 @@ public class JREUtils {
         return userArguments;
     }
 
+    private static File getNativeExtractDir() {
+        File nativeExtractDir = new File(Tools.DIR_CACHE, "native_extract");
+        //noinspection ResultOfMethodCallIgnored
+        nativeExtractDir.mkdirs();
+        return nativeExtractDir;
+    }
+
     /**
      * Parse and separate java arguments in a user friendly fashion
      * It supports multi line and absence of spaces between arguments
@@ -426,7 +494,9 @@ public class JREUtils {
      */
     public static ArrayList<String> parseJavaArguments(String args){
         ArrayList<String> parsedArguments = new ArrayList<>(0);
+        if (args == null) return parsedArguments;
         args = args.trim().replace(" ", "");
+        if (args.isEmpty()) return parsedArguments;
         //For each prefixes, we separate args.
         String[] separators = new String[]{"-XX:-","-XX:+", "-XX:","--", "-D", "-X", "-javaagent:", "-verbose"};
         for(String prefix : separators){
@@ -469,6 +539,19 @@ public class JREUtils {
             }
         }
         return parsedArguments;
+    }
+
+    private static void setHeadlessJavaEnvironment(String runtimeHome) throws ErrnoException {
+        Os.setenv("POJAV_NATIVEDIR", NATIVE_LIB_DIR, true);
+        Os.setenv("JAVA_HOME", runtimeHome, true);
+        Os.setenv("HOME", Tools.DIR_GAME_HOME, true);
+        Os.setenv("TMPDIR", Tools.DIR_CACHE.getAbsolutePath(), true);
+        Os.setenv("LD_LIBRARY_PATH", LD_LIBRARY_PATH, true);
+        String currentPath = Os.getenv("PATH");
+        if (currentPath == null) {
+            currentPath = "";
+        }
+        Os.setenv("PATH", runtimeHome + "/bin:" + currentPath, true);
     }
 
     /**

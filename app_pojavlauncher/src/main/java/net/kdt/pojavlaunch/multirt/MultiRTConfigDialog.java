@@ -1,15 +1,16 @@
 package net.kdt.pojavlaunch.multirt;
 
 import android.annotation.SuppressLint;
-import android.app.AlertDialog;
 import android.content.Context;
 import android.widget.Button;
 
 import androidx.activity.result.ActivityResultLauncher;
+import androidx.appcompat.app.AlertDialog;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
 
 public class MultiRTConfigDialog {
     private AlertDialog mDialog;
@@ -34,7 +35,7 @@ public class MultiRTConfigDialog {
         RTRecyclerViewAdapter adapter = new RTRecyclerViewAdapter();
         mDialogView.setAdapter(adapter);
 
-        mDialog = new AlertDialog.Builder(activity)
+        mDialog = new AlertDialog.Builder(activity, R.style.BattlyDialog)
                 .setTitle(R.string.multirt_config_title)
                 .setView(mDialogView)
                 .setPositiveButton(R.string.multirt_config_add, (dialog, which) -> installJvmLauncher.launch(null))
@@ -43,6 +44,7 @@ public class MultiRTConfigDialog {
 
         // Custom button behavior without dismiss
         mDialog.setOnShowListener(dialog -> {
+            Tools.styleDialog(mDialog);
             Button button = ((AlertDialog) dialog).getButton(AlertDialog.BUTTON_NEUTRAL);
             button.setOnClickListener(view -> {
                 boolean isEditing = !adapter.getIsEditing();

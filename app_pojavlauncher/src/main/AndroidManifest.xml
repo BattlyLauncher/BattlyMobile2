@@ -8,18 +8,15 @@
         android:required="false" />
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission
-        android:name="android.permission.WRITE_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
-    <uses-permission
-        android:name="android.permission.READ_EXTERNAL_STORAGE"
-        android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
     <uses-permission android:name="android.permission.VIBRATE" />
 
     <application
@@ -28,8 +25,8 @@
         android:allowNativeHeapPointerTagging="false"
         android:appCategory="game"
         android:hasFragileUserData="true"
-        android:icon="@mipmap/ic_launcher"
-        android:roundIcon="@mipmap/ic_launcher_round"
+        android:icon="@drawable/logo"
+        android:roundIcon="@drawable/logo"
         android:isGame="true"
         android:label="@string/app_name"
         android:process=":launcher"
@@ -37,26 +34,156 @@
         android:theme="@style/AppTheme">
         <activity
             android:name=".MissingStorageActivity"
-            android:exported="false" />
+            android:exported="false"
+            android:screenOrientation="sensorLandscape" />
 
         <meta-data
             android:name="android.max_aspect"
             android:value="ratio_float" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/notif_icon" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="@string/notif_channel_id" />
 
         <activity
             android:name=".TestStorageActivity"
             android:exported="true"
             android:label="@string/app_short_name"
-            android:launchMode="singleTop">
+            android:launchMode="singleTop"
+            android:screenOrientation="sensorLandscape">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="install"
+                    android:scheme="battly" />
+            </intent-filter>
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+
+                <data
+                    android:host="battlylauncher.com"
+                    android:pathPrefix="/mobile/install"
+                    android:scheme="https" />
+            </intent-filter>
+        </activity>
+
+        <activity-alias
+            android:name=".LauncherDefaultAlias"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/logo"
+            android:roundIcon="@drawable/logo"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
-        </activity>
+        </activity-alias>
+
+        <activity-alias
+            android:name=".LauncherCustom1Alias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_battly_custom_1"
+            android:roundIcon="@drawable/ic_launcher_battly_custom_1"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherCustom2Alias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_battly_custom_2"
+            android:roundIcon="@drawable/ic_launcher_battly_custom_2"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherCustom3Alias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_battly_custom_3"
+            android:roundIcon="@drawable/ic_launcher_battly_custom_3"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherCustom4Alias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_battly_custom_4"
+            android:roundIcon="@drawable/ic_launcher_battly_custom_4"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherCustom5Alias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_battly_custom_5"
+            android:roundIcon="@drawable/ic_launcher_battly_custom_5"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
+        <activity-alias
+            android:name=".LauncherCustom6Alias"
+            android:enabled="false"
+            android:exported="true"
+            android:icon="@drawable/ic_launcher_battly_custom_6"
+            android:roundIcon="@drawable/ic_launcher_battly_custom_6"
+            android:label="@string/app_short_name"
+            android:targetActivity=".TestStorageActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity-alias>
         <activity
             android:name=".LauncherActivity"
             android:label="@string/app_short_name"
+            android:screenOrientation="sensorLandscape"
+            android:windowSoftInputMode="adjustResize"/>
+        <activity
+            android:name=".onboarding.OnboardingActivity"
+            android:label="@string/app_short_name"
+            android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="adjustResize"/>
         <activity
             android:name=".ImportControlActivity"
@@ -125,10 +252,19 @@
 
         <service android:name=".services.ProgressService"
             android:foregroundServiceType="dataSync"/>
-        <service android:name=".services.GameService" android:process=":game"
-            android:foregroundServiceType="specialUse">
-            <property android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
-                android:value="This application is intended to run a 3rd-party piece of software which cannot be managed using the activity's saved instance state. This service is used for background persistence of this piece of software."/>
+        <service
+            android:name=".services.InstallerService"
+            android:process=":installer" />
+        <service
+            android:name=".services.GameService"
+            android:process=":game"
+            android:foregroundServiceType="dataSync" />
+        <service
+            android:name=".services.BattlyMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+            </intent-filter>
         </service>
     </application>
     <queries>

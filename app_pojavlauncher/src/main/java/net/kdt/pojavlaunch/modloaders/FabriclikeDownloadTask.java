@@ -4,6 +4,7 @@ import com.kdt.mcgui.ProgressLayout;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
@@ -62,8 +63,12 @@ public class FabriclikeDownloadTask implements Runnable, Tools.DownloaderFeedbac
             fabricProfile.lastVersionId = versionId;
             fabricProfile.name = mUtils.getName();
             fabricProfile.icon = mUtils.getIconName();
-            LauncherProfiles.insertMinecraftProfile(fabricProfile);
+            String profileKey = LauncherProfiles.getFreeProfileKey();
+            LauncherProfiles.mainProfileJson.profiles.put(profileKey, fabricProfile);
             LauncherProfiles.write();
+            LauncherPreferences.DEFAULT_PREF.edit()
+                    .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, profileKey)
+                    .apply();
         }
         return true;
     }

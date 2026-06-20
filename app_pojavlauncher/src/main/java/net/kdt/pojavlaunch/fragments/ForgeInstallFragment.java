@@ -1,23 +1,20 @@
 package net.kdt.pojavlaunch.fragments;
 
 import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.widget.ExpandableListAdapter;
 
 import androidx.annotation.NonNull;
 
-import net.kdt.pojavlaunch.JavaGUILauncherActivity;
 import net.kdt.pojavlaunch.R;
-import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.modloaders.ForgeDownloadTask;
+import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
 import net.kdt.pojavlaunch.modloaders.ForgeUtils;
 import net.kdt.pojavlaunch.modloaders.ForgeVersionListAdapter;
-import net.kdt.pojavlaunch.modloaders.ModloaderListenerProxy;
-
-import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class ForgeInstallFragment extends ModVersionListFragment<List<String>> {
     public static final String TAG = "ForgeInstallFragment";
@@ -51,14 +48,35 @@ public class ForgeInstallFragment extends ModVersionListFragment<List<String>> {
     }
 
     @Override
-    public Runnable createDownloadTask(Object selectedVersion, ModloaderListenerProxy listenerProxy) {
-        return new ForgeDownloadTask(listenerProxy, (String) selectedVersion);
+    protected List<String> filterVersionList(List<String> versionList, String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return versionList;
+        }
+        String normalized = query.trim().toLowerCase(Locale.ROOT);
+        ArrayList<String> filtered = new ArrayList<>();
+        for (String version : versionList) {
+            if (version != null && version.toLowerCase(Locale.ROOT).contains(normalized)) {
+                filtered.add(version);
+            }
+        }
+        return filtered;
     }
 
     @Override
-    public void onDownloadFinished(Context context, File downloadedFile) {
-        Intent modInstallerStartIntent = new Intent(context, JavaGUILauncherActivity.class);
-        ForgeUtils.addAutoInstallArgs(modInstallerStartIntent, downloadedFile, true);
-        context.startActivity(modInstallerStartIntent);
+    public Runnable createDownloadTask(Object selectedVersion, ModloaderDownloadListener listener) {
+        return new ForgeDownloadTask(requireContext(), listener, (String) selectedVersion);
+    }
+
+    @Override
+    protected String extractVanillaVersion(Object selectedVersion) {
+        // Forge version format: "1.21.8-47.3.0" → MC version is the part before the dash
+        String version = (String) selectedVersion;
+        int dashIndex = version.indexOf('-');
+        return dashIndex > 0 ? version.substring(0, dashIndex) : null;
+    }
+
+    @Override
+    protected String getSuccessMessageLabel(Object selectedVersion) {
+        return "Forge";
     }
 }

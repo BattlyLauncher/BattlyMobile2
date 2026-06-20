@@ -28,7 +28,7 @@ public class FatalErrorActivity extends AppCompatActivity {
 			"Crash stack trace saved to " + strSavePath + "." :
 			"Storage permission is required to save crash stack trace!";
 		
-		new AlertDialog.Builder(this)
+		new AlertDialog.Builder(this, R.style.BattlyDialog)
 			.setTitle(R.string.error_fatal)
 			.setMessage(errHeader + "\n\n" + stackTrace)
 			.setPositiveButton(android.R.string.ok, (p1, p2) -> finish())

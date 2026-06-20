@@ -119,16 +119,11 @@ public class DownloadMirror {
      * @return true if the source is a mirror, false otherwise
      */
     public static boolean isMirrored() {
-        return !LauncherPreferences.PREF_DOWNLOAD_SOURCE.equals("default");
+        return false;
     }
 
     private static String[] getMirrorSettings() {
-        switch (LauncherPreferences.PREF_DOWNLOAD_SOURCE) {
-            case "bmclapi": return MIRROR_BMCLAPI;
-            case "default":
-            default:
-                return null;
-        }
+        return null;
     }
 
     private static String getMirrorMapping(int downloadClass, String mojangUrl) throws MalformedURLException{

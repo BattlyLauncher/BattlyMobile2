@@ -1,55 +1,115 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:background="@color/background_app"
-    android:gravity="center"
+    android:background="@drawable/bg_battly_form_panel"
     android:orientation="vertical"
-    android:paddingHorizontal="@dimen/fragment_padding_medium">
+    android:paddingStart="32dp"
+    android:paddingTop="20dp"
+    android:paddingEnd="32dp"
+    android:paddingBottom="32dp">
 
-    <View
-        android:id="@+id/login_menu"
+    <!-- Standalone back arrow -->
+    <ImageButton
+        android:id="@+id/auth_back_button"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@android:color/transparent"
+        android:contentDescription="@string/launcher_nav_back"
+        android:padding="10dp"
+        android:scaleType="centerInside"
+        android:src="@drawable/ic_arrow_back_white"
+        android:tint="#FFFFFFFF" />
+
+    <!-- Centered content -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="@dimen/_200sdp"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:orientation="vertical">
 
-        android:background="@drawable/background_card"
-        android:translationZ="-1dp"
+        <ImageView
+            android:layout_width="46dp"
+            android:layout_height="46dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_battly_profile_icon"
+            android:contentDescription="@null"
+            android:padding="11dp"
+            android:src="@drawable/logo" />
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/noto_sans_bold"
+            android:text="@string/account_manager_title"
+            android:textColor="#FFFFFFFF"
+            android:textSize="22sp" />
 
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="8dp"
+            android:gravity="center"
+            android:text="@string/account_manager_subtitle"
+            android:textColor="#C7D4DF"
+            android:textSize="13sp" />
 
-    <com.kdt.mcgui.MineButton
-        android:id="@+id/button_microsoft_authentication"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Microsoft Account"
-        android:textSize="@dimen/_12ssp"
-        android:layout_marginHorizontal="@dimen/_25sdp"
-        android:layout_marginBottom="@dimen/_20sdp"
-        app:layout_constraintBottom_toTopOf="@+id/button_local_authentication"
-        app:layout_constraintEnd_toEndOf="@+id/login_menu"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/login_menu"
-        app:layout_constraintTop_toTopOf="@id/login_menu"
-        app:layout_constraintVertical_chainStyle="packed"
-        />
+        <!-- Battly + Microsoft side by side -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="28dp"
+            android:orientation="horizontal">
 
-    <com.kdt.mcgui.MineButton
-        android:id="@+id/button_local_authentication"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Local account"
-        android:textSize="@dimen/_12ssp"
-        android:layout_marginHorizontal="@dimen/_25sdp"
-        app:layout_constraintBottom_toBottomOf="@id/login_menu"
-        app:layout_constraintEnd_toEndOf="@+id/login_menu"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/login_menu"
-        app:layout_constraintTop_toBottomOf="@+id/button_microsoft_authentication" />
+            <Button
+                android:id="@+id/button_battly_authentication"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_weight="1"
+                android:layout_marginEnd="8dp"
+                android:background="@drawable/bg_battly_button_primary"
+                android:fontFamily="@font/noto_sans_bold"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="@string/auth_method_battly"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFFFF"
+                android:textSize="13sp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <Button
+                android:id="@+id/button_microsoft_authentication"
+                android:layout_width="0dp"
+                android:layout_height="54dp"
+                android:layout_weight="1"
+                android:layout_marginStart="8dp"
+                android:background="@drawable/bg_battly_button_secondary"
+                android:fontFamily="@font/noto_sans_bold"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                android:text="@string/auth_method_microsoft"
+                android:textAllCaps="false"
+                android:textColor="#FFFFFFFF"
+                android:textSize="13sp" />
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/button_local_authentication"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:fontFamily="@font/noto_sans_bold"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp"
+            android:text="@string/auth_method_local"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp" />
+
+    </LinearLayout>
+
+</LinearLayout>

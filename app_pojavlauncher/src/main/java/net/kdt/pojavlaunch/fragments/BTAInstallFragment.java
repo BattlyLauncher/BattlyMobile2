@@ -1,6 +1,5 @@
 package net.kdt.pojavlaunch.fragments;
 
-import android.content.Context;
 import android.view.LayoutInflater;
 import android.widget.ExpandableListAdapter;
 
@@ -8,9 +7,8 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.modloaders.BTADownloadTask;
 import net.kdt.pojavlaunch.modloaders.BTAUtils;
 import net.kdt.pojavlaunch.modloaders.BTAVersionListAdapter;
-import net.kdt.pojavlaunch.modloaders.ModloaderListenerProxy;
+import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
 
-import java.io.File;
 import java.io.IOException;
 
 public class BTAInstallFragment extends ModVersionListFragment<BTAUtils.BTAVersionList> {
@@ -41,12 +39,12 @@ public class BTAInstallFragment extends ModVersionListFragment<BTAUtils.BTAVersi
     }
 
     @Override
-    public Runnable createDownloadTask(Object selectedVersion, ModloaderListenerProxy listenerProxy) {
-        return new BTADownloadTask(listenerProxy, (BTAUtils.BTAVersion) selectedVersion);
+    public Runnable createDownloadTask(Object selectedVersion, ModloaderDownloadListener listener) {
+        return new BTADownloadTask(listener, (BTAUtils.BTAVersion) selectedVersion);
     }
 
     @Override
-    public void onDownloadFinished(Context context, File downloadedFile) {
-        // We don't have to do anything after the BTADownloadTask ends, so this is a stub
+    protected String getSuccessMessageLabel(Object selectedVersion) {
+        return "BTA";
     }
 }

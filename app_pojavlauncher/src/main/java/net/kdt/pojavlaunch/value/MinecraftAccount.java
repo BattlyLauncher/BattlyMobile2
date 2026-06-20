@@ -17,6 +17,10 @@ import androidx.annotation.Nullable;
 
 import org.apache.commons.io.IOUtils;
 
+import java.net.URLEncoder;
+import java.nio.charset.StandardCharsets;
+import java.util.UUID;
+
 @SuppressWarnings("IOStreamConstructor")
 @Keep
 public class MinecraftAccount {
@@ -35,7 +39,11 @@ public class MinecraftAccount {
     void updateSkinFace(String uuid) {
         try {
             File skinFile = getSkinFaceFile(username);
-            Tools.downloadFile("https://mc-heads.net/head/" + uuid + "/100", skinFile.getAbsolutePath());
+            String faceUrl = isBattly()
+                    ? "https://api.battlylauncher.com/api/face/" + URLEncoder.encode(username, StandardCharsets.UTF_8.name())
+                    : "https://mc-heads.net/head/" + uuid + "/100";
+            Tools.downloadFile(faceUrl, skinFile.getAbsolutePath());
+            mFaceCache = null;
             
             Log.i("SkinLoader", "Update skin face success");
         } catch (IOException e) {
@@ -49,12 +57,23 @@ public class MinecraftAccount {
         return accessToken.equals("0") && !username.startsWith("Demo.");
     }
 
+    public boolean isBattly() {
+        return !isLocal() && !isMicrosoft && !isDemo();
+    }
+
     public boolean isDemo(){
         return username.startsWith("Demo.");
     }
     
     public void updateSkinFace() {
         updateSkinFace(profileId);
+    }
+
+    public String getProfileIdForLaunch() {
+        if (isBattly() && isDefaultProfileId(profileId)) {
+            return getOfflineUuid(username);
+        }
+        return profileId;
     }
     
     public String save(String outPath) throws IOException {
@@ -92,6 +111,9 @@ public class MinecraftAccount {
             if (acc.msaRefreshToken == null) {
                 acc.msaRefreshToken = "0";
             }
+            if (acc.isBattly() && isDefaultProfileId(acc.profileId)) {
+                acc.profileId = getOfflineUuid(acc.username);
+            }
             return acc;
         } catch(NullPointerException | IOException | JsonSyntaxException e) {
             Log.e(MinecraftAccount.class.getName(), "Caught an exception while loading the profile",e);
@@ -123,6 +145,18 @@ public class MinecraftAccount {
 
     private static File getSkinFaceFile(String username) {
         return new File(Tools.DIR_CACHE, username + ".png");
+    }
+
+    private static boolean isDefaultProfileId(String profileId) {
+        return profileId == null
+                || profileId.isEmpty()
+                || "00000000-0000-0000-0000-000000000000".equals(profileId)
+                || "00000000000000000000000000000000".equals(profileId);
+    }
+
+    private static String getOfflineUuid(String username) {
+        String cleanUsername = username == null ? "Steve" : username.replace("Demo.", "");
+        return UUID.nameUUIDFromBytes(("OfflinePlayer:" + cleanUsername).getBytes(StandardCharsets.UTF_8)).toString();
     }
 
     private static boolean accountExists(String username){

@@ -23,19 +23,17 @@ public class DownloadUtils {
 
     public static void download(URL url, OutputStream os) throws IOException {
         InputStream is = null;
+        URLConnection connection = null;
         try {
-            // System.out.println("Connecting: " + url.toString());
-            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
-            conn.setRequestProperty("User-Agent", USER_AGENT);
-            conn.setConnectTimeout(TIME_OUT);
-            conn.setReadTimeout(TIME_OUT);
-            conn.setDoInput(true);
-            conn.connect();
-            if (conn.getResponseCode() != HttpURLConnection.HTTP_OK) {
-                throw new IOException("Server returned HTTP " + conn.getResponseCode()
-                        + ": " + conn.getResponseMessage());
+            connection = openConnection(url);
+            if (connection instanceof HttpURLConnection) {
+                HttpURLConnection httpConnection = (HttpURLConnection) connection;
+                if (httpConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                    throw new IOException("Server returned HTTP " + httpConnection.getResponseCode()
+                            + ": " + httpConnection.getResponseMessage());
+                }
             }
-            is = conn.getInputStream();
+            is = connection.getInputStream();
             IOUtils.copy(is, os);
         } catch (IOException e) {
             throw new IOException("Unable to download from " + url, e);
@@ -46,6 +44,9 @@ public class DownloadUtils {
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
+            }
+            if (connection instanceof HttpURLConnection) {
+                ((HttpURLConnection) connection).disconnect();
             }
         }
     }
@@ -74,14 +75,12 @@ public class DownloadUtils {
                                              Tools.DownloaderFeedback monitor) throws IOException {
         FileUtils.ensureParentDirectory(outputFile);
 
-        HttpURLConnection conn = (HttpURLConnection) new URL(urlInput).openConnection();
-        conn.setConnectTimeout(TIME_OUT);
-        conn.setReadTimeout(TIME_OUT);
-        InputStream readStr = conn.getInputStream();
+        URLConnection connection = openConnection(new URL(urlInput));
+        InputStream readStr = connection.getInputStream();
         try (FileOutputStream fos = new FileOutputStream(outputFile)) {
             int current;
             int overall = 0;
-            int length = conn.getContentLength();
+            int length = connection.getContentLength();
 
             if (buffer == null) buffer = new byte[65535];
 
@@ -90,9 +89,12 @@ public class DownloadUtils {
                 fos.write(buffer, 0, current);
                 monitor.updateProgress(overall, length);
             }
-            conn.disconnect();
         } catch (IOException e) {
             throw new IOException("Unable to download from " + urlInput, e);
+        } finally {
+            if (connection instanceof HttpURLConnection) {
+                ((HttpURLConnection) connection).disconnect();
+            }
         }
     }
 
@@ -129,6 +131,46 @@ public class DownloadUtils {
             Log.i("DownloadUtils", "Failed to cache the string", e);
         }
         return parseResult;
+    }
+
+    public static <T> T downloadStringFreshWithCacheFallback(String url, String cacheName, ParseCallback<T> parseCallback)
+            throws IOException, ParseException {
+        File cacheDestination = new File(Tools.DIR_CACHE, "string_cache/" + cacheName);
+        try {
+            String urlContent = DownloadUtils.downloadString(url);
+            T parseResult = parseCallback.process(urlContent);
+            writeStringCache(cacheDestination, urlContent);
+            return parseResult;
+        } catch (IOException | ParseException networkError) {
+            if (cacheDestination.isFile() && cacheDestination.canRead()) {
+                try {
+                    String cachedString = Tools.read(new FileInputStream(cacheDestination));
+                    return parseCallback.process(cachedString);
+                } catch (IOException e) {
+                    Log.i("DownloadUtils", "Failed to read fallback cache", e);
+                } catch (ParseException e) {
+                    Log.i("DownloadUtils", "Failed to parse fallback cache", e);
+                }
+            }
+            throw networkError;
+        }
+    }
+
+    private static void writeStringCache(File cacheDestination, String value) {
+        boolean tryWriteCache;
+        if (cacheDestination.exists()) {
+            tryWriteCache = cacheDestination.canWrite();
+        } else {
+            tryWriteCache = FileUtils.ensureParentDirectorySilently(cacheDestination);
+        }
+
+        if (tryWriteCache) {
+            try {
+                Tools.write(cacheDestination.getAbsolutePath(), value);
+            } catch (IOException e) {
+                Log.i("DownloadUtils", "Failed to cache the string", e);
+            }
+        }
     }
 
     private static <T> T downloadFile(Callable<T> downloadFunction) throws IOException{
@@ -173,14 +215,32 @@ public class DownloadUtils {
      * @throws IOException if an I/O error occurs.
      */
     public static long getContentLength(String url) throws IOException {
-        HttpURLConnection urlConnection = (HttpURLConnection) new URL(url).openConnection();
-        urlConnection.setRequestMethod("HEAD");
-        urlConnection.setDoInput(false);
-        urlConnection.setDoOutput(false);
-        urlConnection.connect();
-        int responseCode = urlConnection.getResponseCode();
-        if(responseCode >= 200 && responseCode <= 299) return urlConnection.getContentLength();
-        return -1;
+        URLConnection connection = openConnection(new URL(url));
+        if (connection instanceof HttpURLConnection) {
+            HttpURLConnection httpConnection = (HttpURLConnection) connection;
+            httpConnection.setRequestMethod("HEAD");
+            httpConnection.setDoInput(false);
+            httpConnection.setDoOutput(false);
+            httpConnection.connect();
+            int responseCode = httpConnection.getResponseCode();
+            if (responseCode >= 200 && responseCode <= 299) {
+                return httpConnection.getContentLength();
+            }
+            return -1;
+        }
+        connection.connect();
+        return connection.getContentLengthLong();
+    }
+
+    private static URLConnection openConnection(URL url) throws IOException {
+        URLConnection connection = url.openConnection();
+        connection.setConnectTimeout(TIME_OUT);
+        connection.setReadTimeout(TIME_OUT);
+        connection.setDoInput(true);
+        if (connection instanceof HttpURLConnection) {
+            ((HttpURLConnection) connection).setRequestProperty("User-Agent", USER_AGENT);
+        }
+        return connection;
     }
 
     public interface ParseCallback<T> {

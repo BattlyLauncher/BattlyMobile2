@@ -8,6 +8,9 @@ grant {
     permission java.io.FilePermission "./-", "read, write, delete";
     permission java.io.FilePermission "${java.io.tmpdir}/-", "read, write, delete";
     permission java.io.FilePermission "${user.home}/-", "read, write, delete";
+    // Allow installer JARs (e.g. LabyMod, Forge) to spawn subprocesses.
+    // Android's OS-level sandboxing still restricts what can actually run.
+    permission java.io.FilePermission "<<ALL FILES>>", "execute";
 };
 
 deny {

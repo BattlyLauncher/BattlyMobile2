@@ -1,39 +1,38 @@
-<LinearLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_height="@dimen/_52sdp"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:orientation="horizontal">
+    android:layout_height="52dp"
+    android:layout_marginHorizontal="6dp"
+    android:layout_marginVertical="3dp"
+    android:background="@drawable/bg_battly_launcher_account"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="12dp"
+    android:paddingEnd="6dp">
 
     <fr.spse.extended_view.ExtendedTextView
         android:id="@+id/account_item"
         android:layout_width="0dp"
         android:layout_height="match_parent"
         android:layout_weight="1"
-
-        android:textSize="@dimen/_16ssp"
+        android:drawablePadding="12dp"
+        android:fontFamily="@font/noto_sans_bold"
         android:gravity="center_vertical"
-        android:drawablePadding="@dimen/_6sdp"
-        android:paddingStart="@dimen/_8sdp"
-        app:drawableStartSize="@dimen/_30sdp"
-
-        tools:text="HELLO THERE"
-        tools:drawableStart="@mipmap/ic_launcher"
-
-
+        android:maxLines="2"
+        android:paddingEnd="8dp"
+        android:textColor="#FFFFFFFF"
+        android:textSize="12sp"
+        app:drawableStartSize="34dp"
         tools:ignore="RtlSymmetry" />
 
-    <!-- Fun fact, if I put an Image button, the spinner fails to put an onclick listener on the extended view -->
     <ImageView
         android:id="@+id/delete_account_button"
-        android:layout_width="@dimen/_52sdp"
-        android:layout_height="match_parent"
-        android:background="?attr/selectableItemBackground"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:padding="9dp"
         android:src="@drawable/ic_menu_delete_forever"
-
-        android:padding="@dimen/padding_moderate"
-        />
+        android:tint="#B7D7E4F2" />
 
 </LinearLayout>
-

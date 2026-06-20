@@ -6,26 +6,17 @@ import static net.kdt.pojavlaunch.Tools.getTotalDeviceMemory;
 import android.os.Bundle;
 import android.widget.TextView;
 
-import androidx.activity.result.ActivityResultLauncher;
 import androidx.annotation.Nullable;
 import androidx.preference.EditTextPreference;
-import androidx.preference.Preference;
 import androidx.preference.SwitchPreference;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.contracts.OpenDocumentWithExtension;
-import net.kdt.pojavlaunch.multirt.MultiRTConfigDialog;
 import net.kdt.pojavlaunch.prefs.CustomSeekBarPreference;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 public class LauncherPreferenceJavaFragment extends LauncherPreferenceFragment {
-    private MultiRTConfigDialog mDialogScreen;
     private SwitchPreference mSwitchAutoJRE;
-    private final ActivityResultLauncher<Object> mVmInstallLauncher =
-            registerForActivityResult(new OpenDocumentWithExtension("xz"), (data)->{
-                if(data != null) Tools.installRuntimeFromUri(getContext(), data);
-            });
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -58,18 +49,5 @@ public class LauncherPreferenceJavaFragment extends LauncherPreferenceFragment {
         if (editJVMArgs != null) {
             editJVMArgs.setOnBindEditTextListener(TextView::setSingleLine);
         }
-
-        requirePreference("install_jre").setOnPreferenceClickListener(preference->{
-            openMultiRTDialog();
-            return true;
-        });
-    }
-
-    private void openMultiRTDialog() {
-        if (mDialogScreen == null) {
-            mDialogScreen = new MultiRTConfigDialog();
-            mDialogScreen.prepare(getContext(), mVmInstallLauncher);
-        }
-        mDialogScreen.show();
     }
 }

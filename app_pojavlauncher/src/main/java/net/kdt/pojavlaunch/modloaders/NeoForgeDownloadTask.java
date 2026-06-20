@@ -1,5 +1,7 @@
 package net.kdt.pojavlaunch.modloaders;
 
+import android.content.Context;
+
 import androidx.annotation.NonNull;
 
 import com.kdt.mcgui.ProgressLayout;
@@ -19,12 +21,20 @@ public class NeoForgeDownloadTask implements Runnable, Tools.DownloaderFeedback 
     private final String mDownloadUrl;
     private final String mLoaderVersion;
 
+    private final Context mContext;
     private final ModloaderDownloadListener mListener;
+    private final boolean mCreateProfile;
 
-    public NeoForgeDownloadTask(ModloaderDownloadListener listener, @NonNull String loaderVersion) {
+    public NeoForgeDownloadTask(Context context, ModloaderDownloadListener listener, @NonNull String loaderVersion) {
+        this(context, listener, loaderVersion, true);
+    }
+
+    public NeoForgeDownloadTask(Context context, ModloaderDownloadListener listener, @NonNull String loaderVersion, boolean createProfile) {
+        this.mContext = context.getApplicationContext();
         this.mListener = listener;
         this.mDownloadUrl = String.format(NEOFORGE_INSTALLER_URL, loaderVersion);
         this.mLoaderVersion = loaderVersion;
+        this.mCreateProfile = createProfile;
     }
 
     private static final String NEOFORGE_INSTALLER_URL = "https://maven.neoforged.net/releases/net/neoforged/neoforge/%1$s/neoforge-%1$s-installer.jar";
@@ -49,7 +59,9 @@ public class NeoForgeDownloadTask implements Runnable, Tools.DownloaderFeedback 
             File destinationFile = new File(Tools.DIR_CACHE, "neoforge-installer.jar");
             byte[] buffer = new byte[8192];
             DownloadUtils.downloadFileMonitored(mDownloadUrl, destinationFile, buffer, this);
-            mListener.onDownloadFinished(destinationFile);
+            ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
+            NeoForgeInstaller.install(mContext, destinationFile, mLoaderVersion, mCreateProfile);
+            mListener.onDownloadFinished(null);
         }catch (FileNotFoundException e) {
             mListener.onDataNotAvailable();
         } catch (IOException e) {

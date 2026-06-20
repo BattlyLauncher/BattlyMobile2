@@ -9,6 +9,8 @@ import android.content.Intent;
 import net.kdt.pojavlaunch.MainActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.extra.ExtraConstants;
+import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutorTask;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
@@ -38,6 +40,7 @@ public class ContextAwareDoneListener implements AsyncMinecraftDownloader.DoneLi
 
     @Override
     public void onDownloadFailed(Throwable throwable) {
+        ExtraCore.setValue(ExtraConstants.LAUNCH_GAME_UI_RESET, true);
         Tools.showErrorRemote(mErrorString, throwable);
     }
 

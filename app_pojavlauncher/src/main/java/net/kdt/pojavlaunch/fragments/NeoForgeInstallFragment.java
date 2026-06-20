@@ -1,35 +1,23 @@
 package net.kdt.pojavlaunch.fragments;
 
-import android.content.Context;
-import android.content.Intent;
 import android.view.LayoutInflater;
 import android.widget.ExpandableListAdapter;
 
-import androidx.annotation.NonNull;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-
-import net.kdt.pojavlaunch.JavaGUILauncherActivity;
 import net.kdt.pojavlaunch.R;
-import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.modloaders.ForgeDownloadTask;
-import net.kdt.pojavlaunch.modloaders.ForgeUtils;
 import net.kdt.pojavlaunch.modloaders.ForgeVersionListHandler;
-import net.kdt.pojavlaunch.modloaders.ModloaderListenerProxy;
+import net.kdt.pojavlaunch.modloaders.ModloaderDownloadListener;
 import net.kdt.pojavlaunch.modloaders.NeoForgeDownloadTask;
 import net.kdt.pojavlaunch.modloaders.NeoForgeVersionListAdapter;
+import net.kdt.pojavlaunch.modloaders.NeoForgeVersionUtils;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
-
-import java.io.File;
 import java.io.IOException;
 import java.io.StringReader;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParser;
@@ -42,12 +30,6 @@ public class NeoForgeInstallFragment extends ModVersionListFragment<List<String>
     }
 
     private static final String NEOFORGE_METADATA_URL = "https://maven.neoforged.net/releases/net/neoforged/neoforge/maven-metadata.xml";
-
-
-    @Override
-    public void onAttach(@NonNull Context context) {
-        super.onAttach(context);
-    }
 
     @Override
     public int getTitleText() {
@@ -100,16 +82,35 @@ public class NeoForgeInstallFragment extends ModVersionListFragment<List<String>
     }
 
     @Override
-    public Runnable createDownloadTask(Object selectedVersion, ModloaderListenerProxy listenerProxy) {
-        return new NeoForgeDownloadTask(listenerProxy, (String) selectedVersion);
+    protected List<String> filterVersionList(List<String> versionList, String query) {
+        if (query == null || query.trim().isEmpty()) {
+            return versionList;
+        }
+        String normalized = query.trim().toLowerCase(Locale.ROOT);
+        ArrayList<String> filtered = new ArrayList<>();
+        for (String version : versionList) {
+            String minecraftVersion = NeoForgeVersionUtils.toMinecraftVersion(version);
+            if ((version != null && version.toLowerCase(Locale.ROOT).contains(normalized))
+                    || (minecraftVersion != null && minecraftVersion.toLowerCase(Locale.ROOT).contains(normalized))) {
+                filtered.add(version);
+            }
+        }
+        return filtered;
     }
 
     @Override
-    public void onDownloadFinished(Context context, File downloadedFile) {
-        Intent modInstallerStartIntent = new Intent(context, JavaGUILauncherActivity.class);
-        modInstallerStartIntent
-                .putExtra("javaArgs", "-jar "+downloadedFile.getAbsolutePath()+" --install-client")
-                .putExtra("openLogOutput", true);
-        context.startActivity(modInstallerStartIntent);
+    public Runnable createDownloadTask(Object selectedVersion, ModloaderDownloadListener listener) {
+        return new NeoForgeDownloadTask(requireContext(), listener, (String) selectedVersion);
+    }
+
+    @Override
+    protected String extractVanillaVersion(Object selectedVersion) {
+        // NeoForge version format: "21.4.52" → MC version "1.21.4"
+        return NeoForgeVersionUtils.toMinecraftVersion((String) selectedVersion);
+    }
+
+    @Override
+    protected String getSuccessMessageLabel(Object selectedVersion) {
+        return "NeoForge";
     }
 }

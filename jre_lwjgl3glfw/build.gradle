@@ -10,9 +10,27 @@ jar {
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
     archiveBaseName = "lwjgl-glfw-classes"
     destinationDirectory.set(file("../app_pojavlauncher/src/main/assets/components/lwjgl3/"))
+    manifest {
+        attributes(
+            'Specification-Title':    'Lightweight Java Game Library',
+            'Specification-Version':  '3.4.1',
+            'Implementation-Title':   'lwjgl-glfw-classes',
+            'Implementation-Version': '3.4.1'
+        )
+        // Per-package section so Package.getPackage("org.lwjgl").getSpecificationVersion() returns 3.4.1
+        attributes(
+            [
+                'Specification-Title':    'Lightweight Java Game Library',
+                'Specification-Version':  '3.4.1',
+                'Implementation-Title':   'lwjgl-glfw-classes',
+                'Implementation-Version': '3.4.1'
+            ],
+            'org/lwjgl/'
+        )
+    }
     if (gitUsed()){
       File versionFile = file("../app_pojavlauncher/src/main/assets/components/lwjgl3/version")
-      versionFile.write(getGitHash(project.projectDir))
+      versionFile.write(getGitHash(project.projectDir) + "-cacio-ctc-labymod-stable-fix16")
     }
     from {
         configurations.default.collect {
@@ -20,7 +38,6 @@ jar {
             it.isDirectory() ? it : zipTree(it)
         }
     }
-    exclude 'net/java/openjdk/cacio/ctc/**'
 }
 
 java {

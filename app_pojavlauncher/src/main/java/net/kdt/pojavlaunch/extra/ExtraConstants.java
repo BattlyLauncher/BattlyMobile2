@@ -19,6 +19,8 @@ public class ExtraConstants {
     public static final String REFRESH_VERSION_SPINNER = "refresh_version";
     /* ExtraCore Constant: When we want to launch the game */
     public static final String LAUNCH_GAME = "launch_game";
+    /* ExtraCore Constant: Reset launcher play button after a refused launch request */
+    public static final String LAUNCH_GAME_UI_RESET = "launch_game_ui_reset";
 
 
 

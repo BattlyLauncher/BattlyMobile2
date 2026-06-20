@@ -104,4 +104,17 @@ public class Architecture {
 		return "UNSUPPORTED_ARCH";
 	}
 
+	/**
+	 * Convert to the Android ABI folder name used by packaged native assets.
+	 * @param arch The architecture as an int.
+	 * @return "arm64-v8a" || "armeabi-v7a" || "x86_64" || "x86" || "UNSUPPORTED_ARCH"
+	 */
+	public static String archAsStringAndroid(int arch) {
+		if(arch == ARCH_ARM64) return "arm64-v8a";
+		if(arch == ARCH_ARM) return "armeabi-v7a";
+		if(arch == ARCH_X86_64) return "x86_64";
+		if(arch == ARCH_X86) return "x86";
+		return "UNSUPPORTED_ARCH";
+	}
+
 }

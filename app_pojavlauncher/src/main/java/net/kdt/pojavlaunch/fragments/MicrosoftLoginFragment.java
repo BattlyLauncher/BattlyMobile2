@@ -30,11 +30,12 @@ public class MicrosoftLoginFragment extends Fragment {
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
-        mWebview = (WebView) inflater.inflate(R.layout.fragment_microsoft_login, container, false);
+        View rootView = inflater.inflate(R.layout.fragment_microsoft_login, container, false);
+        mWebview = rootView.findViewById(R.id.microsoft_login_webview);
         setWebViewSettings();
         if(savedInstanceState == null) startNewSession();
         else restoreWebViewState(savedInstanceState);
-        return mWebview;
+        return rootView;
     }
 
     // WebView.restoreState() does not restore the WebSettings or the client, so set them there
@@ -105,7 +106,7 @@ public class MicrosoftLoginFragment extends Fragment {
             if(url.startsWith("ms-xal-00000000402b5328")) {
                 // Should be captured by the activity to kill the fragment and get
                 ExtraCore.setValue(ExtraConstants.MICROSOFT_LOGIN_TODO, Uri.parse(url));
-                Toast.makeText(view.getContext(), "Login started !", Toast.LENGTH_SHORT).show();
+                Toast.makeText(view.getContext(), R.string.microsoft_login_started, Toast.LENGTH_SHORT).show();
                 Tools.backToMainMenu(requireActivity());
 
                 return true;

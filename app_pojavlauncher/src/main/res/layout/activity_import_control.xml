@@ -33,7 +33,7 @@
             android:layout_height="wrap_content"
             android:layout_marginStart="8dp"
             android:layout_marginBottom="5dp"
-            android:text="File name:"
+            android:text="@string/import_control_file_name_label"
             app:layout_constraintBottom_toTopOf="@+id/editText_import_control_file_name"
             app:layout_constraintStart_toStartOf="@+id/editText_import_control_file_name" />
 
@@ -43,7 +43,7 @@
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="35dp"
             android:layout_marginBottom="20dp"
-            android:hint="File name"
+            android:hint="@string/import_control_file_name_hint"
             android:imeOptions="flagForceAscii"
 
             app:layout_constraintBottom_toTopOf="@+id/mineButton_import_control" />

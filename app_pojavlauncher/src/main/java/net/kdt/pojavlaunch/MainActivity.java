@@ -14,6 +14,7 @@ import static org.lwjgl.glfw.CallbackBridge.windowWidth;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.ComponentName;
@@ -22,7 +23,9 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.res.Configuration;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.graphics.drawable.ColorDrawable;
+import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -32,10 +35,18 @@ import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.FrameLayout;
+import android.widget.ImageButton;
+import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.ProgressBar;
+import android.widget.TextView;
 import android.widget.Toast;
+import android.view.Gravity;
 
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
@@ -45,6 +56,10 @@ import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.kdt.LoggerView;
 
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsDialog;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsFeature;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsManager;
 import net.kdt.pojavlaunch.customcontrols.ControlButtonMenuListener;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlDrawerData;
@@ -57,6 +72,7 @@ import net.kdt.pojavlaunch.customcontrols.keyboard.TouchCharInput;
 import net.kdt.pojavlaunch.customcontrols.mouse.GyroControl;
 import net.kdt.pojavlaunch.customcontrols.mouse.HotbarView;
 import net.kdt.pojavlaunch.customcontrols.mouse.Touchpad;
+import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.prefs.QuickSettingSideDialog;
@@ -74,6 +90,7 @@ import org.lwjgl.glfw.CallbackBridge;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 import java.util.Objects;
 
 public class MainActivity extends BaseActivity implements ControlButtonMenuListener, EditorExitable, ServiceConnection {
@@ -88,6 +105,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private MinecraftGLSurface minecraftGLView;
     private static Touchpad touchpad;
     private LoggerView loggerView;
+    private FrameLayout mContentFrame;
+    private View mGameStartingOverlay;
+    private TextView mGameStartingSubtitle;
+    private ImageView mGameStartingLogo;
+    private ProgressBar mGameStartingProgress;
     private DrawerLayout drawerLayout;
     private ListView navDrawer;
     private View mDrawerPullButton;
@@ -104,6 +126,17 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private GameService.LocalBinder mServiceBinder;
 
     private QuickSettingSideDialog mQuickSettingSideDialog;
+    private BroadcastReceiver mBattlyWorldsInviteReceiver;
+    private View mLanInvitePrompt;
+    private boolean mLanInvitePromptHidden;
+    private String mLastLanPromptToken = "";
+    private final Runnable mLanInviteChecker = new Runnable() {
+        @Override
+        public void run() {
+            checkLanInvitePrompt();
+            Tools.MAIN_HANDLER.postDelayed(this, 10000);
+        }
+    };
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -150,6 +183,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         // Start the service a bit early
         ContextCompat.startForegroundService(this, gameServiceIntent);
         initLayout(R.layout.activity_basemain);
+        showGameStartingOverlay();
         CallbackBridge.addGrabListener(touchpad);
         CallbackBridge.addGrabListener(minecraftGLView);
 
@@ -185,6 +219,19 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         // Set the activity for the executor. Must do this here, or else Tools.showErrorRemote() may not
         // execute the correct method
         ContextExecutor.setActivity(this);
+        if (BattlyWorldsFeature.ENABLED) {
+            BattlyWorldsInvites.setGameActive(this, true);
+            mBattlyWorldsInviteReceiver = BattlyWorldsInvites.createGameInviteReceiver(this);
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                registerReceiver(mBattlyWorldsInviteReceiver,
+                        BattlyWorldsInvites.inviteIntentFilter(),
+                        Context.RECEIVER_NOT_EXPORTED);
+            } else {
+                registerReceiver(mBattlyWorldsInviteReceiver, BattlyWorldsInvites.inviteIntentFilter());
+            }
+            BattlyWorldsInvites.joinPendingIfAny(this);
+            Tools.MAIN_HANDLER.postDelayed(mLanInviteChecker, 10000);
+        }
         //Now, attach to the service. The game will only start when this happens, to make sure that we know the right state.
         bindService(gameServiceIntent, this, 0);
     }
@@ -206,12 +253,20 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             GLOBAL_CLIPBOARD = (ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
             touchCharInput.setCharacterSender(new LwjglCharSender());
 
+            Tools.LOCAL_RENDERER = null;
             if(minecraftProfile.pojavRendererName != null) {
                 Log.i("RdrDebug","__P_renderer="+minecraftProfile.pojavRendererName);
                 Tools.LOCAL_RENDERER = minecraftProfile.pojavRendererName;
                 // TODO: Remove this jank when it's not relevant anymore
                 // Shitty hack to make OSMZink smoothly transition into kopper
                 if (minecraftProfile.pojavRendererName.equals("vulkan_zink")) Tools.LOCAL_RENDERER = "opengles3_desktopgl_zink_kopper";
+            } else if (LauncherPreferences.PREF_RENDERER != null
+                    && !LauncherPreferences.PREF_RENDERER.isEmpty()
+                    && !"auto".equals(LauncherPreferences.PREF_RENDERER)) {
+                Tools.LOCAL_RENDERER = LauncherPreferences.PREF_RENDERER;
+                if ("vulkan_zink".equals(LauncherPreferences.PREF_RENDERER)) {
+                    Tools.LOCAL_RENDERER = "opengles3_desktopgl_zink_kopper";
+                }
             }
 
             setTitle("Minecraft " + minecraftProfile.lastVersionId);
@@ -231,17 +286,23 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
 
             // Menu
-            gameActionArrayAdapter = new ArrayAdapter<>(this,
-                    android.R.layout.simple_list_item_1, getResources().getStringArray(R.array.menu_ingame));
+            gameActionArrayAdapter = createGameActionAdapter();
             gameActionClickListener = (parent, view, position, id) -> {
+                boolean closeDrawer = true;
                 switch(position) {
                     case 0: dialogForceClose(MainActivity.this); break;
                     case 1: openLogOutput(); break;
                     case 2: dialogSendCustomKey(); break;
                     case 3: openQuickSettings(); break;
-                    case 4: openCustomControls(); break;
+                    case 4:
+                        openCustomControls();
+                        closeDrawer = false;
+                        break;
+                    case 5: openBattlyWorlds(); break;
                 }
-                drawerLayout.closeDrawers();
+                if (closeDrawer) {
+                    drawerLayout.closeDrawers();
+                }
             };
             navDrawer.setAdapter(gameActionArrayAdapter);
             navDrawer.setOnItemClickListener(gameActionClickListener);
@@ -250,6 +311,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             final String finalVersion = version;
             minecraftGLView.setSurfaceReadyListener(() -> {
                 try {
+                    updateGameStartingStage(R.string.launcher_starting_stage_profile, 28);
                     // Setup virtual mouse right before launching
                     if (PREF_VIRTUAL_MOUSE_START) {
                         touchpad.post(() -> touchpad.switchState());
@@ -257,7 +319,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
                     runCraft(finalVersion, mVersionInfo);
                 }catch (Throwable e){
-                    Tools.showErrorRemote(e);
+                    returnToLauncherAfterGameFailure(e);
                 }
             });
         } catch (Throwable e) {
@@ -298,6 +360,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     /** Boilerplate binding */
     private void bindValues(){
+        mContentFrame = findViewById(R.id.content_frame);
+        mGameStartingOverlay = findViewById(R.id.main_game_starting_overlay);
+        mGameStartingSubtitle = findViewById(R.id.main_game_starting_subtitle);
+        mGameStartingLogo = findViewById(R.id.main_game_starting_logo);
+        mGameStartingProgress = findViewById(R.id.main_game_starting_progress);
         mControlLayout = findViewById(R.id.main_control_layout);
         minecraftGLView = findViewById(R.id.main_game_render_view);
         touchpad = findViewById(R.id.main_touchpad);
@@ -308,6 +375,78 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         touchCharInput = findViewById(R.id.mainTouchCharInput);
         mDrawerPullButton = findViewById(R.id.drawer_button);
         mHotbarView = findViewById(R.id.hotbar_view);
+        minecraftGLView.setFirstFrameListener(this::hideGameStartingOverlay);
+    }
+
+    private void showGameStartingOverlay() {
+        if (mGameStartingOverlay == null) {
+            return;
+        }
+        updateGameStartingStage(R.string.launcher_starting_stage_surface, 8);
+        mGameStartingOverlay.setVisibility(View.VISIBLE);
+        mGameStartingOverlay.setAlpha(1f);
+        if (mGameStartingLogo != null) {
+            mGameStartingLogo.setScaleX(0.92f);
+            mGameStartingLogo.setScaleY(0.92f);
+            mGameStartingLogo.animate()
+                    .scaleX(1.06f)
+                    .scaleY(1.06f)
+                    .setDuration(900)
+                    .withEndAction(() -> {
+                        if (mGameStartingLogo != null && mGameStartingOverlay != null
+                                && mGameStartingOverlay.getVisibility() == View.VISIBLE) {
+                            mGameStartingLogo.animate()
+                                    .scaleX(0.96f)
+                                    .scaleY(0.96f)
+                                    .setDuration(900)
+                                    .start();
+                        }
+                    })
+                    .start();
+        }
+    }
+
+    private void hideGameStartingOverlay() {
+        if (mGameStartingOverlay == null) {
+            return;
+        }
+        updateGameStartingStage(R.string.launcher_starting_stage_ready, 100);
+        mGameStartingOverlay.animate()
+                .alpha(0f)
+                .setDuration(180)
+                .withEndAction(() -> {
+                    mGameStartingOverlay.setVisibility(View.GONE);
+                    mGameStartingOverlay.setAlpha(1f);
+                })
+                .start();
+        if (mGameStartingLogo != null) {
+            mGameStartingLogo.animate().cancel();
+        }
+    }
+
+    private void returnToLauncherAfterGameFailure(Throwable throwable) {
+        hideGameStartingOverlay();
+        Logger.appendToLog("Minecraft launch failed before Java runtime:\n" + Log.getStackTraceString(throwable));
+        LauncherActivity.openAfterGameExit(this, -1, throwable.getMessage());
+        finish();
+        Tools.MAIN_HANDLER.postDelayed(() -> android.os.Process.killProcess(android.os.Process.myPid()), 450);
+    }
+
+    private void updateGameStartingStage(int messageResId, int progress) {
+        if (mGameStartingOverlay == null) {
+            return;
+        }
+        Tools.runOnUiThread(() -> {
+            if (mGameStartingSubtitle != null) {
+                mGameStartingSubtitle.animate().cancel();
+                mGameStartingSubtitle.setAlpha(1f);
+                mGameStartingSubtitle.setText(messageResId);
+            }
+            if (mGameStartingProgress != null) {
+                mGameStartingProgress.setIndeterminate(false);
+                mGameStartingProgress.setProgress(progress);
+            }
+        });
     }
 
     @Override
@@ -346,6 +485,17 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        Tools.MAIN_HANDLER.removeCallbacks(mLanInviteChecker);
+        if (BattlyWorldsFeature.ENABLED) {
+            BattlyWorldsInvites.setGameActive(this, false);
+            if (mBattlyWorldsInviteReceiver != null) {
+                try {
+                    unregisterReceiver(mBattlyWorldsInviteReceiver);
+                } catch (IllegalArgumentException ignored) {
+                }
+                mBattlyWorldsInviteReceiver = null;
+            }
+        }
         CallbackBridge.removeGrabListener(touchpad);
         CallbackBridge.removeGrabListener(minecraftGLView);
         ContextExecutor.clearActivity();
@@ -390,9 +540,13 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 e.printStackTrace();
             }
         }
+        if (BattlyWorldsFeature.ENABLED && requestCode == BattlyWorldsManager.REQUEST_VPN_PERMISSION) {
+            BattlyWorldsManager.onVpnPermissionResult(this, resultCode);
+        }
     }
 
     private void runCraft(String versionId, JMinecraftVersionList.Version version) throws Throwable {
+        updateGameStartingStage(R.string.launcher_starting_stage_profile, 32);
         String assetVersion;
         try {
             if (version.inheritsFrom != null) { // We are almost definitely modded if this runs
@@ -417,6 +571,8 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             assetVersion = "legacy";
        } // If this fails.. oh well.
         
+        updateGameStartingStage(R.string.launcher_starting_stage_renderer, 48);
+        boolean usesModernAssets = isModernAssetVersion(assetVersion);
         // Autoselect renderer
         if (Tools.LOCAL_RENDERER == null) {
             // Preferably we could detect when it is modded and swap to zink however that would also
@@ -425,10 +581,14 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             Tools.LOCAL_RENDERER = "opengles2";
             // MobileGlues becomes available post 1.17. It has superior compatibility with mods
             // while having fairly similar performance performance compared to GL4ES-based forks.
-            if(assetVersion.matches("\\d+") || // Should match all digits, which is the modern assetVersioning
-               "1.17".equals(assetVersion) ||
-               "1.18".equals(assetVersion) ||
-               "1.19".equals(assetVersion)) Tools.LOCAL_RENDERER = "opengles_mobileglues";
+            if(usesModernAssets) {
+                Tools.LOCAL_RENDERER = "opengles_mobileglues";
+            }
+        }
+        if (usesModernAssets && shouldForceMobileGluesForModernEmulator(Tools.LOCAL_RENDERER)) {
+            Log.w("runCraft", "Renderer " + Tools.LOCAL_RENDERER
+                    + " is not reliable for modern Minecraft on the Android emulator; using MobileGlues");
+            Tools.LOCAL_RENDERER = "opengles_mobileglues";
         }
         if(!Tools.checkRendererCompatible(this, Tools.LOCAL_RENDERER)) {
             Tools.RenderersList renderersList = Tools.getCompatibleRenderers(this);
@@ -450,23 +610,42 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
         MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         if (hasMods("sodium"))
-            Logger.appendToLog("WARNING: Sodium is being used, Amethyst-Android does NOT support this mod, you are on your own");
+            Logger.appendToLog("WARNING: Sodium is being used, Battly Launcher does NOT support this mod, you are on your own");
         Logger.appendToLog("--------- Starting game with Launcher Debug!");
         Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS);
         if(Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
             LauncherPreferences.writeMGRendererSettings();
         }
+        updateGameStartingStage(R.string.launcher_starting_stage_jre, 64);
         JREUtils.redirectAndPrintJRELog();
         LauncherProfiles.load();
         int requiredJavaVersion = 8;
         if(version.javaVersion != null) requiredJavaVersion = version.javaVersion.majorVersion;
+        Telemetry.logGameLaunch(versionId, requiredJavaVersion, Tools.LOCAL_RENDERER);
+        updateGameStartingStage(R.string.launcher_starting_stage_first_frame, 86);
         Tools.launchMinecraft(this, minecraftAccount, minecraftProfile, versionId, requiredJavaVersion);
         //Note that we actually stall in the above function, even if the game crashes. But let's be safe.
+        Tools.runOnUiThread(this::hideGameStartingOverlay);
         Tools.runOnUiThread(()-> mServiceBinder.isActive = false);
     }
 
+    private boolean isModernAssetVersion(String assetVersion) {
+        return assetVersion != null
+                && (assetVersion.matches("\\d+")
+                || "1.17".equals(assetVersion)
+                || "1.18".equals(assetVersion)
+                || "1.19".equals(assetVersion));
+    }
+
+    private boolean shouldForceMobileGluesForModernEmulator(String renderer) {
+        return Tools.isAndroidEmulator()
+                && renderer != null
+                && renderer.toLowerCase(Locale.ROOT).contains("zink");
+    }
+
+
     private void dialogSendCustomKey() {
-        AlertDialog.Builder dialog = new AlertDialog.Builder(this);
+        AlertDialog.Builder dialog = new AlertDialog.Builder(this, R.style.BattlyDialog);
         dialog.setTitle(R.string.control_customkey);
         dialog.setItems(EfficientAndroidLWJGLKeycode.generateKeyName(), (dInterface, position) -> EfficientAndroidLWJGLKeycode.execKeyIndex(position));
         dialog.show();
@@ -508,6 +687,226 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             };
         }
         mQuickSettingSideDialog.appear(true);
+    }
+
+    private void openBattlyWorlds() {
+        openBattlyWorlds(false);
+    }
+
+    private void openBattlyWorlds(boolean autoHost) {
+        if (!BattlyWorldsFeature.ENABLED) {
+            BattlyWorldsFeature.showDisabledDialog(this);
+            return;
+        }
+        new BattlyWorldsDialog(this, autoHost).show();
+    }
+
+    private ArrayAdapter<String> createGameActionAdapter() {
+        String[] titles = getResources().getStringArray(R.array.menu_ingame);
+        int[] descriptions = {
+                R.string.ingame_menu_force_close_desc,
+                R.string.ingame_menu_logs_desc,
+                R.string.ingame_menu_custom_key_desc,
+                R.string.ingame_menu_quick_settings_desc,
+                R.string.ingame_menu_controls_desc,
+                R.string.ingame_menu_battlyworlds_desc
+        };
+        int[] icons = {
+                R.drawable.ic_close_white,
+                R.drawable.ic_battly_logs_line,
+                R.drawable.ic_battly_keyboard_line,
+                R.drawable.ic_battly_settings_line,
+                R.drawable.ic_battly_gamepad_line,
+                R.drawable.bworlds
+        };
+        return new ArrayAdapter<String>(this, 0, titles) {
+            @NonNull
+            @Override
+            public View getView(int position, View convertView, @NonNull ViewGroup parent) {
+                LinearLayout row = new LinearLayout(MainActivity.this);
+                row.setOrientation(LinearLayout.HORIZONTAL);
+                row.setGravity(Gravity.CENTER_VERTICAL);
+                row.setPadding(dp(10), dp(6), dp(10), dp(6));
+                row.setMinimumHeight(dp(52));
+
+                GradientDrawable rowBackground = new GradientDrawable();
+                rowBackground.setColor(position == 0 ? 0x223A1E24 : 0x1F8ADBC6);
+                rowBackground.setCornerRadius(dp(18));
+                rowBackground.setStroke(1, position == 0 ? 0x44FF6B7A : 0x225C7F87);
+                row.setBackground(rowBackground);
+
+                ImageView icon = new ImageView(MainActivity.this);
+                icon.setImageResource(position < icons.length ? icons[position] : R.drawable.ic_battly_logo);
+                icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+                icon.setClipToOutline(false);
+                if (position == 5) {
+                    icon.clearColorFilter();
+                    icon.setPadding(dp(7), dp(7), dp(7), dp(7));
+                } else {
+                    icon.setColorFilter(position == 0 ? 0xFFFF8FA0 : 0xFF8ADBC6);
+                    icon.setPadding(dp(8), dp(8), dp(8), dp(8));
+                }
+                GradientDrawable iconBackground = new GradientDrawable();
+                iconBackground.setColor(0x333C4E58);
+                iconBackground.setCornerRadius(dp(13));
+                icon.setBackground(iconBackground);
+                row.addView(icon, new LinearLayout.LayoutParams(dp(38), dp(38)));
+
+                LinearLayout copy = new LinearLayout(MainActivity.this);
+                copy.setOrientation(LinearLayout.VERTICAL);
+                copy.setPadding(dp(12), 0, 0, 0);
+
+                TextView title = new TextView(MainActivity.this);
+                title.setText(getItem(position));
+                title.setTextColor(0xFFFFFFFF);
+                title.setTextSize(14);
+                title.setTypeface(Typeface.DEFAULT_BOLD);
+                title.setSingleLine(true);
+
+                TextView subtitle = new TextView(MainActivity.this);
+                subtitle.setText(position < descriptions.length ? getString(descriptions[position]) : "");
+                subtitle.setTextColor(0xFFB4C5D0);
+                subtitle.setTextSize(11);
+                subtitle.setMaxLines(2);
+
+                copy.addView(title);
+                copy.addView(subtitle);
+                row.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+                LinearLayout container = new LinearLayout(MainActivity.this);
+                container.setPadding(dp(8), dp(3), dp(8), dp(3));
+                container.addView(row, new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT
+                ));
+                return container;
+            }
+        };
+    }
+
+    private int dp(int value) {
+        return (int) (value * getResources().getDisplayMetrics().density + 0.5f);
+    }
+
+    private void checkLanInvitePrompt() {
+        if (!BattlyWorldsFeature.ENABLED) {
+            return;
+        }
+        if (mLanInvitePromptHidden
+                || mContentFrame == null
+                || BattlyWorldsManager.getMode() != null
+                || (mLanInvitePrompt != null && mLanInvitePrompt.getParent() != null)) {
+            return;
+        }
+        String token = findLatestLanPortToken();
+        if (token.isEmpty() || token.equals(mLastLanPromptToken)) {
+            return;
+        }
+        mLastLanPromptToken = token;
+        showLanInvitePrompt();
+    }
+
+    private String findLatestLanPortToken() {
+        File latestLog = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
+        if (!latestLog.exists()) {
+            return "";
+        }
+        try {
+            String log = Tools.read(latestLog);
+            String[] lines = log.split("\n");
+            for (int i = lines.length - 1; i >= 0; i--) {
+                String line = lines[i].trim();
+                String lower = line.toLowerCase();
+                if (lower.contains("local game hosted on port")
+                        || lower.contains("started on port")
+                        || (lower.contains("started on 0.0.0.0:") && lower.matches(".*:[0-9]{2,5}.*"))) {
+                    return line;
+                }
+            }
+        } catch (IOException ignored) {
+        }
+        return "";
+    }
+
+    private void showLanInvitePrompt() {
+        LinearLayout panel = new LinearLayout(this);
+        panel.setOrientation(LinearLayout.HORIZONTAL);
+        panel.setGravity(Gravity.CENTER_VERTICAL);
+        panel.setPadding(dp(14), dp(12), dp(10), dp(12));
+        GradientDrawable background = new GradientDrawable();
+        background.setColor(0xF21A2A33);
+        background.setCornerRadius(dp(20));
+        background.setStroke(1, 0x335C7F87);
+        panel.setBackground(background);
+        panel.setElevation(dp(8));
+
+        ImageView icon = new ImageView(this);
+        icon.setImageResource(R.drawable.bworlds);
+        icon.setPadding(dp(4), dp(4), dp(4), dp(4));
+        GradientDrawable iconBackground = new GradientDrawable();
+        iconBackground.setColor(0x333C4E58);
+        iconBackground.setCornerRadius(dp(14));
+        icon.setBackground(iconBackground);
+        panel.addView(icon, new LinearLayout.LayoutParams(dp(40), dp(40)));
+
+        LinearLayout copy = new LinearLayout(this);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        copy.setPadding(dp(12), 0, dp(10), 0);
+        TextView title = new TextView(this);
+        title.setText(R.string.battlyworlds_lan_prompt_title);
+        title.setTextColor(0xFFFFFFFF);
+        title.setTextSize(14);
+        title.setTypeface(Typeface.DEFAULT_BOLD);
+        TextView message = new TextView(this);
+        message.setText(R.string.battlyworlds_lan_prompt_message);
+        message.setTextColor(0xFFB4C5D0);
+        message.setTextSize(12);
+        message.setMaxLines(2);
+        copy.addView(title);
+        copy.addView(message);
+        panel.addView(copy, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
+
+        TextView action = new TextView(this);
+        action.setText(R.string.battlyworlds_lan_prompt_action);
+        action.setTextColor(0xFF0B171B);
+        action.setTypeface(Typeface.DEFAULT_BOLD);
+        action.setTextSize(13);
+        action.setGravity(Gravity.CENTER);
+        action.setPadding(dp(12), dp(8), dp(12), dp(8));
+        GradientDrawable actionBackground = new GradientDrawable();
+        actionBackground.setColor(0xFF8ADBC6);
+        actionBackground.setCornerRadius(dp(14));
+        action.setBackground(actionBackground);
+        action.setOnClickListener(v -> {
+            hideLanInvitePrompt(false);
+            openBattlyWorlds(true);
+        });
+        panel.addView(action);
+
+        ImageButton close = new ImageButton(this);
+        close.setImageResource(R.drawable.ic_close_white);
+        close.setColorFilter(0xFFFFFFFF);
+        close.setBackgroundColor(Color.TRANSPARENT);
+        close.setPadding(dp(9), dp(9), dp(9), dp(9));
+        close.setOnClickListener(v -> hideLanInvitePrompt(true));
+        panel.addView(close, new LinearLayout.LayoutParams(dp(38), dp(38)));
+
+        int promptWidth = Math.min(dp(360), getResources().getDisplayMetrics().widthPixels - dp(36));
+        FrameLayout.LayoutParams params = new FrameLayout.LayoutParams(promptWidth, ViewGroup.LayoutParams.WRAP_CONTENT);
+        params.gravity = Gravity.TOP | Gravity.END;
+        params.setMargins(0, dp(42), dp(18), 0);
+        mLanInvitePrompt = panel;
+        mContentFrame.addView(panel, params);
+    }
+
+    private void hideLanInvitePrompt(boolean remember) {
+        if (remember) {
+            mLanInvitePromptHidden = true;
+        }
+        if (mLanInvitePrompt != null && mLanInvitePrompt.getParent() instanceof ViewGroup) {
+            ((ViewGroup) mLanInvitePrompt.getParent()).removeView(mLanInvitePrompt);
+        }
+        mLanInvitePrompt = null;
     }
 
     public static void toggleMouse(Context ctx) {
@@ -639,6 +1038,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public void onServiceConnected(ComponentName name, IBinder service) {
         GameService.LocalBinder localBinder = (GameService.LocalBinder) service;
         mServiceBinder = localBinder;
+        updateGameStartingStage(R.string.launcher_starting_stage_surface, 18);
         minecraftGLView.start(localBinder.isActive, touchpad);
         localBinder.isActive = true;
     }

@@ -1,14 +1,20 @@
-<layer-list xmlns:android="http://schemas.android.com/apk/res/android" >
-
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@android:id/background">
-        <color android:color="@color/background_app"/>
+        <shape android:shape="rectangle">
+            <corners android:radius="16dp" />
+            <solid android:color="#8C152433" />
+        </shape>
     </item>
-
 
     <item android:id="@android:id/progress">
         <clip>
-             <color android:color='@color/minebutton_color'/>
+            <shape android:shape="rectangle">
+                <corners android:radius="16dp" />
+                <gradient
+                    android:angle="0"
+                    android:endColor="#3EA46E"
+                    android:startColor="#4DAEE4" />
+            </shape>
         </clip>
     </item>
-
 </layer-list>

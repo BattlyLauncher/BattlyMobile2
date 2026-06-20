@@ -1,9 +1,7 @@
 package net.kdt.pojavlaunch.fragments;
 
 import android.app.AlertDialog;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -37,9 +35,7 @@ public class FileSelectorFragment extends Fragment {
     private boolean mSelectFolder = true;
     private boolean mShowFiles = true;
     private boolean mShowFolders = true;
-    private String mRootPath = Build.VERSION.SDK_INT >= Build.VERSION_CODES.P
-            ? Tools.DIR_GAME_NEW
-            : Environment.getExternalStorageDirectory().getAbsolutePath();
+    private String mRootPath = Tools.DIR_GAME_NEW;
 
 
     public FileSelectorFragment(){
@@ -55,13 +51,16 @@ public class FileSelectorFragment extends Fragment {
 
         mFileListView.setShowFiles(mShowFiles);
         mFileListView.setShowFolders(mShowFolders);
-        mFileListView.lockPathAt(new File(mRootPath));
+        File startPath = new File(mRootPath);
+        File navigationRoot = startPath;
+        mFileListView.setLockPath(navigationRoot);
+        mFileListView.listFileAt(startPath.exists() ? startPath : new File(Tools.DIR_GAME_NEW));
         mFileListView.setDialogTitleListener((title)->mFilePathView.setText(removeLockPath(title)));
         mFileListView.refreshPath();
 
         mCreateFolderButton.setOnClickListener(v -> {
             final EditText editText = new EditText(getContext());
-            new AlertDialog.Builder(getContext())
+            new AlertDialog.Builder(getContext(), R.style.BattlyDialog)
                     .setTitle(R.string.folder_dialog_insert_name)
                     .setView(editText)
                     .setNegativeButton(android.R.string.cancel, null)

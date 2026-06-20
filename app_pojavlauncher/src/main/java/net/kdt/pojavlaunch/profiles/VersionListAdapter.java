@@ -1,6 +1,7 @@
 package net.kdt.pojavlaunch.profiles;
 
 import android.content.Context;
+import android.graphics.Typeface;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -104,9 +105,11 @@ public class VersionListAdapter extends BaseExpandableListAdapter implements Exp
     @Override
     public View getGroupView(int groupPosition, boolean isExpanded, View convertView, ViewGroup parent) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, parent, false);
+            convertView = mLayoutInflater.inflate(R.layout.item_simple_list_1, parent, false);
 
-        ((TextView) convertView).setText(mGroups[groupPosition]);
+        TextView textView = (TextView) convertView;
+        textView.setText(mGroups[groupPosition]);
+        textView.setTypeface(Typeface.DEFAULT_BOLD);
 
         return convertView;
     }
@@ -114,8 +117,10 @@ public class VersionListAdapter extends BaseExpandableListAdapter implements Exp
     @Override
     public View getChildView(int groupPosition, int childPosition, boolean isLastChild, View convertView, ViewGroup parent) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, parent, false);
-        ((TextView) convertView).setText(getChild(groupPosition, childPosition));
+            convertView = mLayoutInflater.inflate(R.layout.item_simple_list_1, parent, false);
+        TextView textView = (TextView) convertView;
+        textView.setTypeface(Typeface.DEFAULT);
+        textView.setText(getChild(groupPosition, childPosition));
         return convertView;
     }
 

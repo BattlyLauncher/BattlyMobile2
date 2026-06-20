@@ -8,6 +8,7 @@ import android.annotation.SuppressLint;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.drawable.Drawable;
 import android.util.Log;
 import android.util.TypedValue;
 import android.view.Gravity;
@@ -20,6 +21,7 @@ import net.kdt.pojavlaunch.LwjglGlfwKeycode;
 import net.kdt.pojavlaunch.MainActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
+import net.kdt.pojavlaunch.customcontrols.ControlDisplayUtils;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
 import net.kdt.pojavlaunch.customcontrols.handleview.EditControlSideDialog;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
@@ -31,6 +33,7 @@ public class ControlButton extends TextView implements ControlInterface {
     private final Paint mRectPaint = new Paint();
     protected ControlData mProperties;
     private final ControlLayout mControlLayout;
+    private Drawable mDisplayIcon;
 
     /* Cache value from the ControlData radius for drawing purposes */
     private float mComputedRadius;
@@ -79,14 +82,45 @@ public class ControlButton extends TextView implements ControlInterface {
             mRectPaint.setAlpha(60);
         }
 
-        setText(properties.name);
+        applyDisplayContent();
+    }
+
+    private void applyDisplayContent() {
+        mDisplayIcon = null;
+        setCompoundDrawables(null, null, null, null);
+        setCompoundDrawablePadding(0);
+
+        if (ControlDisplayUtils.isIcon(mProperties)) {
+            Drawable icon = ControlDisplayUtils.loadIcon(getContext(), mProperties.displayValue);
+            if (icon != null) {
+                mDisplayIcon = icon;
+                setText("");
+                invalidate();
+                return;
+            }
+        }
+
+        setText(ControlDisplayUtils.getText(mProperties));
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        drawCenteredIcon(canvas);
         if (mIsToggled || (!mProperties.isToggle && isActivated()))
             canvas.drawRoundRect(0, 0, getWidth(), getHeight(), mComputedRadius, mComputedRadius, mRectPaint);
+    }
+
+    private void drawCenteredIcon(Canvas canvas) {
+        if (mDisplayIcon == null) return;
+
+        int contentWidth = Math.max(1, getWidth() - getPaddingLeft() - getPaddingRight());
+        int contentHeight = Math.max(1, getHeight() - getPaddingTop() - getPaddingBottom());
+        int iconSize = Math.max(1, (int) (Math.min(contentWidth, contentHeight) * 0.72f));
+        int left = getPaddingLeft() + (contentWidth - iconSize) / 2;
+        int top = getPaddingTop() + (contentHeight - iconSize) / 2;
+        mDisplayIcon.setBounds(left, top, left + iconSize, top + iconSize);
+        mDisplayIcon.draw(canvas);
     }
 
 

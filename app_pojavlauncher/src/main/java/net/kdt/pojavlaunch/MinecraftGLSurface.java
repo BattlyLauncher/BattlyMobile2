@@ -11,6 +11,7 @@ import static org.lwjgl.glfw.CallbackBridge.windowWidth;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.graphics.SurfaceTexture;
 import android.os.Build;
 import android.util.AttributeSet;
@@ -19,6 +20,7 @@ import android.view.Display;
 import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
+import android.view.PixelCopy;
 import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
@@ -82,6 +84,13 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     /* Surface ready listener, used by the activity to launch minecraft */
     SurfaceReadyListener mSurfaceReadyListener = null;
     final Object mSurfaceReadyListenerLock = new Object();
+    Runnable mFirstFrameListener = null;
+    boolean mFirstFrameReported = false;
+    private static final int SURFACE_FRAME_PROBE_SIZE = 24;
+    private static final int SURFACE_FRAME_PROBE_INTERVAL_MS = 250;
+    private static final int SURFACE_FRAME_PROBE_MAX_ATTEMPTS = 80;
+    private Runnable mSurfaceViewFrameProbe = null;
+    private int mSurfaceViewFrameProbeAttempts = 0;
     /* View holding the surface, either a SurfaceView or a TextureView */
     View mSurface;
     String TAG = "MinecraftGLSurface";
@@ -134,11 +143,13 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
                 public void surfaceCreated(@NonNull SurfaceHolder holder) {
                     if(isCalled) {
                         JREUtils.setupBridgeWindow(surfaceView.getHolder().getSurface());
+                        startSurfaceViewFirstFrameProbe(surfaceView);
                         return;
                     }
                     isCalled = true;
 
                     realStart(surfaceView.getHolder().getSurface());
+                    startSurfaceViewFirstFrameProbe(surfaceView);
                 }
 
                 @Override
@@ -147,7 +158,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
                 }
 
                 @Override
-                public void surfaceDestroyed(@NonNull SurfaceHolder holder) {}
+                public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+                    cancelSurfaceViewFirstFrameProbe();
+                }
             });
 
             ((ViewGroup)getParent()).addView(surfaceView);
@@ -182,7 +195,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
                 }
 
                 @Override
-                public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {}
+                public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surface) {
+                    reportFirstFrame();
+                }
             });
 
             ((ViewGroup)getParent()).addView(textureView);
@@ -459,6 +474,109 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         }, "JVM Main thread").start();
     }
 
+    private void reportFirstFrame() {
+        if (mFirstFrameReported) {
+            return;
+        }
+        mFirstFrameReported = true;
+        cancelSurfaceViewFirstFrameProbe();
+        Runnable listener = mFirstFrameListener;
+        if (listener != null) {
+            post(listener);
+        }
+    }
+
+    private void startSurfaceViewFirstFrameProbe(SurfaceView surfaceView) {
+        cancelSurfaceViewFirstFrameProbe();
+        mSurfaceViewFrameProbeAttempts = 0;
+        mSurfaceViewFrameProbe = () -> probeSurfaceViewFirstFrame(surfaceView);
+        Tools.MAIN_HANDLER.postDelayed(mSurfaceViewFrameProbe, SURFACE_FRAME_PROBE_INTERVAL_MS);
+    }
+
+    private void cancelSurfaceViewFirstFrameProbe() {
+        if (mSurfaceViewFrameProbe != null) {
+            Tools.MAIN_HANDLER.removeCallbacks(mSurfaceViewFrameProbe);
+            mSurfaceViewFrameProbe = null;
+        }
+    }
+
+    private void probeSurfaceViewFirstFrame(SurfaceView surfaceView) {
+        if (mFirstFrameReported || mSurfaceViewFrameProbe == null) {
+            return;
+        }
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
+            if (++mSurfaceViewFrameProbeAttempts >= SURFACE_FRAME_PROBE_MAX_ATTEMPTS) {
+                Log.w(TAG, "SurfaceView first-frame probe unavailable on this Android version; hiding launcher overlay.");
+                reportFirstFrame();
+            } else {
+                Tools.MAIN_HANDLER.postDelayed(mSurfaceViewFrameProbe, SURFACE_FRAME_PROBE_INTERVAL_MS);
+            }
+            return;
+        }
+        if (!surfaceView.isAttachedToWindow()
+                || surfaceView.getWidth() <= 0
+                || surfaceView.getHeight() <= 0
+                || surfaceView.getHolder() == null
+                || surfaceView.getHolder().getSurface() == null
+                || !surfaceView.getHolder().getSurface().isValid()) {
+            scheduleNextSurfaceViewProbe();
+            return;
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(
+                SURFACE_FRAME_PROBE_SIZE,
+                SURFACE_FRAME_PROBE_SIZE,
+                Bitmap.Config.ARGB_8888);
+        try {
+            PixelCopy.request(surfaceView, bitmap, result -> {
+                try {
+                    if (result == PixelCopy.SUCCESS && bitmapHasVisibleGameContent(bitmap)) {
+                        reportFirstFrame();
+                    } else {
+                        scheduleNextSurfaceViewProbe();
+                    }
+                } finally {
+                    bitmap.recycle();
+                }
+            }, Tools.MAIN_HANDLER);
+        } catch (IllegalArgumentException e) {
+            bitmap.recycle();
+            scheduleNextSurfaceViewProbe();
+        }
+    }
+
+    private void scheduleNextSurfaceViewProbe() {
+        if (mFirstFrameReported || mSurfaceViewFrameProbe == null) {
+            return;
+        }
+        mSurfaceViewFrameProbeAttempts++;
+        if (mSurfaceViewFrameProbeAttempts >= SURFACE_FRAME_PROBE_MAX_ATTEMPTS) {
+            Log.w(TAG, "SurfaceView first-frame probe timed out; hiding launcher overlay to avoid blocking the game.");
+            reportFirstFrame();
+            return;
+        }
+        Tools.MAIN_HANDLER.postDelayed(mSurfaceViewFrameProbe, SURFACE_FRAME_PROBE_INTERVAL_MS);
+    }
+
+    private boolean bitmapHasVisibleGameContent(Bitmap bitmap) {
+        int width = bitmap.getWidth();
+        int height = bitmap.getHeight();
+        int[] pixels = new int[width * height];
+        bitmap.getPixels(pixels, 0, width, 0, 0, width, height);
+
+        int visiblePixels = 0;
+        for (int color : pixels) {
+            int alpha = (color >>> 24) & 0xff;
+            int red = (color >>> 16) & 0xff;
+            int green = (color >>> 8) & 0xff;
+            int blue = color & 0xff;
+            if (alpha > 32 && red + green + blue > 36) {
+                visiblePixels++;
+            }
+        }
+        return visiblePixels >= Math.max(8, pixels.length / 32);
+    }
+
     @Override
     public void onGrabState(boolean isGrabbing) {
         post(()->updateGrabState(isGrabbing));
@@ -496,6 +614,13 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         synchronized (mSurfaceReadyListenerLock) {
             mSurfaceReadyListener = listener;
             mSurfaceReadyListenerLock.notifyAll();
+        }
+    }
+
+    public void setFirstFrameListener(Runnable listener) {
+        mFirstFrameListener = listener;
+        if (mFirstFrameReported && listener != null) {
+            post(listener);
         }
     }
 }

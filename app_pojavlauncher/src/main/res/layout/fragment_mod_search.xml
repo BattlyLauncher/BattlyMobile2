@@ -1,105 +1,284 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:background="@color/background_app"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:paddingHorizontal="@dimen/fragment_padding_medium"
-    >
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/search_mod_drawer"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
 
-
-
-    <!--
-        Cosmetic layout to have a better scrolling separation
-     -->
+    <!-- Main Content -->
     <androidx.constraintlayout.widget.ConstraintLayout
-        android:id="@+id/search_mod_overlay"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:translationZ="10dp"
-        android:background="@drawable/background_overlay"
-        android:paddingHorizontal="@dimen/padding_medium"
-        android:paddingVertical="@dimen/padding_medium"
-        android:layout_marginTop="@dimen/fragment_padding_medium"
-        android:layout_marginHorizontal="@dimen/fragment_padding_medium"
+        android:layout_height="match_parent"
+        android:padding="16dp">
 
-        app:layout_constraintTop_toTopOf="parent"
-
-
-        >
-        <!-- Search text -->
-        <EditText
-            android:id="@+id/search_mod_edittext"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:background="@drawable/background_line"
-            android:textSize="@dimen/_13ssp"
-            android:translationZ="2dp"
-
-            android:ems="10"
-            android:hint="@string/hint_search_modpack"
-            android:inputType="textPersonName"
-            android:paddingHorizontal="@dimen/padding_heavy"
-            app:layout_constraintTop_toTopOf="parent"
-            app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintEnd_toStartOf="@id/search_mod_filter"
-            />
-
-        <ImageButton
-            android:id="@+id/search_mod_filter"
-            android:layout_width="wrap_content"
-            android:layout_height="0dp"
-            android:background="?android:attr/selectableItemBackground"
-            android:minWidth="@dimen/_38sdp"
-            android:src="@drawable/ic_filter"
-
-            android:paddingHorizontal="@dimen/padding_medium"
-
-            app:layout_constraintEnd_toEndOf="parent"
-            app:layout_constraintTop_toTopOf="@id/search_mod_edittext"
-            app:layout_constraintBottom_toBottomOf="@id/search_mod_edittext"
-
-            />
-
-        <ProgressBar
-            android:id="@+id/search_mod_progressbar"
-            style="?android:attr/progressBarStyleHorizontal"
+        <LinearLayout
+            android:id="@+id/search_mod_overlay"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:indeterminate="true"
-            android:visibility="gone"
-            app:layout_constraintTop_toBottomOf="@+id/search_mod_edittext"
-            tools:layout_editor_absoluteX="13dp" />
+            android:orientation="vertical"
+            app:layout_constraintTop_toTopOf="parent">
 
+            <TextView
+                android:id="@+id/search_mod_subtitle"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:textColor="#C7D4DF"
+                android:textSize="13sp"
+                tools:text="Install directly into the active profile." />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:baselineAligned="false"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="48dp"
+                    android:layout_weight="1"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal"
+                    android:paddingHorizontal="14dp">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:src="@drawable/ic_search"
+                        app:tint="#8AC7D4DF" />
+
+                    <EditText
+                        android:id="@+id/search_mod_edittext"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:background="@null"
+                        android:ems="10"
+                        android:hint="@string/hint_search_modpack"
+                        android:inputType="textPersonName"
+                        android:paddingHorizontal="12dp"
+                        android:textColor="#FFFFFFFF"
+                        android:textColorHint="#B5C7D4DF"
+                        android:textSize="15sp"
+                        tools:text="sodium" />
+                </LinearLayout>
+
+                <ImageButton
+                    android:id="@+id/search_mod_filter_button"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="12dp"
+                    android:background="@drawable/bg_battly_button_secondary"
+                    android:src="@drawable/ic_filter"
+                    app:tint="#FFFFFFFF" />
+            </LinearLayout>
+
+            <ProgressBar
+                android:id="@+id/search_mod_progressbar"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:indeterminate="true"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/search_mod_list"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="12dp"
+            android:clipToPadding="false"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintTop_toBottomOf="@+id/search_mod_overlay" />
+
+        <TextView
+            android:id="@+id/search_mod_status_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_battly_form_section"
+            android:paddingHorizontal="14dp"
+            android:paddingVertical="10dp"
+            android:textColor="#FFFFFFFF"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="@+id/search_mod_list"
+            app:layout_constraintEnd_toEndOf="@+id/search_mod_list"
+            app:layout_constraintStart_toStartOf="@+id/search_mod_list"
+            app:layout_constraintTop_toTopOf="@+id/search_mod_list"
+            tools:text="No results" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
-
-
-
-
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/search_mod_list"
-        android:layout_width="match_parent"
+    <!-- Filters Drawer -->
+    <LinearLayout
+        android:id="@+id/search_mod_navigation_view"
+        android:layout_width="300dp"
         android:layout_height="match_parent"
-        android:paddingTop="@dimen/_15sdp"
-        android:clipToPadding="false"
+        android:layout_gravity="end"
+        android:background="@drawable/bg_battly_form_panel">
 
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:fillViewport="true"
+            android:scrollbars="none">
 
-    <TextView
-        android:id="@+id/search_mod_status_text"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="TextView"
-        android:visibility="gone"
-        app:layout_constraintBottom_toBottomOf="@+id/search_mod_list"
-        app:layout_constraintEnd_toEndOf="@+id/search_mod_list"
-        app:layout_constraintStart_toStartOf="@+id/search_mod_list"
-        app:layout_constraintTop_toTopOf="@+id/search_mod_list" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_filter_title"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="4dp"
+                    android:text="@string/search_filter_subtitle"
+                    android:textColor="#C7D4DF"
+                    android:textSize="12sp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginVertical="14dp"
+                    android:background="#1AFFFFFF" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/search_filter_source_label"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/search_mod_source_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:minHeight="44dp"
+                    android:paddingHorizontal="14dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/search_filter_loader_label"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/search_mod_loader_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:minHeight="44dp"
+                    android:paddingHorizontal="14dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/search_filter_category_label"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <Spinner
+                    android:id="@+id/search_mod_category_spinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:minHeight="44dp"
+                    android:paddingHorizontal="14dp" />
+
+                <TextView
+                    android:id="@+id/search_mod_mc_version_textview"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:text="@string/profiles_profile_version"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="13sp"
+                    android:textStyle="bold" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:baselineAligned="false"
+                    android:gravity="center_vertical"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/search_mod_mc_version_button"
+                        android:layout_width="wrap_content"
+                        android:layout_height="40dp"
+                        android:layout_marginEnd="10dp"
+                        android:background="@drawable/bg_battly_form_section"
+                        android:text="@string/global_select"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/search_mod_selected_mc_version_textview"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="14sp"
+                        tools:text="1.20.1" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:orientation="horizontal">
+
+                    <Button
+                        android:id="@+id/search_mod_reset_filters"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_marginEnd="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_battly_form_section"
+                        android:text="@string/search_filter_reset"
+                        android:textColor="#C7D4DF"
+                        android:textSize="13sp" />
+
+                    <Button
+                        android:id="@+id/search_mod_apply_filters"
+                        android:layout_width="0dp"
+                        android:layout_height="44dp"
+                        android:layout_marginStart="6dp"
+                        android:layout_weight="1"
+                        android:background="@drawable/bg_battly_launcher_play"
+                        android:text="@string/generic_apply"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="13sp"
+                        android:textStyle="bold" />
+                </LinearLayout>
+
+            </LinearLayout>
+        </ScrollView>
+    </LinearLayout>
+
+</androidx.drawerlayout.widget.DrawerLayout>

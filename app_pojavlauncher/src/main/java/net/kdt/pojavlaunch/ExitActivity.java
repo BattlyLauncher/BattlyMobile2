@@ -29,7 +29,7 @@ public class ExitActivity extends AppCompatActivity {
 
         int message = isSignal ? R.string.mcn_signal_title : R.string.mcn_exit_title;
 
-        new AlertDialog.Builder(this)
+        new AlertDialog.Builder(this, R.style.BattlyDialog)
                 .setMessage(getString(message,code))
                 .setPositiveButton(R.string.main_share_logs, (dialog, which) -> shareLog(this))
                 .setOnDismissListener(dialog -> ExitActivity.this.finish())

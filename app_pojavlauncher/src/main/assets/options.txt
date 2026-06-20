@@ -16,6 +16,7 @@ fancyGraphics:false
 ao:0
 clouds:true
 resourcePacks:[]
+narrator:0
 lastServer:
 lang:en_US
 chatVisibility:0

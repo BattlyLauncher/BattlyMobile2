@@ -7,6 +7,8 @@ import android.widget.BaseExpandableListAdapter;
 import android.widget.ExpandableListAdapter;
 import android.widget.TextView;
 
+import net.kdt.pojavlaunch.R;
+
 public class OptiFineVersionListAdapter extends BaseExpandableListAdapter implements ExpandableListAdapter {
 
     private final OptiFineUtils.OptiFineVersions mOptiFineVersions;
@@ -55,9 +57,10 @@ public class OptiFineVersionListAdapter extends BaseExpandableListAdapter implem
     @Override
     public View getGroupView(int i, boolean b, View convertView, ViewGroup viewGroup) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, viewGroup, false);
+            convertView = mLayoutInflater.inflate(R.layout.item_modloader_group, viewGroup, false);
 
-        ((TextView) convertView).setText((String)getGroup(i));
+        ((TextView) convertView.findViewById(R.id.modloader_group_title)).setText((String)getGroup(i));
+        convertView.findViewById(R.id.modloader_group_arrow).setRotation(b ? 180f : 0f);
 
         return convertView;
     }
@@ -65,8 +68,8 @@ public class OptiFineVersionListAdapter extends BaseExpandableListAdapter implem
     @Override
     public View getChildView(int i, int i1, boolean b, View convertView, ViewGroup viewGroup) {
         if(convertView == null)
-            convertView = mLayoutInflater.inflate(android.R.layout.simple_expandable_list_item_1, viewGroup, false);
-        ((TextView) convertView).setText(((OptiFineUtils.OptiFineVersion)getChild(i,i1)).versionName);
+            convertView = mLayoutInflater.inflate(R.layout.item_modloader_child, viewGroup, false);
+        ((TextView) convertView.findViewById(R.id.modloader_child_title)).setText(((OptiFineUtils.OptiFineVersion)getChild(i,i1)).versionName);
         return convertView;
     }
 

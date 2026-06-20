@@ -21,8 +21,12 @@ import androidx.annotation.Nullable;
 import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.FragmentActivity;
 
+import androidx.appcompat.app.AlertDialog;
+
+import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.fragments.ProfileEditorFragment;
@@ -30,6 +34,8 @@ import net.kdt.pojavlaunch.fragments.ProfileTypeSelectFragment;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.profiles.ProfileAdapter;
 import net.kdt.pojavlaunch.profiles.ProfileAdapterExtra;
+import net.kdt.pojavlaunch.profiles.ProfileIconCache;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 
 import fr.spse.extended_view.ExtendedTextView;
 
@@ -68,10 +74,15 @@ public class mcVersionSpinner extends ExtendedTextView {
     /** Set the selection AND saves it as a shared preference */
     public void setProfileSelection(int position){
         setSelection(position);
+        String profileKey = mProfileAdapter.getItem(position).toString();
         LauncherPreferences.DEFAULT_PREF.edit()
                 .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE,
-                        mProfileAdapter.getItem(position).toString())
+                        profileKey)
                 .apply();
+        Telemetry.logProfileSelected(profileKey);
+        if (getContext() instanceof LauncherActivity) {
+            ((LauncherActivity) getContext()).refreshHomeProfileUi();
+        }
     }
 
     public void setSelection(int position){
@@ -157,8 +168,28 @@ public class mcVersionSpinner extends ExtendedTextView {
                 performExtraAction((ProfileAdapterExtra) item);
             }
         });
+        mListView.setOnItemLongClickListener((parent, view, position, id) -> {
+            Object item = mProfileAdapter.getItem(position);
+            if(!(item instanceof String)) return false;
+            String profileKey = (String) item;
+            new AlertDialog.Builder(getContext())
+                    .setTitle(R.string.global_delete)
+                    .setMessage(R.string.profile_delete_confirm)
+                    .setPositiveButton(R.string.global_yes, (dialog, which) -> {
+                        if(LauncherProfiles.mainProfileJson.profiles.size() > 1) {
+                            ProfileIconCache.dropIcon(profileKey);
+                            LauncherProfiles.mainProfileJson.profiles.remove(profileKey);
+                            LauncherProfiles.write();
+                            ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, DELETED_PROFILE);
+                        }
+                        hidePopup(false);
+                    })
+                    .setNegativeButton(R.string.global_no, null)
+                    .show();
+            return true;
+        });
 
-        mPopupWindow = new PopupWindow(mListView, MATCH_PARENT, getContext().getResources().getDimensionPixelOffset(R.dimen._184sdp));
+        mPopupWindow = new PopupWindow(mListView, MATCH_PARENT, getContext().getResources().getDimensionPixelOffset(R.dimen._260sdp));
         mPopupWindow.setElevation(5);
         mPopupWindow.setClippingEnabled(false);
 
