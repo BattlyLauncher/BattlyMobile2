@@ -1,5 +1,6 @@
 package net.kdt.pojavlaunch.prefs.screens;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -122,6 +123,7 @@ public class LauncherPreferenceFragment extends PreferenceFragmentCompat
     }
 
     @Override
+    @SuppressLint("RestrictedApi") // Custom row styling requires binding the public PreferenceScreen adapter.
     protected RecyclerView.Adapter<?> onCreateAdapter(PreferenceScreen preferenceScreen) {
         stylePreferenceTree(preferenceScreen);
         return new PreferenceGroupAdapter(preferenceScreen) {

@@ -1,6 +1,7 @@
 package net.kdt.pojavlaunch.onboarding;
 
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -27,6 +28,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class OnboardingActivity extends AppCompatActivity {
+    public static final String EXTRA_WHATS_NEW = "battly_whats_new";
+    public static final String PREF_WHATS_NEW_SEEN = "battly_whats_new_seen_2_0_1_management_v1";
 
     private ViewPager2 viewPager;
     private OnboardingAdapter adapter;
@@ -39,9 +42,11 @@ public class OnboardingActivity extends AppCompatActivity {
     private ImageView transitionLogo;
     private List<OnboardingSlide> slides;
     private boolean finishingOnboarding;
+    private boolean whatsNewMode;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
 
         // Fullscreen / immersive
@@ -54,6 +59,7 @@ public class OnboardingActivity extends AppCompatActivity {
                 WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
 
         setContentView(R.layout.activity_battly_onboarding);
+        whatsNewMode = getIntent().getBooleanExtra(EXTRA_WHATS_NEW, false);
 
         backgroundView = findViewById(R.id.onboarding_background);
         viewPager = findViewById(R.id.onboarding_viewpager);
@@ -65,6 +71,12 @@ public class OnboardingActivity extends AppCompatActivity {
         welcomeTransition = findViewById(R.id.onboarding_welcome_transition);
         transitionCard = findViewById(R.id.onboarding_transition_card);
         transitionLogo = findViewById(R.id.onboarding_transition_logo);
+        if (whatsNewMode) {
+            ((android.widget.TextView) findViewById(R.id.onboarding_transition_title))
+                    .setText(R.string.battly_whats_new_transition_title);
+            ((android.widget.TextView) findViewById(R.id.onboarding_transition_desc))
+                    .setText(R.string.battly_whats_new_transition_desc);
+        }
         BattlyBackgrounds.applySelectedBackground(this, backgroundView);
 
         setupSlides();
@@ -102,6 +114,21 @@ public class OnboardingActivity extends AppCompatActivity {
 
     private void setupSlides() {
         slides = new ArrayList<>();
+        if (whatsNewMode) {
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_title,
+                    R.string.battly_whats_new_desc, R.drawable.logo));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_instances_title,
+                    R.string.battly_whats_new_instances_desc, R.drawable.minecraft_chest));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_worlds_title,
+                    R.string.battly_whats_new_worlds_desc, R.drawable.minecraft_filled_map));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_compatibility_title,
+                    R.string.battly_whats_new_compatibility_desc, R.drawable.minecraft_book));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_controllers_title,
+                    R.string.battly_whats_new_controllers_desc, R.drawable.ic_battly_gamepad_line));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_recovery_title,
+                    R.string.battly_whats_new_recovery_desc, R.drawable.minecraft_diamond_pickaxe));
+            return;
+        }
         slides.add(new OnboardingSlide(R.string.onboarding_welcome_title, R.string.onboarding_welcome_desc, R.drawable.logo));
         slides.add(new OnboardingSlide(R.string.onboarding_library_title, R.string.onboarding_library_desc, R.drawable.minecraft_bookshelf));
         slides.add(new OnboardingSlide(R.string.onboarding_versions_title, R.string.onboarding_versions_desc, R.drawable.minecraft_book));
@@ -147,11 +174,15 @@ public class OnboardingActivity extends AppCompatActivity {
         if (position == 0) {
             btnBack.setVisibility(View.GONE);
             btnSkip.setVisibility(View.VISIBLE);
-            btnNext.setText(R.string.onboarding_action_start);
+            btnNext.setText(whatsNewMode
+                    ? R.string.battly_whats_new_action_start
+                    : R.string.onboarding_action_start);
         } else if (position == slides.size() - 1) {
             btnBack.setVisibility(View.VISIBLE);
             btnSkip.setVisibility(View.GONE);
-            btnNext.setText(R.string.onboarding_action_enter);
+            btnNext.setText(whatsNewMode
+                    ? R.string.battly_update_video_continue
+                    : R.string.onboarding_action_enter);
         } else {
             btnBack.setVisibility(View.VISIBLE);
             btnSkip.setVisibility(View.VISIBLE);
@@ -218,6 +249,12 @@ public class OnboardingActivity extends AppCompatActivity {
     }
 
     private void doFinishOnboarding() {
+        if (whatsNewMode) {
+            LauncherPreferences.DEFAULT_PREF.edit().putBoolean(PREF_WHATS_NEW_SEEN, true).apply();
+            setResult(RESULT_OK);
+            finish();
+            return;
+        }
         LauncherPreferences.PREF_BATTLY_ONBOARDING_COMPLETED = true;
         LauncherPreferences.DEFAULT_PREF.edit().putBoolean("battly_onboarding_completed", true).apply();
 

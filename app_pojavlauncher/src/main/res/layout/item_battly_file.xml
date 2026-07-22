@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="60dp"
+    android:layout_marginBottom="7dp"
+    android:background="@drawable/bg_battly_settings_item"
+    android:clickable="true"
+    android:focusable="true"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingHorizontal="12dp">
+
+    <ImageView
+        android:id="@+id/battly_file_icon"
+        android:layout_width="38dp"
+        android:layout_height="38dp"
+        android:background="@drawable/bg_battly_profile_icon"
+        android:padding="8dp"
+        app:tint="#FFFFFFFF" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="11dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/battly_file_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="middle"
+            android:fontFamily="@font/noto_sans_bold"
+            android:singleLine="true"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/battly_file_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:ellipsize="end"
+            android:singleLine="true"
+            android:textColor="#AFC2CE"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/battly_file_delete"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_battly_launcher_chip"
+        android:contentDescription="@string/global_delete"
+        android:padding="0dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_delete_compact"
+        android:tint="#FFFF9A9A" />
+</LinearLayout>

@@ -11,6 +11,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.ModIconCache;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDetail;
+import net.kdt.pojavlaunch.modloaders.modpacks.models.Constants;
 import net.kdt.pojavlaunch.progresskeeper.DownloaderProgressWrapper;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
@@ -23,6 +24,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.FileWriter;
 import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -77,6 +79,8 @@ public class ModpackInstaller {
         profile.lastVersionId = modLoaderInfo.getVersionId();
         profile.icon = ModIconCache.getBase64Image(modDetail.getIconCacheTag());
 
+        applySourceMetadata(profile, modDetail, selectedVersion);
+        writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
 
         LauncherProfiles.mainProfileJson.profiles.put(modpackName, profile);
         LauncherProfiles.write();
@@ -163,6 +167,12 @@ public class ModpackInstaller {
             profile.gameDir = "./custom_instances/" + modpackName;
             profile.name = packInfoJson.get("name").getAsString();
             profile.lastVersionId = modLoaderInfo.getVersionId();
+            profile.sourceProvider = isModrinth ? "modrinth-local" : "curseforge-local";
+            profile.sourceVersionId = isModrinth
+                    ? string(packInfoJson, "versionId") : string(packInfoJson, "version");
+            profile.sourceVersionName = profile.sourceVersionId;
+            profile.sourceHash = hash;
+            writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
             LauncherProfiles.mainProfileJson.profiles.put(modpackName, profile);
             LauncherProfiles.write();
 
@@ -170,6 +180,44 @@ public class ModpackInstaller {
         }
         throw new IOException("Can't find manifest file in modpack provided");
 }
+
+    private static void applySourceMetadata(MinecraftProfile profile, ModDetail detail, int selectedVersion) {
+        profile.sourceProvider = detail.apiSource == Constants.SOURCE_MODRINTH ? "modrinth" : "curseforge";
+        profile.sourceProjectId = detail.id;
+        profile.sourceVersionId = value(detail.versionFileNames, selectedVersion);
+        profile.sourceVersionName = value(detail.versionNames, selectedVersion);
+        profile.sourceDownloadUrl = value(detail.versionUrls, selectedVersion);
+        profile.sourceHash = value(detail.versionHashes, selectedVersion);
+        profile.battlyUpdatedAt = System.currentTimeMillis();
+    }
+
+    public static void writeManagedManifest(File instanceDirectory, MinecraftProfile profile) throws IOException {
+        File metadataDirectory = new File(instanceDirectory, ".battly");
+        if (!metadataDirectory.exists() && !metadataDirectory.mkdirs()) {
+            throw new IOException("Unable to create modpack metadata directory");
+        }
+        JsonObject manifest = new JsonObject();
+        manifest.addProperty("schema", "battly-modpack-v1");
+        manifest.addProperty("provider", profile.sourceProvider);
+        manifest.addProperty("projectId", profile.sourceProjectId);
+        manifest.addProperty("versionId", profile.sourceVersionId);
+        manifest.addProperty("versionName", profile.sourceVersionName);
+        manifest.addProperty("downloadUrl", profile.sourceDownloadUrl);
+        manifest.addProperty("hash", profile.sourceHash);
+        manifest.addProperty("minecraftVersion", profile.lastVersionId);
+        manifest.addProperty("updatedAt", System.currentTimeMillis());
+        try (FileWriter writer = new FileWriter(new File(metadataDirectory, "modpack.json"))) {
+            Tools.GLOBAL_GSON.toJson(manifest, writer);
+        }
+    }
+
+    private static String string(JsonObject object, String key) {
+        return object.has(key) && !object.get(key).isJsonNull() ? object.get(key).getAsString() : null;
+    }
+
+    private static String value(String[] values, int index) {
+        return values != null && index >= 0 && index < values.length ? values[index] : null;
+    }
 
 interface InstallFunction {
         ModLoader installModpack(File modpackFile, File instanceDestination) throws IOException;

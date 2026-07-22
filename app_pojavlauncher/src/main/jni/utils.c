@@ -158,6 +158,10 @@ JNIEXPORT jint JNICALL Java_net_kdt_pojavlaunch_utils_JREUtils_executeBinary(JNI
 }
 
 JNIEnv* get_attached_env(JavaVM* jvm) {
+    if (jvm == NULL) {
+        printf("get_attached_env failed: JavaVM is null\n");
+        return NULL;
+    }
     JNIEnv *jvm_env = NULL;
     jint env_result = (*jvm)->GetEnv(jvm, (void**)&jvm_env, JNI_VERSION_1_4);
     if(env_result == JNI_EDETACHED) {

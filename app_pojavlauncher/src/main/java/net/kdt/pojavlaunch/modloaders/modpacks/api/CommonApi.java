@@ -128,6 +128,10 @@ public class CommonApi implements ModpackApi {
         throw new UnsupportedOperationException("Use a source-specific api to resolve dependencies");
     }
 
+    public ModItem getModBySource(int apiSource, int contentType, String projectId) {
+        return getModpackApi(apiSource).getModById(contentType, projectId);
+    }
+
     @Override
     public SearchCategory[] getCategories(SearchFilters searchFilters) {
         if (searchFilters.source == SearchFilters.SOURCE_ANY) {

@@ -191,7 +191,12 @@ public interface ModpackApi {
                                              int selectedVersion,
                                              MinecraftProfile targetProfile,
                                              Set<String> visited) throws IOException {
-        ModDependency[] dependencies = modDetail.versionDependencies == null ? null : modDetail.versionDependencies[selectedVersion];
+        if (modDetail.versionDependencies == null
+                || selectedVersion < 0
+                || selectedVersion >= modDetail.versionDependencies.length) {
+            return 0;
+        }
+        ModDependency[] dependencies = modDetail.versionDependencies[selectedVersion];
         if (dependencies == null || dependencies.length == 0) {
             return 0;
         }
@@ -236,14 +241,18 @@ public interface ModpackApi {
     }
 
     default int findCompatibleVersion(ModDetail baseDetail, int baseVersion, ModDetail dependencyDetail) {
-        String targetMcVersion = baseDetail.mcVersionNames == null ? null : baseDetail.mcVersionNames[baseVersion];
-        String[] targetLoaders = baseDetail.versionLoaders == null ? null : baseDetail.versionLoaders[baseVersion];
+        String[] targetMcVersions = baseDetail.getGameVersions(baseVersion);
+        String[] targetLoaders = baseDetail.versionLoaders == null
+                || baseVersion < 0
+                || baseVersion >= baseDetail.versionLoaders.length
+                ? null
+                : baseDetail.versionLoaders[baseVersion];
 
         for (int i = 0; i < dependencyDetail.versionNames.length; i++) {
-            boolean mcCompatible = targetMcVersion == null
-                    || dependencyDetail.mcVersionNames == null
-                    || dependencyDetail.mcVersionNames[i] == null
-                    || targetMcVersion.equalsIgnoreCase(dependencyDetail.mcVersionNames[i]);
+            boolean mcCompatible = minecraftVersionsOverlap(
+                    targetMcVersions,
+                    dependencyDetail.getGameVersions(i)
+            );
             if (!mcCompatible) {
                 continue;
             }
@@ -253,6 +262,20 @@ public interface ModpackApi {
             }
         }
         return dependencyDetail.versionNames.length == 0 ? -1 : 0;
+    }
+
+    default boolean minecraftVersionsOverlap(String[] expectedVersions, String[] actualVersions) {
+        if (expectedVersions == null || expectedVersions.length == 0
+                || actualVersions == null || actualVersions.length == 0) {
+            return true;
+        }
+        for (String expected : expectedVersions) {
+            if (!Tools.isValidString(expected)) continue;
+            for (String actual : actualVersions) {
+                if (Tools.isValidString(actual) && expected.equalsIgnoreCase(actual)) return true;
+            }
+        }
+        return false;
     }
 
     default boolean loadersOverlap(String[] expectedLoaders, String[] actualLoaders) {

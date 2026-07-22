@@ -94,14 +94,9 @@ bool linker_ns_load(const char* lib_search_path) {
                                                       full_path,
                                                       3 /* TYPE_SHAFED | TYPE_ISOLATED */,
                                                       "/system/:/data/:/vendor/:/apex/", NULL);
-    // THIS IS VERY IMPORTANT and how I trolled FoldCraft:
-    // You need to link the new driver_namespace with NULL and and add ld-android.so
-    // in the link list, to pass through the driver_namespace correctly.
-    // Not doing this fucks up internal __loader symbol lookup
-    // inside the new driver_namespace, thus breaking it on
-    // a lot of android versions
-    // FoldCraft got trolled because they copied the
-    // old broken code verbatim and didn't even test it thoroughly
+    // Link the new driver_namespace with NULL and add ld-android.so
+    // in the link list so internal loader symbols resolve correctly
+    // across Android versions.
     android_link_namespaces(driver_namespace, NULL, "ld-android.so");
     // Also establish links to use the libnativeloader(_lazy).so libraries
     // from the global namespace. This is a workaround for an EMUI issue where

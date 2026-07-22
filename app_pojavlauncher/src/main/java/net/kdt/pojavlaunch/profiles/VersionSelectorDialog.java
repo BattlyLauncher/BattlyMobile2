@@ -10,12 +10,13 @@ import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
 import android.widget.BaseAdapter;
 import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.HorizontalScrollView;
+import android.widget.GridView;
 import android.widget.LinearLayout;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -39,6 +40,7 @@ public class VersionSelectorDialog {
         root.setOrientation(LinearLayout.VERTICAL);
         int padding = dp(context, 18);
         root.setPadding(padding, padding, padding, padding);
+        root.setMinimumHeight(0);
 
         TextView title = new TextView(context);
         title.setText(R.string.download_action_versions_title);
@@ -58,6 +60,10 @@ public class VersionSelectorDialog {
         subtitleParams.setMargins(0, dp(context, 4), 0, dp(context, 12));
         root.addView(subtitle, subtitleParams);
 
+        LinearLayout toolbar = new LinearLayout(context);
+        toolbar.setOrientation(LinearLayout.HORIZONTAL);
+        toolbar.setGravity(android.view.Gravity.CENTER_VERTICAL);
+
         EditText search = new EditText(context);
         search.setSingleLine(true);
         search.setHint(R.string.download_version_search_hint);
@@ -66,14 +72,14 @@ public class VersionSelectorDialog {
         search.setTextSize(14);
         search.setPadding(dp(context, 14), 0, dp(context, 14), 0);
         search.setBackgroundResource(R.drawable.bg_battly_form_panel);
-        root.addView(search, new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(context, 48)
-        ));
+        LinearLayout.LayoutParams searchParams = new LinearLayout.LayoutParams(
+                0, dp(context, 48), 1f);
+        searchParams.setMargins(0, 0, dp(context, 10), 0);
+        toolbar.addView(search, searchParams);
 
         LinearLayout filters = new LinearLayout(context);
         filters.setOrientation(LinearLayout.HORIZONTAL);
-        filters.setPadding(0, dp(context, 10), 0, 0);
+        filters.setGravity(android.view.Gravity.CENTER_VERTICAL);
         CheckBox releaseFilter = createFilter(context, R.string.mcl_setting_veroption_release, true);
         CheckBox snapshotFilter = createFilter(context, R.string.mcl_setting_veroption_snapshot, true);
         CheckBox betaFilter = createFilter(context, R.string.mcl_setting_veroption_oldbeta, false);
@@ -86,21 +92,31 @@ public class VersionSelectorDialog {
         HorizontalScrollView filterScroll = new HorizontalScrollView(context);
         filterScroll.setHorizontalScrollBarEnabled(false);
         filterScroll.addView(filters);
-        root.addView(filterScroll, new LinearLayout.LayoutParams(
+        toolbar.addView(filterScroll, new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT,
+                dp(context, 48)));
+        root.addView(toolbar, new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT
-        ));
+                dp(context, 48)));
 
-        ListView listView = new ListView(context);
-        listView.setDivider(new ColorDrawable(0x00000000));
-        listView.setDividerHeight(dp(context, 8));
+        GridView listView = new GridView(context);
+        listView.setNumColumns(2);
+        listView.setHorizontalSpacing(dp(context, 8));
+        listView.setVerticalSpacing(dp(context, 8));
+        listView.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+        listView.setSelector(new ColorDrawable(0x00000000));
         listView.setCacheColorHint(0x00000000);
+        listView.setClipToPadding(false);
+        listView.setPadding(0, dp(context, 4), 0, dp(context, 18));
         LinearLayout.LayoutParams listParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
-                dp(context, 330)
+                0,
+                1f
         );
-        listParams.setMargins(0, dp(context, 12), 0, 0);
+        listParams.setMargins(0, dp(context, 8), 0, 0);
         root.addView(listView, listParams);
+        listView.setFastScrollEnabled(true);
+        listView.setTextFilterEnabled(true);
 
         VersionOptionAdapter adapter = new VersionOptionAdapter(context, buildOptions(context, hideCustomVersions));
         listView.setAdapter(adapter);
@@ -126,6 +142,16 @@ public class VersionSelectorDialog {
 
         builder.setView(root);
         AlertDialog dialog = builder.show();
+        Window window = dialog.getWindow();
+        if (window != null) {
+            int screenWidth = context.getResources().getDisplayMetrics().widthPixels;
+            int screenHeight = context.getResources().getDisplayMetrics().heightPixels;
+            int horizontalMargin = Math.max(dp(context, 24), Math.round(screenWidth * 0.05f));
+            int verticalMargin = Math.max(dp(context, 48), Math.round(screenHeight * 0.10f));
+            int width = Math.min(screenWidth - horizontalMargin * 2, dp(context, 760));
+            int height = Math.max(dp(context, 280), screenHeight - verticalMargin * 2);
+            window.setLayout(width, height);
+        }
         listView.setOnItemClickListener((parent, view, position, id) -> {
             VersionOption option = adapter.getItem(position);
             if (option == null) return;
@@ -141,7 +167,7 @@ public class VersionSelectorDialog {
             if (installed != null) {
                 Arrays.sort(installed, Comparator.reverseOrder());
                 for (String id : installed) {
-                    options.add(new VersionOption(id, context.getString(R.string.mcl_setting_veroption_installed), null, null, false));
+                    options.add(new VersionOption(id, id, context.getString(R.string.mcl_setting_veroption_installed), null, null, false));
                 }
             }
         }
@@ -156,7 +182,8 @@ public class VersionSelectorDialog {
         for (JMinecraftVersionList.Version version : sorted) {
             String group = getGroup(context, version.type);
             boolean snapshot = "snapshot".equals(version.type);
-            options.add(new VersionOption(version.id, group, version.type, formatDate(version.releaseTime), snapshot));
+            String displayId = "1.0.0".equals(version.id) ? "1.0.0 (1.0)" : version.id;
+            options.add(new VersionOption(version.id, displayId, group, version.type, formatDate(version.releaseTime), snapshot));
         }
         return options;
     }
@@ -189,19 +216,21 @@ public class VersionSelectorDialog {
         checkBox.setTextColor(0xFFE8F3F7);
         checkBox.setTextSize(12);
         checkBox.setButtonTintList(ColorStateList.valueOf(0xFF8DEEDC));
-        checkBox.setPadding(0, 0, dp(context, 12), 0);
+        checkBox.setPadding(0, 0, dp(context, 6), 0);
         return checkBox;
     }
 
     private static class VersionOption {
         final String id;
+        final String displayId;
         final String group;
         final String type;
         final String date;
         final boolean snapshot;
 
-        VersionOption(String id, String group, String type, String date, boolean snapshot) {
+        VersionOption(String id, String displayId, String group, String type, String date, boolean snapshot) {
             this.id = id;
+            this.displayId = displayId;
             this.group = group;
             this.type = type;
             this.date = date;
@@ -246,6 +275,7 @@ public class VersionSelectorDialog {
                 }
                 if (currentQuery.isEmpty()
                         || option.id.toLowerCase(Locale.ROOT).contains(currentQuery)
+                        || option.displayId.toLowerCase(Locale.ROOT).contains(currentQuery)
                         || option.group.toLowerCase(Locale.ROOT).contains(currentQuery)
                         || (option.date != null && option.date.contains(currentQuery))) {
                     visibleOptions.add(option);
@@ -305,7 +335,7 @@ public class VersionSelectorDialog {
             row.setBackgroundResource(R.drawable.bg_battly_form_panel);
 
             TextView id = new TextView(context);
-            id.setText(option.id);
+            id.setText(option.displayId);
             id.setTextColor(0xFFFFFFFF);
             id.setTextSize(15);
             id.setTypeface(Typeface.DEFAULT_BOLD);
@@ -317,9 +347,9 @@ public class VersionSelectorDialog {
             meta.setTextSize(11);
             row.addView(meta);
 
-            ListView.LayoutParams params = new ListView.LayoutParams(
+            GridView.LayoutParams params = new GridView.LayoutParams(
                     ViewGroup.LayoutParams.MATCH_PARENT,
-                    ViewGroup.LayoutParams.WRAP_CONTENT
+                    dp(context, 68)
             );
             row.setLayoutParams(params);
             return row;

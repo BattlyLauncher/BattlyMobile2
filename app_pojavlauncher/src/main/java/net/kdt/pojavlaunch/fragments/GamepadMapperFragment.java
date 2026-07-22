@@ -11,6 +11,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -21,6 +22,10 @@ import androidx.recyclerview.widget.RecyclerView;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.customcontrols.gamepad.Gamepad;
 import net.kdt.pojavlaunch.customcontrols.gamepad.GamepadMapperAdapter;
+import net.kdt.pojavlaunch.customcontrols.gamepad.GamepadMapStore;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.ControllerProfileManager;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 
 import fr.spse.gamepad_remapper.RemapperManager;
 import fr.spse.gamepad_remapper.RemapperView;
@@ -51,6 +56,9 @@ public class GamepadMapperFragment extends Fragment implements
     private RemapperManager mInputManager;
     private GamepadMapperAdapter mMapperAdapter;
     private Gamepad mGamepad;
+    private boolean mCalibrating;
+    private float mRestingAxis;
+    private float mReportedFlat = 0.05f;
     public GamepadMapperFragment() {
         super(R.layout.fragment_controller_remapper);
     }
@@ -72,6 +80,8 @@ public class GamepadMapperFragment extends Fragment implements
         grabStateSpinner.setAdapter(mGrabStateAdapter);
         grabStateSpinner.setSelection(0);
         grabStateSpinner.setOnItemSelectedListener(this);
+        view.findViewById(R.id.gamepad_calibrate).setOnClickListener(v -> startCalibration());
+        view.findViewById(R.id.gamepad_save_profile).setOnClickListener(v -> saveProfile());
     }
 
     private void createGamepad(View mainView, InputDevice inputDevice) {
@@ -104,9 +114,52 @@ public class GamepadMapperFragment extends Fragment implements
     public boolean onGenericMotion(View view, MotionEvent motionEvent) {
         View mainView = getView();
         if(!Gamepad.isGamepadEvent(motionEvent) || mainView == null) return false;
+        if (mCalibrating) sampleCalibration(motionEvent);
         if(mGamepad == null) createGamepad(mainView, motionEvent.getDevice());
         mInputManager.handleMotionEventInput(mainView.getContext(), motionEvent, mGamepad);
         return true;
+    }
+
+    private void startCalibration() {
+        mCalibrating = true;
+        mRestingAxis = 0f;
+        mReportedFlat = 0.05f;
+        Toast.makeText(requireContext(), R.string.controller_calibrate_release, Toast.LENGTH_LONG).show();
+        new Handler(Looper.getMainLooper()).postDelayed(this::finishCalibration, 2500);
+    }
+
+    private void sampleCalibration(MotionEvent event) {
+        int[] axes = {MotionEvent.AXIS_X, MotionEvent.AXIS_Y, MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ,
+                MotionEvent.AXIS_RX, MotionEvent.AXIS_RY};
+        InputDevice device = event.getDevice();
+        for (int axis : axes) {
+            mRestingAxis = Math.max(mRestingAxis, Math.abs(event.getAxisValue(axis)));
+            if (device != null) {
+                InputDevice.MotionRange range = device.getMotionRange(axis, event.getSource());
+                if (range != null && range.getFlat() > 0) mReportedFlat = Math.max(mReportedFlat, range.getFlat());
+            }
+        }
+    }
+
+    private void finishCalibration() {
+        if (!mCalibrating || !isAdded()) return;
+        mCalibrating = false;
+        int scale = Math.max(50, Math.min(200,
+                (int) Math.ceil(Math.max(mReportedFlat, mRestingAxis * 1.35f) / mReportedFlat * 100f)));
+        LauncherPreferences.DEFAULT_PREF.edit().putInt("gamepad_deadzone_scale", scale).apply();
+        LauncherPreferences.loadPreferences(requireContext());
+        Toast.makeText(requireContext(), getString(R.string.controller_calibrate_done, scale), Toast.LENGTH_LONG).show();
+    }
+
+    private void saveProfile() {
+        try {
+            GamepadMapStore.getGameMap();
+            GamepadMapStore.save();
+            ControllerProfileManager.save(LauncherProfiles.getCurrentProfile());
+            Toast.makeText(requireContext(), R.string.controller_profile_saved, Toast.LENGTH_SHORT).show();
+        } catch (Exception exception) {
+            Toast.makeText(requireContext(), exception.getMessage(), Toast.LENGTH_LONG).show();
+        }
     }
 
     @Override

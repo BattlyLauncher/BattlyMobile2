@@ -129,10 +129,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     public void start(boolean isAlreadyRunning, AbstractTouchpad touchpad){
         if(Tools.isAndroid8OrHigher()) setUpPointerCapture(touchpad);
         mInGUIProcessor.setAbstractTouchpad(touchpad);
-        // Kopper Zink has orientation issues on SurfaceView
-        try {
-            useSurfaceView = useSurfaceView && !LOCAL_RENDERER.equals("opengles3_desktopgl_zink_kopper");
-        } catch (NullPointerException ignored){}
+        useSurfaceView = LauncherPreferences.PREF_USE_ALTERNATE_SURFACE && !rendererNeedsTextureView();
+        Log.i(TAG, "Minecraft surface backend: " + (useSurfaceView ? "SurfaceView" : "TextureView")
+                + ", renderer=" + LOCAL_RENDERER);
         if(useSurfaceView){
             SurfaceView surfaceView = new SurfaceView(getContext());
             mSurface = surfaceView;
@@ -204,6 +203,15 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         }
 
 
+    }
+
+    private static boolean rendererNeedsTextureView() {
+        String renderer = LOCAL_RENDERER == null ? "" : LOCAL_RENDERER.toLowerCase(java.util.Locale.ROOT);
+        return renderer.contains("zink")
+                || renderer.contains("mobileglues")
+                || renderer.contains("freedreno")
+                || renderer.contains("vulkan")
+                || renderer.contains("opengles3");
     }
 
     /**
@@ -452,7 +460,8 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         }
 
         //Load Minecraft options:
-        MCOptionUtils.set("fullscreen", "off");
+        // Modern RenderPearl versions parse this strictly as a boolean.
+        MCOptionUtils.set("fullscreen", "false");
         MCOptionUtils.set("overrideWidth", String.valueOf(windowWidth));
         MCOptionUtils.set("overrideHeight", String.valueOf(windowHeight));
         MCOptionUtils.save();

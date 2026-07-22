@@ -6,6 +6,82 @@ plugins{
     id 'com.google.firebase.crashlytics' version '3.0.6' apply false
 }
 
+def mobileGluesPatch = file('patches/mobileglues/1.3.5-battly.patch')
+def sdlPatch = file('patches/sdl/3.2.20-battly.patch')
+
+tasks.register('applyMobileGluesPatches') {
+    inputs.file(mobileGluesPatch)
+    doLast {
+        File mobileGluesDir = file('MobileGlues')
+        if (!new File(mobileGluesDir, '.git').exists() || !mobileGluesPatch.exists()) {
+            throw new GradleException('MobileGlues submodule or Battly patch is missing')
+        }
+
+        def reverseCheck = exec {
+            workingDir mobileGluesDir
+            commandLine 'git', 'apply', '--reverse', '--check', mobileGluesPatch.absolutePath
+            ignoreExitValue true
+        }
+        if (reverseCheck.exitValue == 0) {
+            logger.info('Battly MobileGlues patch is already applied')
+            return
+        }
+
+        exec {
+            workingDir mobileGluesDir
+            commandLine 'git', 'apply', '--check', mobileGluesPatch.absolutePath
+        }
+        exec {
+            workingDir mobileGluesDir
+            commandLine 'git', 'apply', mobileGluesPatch.absolutePath
+        }
+    }
+}
+
+tasks.register('applySdlPatches') {
+    inputs.file(sdlPatch)
+    doLast {
+        File sdlDir = file('app_pojavlauncher/src/main/jni/SDL')
+        if (!new File(sdlDir, '.git').exists() || !sdlPatch.exists()) {
+            throw new GradleException('SDL submodule or Battly patch is missing')
+        }
+
+        def reverseCheck = exec {
+            workingDir sdlDir
+            commandLine 'git', 'apply', '--reverse', '--check', sdlPatch.absolutePath
+            ignoreExitValue true
+        }
+        if (reverseCheck.exitValue == 0) {
+            logger.info('Battly SDL patch is already applied')
+            return
+        }
+
+        exec {
+            workingDir sdlDir
+            commandLine 'git', 'apply', '--check', sdlPatch.absolutePath
+        }
+        exec {
+            workingDir sdlDir
+            commandLine 'git', 'apply', sdlPatch.absolutePath
+        }
+    }
+}
+
+gradle.projectsEvaluated {
+    def mobileGluesProject = findProject(':MobileGlues')
+    if (mobileGluesProject != null) {
+        mobileGluesProject.tasks.matching { it.name == 'preBuild' }.configureEach {
+            dependsOn rootProject.tasks.named('applyMobileGluesPatches')
+        }
+    }
+    def launcherProject = findProject(':app_pojavlauncher')
+    if (launcherProject != null) {
+        launcherProject.tasks.matching { it.name == 'preBuild' }.configureEach {
+            dependsOn rootProject.tasks.named('applySdlPatches')
+        }
+    }
+}
+
 String getGitHash(File project) {
     def command = Runtime.getRuntime().exec("git rev-list -1 HEAD " + project + "/src")
     def returnCode = command.waitFor()

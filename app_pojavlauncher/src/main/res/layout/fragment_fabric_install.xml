@@ -1,166 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingStart="28dp"
+    android:paddingTop="18dp"
+    android:paddingEnd="28dp"
+    android:paddingBottom="20dp">
 
-    <ScrollView
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:paddingStart="28dp"
-        android:paddingTop="24dp"
-        android:paddingEnd="28dp"
-        android:paddingBottom="24dp">
+        android:layout_height="wrap_content"
+        android:text="@string/download_version_subtitle"
+        android:textColor="#C7D4DF"
+        android:textSize="14sp" />
 
-        <LinearLayout
-            android:layout_width="match_parent"
+    <CheckBox
+        android:id="@+id/fabric_installer_only_stable_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="40dp"
+        android:layout_marginTop="8dp"
+        android:buttonTint="#8FD4B3"
+        android:checked="true"
+        android:text="@string/fabric_dl_only_stable"
+        android:textColor="#FFFFFFFF" />
+
+    <ProgressBar
+        android:id="@+id/fabric_installer_progress_bar"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="6dp"
+        android:indeterminate="true"
+        android:indeterminateTint="#8FD4B3" />
+
+    <LinearLayout
+        android:id="@+id/fabric_installer_retry_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:background="@drawable/bg_battly_form_section"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="12dp"
+        android:visibility="gone">
+
+        <TextView
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_battly_form_panel"
-            android:orientation="vertical"
-            android:paddingStart="22dp"
-            android:paddingTop="22dp"
-            android:paddingEnd="22dp"
-            android:paddingBottom="22dp">
+            android:layout_weight="1"
+            android:text="@string/modloader_dl_failed_to_load_list"
+            android:textColor="#FFFFFFFF"
+            android:textStyle="bold" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="0dp"
-                android:text="@string/download_version_subtitle"
-                android:textColor="#C7D4DF"
-                android:textSize="14sp" />
+        <Button
+            android:id="@+id/fabric_installer_retry_button"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:minWidth="0dp"
+            android:text="@string/global_retry"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
 
-            <ProgressBar
-                android:id="@+id/fabric_installer_progress_bar"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="18dp"
-                android:indeterminate="true"
-                android:indeterminateTint="#8FD4B3"
-                android:progressTint="#8FD4B3"
-                android:visibility="visible" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:layout_marginTop="8dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/fabric_installer_label_game_ver"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="@string/fabric_dl_game_version"
-                android:textColor="#C7D4DF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
+        <ImageButton
+            android:id="@+id/fabric_installer_stage_back"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:contentDescription="@string/launcher_nav_back"
+            android:padding="9dp"
+            android:src="@drawable/ic_arrow_back_white"
+            android:visibility="gone" />
 
-            <Spinner
-                android:id="@+id/fabric_installer_game_ver_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_battly_form_field"
-                android:minHeight="54dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:popupBackground="@drawable/bg_battly_form_panel" />
+        <TextView
+            android:id="@+id/fabric_installer_stage_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/noto_sans_bold"
+            android:text="@string/modloader_select_minecraft_version"
+            android:textColor="#FFFFFFFF"
+            android:textSize="15sp" />
+    </LinearLayout>
 
-            <TextView
-                android:id="@+id/fabric_installer_label_loader_ver"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/fabric_dl_loader_version"
-                android:textColor="#C7D4DF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <Spinner
-                android:id="@+id/fabric_installer_loader_ver_spinner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:background="@drawable/bg_battly_form_field"
-                android:minHeight="54dp"
-                android:paddingStart="12dp"
-                android:paddingEnd="12dp"
-                android:popupBackground="@drawable/bg_battly_form_panel" />
-
-            <TextView
-                android:id="@+id/fabric_installer_label_options"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="16dp"
-                android:text="@string/mcl_options"
-                android:textColor="#C7D4DF"
-                android:textSize="13sp"
-                android:textStyle="bold" />
-
-            <CheckBox
-                android:id="@+id/fabric_installer_only_stable_checkbox"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="10dp"
-                android:buttonTint="#8FD4B3"
-                android:checked="true"
-                android:paddingStart="4dp"
-                android:text="@string/fabric_dl_only_stable"
-                android:textColor="#FFFFFFFF" />
-
-            <LinearLayout
-                android:id="@+id/fabric_installer_retry_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:background="@drawable/bg_battly_form_section"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingTop="14dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="14dp"
-                android:visibility="gone">
-
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/modloader_dl_failed_to_load_list"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
-
-                <Button
-                    android:id="@+id/fabric_installer_retry_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_battly_button_secondary"
-                    android:minHeight="0dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="18dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="18dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/global_retry"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFFFF" />
-            </LinearLayout>
-
-            <Button
-                android:id="@+id/fabric_installer_start_button"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="22dp"
-                android:background="@drawable/bg_battly_button_primary"
-                android:enabled="false"
-                android:minHeight="0dp"
-                android:minWidth="0dp"
-                android:paddingStart="18dp"
-                android:paddingTop="14dp"
-                android:paddingEnd="18dp"
-                android:paddingBottom="14dp"
-                android:text="@string/fabric_dl_install"
-                android:textAllCaps="false"
-                android:textColor="#FFFFFFFF"
-                android:textSize="16sp"
-                android:textStyle="bold" />
-        </LinearLayout>
-    </ScrollView>
-</FrameLayout>
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/fabric_installer_version_grid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="14dp"
+        android:scrollbars="none" />
+</LinearLayout>

@@ -23,6 +23,7 @@ import net.kdt.pojavlaunch.progresskeeper.TaskCountListener;
 import net.kdt.pojavlaunch.services.ProgressService;
 
 import java.util.ArrayList;
+import java.util.IllegalFormatException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -187,10 +188,19 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
                     mLinearLayout.addView(textView, params);
                 }
                 textView.setProgress(progress);
-                if(resid != -1) textView.setText(getContext().getString(resid, va));
-                else if(va.length > 0 && va[0] != null)textView.setText((String)va[0]);
+                if(resid != -1) textView.setText(formatProgressText(resid, va));
+                else if(va != null && va.length > 0 && va[0] != null) textView.setText(String.valueOf(va[0]));
                 else textView.setText("");
             });
+        }
+
+        private String formatProgressText(@StringRes int resid, Object... args) {
+            try {
+                return getContext().getString(resid, args);
+            } catch (IllegalFormatException exception) {
+                Log.e("ProgressLayout", "Invalid progress format for resource " + resid, exception);
+                return getContext().getString(resid);
+            }
         }
 
         @Override

@@ -24,6 +24,7 @@ import net.kdt.pojavlaunch.mirrors.DownloadMirror;
 import net.kdt.pojavlaunch.mirrors.MirrorTamperedException;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
+import net.kdt.pojavlaunch.utils.AdaptiveDownloadPolicy;
 import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.value.DependentLibrary;
 import net.kdt.pojavlaunch.value.MinecraftClientInfo;
@@ -102,11 +103,16 @@ public class MinecraftDownloader {
 
                         // Ensure they're both not some 0 byte corrupted json
                         if (providedJsonFile.length() == 0 || vanillaJsonFile.exists() && vanillaJsonFile.length() == 0){
-                            throw new RuntimeException("Minecraft "+versionMessage+ " is needed by " +realVersion); }
+                            throw new RuntimeException(activity.getString(
+                                    R.string.minecraft_dependency_missing,
+                                    versionMessage,
+                                    realVersion)); }
 
                         listener.onDownloadDone();
                     } catch (Exception e) {
-                        Tools.showErrorRemote(versionMessage + " is not currently installed. Please ensure you have an internet connection.", e);
+                        Tools.showErrorRemote(activity.getString(
+                                R.string.minecraft_version_not_installed_network,
+                                versionMessage), e);
                     }
                 }else {
                 downloadGame(activity, version, realVersion);
@@ -153,7 +159,9 @@ public class MinecraftDownloader {
             return;
         }
 
-        int threadCount = Math.max(2, Math.min(16, LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT));
+        int threadCount = LauncherPreferences.PREF_DOWNLOAD_THREADS_AUTO && activity != null
+                ? AdaptiveDownloadPolicy.recommendedWorkers(activity)
+                : Math.max(2, Math.min(16, LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT));
         ThreadPoolExecutor downloaderPool =
                 new ThreadPoolExecutor(threadCount, threadCount, 500, TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>());

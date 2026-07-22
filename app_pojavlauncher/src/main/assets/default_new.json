@@ -1,6 +1,30 @@
 {
   "mControlDataList": [
     {
+      "bgColor": -1290136013,
+      "cornerRadius": 55.0,
+      "displayInGame": true,
+      "displayInMenu": true,
+      "dynamicX": "0.5 * ${screen_width} - 0.5 * ${width}",
+      "dynamicY": "${margin} * 2 + px(36) / 100.0 * ${preferred_scale}",
+      "height": 28.0,
+      "isSwipeable": false,
+      "isToggle": false,
+      "keycodes": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "name": "FPS / Ping",
+      "opacity": 0.92,
+      "passThruEnabled": false,
+      "strokeColor": -1722814271,
+      "strokeWidth": 1.0,
+      "widgetType": "performance",
+      "width": 150.0
+    },
+    {
       "bgColor": 1291845632,
       "cornerRadius": 0.0,
       "displayInGame": true,

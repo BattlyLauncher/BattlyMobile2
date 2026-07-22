@@ -7,7 +7,10 @@ import android.opengl.EGLDisplay;
 import android.opengl.EGLSurface;
 import android.opengl.GLES20;
 import android.opengl.GLES30;
+import android.os.Build;
 import android.util.Log;
+
+import java.util.Locale;
 
 public class GLInfoUtils {
     public static String GLES_VERSION_PREFIX = "OpenGL ES ";
@@ -161,7 +164,20 @@ public class GLInfoUtils {
          * @return
          */
         public boolean isAdreno() {
-            return renderer.contains("Adreno") && vendor.equals("Qualcomm");
+            String normalizedVendor = vendor == null ? "" : vendor.toLowerCase(Locale.ROOT);
+            String normalizedRenderer = renderer == null ? "" : renderer.toLowerCase(Locale.ROOT);
+            String hardware = Build.HARDWARE == null ? "" : Build.HARDWARE.toLowerCase(Locale.ROOT);
+            String board = Build.BOARD == null ? "" : Build.BOARD.toLowerCase(Locale.ROOT);
+            String soc = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S && Build.SOC_MODEL != null
+                    ? Build.SOC_MODEL.toLowerCase(Locale.ROOT)
+                    : "";
+            return normalizedRenderer.contains("adreno")
+                    || normalizedVendor.contains("qualcomm")
+                    || hardware.contains("qcom")
+                    || hardware.contains("qualcomm")
+                    || board.contains("qcom")
+                    || soc.contains("snapdragon")
+                    || soc.contains("qualcomm");
         }
     }
 }

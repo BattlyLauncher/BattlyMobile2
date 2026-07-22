@@ -87,9 +87,14 @@
                 android:layout_height="34dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_battly_button_secondary"
+                android:gravity="center"
+                android:includeFontPadding="false"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
                 android:text="@string/ctrl_preview_btn"
+                android:textAlignment="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="12sp" />
 
@@ -104,11 +109,63 @@
                 android:layout_height="34dp"
                 android:layout_weight="1"
                 android:background="@drawable/bg_battly_button_primary"
+                android:gravity="center"
+                android:includeFontPadding="false"
                 android:minWidth="0dp"
                 android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
                 android:text="@string/ctrl_apply_btn"
+                android:textAlignment="center"
                 android:textColor="#FFFFFFFF"
                 android:textSize="12sp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal">
+
+            <Button
+                android:id="@+id/ctrl_item_like_btn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_battly_button_secondary"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/ctrl_like_btn"
+                android:textAlignment="center"
+                android:textColor="#9CF4DF"
+                android:textSize="11sp" />
+
+            <Space
+                android:layout_width="6dp"
+                android:layout_height="1dp" />
+
+            <Button
+                android:id="@+id/ctrl_item_save_btn"
+                style="@style/Widget.AppCompat.Button.Borderless"
+                android:layout_width="0dp"
+                android:layout_height="30dp"
+                android:layout_weight="1"
+                android:background="@drawable/bg_battly_button_secondary"
+                android:gravity="center"
+                android:includeFontPadding="false"
+                android:minWidth="0dp"
+                android:minHeight="0dp"
+                android:paddingStart="0dp"
+                android:paddingEnd="0dp"
+                android:text="@string/ctrl_save_btn"
+                android:textAlignment="center"
+                android:textColor="#9CF4DF"
+                android:textSize="11sp" />
         </LinearLayout>
     </LinearLayout>
 </LinearLayout>

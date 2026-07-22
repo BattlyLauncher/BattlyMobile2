@@ -1,4 +1,4 @@
-Battly Launcher 2.0.0 (Minecraft Java Launcher for Android)<br>
+Battly Launcher 2.0.3 (Minecraft Java Launcher for Android)<br>
 <br>
 * Credits:<br>
  • Battly.<br>

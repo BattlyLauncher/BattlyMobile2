@@ -6,6 +6,8 @@
 #include <stdlib.h>
 #include <dlfcn.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <time.h>
 #include <environ/environ.h>
 #include "gl_bridge.h"
 #include "egl_loader.h"
@@ -19,6 +21,29 @@
 
 static __thread gl_render_window_t* currentBundle;
 static EGLDisplay g_EglDisplay;
+static volatile unsigned int g_frame_count;
+static volatile unsigned int g_renderer_fps;
+static volatile uint64_t g_fps_window_start_ns;
+
+static uint64_t monotonic_time_ns() {
+    struct timespec now;
+    clock_gettime(CLOCK_MONOTONIC, &now);
+    return ((uint64_t) now.tv_sec * 1000000000ULL) + (uint64_t) now.tv_nsec;
+}
+
+static void record_rendered_frame() {
+    uint64_t now = monotonic_time_ns();
+    if(g_fps_window_start_ns == 0) {
+        g_fps_window_start_ns = now;
+    }
+    g_frame_count++;
+    uint64_t elapsed = now - g_fps_window_start_ns;
+    if(elapsed >= 500000000ULL) {
+        g_renderer_fps = (unsigned int) (((uint64_t) g_frame_count * 1000000000ULL) / elapsed);
+        g_frame_count = 0;
+        g_fps_window_start_ns = now;
+    }
+}
 
 bool gl_init() {
     if(!dlsym_EGL()) return false;
@@ -77,7 +102,8 @@ gl_render_window_t* gl_init_context(gl_render_window_t *share) {
 
     {
         EGLBoolean bindResult;
-        if (strncmp(getenv("AMETHYST_RENDERER"), "opengles3_desktopgl", 19) == 0) {
+        const char *renderer = getenv("BATTLY_RENDERER");
+        if (renderer != NULL && strncmp(renderer, "opengles3_desktopgl", 19) == 0) {
             printf("EGLBridge: Binding to desktop OpenGL\n");
             bindResult = eglBindAPI_p(EGL_OPENGL_API);
         } else {
@@ -160,15 +186,24 @@ void gl_swap_buffers() {
         eglMakeCurrent_p(g_EglDisplay, currentBundle->surface, currentBundle->surface, currentBundle->context);
         currentBundle->state = STATE_RENDERER_ALIVE;
     }
-    if(currentBundle->surface != NULL)
-        if(!eglSwapBuffers_p(g_EglDisplay, currentBundle->surface) && eglGetError_p() == EGL_BAD_SURFACE) {
+    if(currentBundle->surface != NULL) {
+        EGLBoolean swapResult = eglSwapBuffers_p(g_EglDisplay, currentBundle->surface);
+        if(swapResult) {
+            record_rendered_frame();
+        } else if(eglGetError_p() == EGL_BAD_SURFACE) {
             eglMakeCurrent_p(g_EglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
             currentBundle->newNativeSurface = NULL;
             gl_swap_surface(currentBundle);
             eglMakeCurrent_p(g_EglDisplay, currentBundle->surface, currentBundle->surface, currentBundle->context);
             LOGI("The window has died, awaiting window change");
+        }
     }
 
+}
+
+JNIEXPORT jint JNICALL
+Java_net_kdt_pojavlaunch_utils_JREUtils_getRendererFps(JNIEnv *env, jclass clazz) {
+    return (jint) g_renderer_fps;
 }
 
 void gl_setup_window() {

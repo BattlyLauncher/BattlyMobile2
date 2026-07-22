@@ -1,109 +1,144 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingStart="28dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="28dp"
+    android:paddingBottom="10dp">
 
-    <ScrollView
+    <TextView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:fillViewport="true"
-        android:paddingStart="28dp"
-        android:paddingTop="24dp"
-        android:paddingEnd="28dp"
-        android:paddingBottom="24dp">
+        android:layout_height="wrap_content"
+        android:text="@string/download_version_subtitle"
+        android:maxLines="1"
+        android:textColor="#E1EAF0"
+        android:textSize="12sp" />
 
-        <LinearLayout
+    <EditText
+        android:id="@+id/mod_dl_version_search"
+        android:layout_width="match_parent"
+        android:layout_height="42dp"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_battly_form_field"
+        android:hint="@string/download_version_search_hint"
+        android:paddingHorizontal="16dp"
+        android:singleLine="true"
+        android:textColor="#FFFFFFFF"
+        android:textColorHint="#99FFFFFF"
+        android:textSize="14sp" />
+
+    <LinearLayout
+        android:id="@+id/mod_dl_extra_options"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="6dp"
+        android:background="@drawable/bg_battly_form_section"
+        android:orientation="vertical"
+        android:paddingHorizontal="10dp"
+        android:paddingVertical="6dp"
+        android:visibility="gone">
+
+        <CheckBox
+            android:id="@+id/mod_dl_forge_optifine"
+            android:layout_width="match_parent"
+            android:layout_height="28dp"
+            android:buttonTint="#8DEEDC"
+            android:gravity="center_vertical"
+            android:minHeight="0dp"
+            android:text="@string/forge_optifine_checkbox"
+            android:textColor="#FFFFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold" />
+
+        <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:background="@drawable/bg_battly_form_panel"
-            android:orientation="vertical"
-            android:paddingStart="22dp"
-            android:paddingTop="22dp"
-            android:paddingEnd="22dp"
-            android:paddingBottom="22dp">
+            android:layout_marginTop="1dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:text="@string/forge_optifine_checkbox_desc"
+            android:textColor="#D3E0E7"
+            android:textSize="11sp" />
+    </LinearLayout>
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/download_version_subtitle"
-                android:textColor="#C7D4DF"
-                android:textSize="14sp" />
+    <ProgressBar
+        android:id="@+id/mod_dl_list_progress"
+        style="?android:attr/progressBarStyleHorizontal"
+        android:layout_width="match_parent"
+        android:layout_height="6dp"
+        android:layout_marginTop="6dp"
+        android:indeterminate="true"
+        android:indeterminateTint="#8FD4B3" />
 
-            <EditText
-                android:id="@+id/mod_dl_version_search"
-                android:layout_width="match_parent"
-                android:layout_height="48dp"
-                android:layout_marginTop="14dp"
-                android:background="@drawable/bg_battly_form_section"
-                android:hint="@string/download_version_search_hint"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:singleLine="true"
-                android:textColor="#FFFFFFFF"
-                android:textColorHint="#99FFFFFF"
-                android:textSize="14sp" />
+    <LinearLayout
+        android:id="@+id/mod_dl_retry_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:background="@drawable/bg_battly_form_section"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="14dp"
+        android:visibility="gone">
 
-            <ProgressBar
-                android:id="@+id/mod_dl_list_progress"
-                style="?android:attr/progressBarStyleHorizontal"
-                android:layout_width="match_parent"
-                android:layout_height="8dp"
-                android:layout_marginTop="18dp"
-                android:indeterminate="true"
-                android:indeterminateTint="#8FD4B3"
-                android:progressTint="#8FD4B3" />
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/modloader_dl_failed_to_load_list"
+            android:textColor="#FFFFFFFF"
+            android:textStyle="bold" />
 
-            <LinearLayout
-                android:id="@+id/mod_dl_retry_layout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:background="@drawable/bg_battly_form_section"
-                android:gravity="center_vertical"
-                android:orientation="horizontal"
-                android:paddingStart="16dp"
-                android:paddingTop="14dp"
-                android:paddingEnd="16dp"
-                android:paddingBottom="14dp"
-                android:visibility="gone">
+        <Button
+            android:id="@+id/forge_installer_retry_button"
+            android:layout_width="wrap_content"
+            android:layout_height="40dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:minWidth="0dp"
+            android:text="@string/global_retry"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
 
-                <TextView
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:text="@string/modloader_dl_failed_to_load_list"
-                    android:textColor="#FFFFFFFF"
-                    android:textSize="14sp"
-                    android:textStyle="bold" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginTop="4dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
 
-                <Button
-                    android:id="@+id/forge_installer_retry_button"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:background="@drawable/bg_battly_button_secondary"
-                    android:minHeight="0dp"
-                    android:minWidth="0dp"
-                    android:paddingStart="18dp"
-                    android:paddingTop="10dp"
-                    android:paddingEnd="18dp"
-                    android:paddingBottom="10dp"
-                    android:text="@string/global_retry"
-                    android:textAllCaps="false"
-                    android:textColor="#FFFFFFFF" />
-            </LinearLayout>
+        <ImageButton
+            android:id="@+id/mod_dl_stage_back"
+            android:layout_width="22dp"
+            android:layout_height="22dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:contentDescription="@string/launcher_nav_back"
+            android:padding="3dp"
+            android:scaleType="centerInside"
+            android:src="@drawable/ic_arrow_back_compact"
+            android:visibility="gone" />
 
-            <ExpandableListView
-                android:id="@+id/mod_dl_expandable_version_list"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="18dp"
-                android:childDivider="@android:color/transparent"
-                android:divider="@android:color/transparent"
-                android:dividerHeight="0dp"
-                android:groupIndicator="@null"
-                android:listSelector="@android:color/transparent"
-                android:nestedScrollingEnabled="true"
-                android:scrollbars="none" />
-        </LinearLayout>
-    </ScrollView>
-</FrameLayout>
+        <TextView
+            android:id="@+id/mod_dl_stage_title"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:fontFamily="@font/noto_sans_bold"
+            android:text="@string/modloader_select_minecraft_version"
+            android:textColor="#FFFFFFFF"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/mod_dl_version_grid"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="2dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="8dp"
+        android:scrollbars="none" />
+</LinearLayout>

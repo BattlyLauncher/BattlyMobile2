@@ -31,6 +31,7 @@ import com.google.gson.JsonObject;
 import com.kdt.mcgui.mcVersionSpinner;
 
 import net.kdt.pojavlaunch.LauncherActivity;
+import net.kdt.pojavlaunch.PojavProfile;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -44,6 +45,7 @@ import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.LocaleUtils;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
+import net.kdt.pojavlaunch.value.MinecraftAccount;
 
 import java.io.File;
 import java.text.SimpleDateFormat;
@@ -66,6 +68,7 @@ public class MainMenuFragment extends Fragment {
     private TextView mPlayButtonTitle;
     private ProgressBar mPlayButtonProgress;
     private TextView mSelectedVersionLabel;
+    private ImageButton mSkinButton;
     private RecyclerView mNewsPager;
     private NewsCardAdapter mNewsCardAdapter;
     private boolean mLaunchStarting;
@@ -83,6 +86,8 @@ public class MainMenuFragment extends Fragment {
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         ImageButton mToolsButton = requireActivity().findViewById(R.id.news_button);
         ImageButton mLibraryButton = requireActivity().findViewById(R.id.library_button);
+        ImageButton mSocialButton = requireActivity().findViewById(R.id.social_button);
+        mSkinButton = requireActivity().findViewById(R.id.skin_button);
         View mDownloadButton = view.findViewById(R.id.install_jar_button);
         ImageButton mEditProfileButton = view.findViewById(R.id.edit_profile_button);
         mPlayButton = view.findViewById(R.id.play_button);
@@ -101,6 +106,10 @@ public class MainMenuFragment extends Fragment {
         });
         mLibraryButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), LibraryCenterFragment.class,
                 LibraryCenterFragment.TAG, null));
+        mSocialButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), BattlySocialFragment.class,
+                BattlySocialFragment.TAG, null));
+        mSkinButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), BattlySkinManagerFragment.class,
+                BattlySkinManagerFragment.TAG, null));
         mDownloadButton.setOnClickListener(v -> openDownloadCenter());
         mEditProfileButton.setOnClickListener(v -> mVersionSpinner.performClick());
         mEditProfileButton.setOnLongClickListener(v -> {
@@ -109,6 +118,33 @@ public class MainMenuFragment extends Fragment {
         });
         mPlayButton.setOnClickListener(v -> {
             if (mLaunchStarting) {
+                return;
+            }
+            List<File> incompatibleNativeMods = Tools.getAndroidIncompatibleNativeMods();
+            if (!incompatibleNativeMods.isEmpty()) {
+                StringBuilder modNames = new StringBuilder();
+                for (File file : incompatibleNativeMods) {
+                    if (modNames.length() > 0) {
+                        modNames.append("\n");
+                    }
+                    modNames.append("- ").append(file.getName());
+                }
+                AlertDialog incompatibleModsDialog = Tools.createStyledDialogBuilder(requireContext())
+                        .setTitle(R.string.android_incompatible_mods_title)
+                        .setMessage(getString(R.string.android_incompatible_mods_message, modNames.toString()))
+                        .setIcon(R.drawable.minecraft_tnt)
+                        .setPositiveButton(R.string.android_incompatible_mods_disable, (d, w) -> {
+                            try {
+                                Tools.disableAndroidIncompatibleNativeMods();
+                                requestLaunch();
+                            } catch (RuntimeException exception) {
+                                Tools.showError(requireContext(), exception);
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .create();
+                Tools.styleDialog(incompatibleModsDialog);
+                incompatibleModsDialog.show();
                 return;
             }
             if (Tools.hasMods("sodium") && !(LauncherPreferences.DEFAULT_PREF.getBoolean("sodium_override", false))) {
@@ -170,25 +206,29 @@ public class MainMenuFragment extends Fragment {
 
     private void loadNews() {
         String newsLocale = getNewsLocale();
+        String unavailableText = getString(R.string.launcher_news_unavailable);
+        String loadingText = getString(R.string.launcher_news_loading);
         synchronized (NEWS_LOCK) {
             if (sCachedNewsCards != null && newsLocale.equals(sCachedNewsLocale)) {
                 bindNewsCards(sCachedNewsCards);
                 return;
             }
             if (sNewsRequestInFlight) {
-                setNewsLoading();
+                if (mNewsCardAdapter != null && mNewsCardAdapter.getItemCount() == 0) {
+                    setNewsLoading(loadingText);
+                }
                 return;
             }
             sNewsRequestInFlight = true;
         }
-        setNewsLoading();
+        setNewsLoading(loadingText);
         PojavApplication.sExecutorService.execute(() -> {
             List<NewsCard> cards;
             try {
-                cards = loadBattlyNews(newsLocale);
+                cards = loadBattlyNews(newsLocale, unavailableText);
             } catch (Exception e) {
                 Log.w(TAG, "Failed to load Battly news", e);
-                cards = NewsCard.error(getString(R.string.launcher_news_unavailable));
+                cards = NewsCard.error(unavailableText);
             }
             synchronized (NEWS_LOCK) {
                 sCachedNewsCards = cards;
@@ -200,25 +240,32 @@ public class MainMenuFragment extends Fragment {
                 if (!isAdded()) {
                     return;
                 }
-                bindNewsCards(finalCards);
+                if (mNewsCardAdapter != null && mNewsPager != null) {
+                    bindNewsCards(finalCards);
+                }
             });
         });
     }
 
-    private void setNewsLoading() {
+    private void setNewsLoading(String loadingText) {
         if (mNewsCardAdapter == null) {
             return;
         }
-        mNewsCardAdapter.setCards(NewsCard.loading(getString(R.string.launcher_news_loading)));
-        mNewsPager.scrollToPosition(0);
+        mNewsCardAdapter.setCards(NewsCard.loading(loadingText));
+        if (mNewsPager != null) {
+            mNewsPager.scrollToPosition(0);
+        }
     }
 
     private void bindNewsCards(List<NewsCard> cards) {
+        if (mNewsCardAdapter == null || mNewsPager == null) {
+            return;
+        }
         mNewsCardAdapter.setCards(cards);
         mNewsPager.scrollToPosition(0);
     }
 
-    private List<NewsCard> loadBattlyNews(String newsLocale) throws Exception {
+    private List<NewsCard> loadBattlyNews(String newsLocale, String unavailableText) throws Exception {
         return DownloadUtils.downloadStringFreshWithCacheFallback(
                 BATLLY_NEWS_URL_BASE + newsLocale + ".json",
                 "battly_mobile_news_" + newsLocale + ".json",
@@ -226,7 +273,7 @@ public class MainMenuFragment extends Fragment {
                     try {
                         JsonArray newsArray = Tools.GLOBAL_GSON.fromJson(input, JsonArray.class);
                         if (newsArray == null || newsArray.size() == 0) {
-                            return NewsCard.error(getString(R.string.launcher_news_unavailable));
+                            return NewsCard.error(unavailableText);
                         }
                         ArrayList<NewsCard> cards = new ArrayList<>();
                         for (int i = 0; i < newsArray.size(); i++) {
@@ -322,6 +369,7 @@ public class MainMenuFragment extends Fragment {
         super.onResume();
         setPlayLoading(false);
         refreshLauncherProfileUi();
+        updateBattlySkinButton();
     }
 
     @Override
@@ -332,6 +380,7 @@ public class MainMenuFragment extends Fragment {
         mPlayButtonTitle = null;
         mPlayButtonProgress = null;
         mSelectedVersionLabel = null;
+        mSkinButton = null;
         mNewsPager = null;
         mNewsCardAdapter = null;
     }
@@ -341,6 +390,13 @@ public class MainMenuFragment extends Fragment {
             mVersionSpinner.reloadProfiles();
         }
         updateSelectedVersionLabel();
+        updateBattlySkinButton();
+    }
+
+    private void updateBattlySkinButton() {
+        if (mSkinButton == null || !isAdded()) return;
+        MinecraftAccount account = PojavProfile.getCurrentProfileContent(requireContext(), null);
+        mSkinButton.setVisibility(account != null && account.isBattly() ? View.VISIBLE : View.GONE);
     }
 
     private void runInstallerWithConfirmation(boolean isCustomArgs) {

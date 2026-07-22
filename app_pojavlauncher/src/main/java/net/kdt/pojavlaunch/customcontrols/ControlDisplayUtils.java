@@ -247,6 +247,7 @@ public final class ControlDisplayUtils {
         public final String fullId;
         public final String translationKey;
         private final Map<String, String> names;
+        private final Map<String, String> normalizedSearchCache = new LinkedHashMap<>();
 
         private IconItem(String iconName, String id, String fullId, String translationKey, Map<String, String> names) {
             this.iconName = safe(iconName);
@@ -274,18 +275,34 @@ public final class ControlDisplayUtils {
 
         private boolean matches(Context context, String normalizedQuery) {
             if (TextUtils.isEmpty(normalizedQuery)) return true;
-            if (normalizeSearch(iconName).contains(normalizedQuery)) return true;
-            if (normalizeSearch(id).contains(normalizedQuery)) return true;
-            if (normalizeSearch(fullId).contains(normalizedQuery)) return true;
-            if (normalizeSearch(translationKey).contains(normalizedQuery)) return true;
-            if (normalizeSearch(getDisplayName(context)).contains(normalizedQuery)) return true;
+            return getNormalizedSearchText(context).contains(normalizedQuery);
+        }
 
-            for (String name : names.values()) {
-                if (normalizeSearch(name).contains(normalizedQuery)) {
-                    return true;
+        private String getNormalizedSearchText(Context context) {
+            String localeKey = getLocaleKey(context);
+            synchronized (normalizedSearchCache) {
+                String cached = normalizedSearchCache.get(localeKey);
+                if (cached != null) return cached;
+
+                StringBuilder builder = new StringBuilder();
+                appendSearchPart(builder, iconName);
+                appendSearchPart(builder, id);
+                appendSearchPart(builder, fullId);
+                appendSearchPart(builder, translationKey);
+                appendSearchPart(builder, getDisplayName(context));
+                for (String name : names.values()) {
+                    appendSearchPart(builder, name);
                 }
+                String normalized = normalizeSearch(builder.toString());
+                normalizedSearchCache.put(localeKey, normalized);
+                return normalized;
             }
-            return false;
+        }
+
+        private static void appendSearchPart(StringBuilder builder, String value) {
+            if (TextUtils.isEmpty(value)) return;
+            if (builder.length() > 0) builder.append(' ');
+            builder.append(value);
         }
     }
 }

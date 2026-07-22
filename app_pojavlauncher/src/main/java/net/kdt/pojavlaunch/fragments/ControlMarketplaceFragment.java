@@ -2,6 +2,7 @@ package net.kdt.pojavlaunch.fragments;
 
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -39,11 +40,16 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class ControlMarketplaceFragment extends Fragment {
-    public static final String TAG = "ControlMarketplaceFragment";
+    public static final String TAG = "ControlMarketplace";
 
     private static final String API_BASE = "https://api.battlylauncher.com/battlylauncher/controls";
+    private static final String PREFS_MARKETPLACE = "battly_control_marketplace";
+    private static final String PREF_LIKED = "liked_controls";
+    private static final String PREF_SAVED = "saved_controls";
 
     private RecyclerView mRecyclerView;
     private ControlMarketplaceAdapter mAdapter;
@@ -96,6 +102,26 @@ public class ControlMarketplaceFragment extends Fragment {
             public void onPreview(JSONObject item) {
                 onPreviewControl(item);
             }
+
+            @Override
+            public void onLike(JSONObject item) {
+                toggleMarketplaceFlag(PREF_LIKED, item, R.string.ctrl_liked_added, R.string.ctrl_liked_removed);
+            }
+
+            @Override
+            public void onSave(JSONObject item) {
+                toggleMarketplaceFlag(PREF_SAVED, item, R.string.ctrl_saved_added, R.string.ctrl_saved_removed);
+            }
+
+            @Override
+            public boolean isLiked(JSONObject item) {
+                return hasMarketplaceFlag(PREF_LIKED, item);
+            }
+
+            @Override
+            public boolean isSaved(JSONObject item) {
+                return hasMarketplaceFlag(PREF_SAVED, item);
+            }
         });
         mRecyclerView.setAdapter(mAdapter);
 
@@ -139,6 +165,31 @@ public class ControlMarketplaceFragment extends Fragment {
         });
 
         loadControls();
+    }
+
+    private void toggleMarketplaceFlag(String key, JSONObject item, int addedMessage, int removedMessage) {
+        String id = item.optString("_id", "");
+        if (id.isEmpty()) return;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_MARKETPLACE, Context.MODE_PRIVATE);
+        Set<String> values = new HashSet<>(prefs.getStringSet(key, new HashSet<>()));
+        boolean added;
+        if (values.contains(id)) {
+            values.remove(id);
+            added = false;
+        } else {
+            values.add(id);
+            added = true;
+        }
+        prefs.edit().putStringSet(key, values).apply();
+        mAdapter.notifyDataSetChanged();
+        Toast.makeText(requireContext(), added ? addedMessage : removedMessage, Toast.LENGTH_SHORT).show();
+    }
+
+    private boolean hasMarketplaceFlag(String key, JSONObject item) {
+        String id = item.optString("_id", "");
+        if (id.isEmpty() || getContext() == null) return false;
+        SharedPreferences prefs = requireContext().getSharedPreferences(PREFS_MARKETPLACE, Context.MODE_PRIVATE);
+        return prefs.getStringSet(key, new HashSet<>()).contains(id);
     }
 
     private void updateSortChips() {

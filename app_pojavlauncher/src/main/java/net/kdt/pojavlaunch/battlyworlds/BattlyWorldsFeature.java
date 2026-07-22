@@ -1,10 +1,10 @@
 package net.kdt.pojavlaunch.battlyworlds;
 
-import android.app.AlertDialog;
 import android.content.Context;
 import android.widget.Toast;
 
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
 
 public final class BattlyWorldsFeature {
     /**
@@ -30,10 +30,9 @@ public final class BattlyWorldsFeature {
         if (context == null) {
             return;
         }
-        new AlertDialog.Builder(context)
+        Tools.showStyledDialog(Tools.createStyledDialogBuilder(context)
                 .setTitle(R.string.battlyworlds_temporarily_disabled_title)
                 .setMessage(R.string.battlyworlds_temporarily_disabled_message)
-                .setPositiveButton(android.R.string.ok, null)
-                .show();
+                .setPositiveButton(android.R.string.ok, null));
     }
 }

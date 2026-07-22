@@ -15,6 +15,7 @@ import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.analytics.Telemetry;
+import net.kdt.pojavlaunch.battlysocial.BattlySocialNotifications;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsFeature;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.utils.BattlyInAppMessaging;
@@ -37,6 +38,12 @@ public class BattlyMessagingService extends FirebaseMessagingService {
                 return;
             }
             BattlyWorldsInvites.dispatchRemoteInvite(this, remoteMessage.getData());
+            return;
+        }
+        String socialType = remoteMessage.getData().get("type");
+        if (BattlySocialNotifications.TYPE.equals(socialType)
+                || BattlySocialNotifications.EVENT_TYPE.equals(socialType)) {
+            BattlySocialNotifications.dispatch(this, remoteMessage.getData());
             return;
         }
 

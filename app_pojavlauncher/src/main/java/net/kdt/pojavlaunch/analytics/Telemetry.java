@@ -14,6 +14,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import net.kdt.pojavlaunch.BuildConfig;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
+import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
 
 import java.io.File;
@@ -146,6 +147,7 @@ public final class Telemetry {
             crashlytics.setCustomKey("fcm_token_present", true);
         }
         BattlyWorldsInvites.registerDeviceToken(context);
+        BattlySocialManager.registerDeviceToken(context);
         Log.i(TAG, "FCM token available: " + (BuildConfig.DEBUG ? token : token.substring(0, Math.min(12, token.length())) + "..."));
     }
 

@@ -4,8 +4,10 @@ import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.content.pm.ServiceInfo;
 import android.os.Build;
 import android.os.IBinder;
@@ -68,7 +70,7 @@ public class ProgressService extends Service implements TaskCountListener {
         mNotificationBuilder.setContentText(getString(R.string.progresslayout_tasks_in_progress, ProgressKeeper.getTaskCount()));
         Notification notification = mNotificationBuilder.build();
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            startForeground(NotificationUtils.NOTIFICATION_ID_PROGRESS_SERVICE, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_MANIFEST);
+            startForeground(NotificationUtils.NOTIFICATION_ID_PROGRESS_SERVICE, notification, ServiceInfo.FOREGROUND_SERVICE_TYPE_DATA_SYNC);
         } else {
             startForeground(NotificationUtils.NOTIFICATION_ID_PROGRESS_SERVICE, notification);
         }
@@ -94,7 +96,12 @@ public class ProgressService extends Service implements TaskCountListener {
         Tools.MAIN_HANDLER.post(()->{
             if(taskCount > 0) {
                 mNotificationBuilder.setContentText(getString(R.string.progresslayout_tasks_in_progress, taskCount));
-                notificationManagerCompat.notify(1, mNotificationBuilder.build());
+                if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU
+                        || ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                        == PackageManager.PERMISSION_GRANTED) {
+                    notificationManagerCompat.notify(NotificationUtils.NOTIFICATION_ID_PROGRESS_SERVICE,
+                            mNotificationBuilder.build());
+                }
             }else{
                 stopSelf();
             }

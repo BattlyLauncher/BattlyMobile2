@@ -1,0 +1,51 @@
+diff --git a/MobileGlues-cpp/CMakeLists.txt b/MobileGlues-cpp/CMakeLists.txt
+index 463ecf9..aba4d75 100644
+--- a/MobileGlues-cpp/CMakeLists.txt
++++ b/MobileGlues-cpp/CMakeLists.txt
+@@ -25,6 +25,7 @@ set(SPIRV_CROSS_ENABLE_MSL     OFF CACHE BOOL "Disable MSL backend" FORCE)
+ set(SPIRV_CROSS_ENABLE_CPP     OFF CACHE BOOL "Disable C++ API target" FORCE)
+ set(SPIRV_CROSS_CLI            OFF CACHE BOOL "Disable CLI binary" FORCE)
+ set(SPIRV_CROSS_STATIC         ON  CACHE BOOL "Prefer static libs" FORCE)
++set(SPIRV_CROSS_SHARED         ON  CACHE BOOL "Build the shared C API required by LWJGL" FORCE)
+ set(SPIRV_CROSS_ENABLE_UTIL    OFF CACHE BOOL "Disable util" FORCE)
+ 
+ add_subdirectory(3rdparty/glslang)
+@@ -128,6 +129,17 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+     ./3rdparty/xxhash)
+ target_include_directories(${CMAKE_PROJECT_NAME} PUBLIC ${CMAKE_SOURCE_DIR}/include)
+ 
++if(ANDROID)
++    target_link_options(${CMAKE_PROJECT_NAME} PRIVATE
++        "-Wl,-z,max-page-size=16384"
++        "-Wl,-z,common-page-size=16384"
++    )
++    target_link_options(spirv-cross-c-shared PRIVATE
++        "-Wl,-z,max-page-size=16384"
++        "-Wl,-z,common-page-size=16384"
++    )
++endif()
++
+ target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+     glslang::glslang
+     spirv-cross-c
+diff --git a/MobileGlues-cpp/gl/getter.cpp b/MobileGlues-cpp/gl/getter.cpp
+index dd476c7..c686557 100644
+--- a/MobileGlues-cpp/gl/getter.cpp
++++ b/MobileGlues-cpp/gl/getter.cpp
+@@ -217,8 +217,14 @@ std::string getGpuName() {
+ }
+ 
+ void set_es_version() {
+-    std::string ESVersionStr = getBeforeThirdSpace(std::string((const char*)GLES.glGetString(GL_VERSION)));
+-    int major, minor;
++    const GLubyte* rawVersion = GLES.glGetString != nullptr
++        ? GLES.glGetString(GL_VERSION)
++        : nullptr;
++    std::string ESVersionStr = rawVersion != nullptr
++        ? getBeforeThirdSpace(std::string(reinterpret_cast<const char*>(rawVersion)))
++        : "OpenGL ES 3.0";
++    int major = 3;
++    int minor = 0;
+ 
+     if (sscanf(ESVersionStr.c_str(), "OpenGL ES %d.%d", &major, &minor) == 2) {
+         hardware->es_version = major * 100 + minor * 10;

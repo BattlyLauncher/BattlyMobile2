@@ -169,11 +169,11 @@ public class JREUtils {
                 .append(":");
         ldLibraryPath.append("/system/").append(libName).append(":")
                 .append("/vendor/").append(libName).append(":")
-                .append("/vendor/").append(libName).append("/hw:")
-                .append(NATIVE_LIB_DIR);
+                .append("/vendor/").append(libName).append("/hw:");
         if (Tools.isValidString(Tools.lwjglNativesDir)) {
-            ldLibraryPath.append(":").append(Tools.lwjglNativesDir);
+            ldLibraryPath.append(Tools.lwjglNativesDir).append(":");
         }
+        ldLibraryPath.append(NATIVE_LIB_DIR);
         LD_LIBRARY_PATH = ldLibraryPath.toString();
     }
 
@@ -188,13 +188,14 @@ public class JREUtils {
         // Prevent OptiFine (and other error-reporting stuff in Minecraft) from balooning the log
         envMap.put("LIBGL_NOERROR", "1");
 
-        // On certain GLES drivers, overloading default functions shader hack fails, so disable it
-        envMap.put("LIBGL_NOINTOVLHACK", "1");
+        // Keep GL4ES' default shader compatibility hacks enabled. Old Minecraft shaders
+        // still use texture2D(), and forcing LIBGL_NOINTOVLHACK makes GL4ES emit invalid
+        // GLES 3 shaders on modern emulator/desktop drivers.
 
         // Fix white color on banner and sheep, since GL4ES 1.1.5
         envMap.put("LIBGL_NORMALIZE", "1");
 
-        if(PREF_DUMP_SHADERS)
+        if(PREF_DUMP_SHADERS && !"opengles2".equals(LOCAL_RENDERER))
             envMap.put("LIBGL_VGPU_DUMP", "1");
         if(PREF_VSYNC_IN_ZINK)
             envMap.put("POJAV_VSYNC_IN_ZINK", "1");
@@ -221,21 +222,38 @@ public class JREUtils {
         }
 
         if(LOCAL_RENDERER != null) {
-            envMap.put("AMETHYST_RENDERER", LOCAL_RENDERER);
-            if(LOCAL_RENDERER.equals("opengles3_ltw")) {
+            String runtimeRenderer = RendererPluginRegistry.runtimeRendererFor(activity, LOCAL_RENDERER);
+            envMap.put("BATTLY_RENDERER", runtimeRenderer);
+            if(runtimeRenderer.equals("opengles3_ltw")) {
                 envMap.put("LIBGL_ES", "3");
                 envMap.put("POJAVEXEC_EGL","libltw.so"); // Use ANGLE EGL
             }
-            if(LOCAL_RENDERER.equals("opengles_mobileglues")){
+            if(runtimeRenderer.equals("opengles2") || runtimeRenderer.equals("opengles2_5")) {
+                envMap.put("LIBGL_ES", "2");
+            }
+            if(runtimeRenderer.equals("opengles3")) {
+                envMap.put("LIBGL_ES", "3");
+            }
+            if(runtimeRenderer.equals("opengles_mobileglues")){
                 envMap.put("MG_DIR_PATH", Tools.DIR_DATA + "/MobileGlues");
                 envMap.put("POJAVEXEC_EGL","libmobileglues.so");
             }
-            if (LOCAL_RENDERER.equals("opengles3_desktopgl_zink_kopper")){
+            if (runtimeRenderer.equals("opengles3_desktopgl_zink_kopper")){
                 envMap.put("POJAVEXEC_EGL","libEGL_mesa.so"); // Use Mesa EGL
                 if (Tools.shouldUseUBWC()) envMap.put("FD_DEV_FEATURES", "enable_tp_ubwc_flag_hint=1"); // Turnip fix for OneUI rendering issues
             }
-            if (LOCAL_RENDERER.toLowerCase().contains("zink")){
+            if (runtimeRenderer.equals("opengles3_desktopgl_freedreno")){
+                envMap.put("POJAVEXEC_EGL","libEGL_mesa.so"); // Use Mesa EGL
+                envMap.put("POJAV_LOAD_TURNIP", "1");
+                envMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
+                if (Tools.shouldUseUBWC()) envMap.put("FD_DEV_FEATURES", "enable_tp_ubwc_flag_hint=1");
+            }
+            if (runtimeRenderer.toLowerCase().contains("zink")){
                 // This is sketch but it fixes a lot of things, if it causes problems we can just undo it.
+                envMap.put("MESA_GL_VERSION_OVERRIDE","4.6COMPAT");
+                envMap.put("MESA_GLSL_VERSION_OVERRIDE","460");
+            }
+            if (runtimeRenderer.toLowerCase().contains("freedreno")){
                 envMap.put("MESA_GL_VERSION_OVERRIDE","4.6COMPAT");
                 envMap.put("MESA_GLSL_VERSION_OVERRIDE","460");
             }
@@ -252,6 +270,8 @@ public class JREUtils {
             if (glesMajor < 3) {
                 //fallback to 2 since it's the minimum for the entire app
                 envMap.put("LIBGL_ES","2");
+            } else if (LOCAL_RENDERER.startsWith("opengles3_desktopgl")) {
+                envMap.put("LIBGL_ES", "3");
             } else if (LOCAL_RENDERER.startsWith("opengles")) {
                 envMap.put("LIBGL_ES", LOCAL_RENDERER.replace("opengles", "").replace("_5", ""));
             } else {
@@ -327,6 +347,10 @@ public class JREUtils {
         //Add automatically generated args
         userArgs.add("-Xms" + LauncherPreferences.PREF_RAM_ALLOCATION + "M");
         userArgs.add("-Xmx" + LauncherPreferences.PREF_RAM_ALLOCATION + "M");
+        if (LauncherPreferences.PREF_RAM_ALLOCATION <= 1280) {
+            userArgs.add("-XX:+UseSerialGC");
+            userArgs.add("-XX:ReservedCodeCacheSize=48M");
+        }
         if(LOCAL_RENDERER != null) userArgs.add("-Dorg.lwjgl.opengl.libname=" + graphicsLib);
 
         // Force LWJGL to use the Freetype library intended for it, instead of using the one
@@ -380,6 +404,11 @@ public class JREUtils {
             ArrayList<String> userArgs = new ArrayList<>(args);
             addHeadlessJvmArg(userArgs, "-Djava.home=", runtimeHome);
             addHeadlessJvmArg(userArgs, "-Djava.io.tmpdir=", Tools.DIR_CACHE.getAbsolutePath());
+            File nativeExtractDir = getNativeExtractDir();
+            addHeadlessJvmArg(userArgs, "-Djna.tmpdir=", nativeExtractDir.getAbsolutePath());
+            addHeadlessJvmArg(userArgs, "-Dorg.lwjgl.system.SharedLibraryExtractPath=", nativeExtractDir.getAbsolutePath());
+            addHeadlessJvmArg(userArgs, "-Dorg.lwjgl.system.SharedLibraryExtractDirectory=", "lwjgl");
+            addHeadlessJvmArg(userArgs, "-Dio.netty.native.workdir=", nativeExtractDir.getAbsolutePath());
             addHeadlessJvmArg(userArgs, "-Duser.home=", Tools.DIR_GAME_HOME);
             addHeadlessJvmArg(userArgs, "-Dos.name=", "Linux");
             addHeadlessJvmArg(userArgs, "-Dos.version=", "Android-" + Build.VERSION.RELEASE);
@@ -442,8 +471,8 @@ public class JREUtils {
                 //"-Dorg.lwjgl.util.DebugFunctions=true",
                 //"-Dorg.lwjgl.util.DebugLoader=true",
                 // GLFW Stub width height
-                "-Dglfwstub.windowWidth=" + Tools.getDisplayFriendlyRes(currentDisplayMetrics.widthPixels, LauncherPreferences.PREF_SCALE_FACTOR),
-                "-Dglfwstub.windowHeight=" + Tools.getDisplayFriendlyRes(currentDisplayMetrics.heightPixels, LauncherPreferences.PREF_SCALE_FACTOR),
+                "-Dglfwstub.windowWidth=" + Tools.getDisplayFriendlyRes(Math.max(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels), LauncherPreferences.PREF_SCALE_FACTOR),
+                "-Dglfwstub.windowHeight=" + Tools.getDisplayFriendlyRes(Math.min(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels), LauncherPreferences.PREF_SCALE_FACTOR),
                 "-Dglfwstub.initEgl=false",
                 "-Dext.net.resolvPath=" +resolvFile,
                 "-Dlog4j2.formatMsgNoLookups=true", //Log4j RCE mitigation
@@ -479,9 +508,19 @@ public class JREUtils {
 
     private static File getNativeExtractDir() {
         File nativeExtractDir = new File(Tools.DIR_CACHE, "native_extract");
-        //noinspection ResultOfMethodCallIgnored
-        nativeExtractDir.mkdirs();
+        ensureWritableDirectory(nativeExtractDir);
+        ensureWritableDirectory(new File(nativeExtractDir, "lwjgl"));
         return nativeExtractDir;
+    }
+
+    private static void ensureWritableDirectory(File directory) {
+        if (!directory.isDirectory() && !directory.mkdirs()) {
+            Logger.appendToLog("Warning: could not create native work directory: " + directory.getAbsolutePath());
+            return;
+        }
+        if (!directory.canWrite()) {
+            Logger.appendToLog("Warning: native work directory is not writable: " + directory.getAbsolutePath());
+        }
     }
 
     /**
@@ -562,7 +601,8 @@ public class JREUtils {
     public static String loadGraphicsLibrary(){
         if(LOCAL_RENDERER == null) return null;
         String renderLibrary;
-        switch (LOCAL_RENDERER){
+        String runtimeRenderer = runtimeRendererForGraphics(LOCAL_RENDERER);
+        switch (runtimeRenderer){
             case "opengles2":
             case "opengles2_5":
             case "opengles3":
@@ -570,6 +610,7 @@ public class JREUtils {
             case "vulkan_zink": renderLibrary = "libOSMesa.so"; break;
             case "opengles_mobileglues": renderLibrary = "libmobileglues.so"; break;
             case "opengles3_desktopgl_zink_kopper": renderLibrary = "libglxshim.so"; break;
+            case "opengles3_desktopgl_freedreno": renderLibrary = "libglxshim.so"; break;
             case "opengles3_ltw" : renderLibrary = "libltw.so"; break;
             default:
                 Log.w("RENDER_LIBRARY", "No renderer selected, defaulting to opengles2");
@@ -584,6 +625,10 @@ public class JREUtils {
             dlopen(NATIVE_LIB_DIR + "/libgl4es_114.so");
         }
         return renderLibrary;
+    }
+
+    private static String runtimeRendererForGraphics(String rendererId) {
+        return rendererId;
     }
 
     /**
@@ -626,6 +671,7 @@ public class JREUtils {
     public static native void releaseBridgeWindow();
     public static native void initializeHooks();
     public static native void setupExitMethod(Context context);
+    public static native int getRendererFps();
     // Obtain AWT screen pixels to render on Android SurfaceView
     public static native int[] renderAWTScreenFrame(/* Object canvas, int width, int height */);
     static {

@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import android.widget.ImageButton;
 
 import androidx.core.view.ViewCompat;
 import androidx.core.graphics.ColorUtils;
@@ -33,6 +34,8 @@ public class ProfileAdapter extends BaseAdapter {
     private final MinecraftProfile dummy = new MinecraftProfile();
     private List<String> mProfileList;
     private ProfileAdapterExtra[] mExtraEntires;
+    private OnProfileDeleteListener mDeleteListener;
+    private OnProfileClickListener mClickListener;
 
     public ProfileAdapter(ProfileAdapterExtra[] extraEntries) {
         reloadProfiles(extraEntries);
@@ -76,6 +79,7 @@ public class ProfileAdapter extends BaseAdapter {
 
     @Override
     public void notifyDataSetChanged() {
+        ensureProfilesLoaded();
         mProfiles = new HashMap<>(LauncherProfiles.mainProfileJson.profiles);
         mProfileList = new ArrayList<>(Arrays.asList(mProfiles.keySet().toArray(new String[0])));
         super.notifyDataSetChanged();
@@ -85,12 +89,26 @@ public class ProfileAdapter extends BaseAdapter {
     public View getView(int position, View convertView, ViewGroup parent) {
         View v = convertView;
         if (v == null) v = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_version_profile_layout,parent,false);
-        setView(v, getItem(position), true);
+        Object item = getItem(position);
+        setView(v, item, true);
+        v.setOnClickListener(item != null && mClickListener != null
+                ? clicked -> mClickListener.onClick(position, item)
+                : null);
+        ImageButton delete = v.findViewById(R.id.profile_item_delete);
+        if (delete != null) {
+            boolean canDelete = item instanceof String && mProfileList.size() > 1;
+            delete.setVisibility(canDelete ? View.VISIBLE : View.GONE);
+            delete.setFocusable(false);
+            delete.setFocusableInTouchMode(false);
+            delete.setOnClickListener(canDelete && mDeleteListener != null
+                    ? clicked -> mDeleteListener.onDelete((String) item)
+                    : null);
+        }
         return v;
     }
 
     public void setViewProfile(View v, String nm, boolean displaySelection) {
-        ExtendedTextView extendedTextView = (ExtendedTextView) v;
+        ExtendedTextView extendedTextView = textView(v);
 
         MinecraftProfile minecraftProfile = mProfiles.get(nm);
         if(minecraftProfile == null) minecraftProfile = dummy;
@@ -123,7 +141,7 @@ public class ProfileAdapter extends BaseAdapter {
     }
 
     public void setViewExtra(View v, ProfileAdapterExtra extra) {
-        ExtendedTextView extendedTextView = (ExtendedTextView) v;
+        ExtendedTextView extendedTextView = textView(v);
         extendedTextView.setCompoundDrawablesRelative(extra.icon, null, extendedTextView.getCompoundsDrawables()[2], null);
         extendedTextView.setText(extra.name);
         ViewCompat.setBackgroundTintList(extendedTextView, null);
@@ -137,12 +155,42 @@ public class ProfileAdapter extends BaseAdapter {
         }
     }
 
+    private ExtendedTextView textView(View view) {
+        if (view instanceof ExtendedTextView) return (ExtendedTextView) view;
+        return view.findViewById(R.id.profile_item_label);
+    }
+
+    public void setOnProfileDeleteListener(OnProfileDeleteListener listener) {
+        mDeleteListener = listener;
+    }
+
+    public void setOnProfileClickListener(OnProfileClickListener listener) {
+        mClickListener = listener;
+    }
+
+    public interface OnProfileClickListener {
+        void onClick(int position, Object item);
+    }
+
+    public interface OnProfileDeleteListener {
+        void onDelete(String profileKey);
+    }
+
     /** Reload profiles from the file */
     public void reloadProfiles(){
-        LauncherProfiles.load();
+        ensureProfilesLoaded();
         mProfiles = new HashMap<>(LauncherProfiles.mainProfileJson.profiles);
         mProfileList = new ArrayList<>(Arrays.asList(mProfiles.keySet().toArray(new String[0])));
-        notifyDataSetChanged();
+        super.notifyDataSetChanged();
+    }
+
+    private static void ensureProfilesLoaded() {
+        try {
+            LauncherProfiles.load();
+        } catch (RuntimeException loadFailure) {
+            android.util.Log.e("ProfileAdapter", "Unable to load launcher profiles; using a recoverable default", loadFailure);
+            LauncherProfiles.createRecoverableDefault();
+        }
     }
 
     /** Reload profiles from the file, with additional extra entries */

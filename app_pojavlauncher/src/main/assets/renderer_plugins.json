@@ -1,0 +1,41 @@
+{
+  "schema": "battly-renderer-plugins-v1",
+  "renderers": [
+    {
+      "id": "battly_kopper",
+      "name": "Kopper Zink (OpenGL 4.6)",
+      "description": "Mesa Zink through the packaged EGL/Kopper bridge.",
+      "runtimeRenderer": "opengles3_desktopgl_zink_kopper",
+      "minSdk": 29,
+      "requiresVulkan": true,
+      "requiredLibraries": ["libEGL_mesa.so", "libglxshim.so", "libzink_dri.so"]
+    },
+    {
+      "id": "battly_freedreno",
+      "name": "Freedreno Turnip (Adreno)",
+      "description": "Mesa/Turnip backend for compatible 64-bit Adreno devices.",
+      "runtimeRenderer": "opengles3_desktopgl_freedreno",
+      "minSdk": 29,
+      "requiresVulkan": true,
+      "requiresArm64": true,
+      "requiresAdreno": true,
+      "requiredLibraries": ["libvulkan_freedreno.so", "libEGL_mesa.so", "libglxshim.so", "libzink_dri.so"]
+    },
+    {
+      "id": "battly_mobileglues",
+      "name": "MobileGlues",
+      "description": "OpenGL translation backend tuned for modern Minecraft and mod loaders.",
+      "runtimeRenderer": "opengles_mobileglues",
+      "requiresGles3": true,
+      "requiredLibraries": ["libmobileglues.so"]
+    },
+    {
+      "id": "battly_ltw",
+      "name": "LTW (experimental)",
+      "description": "Optional LTW backend, shown only when its native library is installed.",
+      "runtimeRenderer": "opengles3_ltw",
+      "requiresGles3": true,
+      "requiredLibraries": ["libltw.so"]
+    }
+  ]
+}

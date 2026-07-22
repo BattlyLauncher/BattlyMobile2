@@ -4,6 +4,7 @@ import java.lang.instrument.Instrumentation;
 
 public class startInjectors {
     public static void premain(String args, Instrumentation inst) {
+        OfflineSkinInjector.installIfConfigured();
         try {
             // Check if we have the asm classes we need
             Class.forName("org.objectweb.asm.ClassReader");

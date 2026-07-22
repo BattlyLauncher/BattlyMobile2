@@ -1,5 +1,6 @@
 package net.kdt.pojavlaunch.utils;
 
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -59,35 +60,51 @@ public class DownloadUtils {
     }
 
     public static void downloadFile(String url, File out) throws IOException {
-        FileUtils.ensureParentDirectory(out);
-        try (FileOutputStream fileOutputStream = new FileOutputStream(out)) {
-            download(url, fileOutputStream);
-        } catch (IOException e) {
-            if (out.length() < 1) { // Only delete it if file is 0 bytes cause this file might already be downloaded and something else went wrong.
-                Log.i("DownloadUtils", "Cleaning up failed download: " + out.getAbsolutePath());
-                out.delete();
-                throw e;
-            }
-        }
+        downloadFileMonitored(url, out, null, (current, total) -> { });
     }
 
     public static void downloadFileMonitored(String urlInput, File outputFile, @Nullable byte[] buffer,
                                              Tools.DownloaderFeedback monitor) throws IOException {
-        FileUtils.ensureParentDirectory(outputFile);
+        downloadFileMonitored(urlInput, outputFile, buffer, monitor, true);
+    }
 
+    private static void downloadFileMonitored(String urlInput, File outputFile, @Nullable byte[] buffer,
+                                              Tools.DownloaderFeedback monitor, boolean allowReset) throws IOException {
+        FileUtils.ensureParentDirectory(outputFile);
+        long existing = outputFile.isFile() ? outputFile.length() : 0L;
         URLConnection connection = openConnection(new URL(urlInput));
+        if (existing > 0 && connection instanceof HttpURLConnection) {
+            ((HttpURLConnection) connection).setRequestProperty("Range", "bytes=" + existing + "-");
+        }
+        boolean append = false;
+        if (connection instanceof HttpURLConnection) {
+            int code = ((HttpURLConnection) connection).getResponseCode();
+            if (code == HttpURLConnection.HTTP_PARTIAL) append = existing > 0;
+            else if (code == 416 && allowReset) {
+                ((HttpURLConnection) connection).disconnect();
+                if (!outputFile.delete()) throw new IOException("Unable to reset partial download");
+                downloadFileMonitored(urlInput, outputFile, buffer, monitor, false);
+                return;
+            } else if (code < 200 || code >= 300) {
+                throw new IOException("Server returned HTTP " + code + " for " + urlInput);
+            }
+        }
         InputStream readStr = connection.getInputStream();
-        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+        try (FileOutputStream fos = new FileOutputStream(outputFile, append)) {
             int current;
-            int overall = 0;
-            int length = connection.getContentLength();
+            long overall = append ? existing : 0;
+            long responseLength = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                    ? connection.getContentLengthLong()
+                    : connection.getContentLength();
+            long length = responseLength < 0 ? -1 : overall + responseLength;
 
             if (buffer == null) buffer = new byte[65535];
 
             while ((current = readStr.read(buffer)) != -1) {
                 overall += current;
                 fos.write(buffer, 0, current);
-                monitor.updateProgress(overall, length);
+                monitor.updateProgress((int) Math.min(Integer.MAX_VALUE, overall),
+                        (int) Math.min(Integer.MAX_VALUE, length));
             }
         } catch (IOException e) {
             throw new IOException("Unable to download from " + urlInput, e);
@@ -229,7 +246,9 @@ public class DownloadUtils {
             return -1;
         }
         connection.connect();
-        return connection.getContentLengthLong();
+        return Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
+                ? connection.getContentLengthLong()
+                : connection.getContentLength();
     }
 
     private static URLConnection openConnection(URL url) throws IOException {

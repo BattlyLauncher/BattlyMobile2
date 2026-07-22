@@ -30,6 +30,7 @@ import net.kdt.pojavlaunch.customcontrols.buttons.ControlButton;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlDrawer;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlJoystick;
+import net.kdt.pojavlaunch.customcontrols.buttons.ControlPerformanceWidget;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlSubButton;
 import net.kdt.pojavlaunch.customcontrols.handleview.ActionRow;
 import net.kdt.pojavlaunch.customcontrols.handleview.ControlHandleView;
@@ -134,7 +135,9 @@ public class ControlLayout extends FrameLayout {
 	}
 
 	private void addControlView(ControlData controlButton) {
-		final ControlButton view = new ControlButton(this, controlButton);
+		final ControlButton view = controlButton.isPerformanceWidget()
+				? new ControlPerformanceWidget(this, controlButton)
+				: new ControlButton(this, controlButton);
 
 		if (!mModifiable) {
 			view.setAlpha(view.getProperties().opacity);

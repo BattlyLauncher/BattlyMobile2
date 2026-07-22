@@ -20,7 +20,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 public class JREAutoDownloader {
 
@@ -61,39 +60,6 @@ public class JREAutoDownloader {
     }
 
     private static final ExecutorService executor = Executors.newSingleThreadExecutor();
-    private static final AtomicBoolean bootstrapJava8InProgress = new AtomicBoolean(false);
-
-    /**
-     * Ensures the launcher has a compatible Java 8 runtime as soon as the app starts.
-     * Existing compatible installs are kept; otherwise the architecture-specific archive is
-     * downloaded from the Battly runtime release repository.
-     */
-    public static void ensureBootstrapJava8Async() {
-        String installedJre = findCompatibleInstalledJreName(8);
-        if (installedJre != null) {
-            promoteDefaultRuntimeIfMissing(installedJre);
-            return;
-        }
-        if (!bootstrapJava8InProgress.compareAndSet(false, true)) {
-            return;
-        }
-
-        ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, true);
-        downloadJREAsync(8, new DownloadCallback() {
-            @Override
-            public void onSuccess(String jreName) {
-                promoteDefaultRuntimeIfMissing(jreName);
-                bootstrapJava8InProgress.set(false);
-                ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, false);
-            }
-
-            @Override
-            public void onError(Exception e) {
-                bootstrapJava8InProgress.set(false);
-                ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, false);
-            }
-        });
-    }
 
     /**
      * Downloads and extracts the requested JRE version asynchronously.
@@ -112,6 +78,23 @@ public class JREAutoDownloader {
         });
     }
 
+    public static boolean isJavaVersionInstalled(int targetVersion) {
+        return findCompatibleInstalledJreName(targetVersion) != null;
+    }
+
+    public static String getCompatibleInstalledJreName(int targetVersion) {
+        return findCompatibleInstalledJreName(targetVersion);
+    }
+
+    public static boolean isDownloadAvailableForCurrentArchitecture(int targetVersion) {
+        int architecture = Architecture.getDeviceArchitecture();
+        if (architecture == Architecture.UNSUPPORTED_ARCH) return false;
+        String assetName = "jre" + targetVersion + "-android-"
+                + Architecture.archAsString(architecture) + ".tar.xz";
+        Set<String> assets = AVAILABLE_ASSETS.get(targetVersion);
+        return assets != null && assets.contains(assetName);
+    }
+
     /**
      * Downloads and extracts the requested JRE version synchronously.
      * @param targetVersion The Java version requested (8, 17, 21, 25).
@@ -126,10 +109,9 @@ public class JREAutoDownloader {
             throw new Exception("Unsupported architecture");
         }
 
-        // Fallback para x86 pidiendo Java 25
-        if (targetVersion == 25 && architecture == Architecture.ARCH_X86) {
-            Log.w(TAG, "Java 25 is not available for x86. Falling back to Java 21.");
-            targetVersion = 21;
+        if (targetVersion == 25 && (architecture == Architecture.ARCH_ARM
+                || architecture == Architecture.ARCH_X86)) {
+            throw new Exception("Java 25 is not compatible with 32-bit devices. This device can use Minecraft versions that require Java 8, 17 or 21.");
         }
 
         String assetName = "jre" + targetVersion + "-android-" + archString + ".tar.xz";
@@ -141,6 +123,7 @@ public class JREAutoDownloader {
 
         String downloadUrl = BASE_URL + assetName;
         String jreName = "jre-" + targetVersion;
+        final int downloadJavaVersion = targetVersion;
         
         File runtimeBaseDir = new File(Tools.MULTIRT_HOME);
         File downloadsDir = new File(runtimeBaseDir, "downloads");
@@ -160,18 +143,40 @@ public class JREAutoDownloader {
         
         if (!downloadedFile.exists() || downloadedFile.length() == 0) {
             Log.i(TAG, "Downloading JRE from " + downloadUrl);
-            DownloadUtils.downloadFile(downloadUrl, downloadedFile);
+            ProgressLayout.setProgress(ProgressLayout.UNPACK_RUNTIME, 0,
+                    net.kdt.pojavlaunch.R.string.java_runtime_download_downloading, targetVersion);
+            DownloadUtils.downloadFileMonitored(downloadUrl, downloadedFile, null, (curr, max) -> {
+                if (max > 0) {
+                    ProgressLayout.setProgress(ProgressLayout.UNPACK_RUNTIME,
+                            (int) Math.min(95, Math.max(0, (long) curr * 95L / (long) max)),
+                            net.kdt.pojavlaunch.R.string.java_runtime_download_progress,
+                            downloadJavaVersion,
+                            curr / 1024f / 1024f,
+                            max / 1024f / 1024f);
+                } else {
+                    ProgressLayout.setProgress(ProgressLayout.UNPACK_RUNTIME, 0,
+                            net.kdt.pojavlaunch.R.string.java_runtime_download_downloading, downloadJavaVersion);
+                }
+            });
         } else {
             Log.i(TAG, "Archive already downloaded at " + downloadedFile.getAbsolutePath());
         }
 
         Log.i(TAG, "Extracting JRE " + jreName);
+        ProgressLayout.setProgress(ProgressLayout.UNPACK_RUNTIME, 96,
+                net.kdt.pojavlaunch.R.string.java_runtime_download_installing, targetVersion);
         try (FileInputStream fis = new FileInputStream(downloadedFile)) {
             MultiRTUtils.installRuntimeNamed(Tools.NATIVE_LIB_DIR, fis, jreName);
             MultiRTUtils.postPrepare(jreName);
         } catch (Exception e) {
             // Si la extracción falla, borramos el archivo descargado para volver a intentar en el futuro.
+            try {
+                MultiRTUtils.removeRuntimeNamed(jreName);
+            } catch (IOException cleanupError) {
+                e.addSuppressed(cleanupError);
+            }
             downloadedFile.delete();
+            ProgressLayout.clearProgress(ProgressLayout.UNPACK_RUNTIME);
             throw new Exception("Error extracting JRE archive: " + e.getMessage(), e);
         }
         // Clear cached Runtime entry so the next read reflects the newly extracted files on disk.
@@ -217,7 +222,7 @@ public class JREAutoDownloader {
         return null;
     }
 
-    private static void promoteDefaultRuntimeIfMissing(String jreName) {
+    public static void promoteDefaultRuntimeIfMissing(String jreName) {
         if (LauncherPreferences.DEFAULT_PREF == null) {
             return;
         }

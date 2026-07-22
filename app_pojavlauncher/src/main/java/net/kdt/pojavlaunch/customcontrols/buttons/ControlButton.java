@@ -241,6 +241,10 @@ public class ControlButton extends TextView implements ControlInterface {
                 if(isDown) MainActivity.switchKeyboardState();
                 break;
 
+            case ControlData.SPECIALBTN_KEYBOARDPAN:
+                if(isDown) MainActivity.switchKeyboardState(true);
+                break;
+
             case ControlData.SPECIALBTN_TOGGLECTRL:
                 if(isDown)getControlLayoutParent().toggleControlVisible();
                 break;

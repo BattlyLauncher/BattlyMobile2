@@ -5,6 +5,7 @@
 
 package org.libsdl.app;
 
+import android.annotation.SuppressLint;
 import android.app.PendingIntent;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -26,6 +27,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+@SuppressLint("MissingPermission") // initializeBluetooth exits unless the required runtime permission is granted.
 public class HIDDeviceManager {
     private static final String TAG = "hidapi";
     private static final String ACTION_USB_PERMISSION = "org.libsdl.app.USB_PERMISSION";
@@ -197,7 +199,8 @@ public class HIDDeviceManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             mContext.registerReceiver(mUsbBroadcast, filter, Context.RECEIVER_EXPORTED);
         } else {
-            mContext.registerReceiver(mUsbBroadcast, filter);
+            androidx.core.content.ContextCompat.registerReceiver(
+                    mContext, mUsbBroadcast, filter, androidx.core.content.ContextCompat.RECEIVER_EXPORTED);
         }
 
         for (UsbDevice usbDevice : mUsbManager.getDeviceList().values()) {
@@ -412,7 +415,8 @@ public class HIDDeviceManager {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             mContext.registerReceiver(mBluetoothBroadcast, filter, Context.RECEIVER_EXPORTED);
         } else {
-            mContext.registerReceiver(mBluetoothBroadcast, filter);
+            androidx.core.content.ContextCompat.registerReceiver(
+                    mContext, mBluetoothBroadcast, filter, androidx.core.content.ContextCompat.RECEIVER_EXPORTED);
         }
 
         if (mIsChromebook) {

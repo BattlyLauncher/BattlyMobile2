@@ -20,12 +20,19 @@ public class LauncherProfiles {
 
     /** Reload the profile from the file, creating a default one if necessary */
     public static void load(){
+        boolean recoveredCorruptFile = false;
         if (launcherProfilesFile.exists()) {
             try {
                 mainProfileJson = Tools.GLOBAL_GSON.fromJson(Tools.read(launcherProfilesFile.getAbsolutePath()), MinecraftLauncherProfiles.class);
-            } catch (IOException e) {
-                Log.e(LauncherProfiles.class.toString(), "Failed to load file: ", e);
-                throw new RuntimeException(e);
+            } catch (Exception e) {
+                Log.e(LauncherProfiles.class.toString(), "Failed to load launcher profiles; preserving the corrupt file", e);
+                File backup = new File(launcherProfilesFile.getParentFile(),
+                        launcherProfilesFile.getName() + ".corrupt-" + System.currentTimeMillis());
+                if (!launcherProfilesFile.renameTo(backup)) {
+                    Log.w(LauncherProfiles.class.toString(), "Could not preserve corrupt launcher profiles file");
+                }
+                mainProfileJson = null;
+                recoveredCorruptFile = true;
             }
         }
 
@@ -35,8 +42,16 @@ public class LauncherProfiles {
         if (mainProfileJson.profiles.size() == 0)
             mainProfileJson.profiles.put(UUID.randomUUID().toString(), MinecraftProfile.getDefaultProfile());
 
+        if (recoveredCorruptFile) {
+            try {
+                write();
+            } catch (RuntimeException writeFailure) {
+                Log.e(LauncherProfiles.class.toString(), "Failed to persist recovered launcher profiles", writeFailure);
+            }
+        }
+
         // Normalize profile names from mod installers
-        if(normalizeProfileIds(mainProfileJson)){
+        if(normalizeProfileIds(mainProfileJson) || ensureBattlyInstanceMetadata(mainProfileJson)){
             write();
             load();
         }
@@ -56,8 +71,24 @@ public class LauncherProfiles {
         if(mainProfileJson == null) LauncherProfiles.load();
         String defaultProfileName = LauncherPreferences.DEFAULT_PREF.getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
         MinecraftProfile profile = mainProfileJson.profiles.get(defaultProfileName);
-        if(profile == null) throw new RuntimeException("The current profile stopped existing :(");
+        if(profile == null) {
+            Log.w(LauncherProfiles.class.toString(), "Current profile is missing, falling back to the first available profile: " + defaultProfileName);
+            if (mainProfileJson.profiles == null || mainProfileJson.profiles.isEmpty()) {
+                LauncherProfiles.load();
+            }
+            Map.Entry<String, MinecraftProfile> fallback = mainProfileJson.profiles.entrySet().iterator().next();
+            LauncherPreferences.DEFAULT_PREF.edit()
+                    .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, fallback.getKey())
+                    .apply();
+            profile = fallback.getValue();
+        }
         return profile;
+    }
+
+    public static void createRecoverableDefault() {
+        mainProfileJson = new MinecraftLauncherProfiles();
+        if (mainProfileJson.profiles == null) mainProfileJson.profiles = new HashMap<>();
+        mainProfileJson.profiles.put(UUID.randomUUID().toString(), MinecraftProfile.getDefaultProfile());
     }
 
     /**
@@ -107,5 +138,31 @@ public class LauncherProfiles {
         }
 
         return hasNormalized;
+    }
+
+    private static boolean ensureBattlyInstanceMetadata(MinecraftLauncherProfiles launcherProfiles) {
+        boolean changed = false;
+        long now = System.currentTimeMillis();
+        for (Map.Entry<String, MinecraftProfile> entry : launcherProfiles.profiles.entrySet()) {
+            MinecraftProfile profile = entry.getValue();
+            if (profile == null) continue;
+            if (!Tools.isValidString(profile.battlyInstanceId)) {
+                profile.battlyInstanceId = entry.getKey();
+                changed = true;
+            }
+            if (profile.battlySchemaVersion < 1) {
+                profile.battlySchemaVersion = 1;
+                changed = true;
+            }
+            if (profile.battlyCreatedAt <= 0) {
+                profile.battlyCreatedAt = now;
+                changed = true;
+            }
+            if (profile.battlyUpdatedAt <= 0) {
+                profile.battlyUpdatedAt = profile.battlyCreatedAt;
+                changed = true;
+            }
+        }
+        return changed;
     }
 }

@@ -19,6 +19,8 @@
 			android:ems="10"
 			android:imeOptions="flagNoFullscreen|flagNoExtractUi|flagNoPersonalizedLearning|actionDone"
 			android:inputType="textFilter|textImeMultiLine|textAutoComplete|textAutoCorrect"
+			app:layout_constraintStart_toStartOf="parent"
+			app:layout_constraintTop_toTopOf="parent"
 			tools:ignore="TouchTargetSizeCheck"
 			/>
 

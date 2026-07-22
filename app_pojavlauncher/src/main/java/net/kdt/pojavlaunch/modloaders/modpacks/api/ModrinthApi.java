@@ -106,6 +106,7 @@ public class ModrinthApi implements ModpackApi{
         if(response == null) return null;
         String[] names = new String[response.size()];
         String[] mcNames = new String[response.size()];
+        String[][] gameVersions = new String[response.size()][];
         String[] urls = new String[response.size()];
         String[] fileNames = new String[response.size()];
         String[] hashes = new String[response.size()];
@@ -115,7 +116,9 @@ public class ModrinthApi implements ModpackApi{
         for (int i=0; i<response.size(); ++i) {
             JsonObject version = response.get(i).getAsJsonObject();
             names[i] = version.get("name").getAsString();
-            mcNames[i] = pickMinecraftVersion(version.get("game_versions").getAsJsonArray());
+            JsonArray versionGameVersions = version.get("game_versions").getAsJsonArray();
+            gameVersions[i] = jsonArrayToStrings(versionGameVersions);
+            mcNames[i] = pickMinecraftVersion(versionGameVersions);
             JsonObject versionFile = pickPrimaryFile(version.get("files").getAsJsonArray());
             urls[i] = versionFile.get("url").getAsString();
             fileNames[i] = versionFile.get("filename").getAsString();
@@ -131,7 +134,8 @@ public class ModrinthApi implements ModpackApi{
             hashes[i] = hashesMap.get("sha1").getAsString();
         }
 
-        return new ModDetail(item, names, mcNames, urls, fileNames, hashes, versionLoaders, versionDependencies);
+        return new ModDetail(item, names, mcNames, gameVersions, urls, fileNames, hashes,
+                versionLoaders, versionDependencies);
     }
 
     @Override
@@ -335,6 +339,10 @@ public class ModrinthApi implements ModpackApi{
             ZipUtils.zipExtract(modpackZipFile, "client-overrides/", instanceDestination);
             return createInfo(modrinthIndex);
         }
+    }
+
+    public ModLoader installPackArchive(File archive, File destination) throws IOException {
+        return installMrpack(archive, destination);
     }
 
     class ModrinthSearchResult extends SearchResult {

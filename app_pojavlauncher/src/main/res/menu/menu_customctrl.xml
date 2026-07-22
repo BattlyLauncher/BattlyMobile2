@@ -8,6 +8,10 @@
         android:title="@string/customctrl_addbutton_drawer"/>
 
     <item
+        android:id="@+id/menu_ctrl_add_performance"
+        android:title="@string/customctrl_performance_widget"/>
+
+    <item
         android:id="@+id/menu_ctrl_load"
         android:title="@string/global_load"/>
 

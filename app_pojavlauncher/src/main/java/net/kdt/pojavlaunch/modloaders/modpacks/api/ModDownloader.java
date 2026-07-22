@@ -4,6 +4,7 @@ import androidx.annotation.Nullable;
 
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,8 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ModDownloader {
     private static final ThreadLocal<byte[]> sThreadLocalBuffer = new ThreadLocal<>();
-    private final ThreadPoolExecutor mDownloadPool = new ThreadPoolExecutor(4,4,100, TimeUnit.MILLISECONDS,
-            new LinkedBlockingQueue<>());
+    private final ThreadPoolExecutor mDownloadPool;
     private final AtomicBoolean mTerminator = new AtomicBoolean(false);
     private final AtomicLong mDownloadSize = new AtomicLong(0);
     private final Object mExceptionSyncPoint = new Object();
@@ -32,6 +32,9 @@ public class ModDownloader {
     }
 
     public ModDownloader(File destinationDirectory, boolean useFileCount) {
+        int workers = Math.max(2, Math.min(12, LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT));
+        this.mDownloadPool = new ThreadPoolExecutor(workers, workers, 100, TimeUnit.MILLISECONDS,
+                new LinkedBlockingQueue<>());
         this.mDownloadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         this.mDestinationDirectory = destinationDirectory;
         this.mUseFileCount = useFileCount;
@@ -128,10 +131,28 @@ public class ModDownloader {
                         return null;
                     });
 
+                }catch (RuntimeException e) {
+                    if(handleRuntimeDownloadFailure(e)) return;
+                    downloadFailed(new IOException("Unexpected download failure", e));
+                    return;
                 }catch (IOException e) {
                     downloadFailed(e);
+                    return;
                 }
             }
+        }
+
+        private boolean handleRuntimeDownloadFailure(RuntimeException exception) {
+            Throwable cause = exception;
+            while (cause != null) {
+                if (cause instanceof InterruptedException || cause instanceof InterruptedIOException) {
+                    Thread.currentThread().interrupt();
+                    downloadFailed(new InterruptedIOException("Download interrupted"));
+                    return true;
+                }
+                cause = cause.getCause();
+            }
+            return false;
         }
 
         private IOException tryDownload(String sourceUrl) throws InterruptedException {

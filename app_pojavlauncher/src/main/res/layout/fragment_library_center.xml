@@ -172,6 +172,61 @@
                     style="@style/Widget_Battly_LibraryCardSubtitle"
                     android:text="@string/download_action_browse_datapacks_subtitle" />
             </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/download_panel_battly_skins"
+                style="@style/Widget_Battly_LibraryCard">
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/logo" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardTitle"
+                    android:text="@string/download_action_battly_skins_title" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardSubtitle"
+                    android:text="@string/download_action_battly_skins_subtitle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/download_panel_instances"
+                style="@style/Widget_Battly_LibraryCard">
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/minecraft_chest" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardTitle"
+                    android:text="@string/instance_manager_title" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardSubtitle"
+                    android:text="@string/instance_manager_subtitle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/download_panel_file_manager"
+                style="@style/Widget_Battly_LibraryCard">
+
+                <ImageView
+                    android:layout_width="36dp"
+                    android:layout_height="36dp"
+                    android:src="@drawable/ic_folder"
+                    app:tint="#FFFFFFFF" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardTitle"
+                    android:text="@string/battly_files_title" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardSubtitle"
+                    android:text="@string/battly_files_subtitle" />
+            </LinearLayout>
         </GridLayout>
 
         <TextView

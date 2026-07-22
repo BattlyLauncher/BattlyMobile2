@@ -30,12 +30,57 @@ jar {
     }
     if (gitUsed()){
       File versionFile = file("../app_pojavlauncher/src/main/assets/components/lwjgl3/version")
-      versionFile.write(getGitHash(project.projectDir) + "-cacio-ctc-labymod-stable-fix16")
+      String lwjglPatchVersion = getGitHash(project.projectDir) + "-cacio-ctc-labymod-stable-fix18-solclient-real-ui-battly-r9"
+      versionFile.write(lwjglPatchVersion)
+      file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.3.3/version").write(lwjglPatchVersion + "-3.3.3")
+      file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.1/version").write(lwjglPatchVersion + "-3.4.1-native-r5")
     }
     from {
         configurations.default.collect {
             println(it.getName())
             it.isDirectory() ? it : zipTree(it)
+        }
+    }
+}
+
+tasks.register("patchMergedLwjglModules") {
+    dependsOn tasks.named("classes")
+    inputs.files(sourceSets.main.output.classesDirs)
+    inputs.files(
+        file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.3.3/lwjgl-3.3.3-merged-modules.jar"),
+        file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.1/lwjgl-3.4.1-merged-modules.jar")
+    )
+    outputs.upToDateWhen { false }
+
+    doLast {
+        ["3.3.3", "3.4.1"].each { version ->
+            File mergedJar = file("../app_pojavlauncher/src/main/assets/components/lwjgl3/${version}/lwjgl-${version}-merged-modules.jar")
+            if (!mergedJar.exists()) {
+                throw new GradleException("Missing LWJGL merged module: ${mergedJar}")
+            }
+
+            File stagingDir = layout.buildDirectory.dir("patched-lwjgl/${version}").get().asFile
+            delete stagingDir
+            copy {
+                from(zipTree(mergedJar))
+                into stagingDir
+            }
+
+            sourceSets.main.output.classesDirs.files.each { classesDir ->
+                fileTree(classesDir).matching {
+                    include "org/lwjgl/glfw/**"
+                }.files.each { compiledClass ->
+                    String relativePath = classesDir.toPath().relativize(compiledClass.toPath()).toString()
+                    delete new File(stagingDir, relativePath)
+                }
+            }
+            copy {
+                from(sourceSets.main.output.classesDirs) {
+                    include "org/lwjgl/glfw/**"
+                }
+                into stagingDir
+            }
+            ant.zip(destfile: mergedJar, basedir: stagingDir)
         }
     }
 }

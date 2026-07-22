@@ -22,6 +22,20 @@ public class MinecraftProfile {
 	public String pojavRendererName;
 	public String controlFile;
 	public MinecraftResolution[] resolution;
+	// Optional Battly instance metadata. Old launcher_profiles.json files remain valid.
+	public String battlyInstanceId;
+	public int battlySchemaVersion;
+	public long battlyCreatedAt;
+	public long battlyUpdatedAt;
+	public String loaderName;
+	public String loaderVersion;
+	public String sourceProvider;
+	public String sourceProjectId;
+	public String sourceVersionId;
+	public String sourceVersionName;
+	public String sourceDownloadUrl;
+	public String sourceHash;
+	public String gamepadProfile;
 
 
 	public static MinecraftProfile createTemplate(){
@@ -55,5 +69,18 @@ public class MinecraftProfile {
 		pojavRendererName = profile.pojavRendererName;
 		controlFile = profile.controlFile;
 		resolution = profile.resolution;
+		battlyInstanceId = profile.battlyInstanceId;
+		battlySchemaVersion = profile.battlySchemaVersion;
+		battlyCreatedAt = profile.battlyCreatedAt;
+		battlyUpdatedAt = profile.battlyUpdatedAt;
+		loaderName = profile.loaderName;
+		loaderVersion = profile.loaderVersion;
+		sourceProvider = profile.sourceProvider;
+		sourceProjectId = profile.sourceProjectId;
+		sourceVersionId = profile.sourceVersionId;
+		sourceVersionName = profile.sourceVersionName;
+		sourceDownloadUrl = profile.sourceDownloadUrl;
+		sourceHash = profile.sourceHash;
+		gamepadProfile = profile.gamepadProfile;
 	}
 }

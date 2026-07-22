@@ -162,10 +162,11 @@ int pojavInitOpenGL() {
         pojav_environ->force_vsync = true;
 
     // NOTE: Override for now.
-    const char *renderer = getenv("AMETHYST_RENDERER");
-    if (strncmp("opengles", renderer, 8) == 0) {
+    const char *renderer = getenv("BATTLY_RENDERER");
+    if (renderer != NULL && strncmp("opengles", renderer, 8) == 0) {
         pojav_environ->config_renderer = RENDERER_GL4ES;
-        if (!strcmp(renderer, "opengles3_desktopgl_zink_kopper")) {
+        if (!strcmp(renderer, "opengles3_desktopgl_zink_kopper")
+                || !strcmp(renderer, "opengles3_desktopgl_freedreno")) {
             load_vulkan();
             setenv("GALLIUM_DRIVER", "zink", 1);
             setenv("MESA_ANDROID_NO_KMS_SWRAST", "1", 1);

@@ -524,6 +524,7 @@ public class GLFW
     static {
         try {
             System.loadLibrary("pojavexec");
+            nativeInitializeGLFWNativeBridge();
         } catch (UnsatisfiedLinkError e) {
             e.printStackTrace();
         }
@@ -882,6 +883,11 @@ public class GLFW
         return 1L;
     }
 
+    @Nullable
+    public static String glfwGetMonitorName(@NativeType("GLFWmonitor *") long monitor) {
+        return monitor == glfwGetPrimaryMonitor() ? "Battly Display" : null;
+    }
+
     public static void glfwGetMonitorPos(@NativeType("GLFWmonitor *") long monitor, @Nullable @NativeType("int *") IntBuffer xpos, @Nullable @NativeType("int *") IntBuffer ypos) {
         if (CHECKS) {
             checkSafe(xpos, 1);
@@ -957,6 +963,8 @@ public class GLFW
         }
     }
 
+    private static native void nativeInitializeGLFWNativeBridge();
+
     @Nullable
     public static GLFWVidMode glfwGetVideoMode(long monitor) {
         return mGLFWVideoMode;
@@ -1016,8 +1024,8 @@ public class GLFW
         // win.width = width;
         // win.height = height;
 
-        win.width = mGLFWWindowWidth;
-        win.height = mGLFWWindowHeight;
+        win.width = mGLFWWindowWidth > 0 ? mGLFWWindowWidth : width;
+        win.height = mGLFWWindowHeight > 0 ? mGLFWWindowHeight : height;
         win.title = title;
 
         // Set the Open GL version for context because Forge and derivatives ask for it
@@ -1026,21 +1034,22 @@ public class GLFW
         int glMinor = 3;
         boolean turnipLoad = System.getenv("POJAV_LOAD_TURNIP") != null &&
                 System.getenv("POJAV_LOAD_TURNIP").equals("1");
+        String renderer = System.getenv("BATTLY_RENDERER");
         // These values can be found at headings_array.xml
-        if (turnipLoad && System.getenv("AMETHYST_RENDERER").equals("vulkan_zink")) {
+        if (turnipLoad && "vulkan_zink".equals(renderer)) {
             System.out.println("GLFW: Turnip+Zink detected, setting GL context to 4.6");
             glMajor = 4;
             glMinor = 6;
-        } else if (System.getenv("AMETHYST_RENDERER").equals("opengles3_virgl")) {
-            System.out.println("GLFW: virglrenderer detected, setting GL context to 4.3");
+        } else if ("opengles3_virgl".equals(renderer)) {
+            System.out.println("GLFW: desktop GL bridge detected, setting GL context to 4.3");
             glMajor = 4;
             glMinor = 3;
-        } else if (System.getenv("AMETHYST_RENDERER").equals("opengles_mobileglues")) {
+        } else if ("opengles_mobileglues".equals(renderer)) {
             System.out.println("GLFW: MobileGlues detected, setting GL context to 4.0");
             glMajor = 4;
             glMinor = 0;
         } else {
-            System.out.println("GLFW: " + System.getenv("AMETHYST_RENDERER") + " detected, defaulting GL context to 3.3");
+            System.out.println("GLFW: " + renderer + " detected, defaulting GL context to 3.3");
         }
         win.windowAttribs.put(GLFW_CONTEXT_VERSION_MAJOR, glMajor);
         win.windowAttribs.put(GLFW_CONTEXT_VERSION_MINOR, glMinor);

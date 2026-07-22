@@ -31,7 +31,7 @@
             android:contentDescription="@string/ctrl_back"
             android:padding="8dp"
             android:src="@drawable/ic_arrow_back_white"
-            android:tint="#FFFFFFFF" />
+            app:tint="#FFFFFFFF" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -233,7 +233,7 @@
             android:layout_width="48dp"
             android:layout_height="48dp"
             android:src="@drawable/ic_menu_custom_controls"
-            android:tint="#2a4a60"
+            app:tint="#2a4a60"
             android:layout_marginBottom="8dp" />
 
         <TextView
@@ -285,7 +285,7 @@
             android:src="@drawable/ic_arrow_back_white"
             android:padding="8dp"
             android:contentDescription="@string/ctrl_prev"
-            android:tint="#FFFFFFFF"
+            app:tint="#FFFFFFFF"
             android:enabled="false" />
 
         <TextView
@@ -306,7 +306,7 @@
             android:src="@drawable/ic_battly_chevron"
             android:padding="8dp"
             android:contentDescription="@string/ctrl_next"
-            android:tint="#FFFFFFFF"
+            app:tint="#FFFFFFFF"
             android:enabled="false" />
     </LinearLayout>
 

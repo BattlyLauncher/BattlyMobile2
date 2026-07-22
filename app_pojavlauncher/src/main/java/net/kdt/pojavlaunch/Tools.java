@@ -73,9 +73,13 @@ import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.utils.GLInfoUtils;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.JSONUtils;
+import net.kdt.pojavlaunch.utils.LegacyShaderpackCompat;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
+import net.kdt.pojavlaunch.utils.OfflineSkinManager;
+import net.kdt.pojavlaunch.utils.PromotedServersManager;
 import net.kdt.pojavlaunch.utils.OldVersionsUtils;
 import net.kdt.pojavlaunch.utils.BattlyNotify;
+import net.kdt.pojavlaunch.utils.RendererPluginRegistry;
 import net.kdt.pojavlaunch.value.DependentLibrary;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.value.MinecraftLibraryArtifact;
@@ -298,6 +302,34 @@ public final class Tools {
         return false;
     }
 
+    public static List<File> getAndroidIncompatibleNativeMods() {
+        File modsDir = new File(getGameDir(), "mods");
+        File[] mods = modsDir.listFiles(file -> file.isFile() && file.getName().toLowerCase(Locale.ROOT).endsWith(".jar"));
+        List<File> incompatibleMods = new ArrayList<>();
+        if (mods == null) {
+            return incompatibleMods;
+        }
+        for (File file : mods) {
+            String name = file.getName().toLowerCase(Locale.ROOT);
+            if (name.contains("axiom")) {
+                incompatibleMods.add(file);
+            }
+        }
+        return incompatibleMods;
+    }
+
+    public static void disableAndroidIncompatibleNativeMods() {
+        for (File file : getAndroidIncompatibleNativeMods()) {
+            File disabledFile = new File(file.getParentFile(), file.getName() + ".disabled");
+            if (disabledFile.exists() && !disabledFile.delete()) {
+                throw new RuntimeException("Failed to replace disabled mod: " + file.getName());
+            }
+            if (!file.renameTo(disabledFile)) {
+                throw new RuntimeException("Failed to disable incompatible mod: " + file.getName());
+            }
+        }
+    }
+
     /**
      * Tries to delete any sodium related mods of the currently selected profile via string matching
      * the files in the mods folder.
@@ -438,7 +470,10 @@ public final class Tools {
 
         // Pre-process specific files
         disableSplash(gamedir);
-        clearAuthlibSkinCache();
+        clearMinecraftSkinCache();
+        applyLowEndMinecraftOptions(gamedir);
+        PromotedServersManager.syncBeforeLaunch(activity.getApplicationContext(), gamedir);
+        LegacyShaderpackCompat.applyIfNeeded(gamedir, versionInfo);
         List<String> launchArgs = new ArrayList<>(Arrays.asList(getMinecraftClientArgs(minecraftAccount, versionInfo, gamedir)));
         augmentCustomClientLaunchArgs(versionInfo, launchArgs);
         ensureLegacyMixinProvider(activity, gamedir, versionInfo);
@@ -452,7 +487,11 @@ public final class Tools {
 
         List<String> javaArgList = new ArrayList<>();
 
-        getCacioJavaArgs(javaArgList, runtime.javaVersion == 8, activity);
+        boolean legacyAwtFrame = runtime.javaVersion == 8 && requiresLegacyAwtFrame(versionInfo);
+        getCacioJavaArgs(javaArgList, runtime.javaVersion == 8, activity, !legacyAwtFrame);
+        if (legacyAwtFrame) {
+            Logger.appendToLog("Info: Legacy AWT mode enabled for " + versionInfo.id);
+        }
 
         if (versionInfo.logging != null) {
             String configFile = Tools.DIR_DATA + "/security/" + versionInfo.logging.client.file.id.replace("client", "log4j-rce-patch");
@@ -476,11 +515,19 @@ public final class Tools {
             javaArgList.add("-javaagent:" + lwjglPatchAgent.getAbsolutePath());
         }
 
-        if (minecraftAccount.isBattly()) {
+        if (minecraftAccount.isBattly() && shouldAttachBattlyAuthlib(versionInfo)) {
             BattlyAuthlibManager.addJvmArgumentsIfAvailable(javaArgList);
+        } else if (minecraftAccount.isBattly()) {
+            Logger.appendToLog("Info: Battly authlib skipped for " + versionInfo.id
+                    + " (safe compatibility range: Minecraft 1.7.10-1.16.5)");
         }
+        OfflineSkinManager.appendJvmArgs(activity, minecraftAccount, versionInfo, javaArgList);
 
         javaArgList.addAll(Arrays.asList(getMinecraftJVMArgs(versionId, gamedir)));
+        if (!supportsGlobalUrlAgents(versionInfo)) {
+            javaArgList.removeIf(argument -> argument.startsWith("-javaagent:")
+                    && argument.contains("arc_dns_injector"));
+        }
         addNativeLibraryPathOverrides(javaArgList, versionId);
         javaArgList.add("-cp");
         if (launchClassPath.contains("bta-client-")){ // BTADownloadTask.BASE_JSON sets this. Jank.
@@ -506,6 +553,84 @@ public final class Tools {
         // We never return otherwise. The process will be killed anyway, and thus we will become inactive
     }
     private static Logger.eventLogListener controllableMitigationLogListener;
+
+    private static boolean requiresLegacyAwtFrame(JMinecraftVersionList.Version versionInfo) {
+        if (versionInfo == null) {
+            return false;
+        }
+        String versionId = versionInfo.id == null ? "" : versionInfo.id.toLowerCase(Locale.ROOT);
+        if (versionId.matches("^(a|b)?1\\.[0-5](\\..*)?$") || versionId.matches("^1\\.[0-5]$")) {
+            return true;
+        }
+        String creationTime = versionInfo.time;
+        if (!Tools.isValidString(creationTime)) {
+            return false;
+        }
+        try {
+            Date creationDate = DateUtils.parseReleaseDate(creationTime);
+            return creationDate != null && DateUtils.dateBefore(creationDate, 2013, 7, 1);
+        } catch (ParseException exception) {
+            return false;
+        }
+    }
+
+    private static boolean shouldAttachBattlyAuthlib(JMinecraftVersionList.Version versionInfo) {
+        if (versionInfo == null || !supportsGlobalUrlAgents(versionInfo)) {
+            return false;
+        }
+        String id = ((versionInfo.id == null ? "" : versionInfo.id) + " "
+                + (versionInfo.inheritsFrom == null ? "" : versionInfo.inheritsFrom))
+                .toLowerCase(Locale.ROOT);
+        java.util.regex.Matcher matcher = java.util.regex.Pattern
+                .compile("(?:^|[^0-9])(\\d+)\\.(\\d+)(?:\\.(\\d+))?")
+                .matcher(id);
+        if (!matcher.find()) {
+            return false;
+        }
+        int major = parseIntOrZero(matcher.group(1));
+        int minor = parseIntOrZero(matcher.group(2));
+        int patch = parseIntOrZero(matcher.group(3));
+        return major == 1
+                && (minor > 7 || (minor == 7 && patch >= 10))
+                && minor < 17;
+    }
+
+    private static boolean supportsGlobalUrlAgents(JMinecraftVersionList.Version versionInfo) {
+        if (versionInfo == null) {
+            return false;
+        }
+        String mainClass = versionInfo.mainClass == null
+                ? "" : versionInfo.mainClass.toLowerCase(Locale.ROOT);
+        if (mainClass.contains("bootstraplauncher") || mainClass.contains("modlauncher")) {
+            return false;
+        }
+        if (versionInfo.libraries == null) {
+            return true;
+        }
+        for (DependentLibrary library : versionInfo.libraries) {
+            if (library == null || library.name == null) {
+                continue;
+            }
+            String name = library.name.toLowerCase(Locale.ROOT);
+            if (name.contains("securejarhandler") || name.contains("bootstraplauncher")
+                    || name.contains("modlauncher")) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private static int parseIntOrZero(String value) {
+        if (value == null) {
+            return 0;
+        }
+        try {
+            return Integer.parseInt(value);
+        } catch (NumberFormatException ignored) {
+            return 0;
+        }
+    }
+
     /*
      * This is does not work when debugging. This is not reliable.
      * This is a monstrosity that races the mod, trying to ensure that when the folder is checked
@@ -693,11 +818,15 @@ public final class Tools {
     }
 
     public static void getCacioJavaArgs(List<String> javaArgList, boolean isJava8, Activity activity) {
+        getCacioJavaArgs(javaArgList, isJava8, activity, true);
+    }
+
+    public static void getCacioJavaArgs(List<String> javaArgList, boolean isJava8, Activity activity, boolean headless) {
         // headless=true makes Toolkit.loadLibraries() use libawt_headless.so instead of libawt_xawt.so.
         // libawt_xawt.so is the X11 library — absent/non-functional on Android and broken in JRE 25.
         // The cacio agent (CTCPreloadAgent/CTCToolkit) installs itself after Toolkit init, so rendering
         // still works via cacio's own pipeline regardless of this flag.
-        javaArgList.add("-Djava.awt.headless=true");
+        javaArgList.add("-Djava.awt.headless=" + headless);
         javaArgList.add("-Dcacio.managed.screensize=" + AWTCanvasView.AWT_CANVAS_WIDTH + "x" + AWTCanvasView.AWT_CANVAS_HEIGHT);
         javaArgList.add("-Dcacio.font.fontmanager=sun.awt.X11FontManager");
         javaArgList.add("-Dcacio.font.fontscaler=sun.font.FreetypeFontScaler");
@@ -880,14 +1009,18 @@ public final class Tools {
 
         if(profile.isDemo()) mcArguments += " --demo";
 
-        return JSONUtils.insertJSONValueList(splitAndFilterEmpty(mcArguments), varArgMap);
+        String[] resolvedArgs = JSONUtils.insertJSONValueList(splitAndFilterEmpty(mcArguments), varArgMap);
+        return net.kdt.pojavlaunch.battlysocial.BattlySocialManager
+                .appendPendingServerArgs(resolvedArgs);
     }
 
-    private static void clearAuthlibSkinCache() {
-        File rootSkins = new File(DIR_GAME_HOME, "assets/skins");
+    private static void clearMinecraftSkinCache() {
         File minecraftSkins = new File(ASSETS_PATH, "skins");
-        clearDirectory(rootSkins);
         clearDirectory(minecraftSkins);
+
+        // Older Battly Mobile builds temporarily used a root-level skin cache.
+        // Keep cleaning it so users upgrading from those builds do not retain stale skins.
+        clearDirectory(new File(DIR_GAME_HOME, "assets/skins"));
     }
 
     private static void clearDirectory(File directory) {
@@ -900,6 +1033,47 @@ public final class Tools {
         } catch (IOException e) {
             Log.w(APP_NAME, "Failed to clear cache directory " + directory.getAbsolutePath(), e);
             Logger.appendToLog("Warning: Could not clear cache directory: " + directory.getAbsolutePath());
+        }
+    }
+
+    private static void applyLowEndMinecraftOptions(File gameDir) {
+        if (LauncherPreferences.PREF_RAM_ALLOCATION > 1280) {
+            return;
+        }
+        try {
+            MCOptionUtils.load(gameDir.getAbsolutePath());
+            capIntegerOption("renderDistance", 6);
+            capIntegerOption("renderDistanceChunks", 6);
+            setIfMissing("mipmapLevels", "0");
+            setIfMissing("particles", "1");
+            setIfMissing("clouds", "false");
+            setIfMissing("entityShadows", "false");
+            capIntegerOption("maxFps", 60);
+            MCOptionUtils.save();
+            Logger.appendToLog("Info: Applied low-end Minecraft option defaults");
+        } catch (Throwable throwable) {
+            Log.w(APP_NAME, "Could not apply low-end Minecraft options", throwable);
+        }
+    }
+
+    private static void capIntegerOption(String key, int maxValue) {
+        String value = MCOptionUtils.get(key);
+        if (!isValidString(value)) {
+            MCOptionUtils.set(key, String.valueOf(maxValue));
+            return;
+        }
+        try {
+            int parsed = Integer.parseInt(value.trim());
+            if (parsed > maxValue) {
+                MCOptionUtils.set(key, String.valueOf(maxValue));
+            }
+        } catch (NumberFormatException ignored) {
+        }
+    }
+
+    private static void setIfMissing(String key, String value) {
+        if (!isValidString(MCOptionUtils.get(key))) {
+            MCOptionUtils.set(key, value);
         }
     }
 
@@ -1131,15 +1305,19 @@ public final class Tools {
             {"linux/x64/org/lwjgl/openal/libopenal.so",        "libopenal.so"},
         };
         File outJar = new File(lwjgl3Folder, "lwjgl-android-natives.jar");
-        File refLib = new File(NATIVE_LIB_DIR, "liblwjgl.so");
+        File versionedNativeDir = new File(DIR_DATA, "lwjgl-" + sLwjglVersion + "-natives/"
+                + archAsStringAndroid(getDeviceArchitecture()));
+        File versionedCore = new File(versionedNativeDir, "liblwjgl.so");
+        File refLib = versionedCore.exists() ? versionedCore : new File(NATIVE_LIB_DIR, "liblwjgl.so");
         if (!refLib.exists()) return false;
-        if (outJar.exists() && outJar.lastModified() >= refLib.lastModified()) return false;
+        if (isAndroidNativesJarCurrent(outJar, libEntries, refLib)) return false;
 
         lwjgl3Folder.mkdirs();
         File tmpJar = new File(lwjgl3Folder, "lwjgl-android-natives.jar.tmp");
         try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(tmpJar))) {
             for (String[] entry : libEntries) {
-                File soFile = new File(NATIVE_LIB_DIR, entry[1]);
+                File versionedFile = new File(versionedNativeDir, entry[1]);
+                File soFile = versionedFile.exists() ? versionedFile : new File(NATIVE_LIB_DIR, entry[1]);
                 if (!soFile.exists()) {
                     Log.w(APP_NAME, "Android LWJGL native not found, skipping: " + entry[1]);
                     continue;
@@ -1176,6 +1354,24 @@ public final class Tools {
         return true;
     }
 
+    private static boolean isAndroidNativesJarCurrent(File jarFile, String[][] requiredEntries, File refLib) {
+        if (!jarFile.exists() || jarFile.lastModified() < refLib.lastModified()) {
+            return false;
+        }
+        try (JarFile jar = new JarFile(jarFile)) {
+            for (String[] entry : requiredEntries) {
+                File soFile = new File(NATIVE_LIB_DIR, entry[1]);
+                if (soFile.exists() && jar.getJarEntry(entry[0]) == null) {
+                    return false;
+                }
+            }
+            return true;
+        } catch (IOException exception) {
+            Log.w(APP_NAME, "Invalid Android LWJGL natives JAR, regenerating: " + jarFile, exception);
+            return false;
+        }
+    }
+
     private static String getLWJGL3ClassPath(String launchClassPath) {
         StringBuilder libStr = new StringBuilder();
         String internalLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
@@ -1184,9 +1380,12 @@ public final class Tools {
                 archAsStringAndroid(getDeviceArchitecture()));
 
         File lwjgl3Folder = new File(Tools.DIR_GAME_HOME, "lwjgl3/" + internalLwjglVersion);
+        ensureAndroidNativesJar(lwjgl3Folder);
         appendClasspathFile(libStr, new File(lwjgl3Folder, "lwjgl.jar"));
         appendClasspathFile(libStr, new File(lwjgl3Folder,
                 "lwjgl-" + internalLwjglVersion + "-merged-modules.jar"));
+        appendClasspathFile(libStr, new File(lwjgl3Folder, "lwjgl-android-natives.jar"));
+        appendClasspathFile(libStr, new File(Tools.DIR_GAME_HOME, "lwjgl3/android-text2speech-stub.jar"));
 
         File[] lwjgl3Files = lwjgl3Folder.listFiles();
         if (lwjgl3Files != null) {
@@ -1195,6 +1394,7 @@ public final class Tools {
                 if (fileName.endsWith(".jar")
                         && !fileName.equals("lwjgl.jar")
                         && !fileName.equals("lwjgl-" + internalLwjglVersion + "-merged-modules.jar")
+                        && !fileName.equals("lwjgl-android-natives.jar")
                         && !fileName.endsWith("lwjglx.jar")) {
                     appendClasspathFile(libStr, file);
                 }
@@ -1302,6 +1502,11 @@ public final class Tools {
             int width = dimensionView.getWidth();
             int height = dimensionView.getHeight();
             if(width != 0 && height != 0) {
+                if (width < height) {
+                    int tmp = width;
+                    width = height;
+                    height = tmp;
+                }
                 Log.i("Tools", "Using dimension_tracker for display dimensions; W="+width+" H="+height);
                 CallbackBridge.physicalWidth = width;
                 CallbackBridge.physicalHeight = height;
@@ -1311,8 +1516,8 @@ public final class Tools {
             }
         }
 
-        CallbackBridge.physicalWidth = currentDisplayMetrics.widthPixels;
-        CallbackBridge.physicalHeight = currentDisplayMetrics.heightPixels;
+        CallbackBridge.physicalWidth = Math.max(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels);
+        CallbackBridge.physicalHeight = Math.min(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels);
     }
 
     public static float dpToPx(float dp) {
@@ -1892,7 +2097,7 @@ public final class Tools {
         // install mods with custom arguments
         final EditText editText = new EditText(activity);
         editText.setSingleLine();
-        editText.setHint("-jar/-cp /path/to/file.jar ...");
+        editText.setHint(R.string.jar_installer_arguments_hint);
 
         AlertDialog.Builder builder = new AlertDialog.Builder(activity, R.style.BattlyDialog)
                 .setTitle(R.string.alerttitle_installmod)
@@ -2135,25 +2340,60 @@ public final class Tools {
         String[] defaultRenderers = resources.getStringArray(R.array.renderer_values);
         String[] defaultRendererNames = resources.getStringArray(R.array.renderer);
         boolean deviceHasVulkan = checkVulkanSupport(context.getPackageManager());
-        // Zink is now also optional because it sucks
-        boolean deviceHasOSMesaZinkBinary = new File(Tools.NATIVE_LIB_DIR, "libOSMesa.so").exists();
+        boolean deviceCompatibleMesa = SDK_INT >= Build.VERSION_CODES.Q;
+        boolean deviceHasOSMesaZinkBinary = hasNativeLibrary(context, "libOSMesa.so");
+        boolean deviceHasKopperShim = hasNativeLibrary(context, "libglxshim.so");
+        boolean deviceHasMesaEgl = hasNativeLibrary(context, "libEGL_mesa.so");
+        boolean deviceHasZinkDri = hasNativeLibrary(context, "libzink_dri.so");
+        boolean deviceHasFreedreno = hasNativeLibrary(context, "libvulkan_freedreno.so");
+        boolean deviceIsAdreno = GLInfoUtils.getGlInfo().isAdreno();
+        boolean deviceIsArm64 = getDeviceArchitecture() == Architecture.ARCH_ARM64;
+        boolean appHasGl4es = hasNativeLibrary(context, "libgl4es_114.so");
+        boolean appHasMobileGlues = hasNativeLibrary(context, "libmobileglues.so");
         boolean deviceHasOpenGLES3 = JREUtils.getDetectedVersion() >= 3;
         // LTW is an optional proprietary dependency
-        boolean appHasLtw = new File(Tools.NATIVE_LIB_DIR, "libltw.so").exists();
+        boolean appHasLtw = hasNativeLibrary(context, "libltw.so");
         List<String> rendererIds = new ArrayList<>(defaultRenderers.length);
         List<String> rendererNames = new ArrayList<>(defaultRendererNames.length);
         for(int i = 0; i < defaultRenderers.length; i++) {
             String rendererId = defaultRenderers[i];
+            if(rendererId.startsWith("opengles") && !appHasGl4es && !rendererId.contains("mobileglues") && !rendererId.contains("ltw")) continue;
             if(rendererId.contains("vulkan") && !deviceHasVulkan) continue;
-            if(rendererId.contains("vulkan_zink") && !deviceHasOSMesaZinkBinary) continue;
+            if("vulkan_zink".equals(rendererId) && (!deviceCompatibleMesa || !deviceHasOSMesaZinkBinary)) continue;
+            if("opengles3_desktopgl_zink_kopper".equals(rendererId)
+                    && (!deviceHasVulkan || !deviceCompatibleMesa || !deviceHasMesaEgl
+                    || !deviceHasKopperShim || !deviceHasZinkDri)) continue;
+            if(rendererId.contains("freedreno") && (!deviceHasVulkan || !deviceCompatibleMesa
+                    || !deviceIsAdreno || !deviceIsArm64 || !deviceHasFreedreno
+                    || !deviceHasMesaEgl || !deviceHasKopperShim || !deviceHasZinkDri)) continue;
+            if(rendererId.contains("mobileglues") && !appHasMobileGlues) continue;
             if(rendererId.contains("ltw") && (!deviceHasOpenGLES3 || !appHasLtw)) continue;
             rendererIds.add(rendererId);
             rendererNames.add(defaultRendererNames[i]);
+        }
+        for(RendererPluginRegistry.Entry entry : RendererPluginRegistry.compatible(context)) {
+            if(!rendererIds.contains(entry.id) && !rendererIds.contains(entry.runtimeRenderer)) {
+                rendererIds.add(entry.id);
+                rendererNames.add(entry.name);
+            }
         }
         sCompatibleRenderers = new RenderersList(rendererIds,
                 rendererNames.toArray(new String[0]));
 
         return sCompatibleRenderers;
+    }
+
+    private static boolean hasNativeLibrary(Context context, String libraryName) {
+        if (Tools.isValidString(Tools.NATIVE_LIB_DIR)
+                && new File(Tools.NATIVE_LIB_DIR, libraryName).isFile()) {
+            return true;
+        }
+        try {
+            String nativeDir = context.getApplicationInfo().nativeLibraryDir;
+            return Tools.isValidString(nativeDir) && new File(nativeDir, libraryName).isFile();
+        } catch (Throwable ignored) {
+            return false;
+        }
     }
 
     /** Checks if the renderer Id is compatible with the current device */

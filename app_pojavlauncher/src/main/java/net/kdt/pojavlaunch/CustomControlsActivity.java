@@ -10,6 +10,7 @@ import android.view.View;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 
+import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import net.kdt.pojavlaunch.customcontrols.ControlData;
@@ -115,15 +116,18 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
                 mControlLayout.addJoystickButton(new ControlJoystickData());
                 break;
             case 3:
-                mControlLayout.openLoadDialog();
+                mControlLayout.addControlButton(ControlData.createPerformanceWidget());
                 break;
             case 4:
-                mControlLayout.openSaveDialog(this);
+                mControlLayout.openLoadDialog();
                 break;
             case 5:
-                mControlLayout.openSetDefaultDialog();
+                mControlLayout.openSaveDialog(this);
                 break;
             case 6:
+                mControlLayout.openSetDefaultDialog();
+                break;
+            case 7:
                 exportCurrentControl();
                 break;
             default:
@@ -186,7 +190,7 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
     private TextView createDrawerItem(String label, boolean selected) {
         TextView item = new TextView(this);
         item.setText(label);
-        item.setTextColor(getColor(android.R.color.white));
+        item.setTextColor(ContextCompat.getColor(this, android.R.color.white));
         item.setTextSize(14);
         item.setGravity(Gravity.CENTER_VERTICAL);
         item.setTypeface(Typeface.DEFAULT, selected ? Typeface.BOLD : Typeface.NORMAL);

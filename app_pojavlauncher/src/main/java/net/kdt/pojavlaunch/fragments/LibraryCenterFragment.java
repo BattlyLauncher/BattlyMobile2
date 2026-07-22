@@ -1,26 +1,35 @@
 package net.kdt.pojavlaunch.fragments;
 
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
+import android.widget.Button;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
 
 import net.kdt.pojavlaunch.LauncherActivity;
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
+import net.kdt.pojavlaunch.utils.ContentDependencyAnalyzer;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -39,6 +48,7 @@ public class LibraryCenterFragment extends Fragment {
     private static final Pattern TOML_NAME = Pattern.compile("displayName\\s*=\\s*\"([^\"]+)\"");
     private static final Pattern TOML_VERSION = Pattern.compile("version\\s*=\\s*\"([^\"]+)\"");
     private LinearLayout mInstalledContentContainer;
+    private int mInstalledContentRequestId;
 
     public LibraryCenterFragment() {
         super(R.layout.fragment_library_center);
@@ -54,6 +64,14 @@ public class LibraryCenterFragment extends Fragment {
         view.findViewById(R.id.download_panel_browse_resourcepacks).setOnClickListener(v -> openSearch(SearchFilters.TYPE_RESOURCEPACK));
         view.findViewById(R.id.download_panel_browse_shaders).setOnClickListener(v -> openSearch(SearchFilters.TYPE_SHADER));
         view.findViewById(R.id.download_panel_browse_datapacks).setOnClickListener(v -> openSearch(SearchFilters.TYPE_DATAPACK));
+        view.findViewById(R.id.download_panel_battly_skins).setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), BattlySkinManagerFragment.class, BattlySkinManagerFragment.TAG, null));
+        view.findViewById(R.id.download_panel_instances).setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), InstanceManagerFragment.class, InstanceManagerFragment.TAG, null));
+        view.findViewById(R.id.download_panel_file_manager).setOnClickListener(v ->
+                Tools.swapFragment(requireActivity(), BattlyFileManagerFragment.class,
+                        BattlyFileManagerFragment.TAG,
+                        BattlyFileManagerFragment.createArguments(new File(Tools.DIR_GAME_HOME))));
         bindInstalledContent();
     }
 
@@ -77,13 +95,26 @@ public class LibraryCenterFragment extends Fragment {
     private void bindInstalledContent() {
         mInstalledContentContainer.removeAllViews();
         File gameDir = Tools.getGameDirPath(LauncherProfiles.getCurrentProfile());
-        addInstalledSection(R.string.library_installed_mods, new File(gameDir, "mods"));
-        addInstalledSection(R.string.library_installed_resourcepacks, new File(gameDir, "resourcepacks"));
-        addInstalledSection(R.string.library_installed_shaders, new File(gameDir, "shaderpacks"));
-        addInstalledSection(R.string.library_installed_datapacks, new File(gameDir, "datapacks"));
+        int requestId = ++mInstalledContentRequestId;
+        PojavApplication.sExecutorService.execute(() -> {
+            List<InstalledSection> sections = new ArrayList<>();
+            sections.add(scanInstalledSection(R.string.library_installed_mods, new File(gameDir, "mods")));
+            sections.add(scanInstalledSection(R.string.library_installed_resourcepacks, new File(gameDir, "resourcepacks")));
+            sections.add(scanInstalledSection(R.string.library_installed_shaders, new File(gameDir, "shaderpacks")));
+            sections.add(scanInstalledSection(R.string.library_installed_datapacks, new File(gameDir, "datapacks")));
+            Tools.runOnUiThread(() -> {
+                if (!isAdded() || mInstalledContentContainer == null || requestId != mInstalledContentRequestId) {
+                    return;
+                }
+                mInstalledContentContainer.removeAllViews();
+                for (InstalledSection section : sections) {
+                    addInstalledSection(section);
+                }
+            });
+        });
     }
 
-    private void addInstalledSection(int titleRes, File directory) {
+    private InstalledSection scanInstalledSection(int titleRes, File directory) {
         File[] files = directory.exists()
                 ? directory.listFiles(file -> !file.getName().startsWith(".") && (file.isFile() || file.isDirectory()))
                 : null;
@@ -95,7 +126,18 @@ public class LibraryCenterFragment extends Fragment {
         for (File file : files) {
             entries.add(readContentInfo(titleRes, file));
         }
+        long totalBytes = 0L;
+        int folders = 0;
+        for (File file : files) {
+            if (file.isDirectory()) {
+                folders++;
+            }
+            totalBytes += getSize(file);
+        }
+        return new InstalledSection(titleRes, directory, files.length, folders, totalBytes, entries);
+    }
 
+    private void addInstalledSection(InstalledSection section) {
         LinearLayout card = new LinearLayout(requireContext());
         card.setOrientation(LinearLayout.VERTICAL);
         card.setBackgroundResource(R.drawable.bg_battly_form_panel);
@@ -112,30 +154,38 @@ public class LibraryCenterFragment extends Fragment {
         header.setOrientation(LinearLayout.HORIZONTAL);
 
         TextView title = new TextView(requireContext());
-        title.setText(titleRes);
+        title.setText(section.titleRes);
         title.setTextColor(0xFFFFFFFF);
         title.setTextSize(15);
         title.setTypeface(Typeface.DEFAULT, Typeface.BOLD);
         header.addView(title, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
 
         TextView count = new TextView(requireContext());
-        count.setText(getResources().getQuantityString(R.plurals.library_installed_count, files.length, files.length));
+        count.setText(getResources().getQuantityString(R.plurals.library_installed_count, section.fileCount, section.fileCount));
         count.setTextColor(0xFFC7D4DF);
         count.setTextSize(12);
         header.addView(count);
+        if (section.titleRes == R.string.library_installed_mods && section.fileCount > 0) {
+            Button analyze = actionButton(R.string.library_analyze_mods, android.R.drawable.ic_menu_info_details,
+                    v -> analyzeMods(section.directory));
+            LinearLayout.LayoutParams analyzeParams = new LinearLayout.LayoutParams(
+                    LinearLayout.LayoutParams.WRAP_CONTENT, dp(38));
+            analyzeParams.setMargins(dp(8), 0, 0, 0);
+            header.addView(analyze, analyzeParams);
+        }
         header.setClickable(true);
         header.setFocusable(true);
-        header.setOnClickListener(v -> Tools.openPath(requireContext(), directory, false));
+        header.setOnClickListener(v -> Tools.openPath(requireContext(), section.directory, false));
         card.addView(header);
 
         TextView detail = new TextView(requireContext());
-        detail.setText(buildInstalledDetail(files));
+        detail.setText(buildInstalledDetail(section));
         detail.setTextColor(0xFF93AEBB);
         detail.setTextSize(12);
         detail.setPadding(0, dp(8), 0, 0);
         card.addView(detail);
 
-        if (entries.isEmpty()) {
+        if (section.entries.isEmpty()) {
             TextView empty = new TextView(requireContext());
             empty.setText(R.string.library_installed_empty);
             empty.setTextColor(0xFFC7D4DF);
@@ -143,13 +193,13 @@ public class LibraryCenterFragment extends Fragment {
             empty.setPadding(0, dp(10), 0, 0);
             card.addView(empty);
         } else {
-            int visibleCount = Math.min(entries.size(), 5);
+            int visibleCount = Math.min(section.entries.size(), 5);
             for (int i = 0; i < visibleCount; i++) {
-                card.addView(createContentRow(entries.get(i)));
+                card.addView(createContentRow(section.entries.get(i)));
             }
-            if (entries.size() > visibleCount) {
+            if (section.entries.size() > visibleCount) {
                 TextView more = new TextView(requireContext());
-                more.setText(getString(R.string.library_installed_more, entries.size() - visibleCount));
+                more.setText(getString(R.string.library_installed_more, section.entries.size() - visibleCount));
                 more.setTextColor(0xFF8DEEDC);
                 more.setTypeface(Typeface.DEFAULT_BOLD);
                 more.setTextSize(12);
@@ -161,21 +211,36 @@ public class LibraryCenterFragment extends Fragment {
         mInstalledContentContainer.addView(card);
     }
 
-    private String buildInstalledDetail(File[] files) {
-        if (files.length == 0) {
+    private void analyzeMods(File directory) {
+        Toast.makeText(requireContext(), R.string.global_wait, Toast.LENGTH_SHORT).show();
+        PojavApplication.sExecutorService.execute(() -> {
+            ContentDependencyAnalyzer.Report report = ContentDependencyAnalyzer.analyze(directory);
+            Tools.runOnUiThread(() -> {
+                if (!isAdded()) return;
+                if (report.healthy()) {
+                    Toast.makeText(requireContext(), getString(R.string.library_mods_healthy, report.mods.size()), Toast.LENGTH_LONG).show();
+                    return;
+                }
+                String[] labels = new String[report.issues.size()];
+                for (int i = 0; i < labels.length; i++) {
+                    ContentDependencyAnalyzer.Issue issue = report.issues.get(i);
+                    labels[i] = issue.severity + " | " + issue.title + "\n" + issue.detail;
+                }
+                Tools.showStyledDialog(Tools.createStyledDialogBuilder(requireContext())
+                        .setTitle(R.string.library_dependency_report)
+                        .setItems(labels, null)
+                        .setPositiveButton(android.R.string.ok, null));
+            });
+        });
+    }
+
+    private String buildInstalledDetail(InstalledSection section) {
+        if (section.fileCount == 0) {
             return "";
         }
-        long totalBytes = 0L;
-        int folders = 0;
-        for (File file : files) {
-            if (file.isDirectory()) {
-                folders++;
-            }
-            totalBytes += getSize(file);
-        }
-        String size = formatSize(totalBytes);
-        if (folders > 0) {
-            return getString(R.string.library_installed_detail_with_folders, size, folders);
+        String size = formatSize(section.totalBytes);
+        if (section.folderCount > 0) {
+            return getString(R.string.library_installed_detail_with_folders, size, section.folderCount);
         }
         return getString(R.string.library_installed_detail, size);
     }
@@ -226,7 +291,44 @@ public class LibraryCenterFragment extends Fragment {
             description.setPadding(0, dp(6), 0, 0);
             row.addView(description);
         }
+        LinearLayout actions = new LinearLayout(requireContext());
+        actions.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
+        actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setPadding(0, dp(8), 0, 0);
+        actions.addView(actionButton(R.string.library_content_open, android.R.drawable.ic_menu_view,
+                v -> Tools.openPath(requireContext(), info.file, false)));
+        actions.addView(actionButton(info.enabled ? R.string.library_content_disable : R.string.library_content_enable,
+                info.enabled ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
+                v -> toggleContent(info)));
+        actions.addView(actionButton(R.string.library_content_move, android.R.drawable.ic_menu_send,
+                v -> showMoveContentDialog(info)));
+        actions.addView(actionButton(R.string.library_content_delete, android.R.drawable.ic_menu_delete,
+                v -> confirmDelete(info)));
+        row.addView(actions);
         return row;
+    }
+
+    private Button actionButton(int textRes, int iconRes, View.OnClickListener listener) {
+        Button button = new Button(requireContext());
+        button.setText(textRes);
+        button.setAllCaps(false);
+        button.setTextColor(0xFF8DEEDC);
+        button.setTextSize(11);
+        button.setTypeface(Typeface.DEFAULT_BOLD);
+        button.setBackgroundResource(R.drawable.bg_battly_button_secondary);
+        Drawable icon = requireContext().getDrawable(iconRes);
+        if (icon != null) {
+            int size = dp(16);
+            icon.setBounds(0, 0, size, size);
+            icon.setTint(0xFF8DEEDC);
+            button.setCompoundDrawables(icon, null, null, null);
+            button.setCompoundDrawablePadding(dp(5));
+        }
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, dp(38));
+        params.setMargins(dp(6), 0, 0, 0);
+        button.setLayoutParams(params);
+        button.setOnClickListener(listener);
+        return button;
     }
 
     private ContentInfo readContentInfo(int titleRes, File file) {
@@ -235,7 +337,12 @@ public class LibraryCenterFragment extends Fragment {
         info.version = "";
         info.description = "";
         info.size = formatSize(getSize(file));
+        info.file = file;
+        info.sectionTitleRes = titleRes;
         info.enabled = !file.getName().toLowerCase(Locale.ROOT).endsWith(".disabledmod");
+        if (titleRes == R.string.library_installed_resourcepacks) {
+            info.enabled = isResourcePackEnabled(file);
+        }
         info.badge = titleRes == R.string.library_installed_mods ? "MOD"
                 : titleRes == R.string.library_installed_resourcepacks ? "PACK"
                 : titleRes == R.string.library_installed_shaders ? "SHADER" : "DATA";
@@ -355,6 +462,178 @@ public class LibraryCenterFragment extends Fragment {
         }
     }
 
+    private void toggleContent(ContentInfo info) {
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                if (info.sectionTitleRes == R.string.library_installed_resourcepacks) {
+                    setResourcePackEnabled(info.file, !info.enabled);
+                } else {
+                    File target = getToggleTarget(info.file, info.sectionTitleRes, !info.enabled);
+                    if (target == null || !info.file.renameTo(target)) {
+                        throw new IllegalStateException("No se pudo renombrar el archivo");
+                    }
+                }
+                Tools.runOnUiThread(() -> {
+                    Toast.makeText(requireContext(), R.string.library_content_updated, Toast.LENGTH_SHORT).show();
+                    bindInstalledContent();
+                });
+            } catch (Exception e) {
+                Tools.runOnUiThread(() -> Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
+    private File getToggleTarget(File file, int sectionTitleRes, boolean enable) {
+        String name = file.getName();
+        File parent = file.getParentFile();
+        if (parent == null) return null;
+        if (sectionTitleRes == R.string.library_installed_mods) {
+            if (enable && name.endsWith(".disabledmod")) {
+                return new File(parent, name.substring(0, name.length() - ".disabledmod".length()) + ".jar");
+            }
+            if (!enable) {
+                return new File(parent, cleanFileName(name) + ".disabledmod");
+            }
+        }
+        String disabledSuffix = sectionTitleRes == R.string.library_installed_shaders ? ".disabledshader" : ".disableddatapack";
+        if (enable && name.endsWith(disabledSuffix)) {
+            return new File(parent, name.substring(0, name.length() - disabledSuffix.length()) + ".zip");
+        }
+        if (!enable) {
+            return new File(parent, cleanFileName(name) + disabledSuffix);
+        }
+        return null;
+    }
+
+    private boolean isResourcePackEnabled(File file) {
+        try {
+            File options = new File(Tools.getGameDirPath(LauncherProfiles.getCurrentProfile()), "options.txt");
+            if (!options.isFile()) return false;
+            String text = Tools.read(options.getAbsolutePath());
+            String name = file.getName();
+            return text.contains("\"file/" + name + "\"") || text.contains("\"" + name + "\"");
+        } catch (Exception ignored) {
+            return false;
+        }
+    }
+
+    private void setResourcePackEnabled(File file, boolean enabled) throws Exception {
+        File options = new File(Tools.getGameDirPath(LauncherProfiles.getCurrentProfile()), "options.txt");
+        String text = options.isFile() ? Tools.read(options.getAbsolutePath()) : "";
+        String name = file.getName();
+        text = text.replace("\"file/" + name + "\",", "")
+                .replace(",\"file/" + name + "\"", "")
+                .replace("\"file/" + name + "\"", "")
+                .replace("\"" + name + "\",", "")
+                .replace(",\"" + name + "\"", "")
+                .replace("\"" + name + "\"", "");
+        if (enabled) {
+            String entry = "\"file/" + name + "\"";
+            if (text.contains("resourcePacks:[")) {
+                text = text.replaceFirst("resourcePacks:\\[", "resourcePacks:[" + entry + ",");
+                text = text.replace("resourcePacks:[" + entry + ",]", "resourcePacks:[" + entry + "]");
+            } else {
+                text += (text.endsWith("\n") || text.isEmpty() ? "" : "\n") + "resourcePacks:[" + entry + "]\n";
+            }
+        }
+        Tools.write(options.getAbsolutePath(), text);
+    }
+
+    private void confirmDelete(ContentInfo info) {
+        AlertDialog dialog = Tools.createStyledDialogBuilder(requireContext())
+                .setTitle(R.string.library_content_delete)
+                .setMessage(info.file.getName())
+                .setPositiveButton(android.R.string.ok, (d, w) -> deleteContent(info.file))
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        Tools.styleDialog(dialog);
+        dialog.show();
+    }
+
+    private void deleteContent(File file) {
+        PojavApplication.sExecutorService.execute(() -> {
+            boolean ok = deleteRecursive(file);
+            Tools.runOnUiThread(() -> {
+                Toast.makeText(requireContext(), ok ? R.string.library_content_deleted : R.string.global_error, Toast.LENGTH_SHORT).show();
+                bindInstalledContent();
+            });
+        });
+    }
+
+    private boolean deleteRecursive(File file) {
+        if (file == null || !file.exists()) return true;
+        if (file.isDirectory()) {
+            File[] children = file.listFiles();
+            if (children != null) {
+                for (File child : children) {
+                    if (!deleteRecursive(child)) return false;
+                }
+            }
+        }
+        return file.delete();
+    }
+
+    private void showMoveContentDialog(ContentInfo info) {
+        if (LauncherProfiles.mainProfileJson == null) LauncherProfiles.load();
+        List<MinecraftProfile> profiles = new ArrayList<>(LauncherProfiles.mainProfileJson.profiles.values());
+        List<String> labels = new ArrayList<>();
+        for (MinecraftProfile profile : profiles) {
+            labels.add(profile.name);
+        }
+        AlertDialog dialog = Tools.createStyledDialogBuilder(requireContext())
+                .setTitle(R.string.library_content_move)
+                .setItems(labels.toArray(new String[0]), (d, which) -> moveContent(info, profiles.get(which)))
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        Tools.styleDialog(dialog);
+        dialog.show();
+    }
+
+    private void moveContent(ContentInfo info, MinecraftProfile targetProfile) {
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                File targetDir = getSectionDirectory(targetProfile, info.sectionTitleRes);
+                if (!targetDir.exists() && !targetDir.mkdirs()) {
+                    throw new IllegalStateException("No se pudo crear la carpeta destino");
+                }
+                File target = new File(targetDir, info.file.getName());
+                copyRecursive(info.file, target);
+                deleteRecursive(info.file);
+                Tools.runOnUiThread(() -> {
+                    Toast.makeText(requireContext(), R.string.library_content_moved, Toast.LENGTH_SHORT).show();
+                    bindInstalledContent();
+                });
+            } catch (Exception e) {
+                Tools.runOnUiThread(() -> Toast.makeText(requireContext(), e.getMessage(), Toast.LENGTH_LONG).show());
+            }
+        });
+    }
+
+    private File getSectionDirectory(MinecraftProfile profile, int sectionTitleRes) {
+        File gameDir = Tools.getGameDirPath(profile);
+        if (sectionTitleRes == R.string.library_installed_mods) return new File(gameDir, "mods");
+        if (sectionTitleRes == R.string.library_installed_resourcepacks) return new File(gameDir, "resourcepacks");
+        if (sectionTitleRes == R.string.library_installed_shaders) return new File(gameDir, "shaderpacks");
+        return new File(gameDir, "datapacks");
+    }
+
+    private void copyRecursive(File source, File target) throws Exception {
+        if (source.isDirectory()) {
+            if (!target.exists() && !target.mkdirs()) throw new IllegalStateException("No se pudo copiar la carpeta");
+            File[] children = source.listFiles();
+            if (children != null) {
+                for (File child : children) copyRecursive(child, new File(target, child.getName()));
+            }
+            return;
+        }
+        try (FileInputStream input = new FileInputStream(source);
+             FileOutputStream output = new FileOutputStream(target)) {
+            byte[] buffer = new byte[8192];
+            int read;
+            while ((read = input.read(buffer)) != -1) output.write(buffer, 0, read);
+        }
+    }
+
     private String cleanFileName(String name) {
         int dot = name.lastIndexOf('.');
         return dot > 0 ? name.substring(0, dot) : name;
@@ -393,6 +672,8 @@ public class LibraryCenterFragment extends Fragment {
         String description;
         String size;
         String badge;
+        File file;
+        int sectionTitleRes;
         boolean enabled;
 
         String metaLine() {
@@ -409,6 +690,24 @@ public class LibraryCenterFragment extends Fragment {
             if (!Tools.isValidString(value)) return;
             if (builder.length() > 0) builder.append(" · ");
             builder.append(value);
+        }
+    }
+
+    private static class InstalledSection {
+        final int titleRes;
+        final File directory;
+        final int fileCount;
+        final int folderCount;
+        final long totalBytes;
+        final List<ContentInfo> entries;
+
+        InstalledSection(int titleRes, File directory, int fileCount, int folderCount, long totalBytes, List<ContentInfo> entries) {
+            this.titleRes = titleRes;
+            this.directory = directory;
+            this.fileCount = fileCount;
+            this.folderCount = folderCount;
+            this.totalBytes = totalBytes;
+            this.entries = entries;
         }
     }
 }

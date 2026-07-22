@@ -33,6 +33,6 @@
         android:background="?attr/selectableItemBackgroundBorderless"
         android:padding="9dp"
         android:src="@drawable/ic_menu_delete_forever"
-        android:tint="#B7D7E4F2" />
+        app:tint="#B7D7E4F2" />
 
 </LinearLayout>

@@ -223,6 +223,26 @@ public class EditControlSideDialog extends SideDialogView {
         mToggleSwitch.setVisibility(View.GONE);
     }
 
+    public void loadPerformanceValues(ControlData data) {
+        loadValues(data);
+
+        mMappingTextView.setVisibility(GONE);
+        for (int i = 0; i < mKeycodeSpinners.length; i++) {
+            mKeycodeSpinners[i].setVisibility(GONE);
+            mKeycodeTextviews[i].setVisibility(GONE);
+        }
+
+        mNameTextView.setVisibility(GONE);
+        mNameEditText.setVisibility(GONE);
+        mDisplayTextView.setVisibility(GONE);
+        mDisplaySpinner.setVisibility(GONE);
+        mDisplayValueEditText.setVisibility(GONE);
+        mIconPickerButton.setVisibility(GONE);
+        mSwipeableSwitch.setVisibility(GONE);
+        mPassthroughSwitch.setVisibility(GONE);
+        mToggleSwitch.setVisibility(GONE);
+    }
+
     /**
      * Load values for the joystick
      */

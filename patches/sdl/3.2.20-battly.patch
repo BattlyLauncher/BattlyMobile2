@@ -1,0 +1,12 @@
+diff --git a/android-project/app/src/main/AndroidManifest.xml b/android-project/app/src/main/AndroidManifest.xml
+index f3a7cd5ce..4c262b35e 100644
+--- a/android-project/app/src/main/AndroidManifest.xml
++++ b/android-project/app/src/main/AndroidManifest.xml
+@@ -43,7 +43,6 @@
+     -->
+ 
+     <!-- Allow downloading to the external storage on Android 5.1 and older -->
+-    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="22" /> -->
+ 
+     <!-- Allow access to Bluetooth devices -->
+     <!-- Currently this is just for Steam Controller support and requires setting SDL_HINT_JOYSTICK_HIDAPI_STEAM -->

@@ -74,7 +74,6 @@ public class PojavApplication extends Application {
 												originalJNIDirectory.lastIndexOf("/"))
 												.concat("/x86");
 			}
-			JREAutoDownloader.ensureBootstrapJava8Async();
 		} catch (Throwable throwable) {
 			Intent ferrorIntent = new Intent(this, FatalErrorActivity.class);
 			ferrorIntent.putExtra("throwable", throwable);

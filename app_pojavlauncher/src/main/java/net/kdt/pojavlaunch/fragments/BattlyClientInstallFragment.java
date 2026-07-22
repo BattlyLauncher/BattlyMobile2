@@ -71,7 +71,7 @@ public class BattlyClientInstallFragment extends Fragment {
                 dp(8));
         installProgressParams.setMargins(0, dp(8), 0, 0);
         panel.addView(mInstallProgress, installProgressParams);
-        ViewGroup listParent = view.findViewById(R.id.mod_dl_expandable_version_list);
+        ViewGroup listParent = view.findViewById(R.id.mod_dl_version_grid);
         listParent.setVisibility(View.GONE);
         mList = new LinearLayout(requireContext());
         mList.setOrientation(LinearLayout.VERTICAL);
@@ -226,7 +226,9 @@ public class BattlyClientInstallFragment extends Fragment {
                 Tools.runOnUiThread(() -> {
                     mProgress.setVisibility(View.GONE);
                     hideInstallProgress();
-                    Toast.makeText(requireContext(), client.name + " instalado.", Toast.LENGTH_LONG).show();
+                    Toast.makeText(requireContext(),
+                            getString(R.string.client_install_success, client.name),
+                            Toast.LENGTH_LONG).show();
                     Tools.backToMainMenu(requireActivity());
                 });
             } catch (Exception e) {

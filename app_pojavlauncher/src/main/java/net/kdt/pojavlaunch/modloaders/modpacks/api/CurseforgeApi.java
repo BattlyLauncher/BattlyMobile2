@@ -93,16 +93,17 @@ public class CurseforgeApi implements ModpackApi{
             JsonElement allowModDistribution = dataElement.get("allowModDistribution");
             // Gson automatically casts null to false, which leans to issues
             // So, only check the distribution flag if it is non-null
-            if(!allowModDistribution.isJsonNull() && !allowModDistribution.getAsBoolean()) {
+            if(allowModDistribution != null && !allowModDistribution.isJsonNull() && !allowModDistribution.getAsBoolean()) {
                 Log.i("CurseforgeApi", "Skipping modpack "+dataElement.get("name").getAsString() + " because curseforge sucks");
                 continue;
             }
+            JsonObject logo = GsonJsonUtils.getJsonObjectSafe(dataElement, "logo");
             ModItem modItem = new ModItem(Constants.SOURCE_CURSEFORGE,
                     searchFilters.contentType,
-                    dataElement.get("id").getAsString(),
-                    dataElement.get("name").getAsString(),
-                    dataElement.get("summary").getAsString(),
-                    dataElement.getAsJsonObject("logo").get("thumbnailUrl").getAsString(),
+                    GsonJsonUtils.getStringSafe(dataElement, "id"),
+                    GsonJsonUtils.getStringSafe(dataElement, "name"),
+                    GsonJsonUtils.getStringSafe(dataElement, "summary"),
+                    logo == null ? null : GsonJsonUtils.getStringSafe(logo, "thumbnailUrl"),
                     extractCategories(dataElement),
                     extractLoaders(dataElement));
             if (!matchesLoaderFilter(searchFilters, modItem.loaders)) {
@@ -130,6 +131,7 @@ public class CurseforgeApi implements ModpackApi{
         int length = allModDetails.size();
         String[] versionNames = new String[length];
         String[] mcVersionNames = new String[length];
+        String[][] versionGameVersions = new String[length][];
         String[] versionUrls = new String[length];
         String[] versionFileNames = new String[length];
         String[] hashes = new String[length];
@@ -137,8 +139,11 @@ public class CurseforgeApi implements ModpackApi{
         ModDependency[][] versionDependencies = new ModDependency[length][];
         for(int i = 0; i < allModDetails.size(); i++) {
             JsonObject modDetail = allModDetails.get(i);
-            versionNames[i] = modDetail.get("displayName").getAsString();
+            versionNames[i] = GsonJsonUtils.getStringSafe(modDetail, "displayName");
             versionFileNames[i] = GsonJsonUtils.getStringSafe(modDetail, "fileName");
+            if (!Tools.isValidString(versionNames[i])) {
+                versionNames[i] = Tools.isValidString(versionFileNames[i]) ? versionFileNames[i] : "File " + (i + 1);
+            }
 
             JsonElement downloadUrl = modDetail.get("downloadUrl");
             if(downloadUrl != null && !downloadUrl.isJsonNull()) {
@@ -150,21 +155,16 @@ public class CurseforgeApi implements ModpackApi{
                 );
             }
 
-            JsonArray gameVersions = modDetail.getAsJsonArray("gameVersions");
-            for(JsonElement jsonElement : gameVersions) {
-                String gameVersion = jsonElement.getAsString();
-                if(!sMcVersionPattern.matcher(gameVersion).matches()) {
-                    continue;
-                }
-                mcVersionNames[i] = gameVersion;
-                break;
-            }
+            JsonArray gameVersions = GsonJsonUtils.getJsonArraySafe(modDetail, "gameVersions");
+            versionGameVersions[i] = extractMinecraftVersions(gameVersions);
+            mcVersionNames[i] = versionGameVersions[i].length == 0 ? null : versionGameVersions[i][0];
 
             hashes[i] = getSha1FromModData(modDetail);
             versionLoaders[i] = extractLoadersFromVersions(gameVersions);
-            versionDependencies[i] = parseDependencies(modDetail.getAsJsonArray("dependencies"));
+            versionDependencies[i] = parseDependencies(GsonJsonUtils.getJsonArraySafe(modDetail, "dependencies"));
         }
-        return new ModDetail(item, versionNames, mcVersionNames, versionUrls, versionFileNames, hashes, versionLoaders, versionDependencies);
+        return new ModDetail(item, versionNames, mcVersionNames, versionGameVersions, versionUrls,
+                versionFileNames, hashes, versionLoaders, versionDependencies);
     }
 
     @Override
@@ -249,7 +249,8 @@ public class CurseforgeApi implements ModpackApi{
 
         for(int i = 0; i < data.size(); i++) {
             JsonObject fileInfo = data.get(i).getAsJsonObject();
-            if(fileInfo.get("isServerPack").getAsBoolean()) continue;
+            JsonElement isServerPack = fileInfo.get("isServerPack");
+            if(isServerPack != null && !isServerPack.isJsonNull() && isServerPack.getAsBoolean()) continue;
             objectList.add(fileInfo);
         }
         if(data.size() < CURSEFORGE_PAGINATION_SIZE) {
@@ -316,12 +317,22 @@ public class CurseforgeApi implements ModpackApi{
         if (gameVersions == null) return new String[0];
         for (JsonElement jsonElement : gameVersions) {
             String value = jsonElement.getAsString().toLowerCase(Locale.ROOT);
-            if (value.contains("forge")) loaders.add("forge");
+            if (value.contains("neoforge")) loaders.add("neoforge");
+            else if (value.contains("forge")) loaders.add("forge");
             else if (value.contains("fabric")) loaders.add("fabric");
             else if (value.contains("quilt")) loaders.add("quilt");
-            else if (value.contains("neoforge")) loaders.add("neoforge");
         }
         return loaders.toArray(new String[0]);
+    }
+
+    private static String[] extractMinecraftVersions(JsonArray gameVersions) {
+        LinkedHashSet<String> versions = new LinkedHashSet<>();
+        if (gameVersions == null) return new String[0];
+        for (JsonElement jsonElement : gameVersions) {
+            String value = jsonElement.getAsString();
+            if (sMcVersionPattern.matcher(value).matches()) versions.add(value);
+        }
+        return versions.toArray(new String[0]);
     }
 
     private static ModDependency[] parseDependencies(JsonArray dependencies) {
@@ -368,6 +379,10 @@ public class CurseforgeApi implements ModpackApi{
             ZipUtils.zipExtract(modpackZipFile, overridesDir, instanceDestination);
             return createInfo(curseManifest.minecraft);
         }
+    }
+
+    public ModLoader installPackArchive(File archive, File destination) throws IOException {
+        return installCurseforgeZip(archive, destination);
     }
 
     private ModLoader createInfo(CurseManifest.CurseMinecraft minecraft) {

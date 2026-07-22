@@ -1,10 +1,13 @@
 name: Battly Mobile Android CI
 
+permissions:
+  contents: write
+
 on:
   pull_request:
     branches-ignore:
       - 'l10n_v3_openjdk' 
-    types: [ opened, reopened ]
+    types: [ opened, reopened, synchronize ]
   push:
     branches-ignore:
       - 'l10n_v3_openjdk'
@@ -34,15 +37,8 @@ jobs:
           distribution: 'temurin'
           java-version: '21'
 
-      - name: Get JRE 8
-        uses: dawidd6/action-download-artifact@v9
-        with:
-          workflow: build.yml
-          path: app_pojavlauncher/src/main/assets/components/jre
-          workflow_conclusion: completed
-          repo: AngelAuraMC/angelauramc-openjdk-build
-          branch: buildjre8
-          name: jre8-pojav
+      - name: Verify Battly translations
+        run: python3 tools/i18n/audit_android_i18n.py
 
       - name: Get JRE17
         uses: dawidd6/action-download-artifact@v9
@@ -125,29 +121,33 @@ jobs:
 
           mkdir out
           # Build JRE JAR files (security manager, etc...)
-          gradle :jre_lwjgl3glfw:build --no-daemon
+          ./gradlew :jre_lwjgl3glfw:build --no-daemon
 
-      - name: Build Google Play .aab
+      - name: Build signed release artifacts
         if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
           if [ -z "${GPLAY_KEYSTORE_B64:-}" ] || [ -z "${FIREBASE_PROD_GOOGLE_SERVICES_JSON_B64:-}" ]; then
-            echo "Skipping gplay build: release signing or production Firebase secrets are missing."
+            echo "Skipping signed release build: signing or production Firebase secrets are missing."
             exit 0
           fi
-          gradle :app_pojavlauncher:bundleGplay
+          ./gradlew :app_pojavlauncher:bundleGplay :app_pojavlauncher:assembleGplay --console=plain
           mv app_pojavlauncher/build/outputs/bundle/gplay/app_pojavlauncher-gplay.aab out/app-gplay.aab
+          mv app_pojavlauncher/build/outputs/apk/gplay/app_pojavlauncher-gplay.apk out/Battly-Mobile-2.0.2.apk
+          sha256sum out/app-gplay.aab > out/app-gplay.aab.sha256
+          sha256sum out/Battly-Mobile-2.0.2.apk > out/Battly-Mobile-2.0.2.apk.sha256
 
       - name: Verify native 16 KB page-size compatibility
         if: hashFiles('out/app-gplay.aab') != ''
         shell: pwsh
         run: |
           ./tools/android/verify-native-16kb.ps1 -Path ./out/app-gplay.aab -SkipZipAlign
+          ./tools/android/verify-native-16kb.ps1 -Path ./out/Battly-Mobile-2.0.2.apk
 
       - name: Build Debug .apk
         run: |
           # Build the launcher
-          gradle :app_pojavlauncher:assembleDebug
+          ./gradlew :app_pojavlauncher:assembleDebug --console=plain
           mv app_pojavlauncher/build/outputs/apk/debug/app_pojavlauncher-debug.apk out/app-debug.apk
 
       - name: Gen md5sums
@@ -165,10 +165,20 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: app-release-aab
-          path: out/app-gplay.aab
+          path: |
+            out/app-gplay.aab
+            out/app-gplay.aab.sha256
+
+      - name: Upload signed release APK
+        if: hashFiles('out/Battly-Mobile-2.0.2.apk') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: battly-mobile-release-apk
+          path: |
+            out/Battly-Mobile-2.0.2.apk
+            out/Battly-Mobile-2.0.2.apk.sha256
 
       - name: Upload onto the Google Play testing track
-        continue-on-error: true
         if: hashFiles('out/app-gplay.aab') != '' && env.GPLAY_SERVICE_JSON != ''
         uses: r0adkll/upload-google-play@v1.1.2
         with:
@@ -177,3 +187,14 @@ jobs:
           releaseFiles: out/app-gplay.aab
           track: internal
           inAppUpdatePriority: 5
+
+      - name: Publish GitHub release assets
+        if: startsWith(github.ref, 'refs/tags/') && hashFiles('out/Battly-Mobile-2.0.2.apk') != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            out/Battly-Mobile-2.0.2.apk
+            out/Battly-Mobile-2.0.2.apk.sha256
+            out/app-gplay.aab
+            out/app-gplay.aab.sha256

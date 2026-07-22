@@ -1,4 +1,4 @@
-<ListView
+<GridView
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/list_view"
@@ -9,6 +9,9 @@
     android:fadeScrollbars="false"
     android:scrollbarThumbVertical="@color/minebutton_color"
     android:padding="12dp"
+    android:numColumns="2"
+    android:horizontalSpacing="8dp"
+    android:verticalSpacing="8dp"
+    android:stretchMode="columnWidth"
     android:scrollbarSize="@dimen/padding_medium"
-    android:divider="@android:color/transparent"
-    android:dividerHeight="8dp" />
+    android:listSelector="@android:color/transparent" />

@@ -46,12 +46,24 @@ public class MultiRTUtils {
         File[] files = RUNTIME_FOLDER.listFiles();
         if (files != null)
             for (File f : files) {
-                runtimes.add(read(f.getName()));
+                if (isRuntimeCandidate(f)) {
+                    runtimes.add(read(f.getName()));
+                }
             }
         else
             throw new RuntimeException("The runtime directory does not exist");
 
         return runtimes;
+    }
+
+    private static boolean isRuntimeCandidate(File file) {
+        if (file == null || !file.isDirectory()) return false;
+        String name = file.getName();
+        return !"downloads".equals(name)
+                && !"download".equals(name)
+                && !"tmp".equals(name)
+                && !"temp".equals(name)
+                && !name.startsWith(".");
     }
 
     public static String getExactJreName(int majorVersion) {
@@ -290,12 +302,24 @@ public class MultiRTUtils {
         while (tarEntry != null) {
 
             final String tarEntryName = tarEntry.getName();
+            // Some runtime archives contain a root metadata entry named "./".
+            // It has no payload to extract and resolves to dest itself, so skip it
+            // without weakening the traversal checks applied to actual entries.
+            if (isArchiveRootEntry(tarEntryName)) {
+                tarEntry = tarIn.getNextTarEntry();
+                continue;
+            }
             // publishProgress(null, "Unpacking " + tarEntry.getName());
             ProgressLayout.setProgress(ProgressLayout.UNPACK_RUNTIME, 100, R.string.global_unpacking, tarEntryName);
 
             File destPath = new File(dest, tarEntry.getName());
+            String rootPath = dest.getCanonicalPath() + File.separator;
+            if (!destPath.getCanonicalPath().startsWith(rootPath)) {
+                throw new IOException("Unsafe runtime archive path: " + tarEntry.getName());
+            }
             net.kdt.pojavlaunch.utils.FileUtils.ensureParentDirectory(destPath);
             if (tarEntry.isSymbolicLink()) {
+                validateSymbolicLinkTarget(dest, destPath, tarEntry.getLinkName());
                 try {
                     // android.system.Os
                     // Libcore one support all Android versions
@@ -314,5 +338,30 @@ public class MultiRTUtils {
             tarEntry = tarIn.getNextTarEntry();
         }
         tarIn.close();
+    }
+
+    private static boolean isArchiveRootEntry(String entryName) {
+        if (entryName == null || entryName.isEmpty()) return true;
+        String normalized = entryName.replace('\\', '/');
+        while (normalized.startsWith("./")) {
+            normalized = normalized.substring(2);
+        }
+        return normalized.isEmpty() || ".".equals(normalized);
+    }
+
+    private static void validateSymbolicLinkTarget(File root, File link, String linkTarget) throws IOException {
+        if (linkTarget == null || linkTarget.isEmpty() || new File(linkTarget).isAbsolute()) {
+            throw new IOException("Unsafe runtime symbolic link: " + linkTarget);
+        }
+        File linkParent = link.getParentFile();
+        if (linkParent == null) {
+            throw new IOException("Unsafe runtime symbolic link: " + linkTarget);
+        }
+        String rootPath = root.getCanonicalPath();
+        String resolvedTarget = new File(linkParent, linkTarget).getCanonicalPath();
+        if (!resolvedTarget.equals(rootPath)
+                && !resolvedTarget.startsWith(rootPath + File.separator)) {
+            throw new IOException("Unsafe runtime symbolic link: " + linkTarget);
+        }
     }
 }

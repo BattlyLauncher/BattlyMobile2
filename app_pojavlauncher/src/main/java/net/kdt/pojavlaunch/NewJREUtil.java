@@ -103,6 +103,12 @@ public class NewJREUtil {
             gameRequiredVersion = versionInfo.javaVersion.majorVersion;
         }
 
+        if (gameRequiredVersion >= 25 && Architecture.is32BitsDevice()) {
+            Tools.dialogOnUiThread(activity, activity.getString(R.string.global_error),
+                    activity.getString(R.string.multirt_java25_unsupported_32bit));
+            return false;
+        }
+
         LauncherProfiles.load();
         AssetManager assetManager = activity.getAssets();
         MinecraftProfile minecraftProfile = LauncherProfiles.getCurrentProfile();
@@ -160,15 +166,23 @@ public class NewJREUtil {
             }
         }
 
-        // Download the exact required version from the remote repository.
-        try {
-            String jreName = net.kdt.pojavlaunch.utils.JREAutoDownloader.downloadAndExtractJRE(gameRequiredVersion);
-            minecraftProfile.javaDir = Tools.LAUNCHERPROFILES_RTPREFIX + jreName;
-            LauncherProfiles.write();
-            return true;
-        } catch (Exception e) {
-            Log.e("NewJREAuto", "Failed to download exact JRE " + gameRequiredVersion +
-                    ", trying any compatible installed version.", e);
+        // Download an exact runtime only when Battly actually publishes it for this ABI.
+        // Minecraft 1.17 requests Java 16, for example, but Java 17 is the supported Android
+        // runtime and must be reused instead of attempting a permanently missing asset.
+        if (net.kdt.pojavlaunch.utils.JREAutoDownloader
+                .isDownloadAvailableForCurrentArchitecture(gameRequiredVersion)) {
+            try {
+                String jreName = net.kdt.pojavlaunch.utils.JREAutoDownloader.downloadAndExtractJRE(gameRequiredVersion);
+                minecraftProfile.javaDir = Tools.LAUNCHERPROFILES_RTPREFIX + jreName;
+                LauncherProfiles.write();
+                return true;
+            } catch (Exception e) {
+                Log.e("NewJREAuto", "Failed to download exact JRE " + gameRequiredVersion +
+                        ", trying any compatible installed version.", e);
+            }
+        } else {
+            Log.i("NewJREUtil", "No Android build exists for exact Java " + gameRequiredVersion
+                    + "; using the nearest compatible installed runtime.");
         }
 
         // Last resort: fall back to the nearest installed runtime that is >= required.

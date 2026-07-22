@@ -6,6 +6,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 
+import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.MainActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -48,9 +49,12 @@ public class ContextAwareDoneListener implements AsyncMinecraftDownloader.DoneLi
     public void executeWithActivity(Activity activity) {
         try {
             Intent gameStartIntent = createGameStartIntent(activity);
+            LauncherActivity.markGameSessionStarting(activity, mNormalizedVersionid);
             activity.startActivity(gameStartIntent);
-            activity.finish();
-            android.os.Process.killProcess(android.os.Process.myPid()); //You should kill yourself, NOW!
+            // Keep the launcher Activity in the task. Minecraft runs in :game, so Android can
+            // reclaim the launcher process while the game is active and recreate it afterwards.
+            // Finishing and killing it here left users on the system home screen whenever the
+            // JVM terminated through System.exit(), before JREUtils could report the exit code.
         } catch (Throwable e) {
             Tools.showError(activity.getBaseContext(), e);
         }

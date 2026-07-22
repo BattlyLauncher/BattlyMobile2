@@ -10,11 +10,18 @@ import android.text.TextWatcher;
 import androidx.preference.EditTextPreference;
 import androidx.preference.ListPreference;
 import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
 import androidx.preference.SwitchPreference;
 
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.GLInfoUtils;
+import net.kdt.pojavlaunch.utils.RendererPluginRegistry;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferenceFragment {
     EditTextPreference GLSLCachePreference;
@@ -58,6 +65,7 @@ public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferen
         });
         updateGLSLCacheSummary(); // Just updates the summary with the value when user opens the menu. Yes it's out of place.
         updateMultiDrawSummary(); // Same as above
+        populateRendererStatus();
     }
 
     @Override
@@ -91,5 +99,71 @@ public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferen
         } catch (Exception e) {
             e.printStackTrace();
         }
+    }
+
+    private void populateRendererStatus() {
+        if (getPreferenceScreen() == null) {
+            return;
+        }
+        PreferenceCategory category = new PreferenceCategory(requireContext());
+        category.setTitle(R.string.renderer_status_title);
+        getPreferenceScreen().addPreference(category);
+
+        String[] names = getResources().getStringArray(R.array.renderer);
+        String[] values = getResources().getStringArray(R.array.renderer_values);
+        Set<String> compatible = new HashSet<>();
+        compatible.addAll(Tools.getCompatibleRenderers(requireContext()).rendererIds);
+        for (int i = 0; i < names.length && i < values.length; i++) {
+            String rendererId = values[i];
+            boolean isCompatible = compatible.contains(rendererId);
+            Preference preference = new Preference(requireContext());
+            preference.setTitle(names[i]);
+            preference.setSummary(getString(
+                    isCompatible ? R.string.renderer_status_available : R.string.renderer_status_unavailable,
+                    getRendererDescription(rendererId)
+            ));
+            preference.setEnabled(isCompatible);
+            category.addPreference(preference);
+        }
+        for (RendererPluginRegistry.Entry entry : RendererPluginRegistry.load(requireContext())) {
+            if (Arrays.asList(values).contains(entry.runtimeRenderer)) {
+                continue;
+            }
+            boolean isCompatible = compatible.contains(entry.id);
+            Preference preference = new Preference(requireContext());
+            preference.setTitle(entry.name);
+            preference.setSummary(getString(
+                    isCompatible ? R.string.renderer_status_available : R.string.renderer_status_unavailable,
+                    Tools.isValidString(entry.description) ? entry.description : getString(R.string.renderer_desc_generic)
+            ));
+            preference.setEnabled(isCompatible);
+            category.addPreference(preference);
+        }
+    }
+
+    private String getRendererDescription(String rendererId) {
+        if ("opengles2".equals(rendererId)) {
+            return getString(R.string.renderer_desc_gl4es);
+        }
+        if ("opengles3_desktopgl_zink_kopper".equals(rendererId)) {
+            return getString(R.string.renderer_desc_kopper);
+        }
+        if ("vulkan_zink".equals(rendererId)) {
+            return getString(R.string.renderer_desc_zink);
+        }
+        if ("opengles_mobileglues".equals(rendererId)) {
+            return getString(R.string.renderer_desc_mobileglues);
+        }
+        if ("opengles3_ltw".equals(rendererId)) {
+            return getString(R.string.renderer_desc_ltw);
+        }
+        if ("opengles3_desktopgl_freedreno".equals(rendererId)) {
+            GLInfoUtils.GLInfo info = GLInfoUtils.getGlInfo();
+            if (!info.isAdreno()) {
+                return getString(R.string.renderer_desc_freedreno_not_adreno, info.vendor + " " + info.renderer);
+            }
+            return getString(R.string.renderer_desc_freedreno);
+        }
+        return getString(R.string.renderer_desc_generic);
     }
 }

@@ -64,7 +64,7 @@
                 android:layout_width="24dp"
                 android:layout_height="24dp"
                 android:src="@drawable/ic_battly_chevron"
-                android:tint="#4DFFFFFF" />
+                app:tint="#4DFFFFFF" />
         </LinearLayout>
 
         <!-- Secondary Actions Grid -->
@@ -95,7 +95,7 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_menu_install_jar"
-                    android:tint="#FFFFFFFF" />
+                    app:tint="#FFFFFFFF" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -134,7 +134,7 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_folder"
-                    android:tint="#FFFFFFFF" />
+                    app:tint="#FFFFFFFF" />
 
                 <TextView
                     android:layout_width="match_parent"
@@ -172,7 +172,7 @@
                     android:layout_width="32dp"
                     android:layout_height="32dp"
                     android:src="@drawable/ic_setting_misc"
-                    android:tint="#FFFFFFFF" />
+                    app:tint="#FFFFFFFF" />
 
                 <TextView
                     android:layout_width="match_parent"

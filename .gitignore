@@ -3,6 +3,8 @@
 /*/build/
 **/bin/
 **/.cxx/
+**/__pycache__/
+*.py[cod]
 app_pojavlauncher/.cxx/
 
 # IDE / local machine state
@@ -79,6 +81,8 @@ app_pojavlauncher/src/main/assets/components/jre/
 /.tmp-*
 /build_log.txt
 /release-secrets/
+/.codex/
+/.codex-remote-attachments/
 /dist/
 /out/
 /items/

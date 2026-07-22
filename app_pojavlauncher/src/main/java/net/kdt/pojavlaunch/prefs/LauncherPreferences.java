@@ -10,6 +10,7 @@ import android.content.*;
 import android.content.res.Configuration;
 import android.graphics.Rect;
 import android.os.Build;
+import android.os.StatFs;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -23,6 +24,9 @@ import net.kdt.pojavlaunch.utils.JREUtils;
 import java.io.File;
 import java.io.IOException;
 import java.util.LinkedHashMap;
+import java.util.Locale;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class LauncherPreferences {
     public static final String PREF_KEY_CURRENT_PROFILE = "currentProfile";
@@ -74,6 +78,7 @@ public class LauncherPreferences {
     public static boolean PREF_VERIFY_MANIFEST = true;
     public static String PREF_DOWNLOAD_SOURCE = "default";
     public static int PREF_DOWNLOAD_THREAD_COUNT = 8;
+    public static boolean PREF_DOWNLOAD_THREADS_AUTO = true;
     public static boolean PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = false;
     public static boolean PREF_VSYNC_IN_ZINK = true;
     public static boolean PREF_FORCE_ENABLE_TOUCHCONTROLLER = false;
@@ -88,7 +93,8 @@ public class LauncherPreferences {
         }
         //Required for CTRLDEF_FILE and MultiRT
         Tools.initStorageConstants(ctx);
-        boolean isDevicePowerful = isDevicePowerful(ctx);
+        boolean isEntryLevelDevice = isEntryLevelDevice(ctx);
+        boolean isDevicePowerful = !isEntryLevelDevice && isDevicePowerful(ctx);
 
         PREF_BUTTONSIZE = DEFAULT_PREF.getInt("buttonscale", 100);
         PREF_MOUSESCALE = DEFAULT_PREF.getInt("mousescale", 100)/100f;
@@ -105,7 +111,7 @@ public class LauncherPreferences {
         PREF_RAM_ALLOCATION = DEFAULT_PREF.getInt("allocation", findBestRAMAllocation(ctx));
         PREF_BATTLY_ONBOARDING_COMPLETED = DEFAULT_PREF.getBoolean("battly_onboarding_completed", false);
         PREF_CUSTOM_JAVA_ARGS = DEFAULT_PREF.getString("javaArgs", "");
-        PREF_SUSTAINED_PERFORMANCE = DEFAULT_PREF.getBoolean("sustainedPerformance", isDevicePowerful);
+        PREF_SUSTAINED_PERFORMANCE = DEFAULT_PREF.getBoolean("sustainedPerformance", isEntryLevelDevice || isDevicePowerful);
         PREF_VIRTUAL_MOUSE_START = DEFAULT_PREF.getBoolean("mouse_start", false);
         PREF_ARC_CAPES = DEFAULT_PREF.getBoolean("arc_capes",false);
         PREF_USE_ALTERNATE_SURFACE = DEFAULT_PREF.getBoolean("alternate_surface", isDevicePowerful);
@@ -118,7 +124,7 @@ public class LauncherPreferences {
         PREF_GYRO_SMOOTHING = DEFAULT_PREF.getBoolean("gyroSmoothing", true);
         PREF_GYRO_INVERT_X = DEFAULT_PREF.getBoolean("gyroInvertX", false);
         PREF_GYRO_INVERT_Y = DEFAULT_PREF.getBoolean("gyroInvertY", false);
-        PREF_FORCE_VSYNC = DEFAULT_PREF.getBoolean("force_vsync", isDevicePowerful);
+        PREF_FORCE_VSYNC = DEFAULT_PREF.getBoolean("force_vsync", isDevicePowerful && !isEntryLevelDevice);
         PREF_BUTTON_ALL_CAPS = DEFAULT_PREF.getBoolean("buttonAllCaps", true);
         PREF_DUMP_SHADERS = DEFAULT_PREF.getBoolean("dump_shaders", false);
         PREF_DEADZONE_SCALE = ((float) DEFAULT_PREF.getInt("gamepad_deadzone_scale", 100))/100f;
@@ -129,6 +135,7 @@ public class LauncherPreferences {
             DEFAULT_PREF.edit().remove("downloadSource").apply();
         }
         PREF_DOWNLOAD_THREAD_COUNT = clamp(DEFAULT_PREF.getInt("downloadThreadCount", 8), 2, 16);
+        PREF_DOWNLOAD_THREADS_AUTO = DEFAULT_PREF.getBoolean("downloadThreadsAuto", true);
         PREF_VERIFY_MANIFEST = DEFAULT_PREF.getBoolean("verifyManifest", true);
         PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = DEFAULT_PREF.getBoolean(PREF_KEY_SKIP_NOTIFICATION_CHECK, false);
         PREF_VSYNC_IN_ZINK = DEFAULT_PREF.getBoolean("vsync_in_zink", true);
@@ -173,13 +180,13 @@ public class LauncherPreferences {
         int deviceRam = Tools.getTotalDeviceMemory(ctx);
         if (deviceRam < 1024) return 296;
         if (deviceRam < 1536) return 448;
-        if (deviceRam < 2048) return 656;
+        if (deviceRam < 2048) return 576;
         // Limit the max for 32 bits devices more harshly
         if (is32BitsDevice()) return 696;
 
-        if (deviceRam < 3064) return 936;
-        if (deviceRam < 4096) return 1144;
-        if (deviceRam < 6144) return 1536;
+        if (deviceRam < 3064) return 768;
+        if (deviceRam < 4096) return 1024;
+        if (deviceRam < 6144) return 1280;
         return 2048; //Default RAM allocation for 64 bits
     }
 
@@ -190,7 +197,8 @@ public class LauncherPreferences {
     private static int findBestResolution(Context context, boolean isDevicePowerful) {
         DisplayMetrics metrics = context.getResources().getDisplayMetrics();
         int minSide = Math.min(metrics.widthPixels, metrics.heightPixels);
-        int targetSide = isDevicePowerful ? 1080 : 720;
+        int deviceRam = Tools.getTotalDeviceMemory(context);
+        int targetSide = isDevicePowerful ? 1080 : (deviceRam < 4096 || isLowStorageDevice(context) ? 540 : 720);
         if (minSide <= targetSide) return 100; // No need to scale down
 
         float ratio = (100f * targetSide / minSide);
@@ -209,6 +217,22 @@ public class LauncherPreferences {
         if (Runtime.getRuntime().availableProcessors() <= 4) return false;
         if (hasAllCoreSameFreq()) return false;
         return true;
+    }
+
+    private static boolean isEntryLevelDevice(Context context) {
+        return Tools.getTotalDeviceMemory(context) < 6144 || isLowStorageDevice(context);
+    }
+
+    private static boolean isLowStorageDevice(Context context) {
+        try {
+            File filesDir = context.getExternalFilesDir(null);
+            if (filesDir == null) filesDir = context.getFilesDir();
+            StatFs statFs = new StatFs(filesDir.getAbsolutePath());
+            long totalBytes = statFs.getBlockSizeLong() * statFs.getBlockCountLong();
+            return totalBytes > 0 && totalBytes < 64L * 1024L * 1024L * 1024L;
+        } catch (Throwable throwable) {
+            return false;
+        }
     }
 
     private static boolean hasAllCoreSameFreq() {
@@ -247,6 +271,14 @@ public class LauncherPreferences {
         Tools.updateWindowSize(activity);
     }
     public static void writeMGRendererSettings() throws IOException {
+        writeMGRendererSettings(false, null);
+    }
+
+    public static void writeMGRendererSettings(boolean forceNoAngle) throws IOException {
+        writeMGRendererSettings(forceNoAngle, null);
+    }
+
+    public static void writeMGRendererSettings(boolean forceNoAngle, String minecraftVersion) throws IOException {
         LinkedHashMap<String, Object> MGConfigJson = new LinkedHashMap<>();
         boolean androidEmulator = Tools.isAndroidEmulator();
         // Copying the defaultValues from pref_renderer.xml to use as defaults here too
@@ -254,15 +286,23 @@ public class LauncherPreferences {
         // We need to get the string and convert it to int because the android:defaultValues only takes in string-arrays.
         // Using .getInt() leads to a class cast exception and using integer-arrays will just crash the layout/fragment.
         String angleSetting = DEFAULT_PREF.getString("mg_renderer_setting_angle", "0");
-        if (androidEmulator) {
+        if (forceNoAngle) {
+            angleSetting = "0";
+        } else if (androidEmulator) {
             angleSetting = "3";
         }
         MGConfigJson.put("enableANGLE", Integer.parseInt(angleSetting));
-        MGConfigJson.put("enableNoError", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_errorSetting", "0")));
+        int noErrorSetting = Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_errorSetting", "0"));
+        if (requiresMobileGluesShaderErrorWorkaround(minecraftVersion)) {
+            noErrorSetting = Math.max(noErrorSetting, 2);
+            Logger.appendToLog("Info: MobileGlues shader/program error workaround enabled for "
+                    + minecraftVersion);
+        }
+        MGConfigJson.put("enableNoError", noErrorSetting);
         MGConfigJson.put("fsr1Setting", Integer.parseInt(DEFAULT_PREF.getString("mg_renderer_setting_fsr", "0")));
 
         // These guys are SwitchPreferences so they get special treatment, they need to be converted to ints
-        int gl43exts = DEFAULT_PREF.getBoolean("mg_renderer_setting_gl43ext", false) ? 1 : 0;
+        int gl43exts = DEFAULT_PREF.getBoolean("mg_renderer_setting_gl43exts", false) ? 1 : 0;
         int computeShaderext = DEFAULT_PREF.getBoolean("mg_renderer_computeShaderext", false) ? 1 : 0;
         int angleDepthClearFixMode = DEFAULT_PREF.getBoolean("mg_renderer_setting_angleDepthClearFixMode", false) ? 1 : 0;
         int timerQueryExt = DEFAULT_PREF.getBoolean("mg_renderer_setting_timerQueryExt", false) ? 1 : 0;
@@ -294,5 +334,20 @@ public class LauncherPreferences {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static boolean requiresMobileGluesShaderErrorWorkaround(String minecraftVersion) {
+        if (minecraftVersion == null) return false;
+        String normalized = minecraftVersion.toLowerCase(Locale.ROOT).trim();
+        Matcher release = Pattern.compile("^(\\d+)\\.(\\d+)").matcher(normalized);
+        if (!release.find()) return false;
+
+        int major = Integer.parseInt(release.group(1));
+        int minor = Integer.parseInt(release.group(2));
+        if (major > 26 || major == 26 && minor > 3) return true;
+        if (major != 26 || minor != 3) return false;
+
+        Matcher snapshot = Pattern.compile("snapshot[-_ ]?(\\d+)").matcher(normalized);
+        return !snapshot.find() || Integer.parseInt(snapshot.group(1)) >= 3;
     }
 }

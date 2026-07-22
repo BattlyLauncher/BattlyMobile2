@@ -1,8 +1,6 @@
 package net.kdt.pojavlaunch.fragments;
 
 import static net.kdt.pojavlaunch.Tools.hasNoOnlineProfileDialog;
-import static net.kdt.pojavlaunch.Tools.openPath;
-
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Toast;
@@ -43,7 +41,9 @@ public class DownloadCenterFragment extends Fragment {
             hasNoOnlineProfileDialog(getActivity(), getString(R.string.demo_unsupported),
                     getString(R.string.change_account));
         } else {
-            openPath(requireContext(), getCurrentProfileDirectory(), false);
+            Tools.swapFragment(requireActivity(), BattlyFileManagerFragment.class,
+                    BattlyFileManagerFragment.TAG,
+                    BattlyFileManagerFragment.createArguments(getCurrentProfileDirectory()));
         }
     }
 

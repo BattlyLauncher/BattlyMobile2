@@ -22,7 +22,34 @@ function Expand-Artifact([string]$ArtifactPath) {
     New-Item -ItemType Directory -Path $temp | Out-Null
     $zipPath = Join-Path $temp "artifact.zip"
     Copy-Item -LiteralPath $ArtifactPath -Destination $zipPath -Force
-    Expand-Archive -Path $zipPath -DestinationPath $temp -Force
+
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $tempPrefix = [System.IO.Path]::GetFullPath($temp) + [System.IO.Path]::DirectorySeparatorChar
+    $archive = [System.IO.Compression.ZipFile]::OpenRead($zipPath)
+    try {
+        foreach ($entry in $archive.Entries) {
+            $target = [System.IO.Path]::GetFullPath((Join-Path $temp $entry.FullName))
+            if (-not $target.StartsWith($tempPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
+                throw "Entrada ZIP fuera del directorio temporal: $($entry.FullName)"
+            }
+            if ([string]::IsNullOrEmpty($entry.Name)) {
+                New-Item -ItemType Directory -Path $target -Force | Out-Null
+                continue
+            }
+            $parent = Split-Path -Parent $target
+            New-Item -ItemType Directory -Path $parent -Force | Out-Null
+            $inputStream = $entry.Open()
+            $outputStream = [System.IO.File]::Open($target, [System.IO.FileMode]::Create, [System.IO.FileAccess]::Write)
+            try {
+                $inputStream.CopyTo($outputStream)
+            } finally {
+                $outputStream.Dispose()
+                $inputStream.Dispose()
+            }
+        }
+    } finally {
+        $archive.Dispose()
+    }
     Remove-Item -LiteralPath $zipPath -Force
     return $temp
 }

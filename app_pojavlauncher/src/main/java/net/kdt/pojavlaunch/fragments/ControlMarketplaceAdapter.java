@@ -4,6 +4,7 @@ import android.graphics.drawable.Drawable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
 import android.text.style.ImageSpan;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -27,6 +28,14 @@ public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarke
         void onApply(JSONObject item);
 
         void onPreview(JSONObject item);
+
+        void onLike(JSONObject item);
+
+        void onSave(JSONObject item);
+
+        boolean isLiked(JSONObject item);
+
+        boolean isSaved(JSONObject item);
     }
 
     private final List<JSONObject> mItems = new ArrayList<>();
@@ -74,6 +83,8 @@ public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarke
         final TextView mStats;
         final Button mApplyBtn;
         final Button mPreviewBtn;
+        final Button mLikeBtn;
+        final Button mSaveBtn;
 
         ViewHolder(@NonNull View itemView) {
             super(itemView);
@@ -84,6 +95,8 @@ public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarke
             mStats = itemView.findViewById(R.id.ctrl_item_stats);
             mApplyBtn = itemView.findViewById(R.id.ctrl_item_apply_btn);
             mPreviewBtn = itemView.findViewById(R.id.ctrl_item_preview_btn);
+            mLikeBtn = itemView.findViewById(R.id.ctrl_item_like_btn);
+            mSaveBtn = itemView.findViewById(R.id.ctrl_item_save_btn);
         }
 
         void bind(JSONObject item, OnApplyListener listener) {
@@ -136,8 +149,43 @@ public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarke
             statsText.append(" ").append(String.valueOf(likes));
             mStats.setText(statsText);
 
+            boolean liked = listener.isLiked(item);
+            boolean saved = listener.isSaved(item);
+            mPreviewBtn.setText(R.string.ctrl_preview_btn);
+            mApplyBtn.setText(R.string.ctrl_apply_btn);
+            mLikeBtn.setText(liked ? R.string.ctrl_liked_btn : R.string.ctrl_like_btn);
+            mSaveBtn.setText(saved ? R.string.ctrl_saved_btn : R.string.ctrl_save_btn);
+            setButtonIcon(mApplyBtn, android.R.drawable.ic_menu_save);
+            setButtonIcon(mPreviewBtn, android.R.drawable.ic_menu_view);
+            setButtonIcon(mLikeBtn, liked ? android.R.drawable.btn_star_big_on : android.R.drawable.btn_star_big_off);
+            setButtonIcon(mSaveBtn, saved ? android.R.drawable.ic_menu_agenda : android.R.drawable.ic_menu_add);
             mApplyBtn.setOnClickListener(v -> listener.onApply(item));
             mPreviewBtn.setOnClickListener(v -> listener.onPreview(item));
+            mLikeBtn.setOnClickListener(v -> listener.onLike(item));
+            mSaveBtn.setOnClickListener(v -> listener.onSave(item));
+        }
+
+        private void setButtonIcon(Button button, int iconRes) {
+            Drawable icon = button.getContext().getDrawable(iconRes);
+            if (icon == null) return;
+            CharSequence label = button.getText();
+            int size = Math.round(button.getTextSize() * 1.05f);
+            icon.setBounds(0, 0, size, size);
+            icon.setTint(0xFF8DEEDC);
+            SpannableStringBuilder text = new SpannableStringBuilder();
+            text.append("\u00A0");
+            text.setSpan(new ImageSpan(icon, ImageSpan.ALIGN_BASELINE),
+                    0, 1, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE);
+            text.append("  ").append(label);
+            button.setAllCaps(false);
+            button.setGravity(Gravity.CENTER);
+            button.setTextAlignment(View.TEXT_ALIGNMENT_CENTER);
+            button.setMinWidth(0);
+            button.setMinimumWidth(0);
+            button.setPadding(0, 0, 0, 0);
+            button.setIncludeFontPadding(false);
+            button.setCompoundDrawables(null, null, null, null);
+            button.setText(text);
         }
     }
 }

@@ -37,7 +37,7 @@ public class TextProgressBar extends ProgressBar {
         setProgressDrawable(ResourcesCompat.getDrawable(getResources(), R.drawable.view_text_progressbar, null));
         setProgress(35);
         setMax(100);
-        setMinHeight((int) (getResources().getDisplayMetrics().density * 36));
+        setMinimumHeight((int) (getResources().getDisplayMetrics().density * 36));
         mTextPaint = new Paint();
         mTextPaint.setColor(Color.WHITE);
         mTextPaint.setFlags(Paint.FAKE_BOLD_TEXT_FLAG);

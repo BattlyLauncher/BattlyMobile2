@@ -3,6 +3,7 @@ package net.kdt.pojavlaunch.modloaders.modpacks;
 import android.annotation.SuppressLint;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -17,8 +18,6 @@ import android.widget.TextView;
 import androidx.appcompat.app.AlertDialog;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
-import androidx.core.graphics.drawable.RoundedBitmapDrawable;
-import androidx.core.graphics.drawable.RoundedBitmapDrawableFactory;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.kdt.SimpleArrayAdapter;
@@ -44,6 +43,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -64,9 +64,6 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private ModItem[] mModItems;
     private final ModpackApi mModpackApi;
 
-    /* Cache for ever so slightly rounding the image for the corner not to stick out of the layout */
-    private final float mCornerDimensionCache;
-
     private Future<?> mTaskInProgress;
     private SearchFilters mSearchFilters;
     private SearchResult mCurrentResult;
@@ -75,7 +72,6 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
 
     public ModItemAdapter(Resources resources, ModpackApi api, SearchResultCallback callback) {
-        mCornerDimensionCache = resources.getDimension(R.dimen._1sdp) / 250;
         mModpackApi = api;
         mModItems = new ModItem[]{};
         mSearchResultCallback = callback;
@@ -211,9 +207,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     // Setup dialog basic info
                     ImageView dIcon = dialog.findViewById(R.id.dialog_mod_icon);
                     if(mThumbnailBitmap != null) {
-                        androidx.core.graphics.drawable.RoundedBitmapDrawable drawable = androidx.core.graphics.drawable.RoundedBitmapDrawableFactory.create(v.getResources(), mThumbnailBitmap);
-                        drawable.setCornerRadius(mCornerDimensionCache * mThumbnailBitmap.getHeight());
-                        dIcon.setImageDrawable(drawable);
+                        dIcon.setImageDrawable(new BitmapDrawable(v.getResources(), mThumbnailBitmap));
                     }
                     ((TextView)dialog.findViewById(R.id.dialog_mod_title)).setText(mModItem.title);
                     ((TextView)dialog.findViewById(R.id.dialog_mod_meta)).setText(buildMeta(mModItem));
@@ -334,9 +328,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mImageReceiver = bm->{
                 mImageReceiver = null;
                 mThumbnailBitmap = bm;
-                RoundedBitmapDrawable drawable = RoundedBitmapDrawableFactory.create(mIconView.getResources(), bm);
-                drawable.setCornerRadius(mCornerDimensionCache * bm.getHeight());
-                mIconView.setImageDrawable(drawable);
+                mIconView.setImageDrawable(new BitmapDrawable(mIconView.getResources(), bm));
             };
             mIconCache.getImage(mImageReceiver, mModItem.getIconCacheTag(), mModItem.imageUrl);
             mSourceView.setImageResource(getSourceDrawable(item.apiSource));
@@ -354,7 +346,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if(detailedItem != null) {
                 setInstallEnabled(true);
                 mExtendedErrorTextView.setVisibility(View.GONE);
-                mSelectedCompatibility = pickInitialCompatibility(detailedItem);
+                // Do not silently hide files behind the first detected Minecraft/loader
+                // combination. Resource packs and shaders commonly publish one file for
+                // several game versions, so the complete release history is the safest
+                // and least surprising initial view.
+                mSelectedCompatibility = null;
                 mExtendedSpinner.setAdapter(mVersionAdapter);
                 bindVersionsForCompatibility();
             } else {
@@ -444,16 +440,16 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (mModDetail == null || mExtendedSpinner == null || selectedPosition < 0) {
                 return;
             }
-            String mcVersion = mModDetail.mcVersionNames == null || selectedPosition >= mModDetail.mcVersionNames.length
-                    ? null : mModDetail.mcVersionNames[selectedPosition];
-            String loaderSummary = buildLoaderSummary(mModDetail.versionLoaders == null || selectedPosition >= mModDetail.versionLoaders.length
-                    ? null : mModDetail.versionLoaders[selectedPosition]);
             if (mExtendedInfoTextView != null) {
-                mExtendedInfoTextView.setText(itemView.getContext().getString(
-                        R.string.mod_version_summary,
-                        Tools.isValidString(mcVersion) ? mcVersion : itemView.getContext().getString(R.string.launcher_version_unknown),
-                        loaderSummary
-                ));
+                if (mSelectedCompatibility == null) {
+                    mExtendedInfoTextView.setText(itemView.getContext().getString(
+                            R.string.mod_detail_minecraft_versions_count,
+                            countMinecraftVersions(mModDetail),
+                            buildLoaderSummary(collectLoaders(mModDetail))
+                    ));
+                } else {
+                    mExtendedInfoTextView.setText(mSelectedCompatibility.toString());
+                }
             }
 
             int dependencyCount = getRequiredDependencyCount(selectedPosition);
@@ -512,11 +508,6 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mExtendedSpinner.setSelection(0);
             }
             updateExtendedVersionState();
-        }
-
-        private CompatibilityOption pickInitialCompatibility(ModDetail detail) {
-            List<CompatibilityOption> options = buildCompatibilityOptions(detail);
-            return options.isEmpty() ? null : options.get(0);
         }
 
         private void installSelectedVersion(int selectedVersion, boolean dependenciesOnly) {
@@ -633,24 +624,28 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 return;
             }
             List<CompatibilityOption> options = buildCompatibilityOptions(mModDetail);
-            if (options.size() <= 1) {
+            if (options.isEmpty()) {
                 return;
             }
 
-            String[] labels = new String[options.size()];
+            String[] labels = new String[options.size() + 1];
+            labels[0] = itemView.getContext().getString(
+                    R.string.mod_detail_all_versions,
+                    mModDetail.versionNames == null ? 0 : mModDetail.versionNames.length
+            );
             int checkedIndex = 0;
             for (int i = 0; i < options.size(); i++) {
                 CompatibilityOption option = options.get(i);
-                labels[i] = option.toString();
+                labels[i + 1] = option.toString();
                 if (option.sameAs(mSelectedCompatibility)) {
-                    checkedIndex = i;
+                    checkedIndex = i + 1;
                 }
             }
 
             new AlertDialog.Builder(itemView.getContext(), R.style.BattlyDialog)
                     .setTitle(R.string.mod_detail_label_compat)
                     .setSingleChoiceItems(labels, checkedIndex, (dialog, which) -> {
-                        mSelectedCompatibility = options.get(which);
+                        mSelectedCompatibility = which == 0 ? null : options.get(which - 1);
                         bindVersionsForCompatibility();
                         dialog.dismiss();
                     })
@@ -664,25 +659,34 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
 
             for (int i = 0; i < detail.versionNames.length; i++) {
-                String mcVersion = detail.mcVersionNames == null || i >= detail.mcVersionNames.length
-                        ? null : detail.mcVersionNames[i];
+                String[] gameVersions = detail.getGameVersions(i);
                 String[] loaders = detail.versionLoaders == null || i >= detail.versionLoaders.length
                         ? null : detail.versionLoaders[i];
-                boolean addedLoader = false;
-                if (loaders != null) {
-                    for (String loader : loaders) {
-                        if (!Tools.isValidString(loader)) {
-                            continue;
+                if (gameVersions.length == 0) gameVersions = new String[]{null};
+
+                for (String mcVersion : gameVersions) {
+                    boolean addedLoader = false;
+                    if (loaders != null) {
+                        for (String loader : loaders) {
+                            if (!Tools.isValidString(loader)) {
+                                continue;
+                            }
+                            addCompatibilityOption(options, mcVersion, loader);
+                            addedLoader = true;
                         }
-                        addCompatibilityOption(options, mcVersion, loader);
-                        addedLoader = true;
+                    }
+                    if (!addedLoader) {
+                        addCompatibilityOption(options, mcVersion, null);
                     }
                 }
-                if (!addedLoader) {
-                    addCompatibilityOption(options, mcVersion, null);
-                }
             }
-            return new ArrayList<>(options.values());
+            ArrayList<CompatibilityOption> result = new ArrayList<>(options.values());
+            Collections.sort(result, (left, right) -> {
+                int versionResult = compareVersionDescending(left.mcVersion, right.mcVersion);
+                if (versionResult != 0) return versionResult;
+                return String.valueOf(left.loader).compareToIgnoreCase(String.valueOf(right.loader));
+            });
+            return result;
         }
 
         private void addCompatibilityOption(LinkedHashMap<String, CompatibilityOption> options,
@@ -702,9 +706,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (option == null) {
                 return true;
             }
-            String mcVersion = mModDetail.mcVersionNames == null || versionIndex >= mModDetail.mcVersionNames.length
-                    ? null : mModDetail.mcVersionNames[versionIndex];
-            if (option.mcVersion != null && !option.mcVersion.equalsIgnoreCase(mcVersion)) {
+            if (option.mcVersion != null
+                    && !mModDetail.supportsMinecraftVersion(versionIndex, option.mcVersion)) {
                 return false;
             }
 
@@ -722,6 +725,54 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 }
             }
             return false;
+        }
+
+        private int countMinecraftVersions(ModDetail detail) {
+            LinkedHashSet<String> versions = new LinkedHashSet<>();
+            if (detail != null && detail.versionNames != null) {
+                for (int i = 0; i < detail.versionNames.length; i++) {
+                    for (String version : detail.getGameVersions(i)) {
+                        if (Tools.isValidString(version)) versions.add(version);
+                    }
+                }
+            }
+            return versions.size();
+        }
+
+        private String[] collectLoaders(ModDetail detail) {
+            LinkedHashSet<String> loaders = new LinkedHashSet<>();
+            if (detail != null && detail.versionLoaders != null) {
+                for (String[] versionLoaders : detail.versionLoaders) {
+                    if (versionLoaders == null) continue;
+                    for (String loader : versionLoaders) {
+                        if (Tools.isValidString(loader)) loaders.add(loader);
+                    }
+                }
+            }
+            return loaders.toArray(new String[0]);
+        }
+
+        private int compareVersionDescending(String left, String right) {
+            if (left == null) return right == null ? 0 : 1;
+            if (right == null) return -1;
+            String[] leftParts = left.split("[^0-9]+");
+            String[] rightParts = right.split("[^0-9]+");
+            int max = Math.max(leftParts.length, rightParts.length);
+            for (int i = 0; i < max; i++) {
+                int leftValue = parseVersionPart(leftParts, i);
+                int rightValue = parseVersionPart(rightParts, i);
+                if (leftValue != rightValue) return Integer.compare(rightValue, leftValue);
+            }
+            return right.compareToIgnoreCase(left);
+        }
+
+        private int parseVersionPart(String[] parts, int index) {
+            if (index >= parts.length || parts[index].isEmpty()) return 0;
+            try {
+                return Integer.parseInt(parts[index]);
+            } catch (NumberFormatException ignored) {
+                return 0;
+            }
         }
 
         private int getRequiredDependencyCount(int selectedPosition) {
@@ -795,10 +846,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             java.util.ArrayList<String> labels = new java.util.ArrayList<>();
             for (String loader : loaders) {
                 if (!Tools.isValidString(loader)) continue;
-                if ("forge".equalsIgnoreCase(loader)) labels.add("Forge");
-                else if ("fabric".equalsIgnoreCase(loader)) labels.add("Fabric");
-                else if ("quilt".equalsIgnoreCase(loader)) labels.add("Quilt");
-                else if ("neoforge".equalsIgnoreCase(loader)) labels.add("NeoForge");
+                String label = toLoaderLabel(loader);
+                if (!labels.contains(label)) labels.add(label);
             }
             return labels.isEmpty()
                     ? itemView.getContext().getString(R.string.search_filter_loader_any)
@@ -813,6 +862,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if ("fabric".equalsIgnoreCase(loader)) return "Fabric";
             if ("quilt".equalsIgnoreCase(loader)) return "Quilt";
             if ("neoforge".equalsIgnoreCase(loader)) return "NeoForge";
+            if ("iris".equalsIgnoreCase(loader)) return "Iris";
+            if ("optifine".equalsIgnoreCase(loader)) return "OptiFine";
             return loader;
         }
 
@@ -929,15 +980,16 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     notifyDataSetChanged();
                     return;
                 }
-                if(mPreviousResult != null) {
-                    int prevLength = mModItems.length;
-                    mModItems = finalModItems;
-                    notifyItemChanged(prevLength);
-                    notifyItemRangeInserted(prevLength+1, mModItems.length);
-                }else {
-                    mModItems = finalModItems;
-                    notifyDataSetChanged();
-                }
+                mModItems = finalModItems;
+                mLastPage = result != null
+                        && result.totalResultCount > 0
+                        && mModItems.length >= result.totalResultCount;
+
+                // The final loading cell changes position whenever a page is appended.
+                // A range notification based on the total list length corrupts RecyclerView's
+                // item accounting and can leave later pages unbound. Rebind the small catalog
+                // grid from its authoritative array instead.
+                notifyDataSetChanged();
             });
         }
     }

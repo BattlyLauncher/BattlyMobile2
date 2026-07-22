@@ -89,7 +89,7 @@
                 android:layout_height="18dp"
                 android:layout_marginStart="12dp"
                 android:src="@drawable/ic_battly_chevron"
-                android:tint="#E7F5FF" />
+                app:tint="#E7F5FF" />
         </LinearLayout>
 
         <LinearLayout

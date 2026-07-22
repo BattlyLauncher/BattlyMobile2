@@ -24,6 +24,8 @@ import android.view.KeyEvent;
 import android.view.MotionEvent;
 import android.view.View;
 
+import androidx.annotation.RequiresApi;
+
 import net.kdt.pojavlaunch.MinecraftGLSurface;
 import net.kdt.pojavlaunch.customcontrols.gamepad.direct.DirectGamepadEnableHandler;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
@@ -516,6 +518,7 @@ class SDLJoystickHandler_API19 extends SDLJoystickHandler_API16 {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.S)
 class SDLHapticHandler_API31 extends SDLHapticHandler {
     @Override
     public void run(int device_id, float intensity, int length) {
@@ -568,6 +571,7 @@ class SDLHapticHandler_API31 extends SDLHapticHandler {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 class SDLHapticHandler_API26 extends SDLHapticHandler {
     @Override
     public void run(int device_id, float intensity, int length) {
@@ -821,6 +825,7 @@ class SDLGenericMotionListener_API24 extends SDLGenericMotionListener_API14 {
     }
 }
 
+@RequiresApi(Build.VERSION_CODES.O)
 class SDLGenericMotionListener_API26 extends SDLGenericMotionListener_API24 {
     // Generic Motion (mouse hover, joystick...) events go here
     private boolean mRelativeModeEnabled;

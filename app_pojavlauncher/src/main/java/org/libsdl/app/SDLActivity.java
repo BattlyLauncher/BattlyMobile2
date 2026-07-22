@@ -53,6 +53,8 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import net.kdt.pojavlaunch.R;
+
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Hashtable;
@@ -410,13 +412,10 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         if (mBrokenLibraries) {
             mSingleton = this;
-            AlertDialog.Builder dlgAlert  = new AlertDialog.Builder(this);
-            dlgAlert.setMessage("An error occurred while trying to start the application. Please try again and/or reinstall."
-                  + System.getProperty("line.separator")
-                  + System.getProperty("line.separator")
-                  + "Error: " + errorMsgBrokenLib);
-            dlgAlert.setTitle("SDL Error");
-            dlgAlert.setPositiveButton("Exit",
+            AlertDialog.Builder dlgAlert = new AlertDialog.Builder(this, R.style.BattlyDialog);
+            dlgAlert.setMessage(getString(R.string.sdl_library_error_message, errorMsgBrokenLib));
+            dlgAlert.setTitle(R.string.sdl_library_error_title);
+            dlgAlert.setPositiveButton(R.string.sdl_library_error_exit,
                 new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog,int id) {
@@ -1665,7 +1664,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
         // create dialog with title and a listener to wake up calling thread
 
-        final AlertDialog dialog = new AlertDialog.Builder(this).create();
+        final AlertDialog dialog = new AlertDialog.Builder(this, R.style.BattlyDialog).create();
         dialog.setTitle(args.getString("title"));
         dialog.setCancelable(false);
         dialog.setOnDismissListener(new DialogInterface.OnDismissListener() {

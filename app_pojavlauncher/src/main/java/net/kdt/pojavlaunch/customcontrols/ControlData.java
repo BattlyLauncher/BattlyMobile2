@@ -23,6 +23,7 @@ import java.util.Map;
 
 @Keep
 public class ControlData {
+    public static final String WIDGET_PERFORMANCE = "performance";
 
     public static final int SPECIALBTN_KEYBOARD = -1;
     public static final int SPECIALBTN_TOGGLECTRL = -2;
@@ -33,6 +34,7 @@ public class ControlData {
     public static final int SPECIALBTN_SCROLLUP = -7;
     public static final int SPECIALBTN_SCROLLDOWN = -8;
     public static final int SPECIALBTN_MENU = -9;
+    public static final int SPECIALBTN_KEYBOARDPAN = -10;
 
     private static ControlData[] SPECIAL_BUTTONS;
     private static List<String> SPECIAL_BUTTON_NAME_ARRAY;
@@ -58,6 +60,7 @@ public class ControlData {
     public String name;
     public String displayType;
     public String displayValue;
+    public String widgetType;
     public int[] keycodes;      //Should store up to 4 keys
     public float opacity;       //Alpha value from 0 to 1;
     public int bgColor;
@@ -133,6 +136,7 @@ public class ControlData {
         this.passThruEnabled = mousePassthrough;
         this.displayType = ControlDisplayUtils.TYPE_TEXT;
         this.displayValue = "";
+        this.widgetType = "";
     }
 
     //Deep copy constructor
@@ -157,6 +161,34 @@ public class ControlData {
         );
         this.displayType = controlData.displayType;
         this.displayValue = controlData.displayValue;
+        this.widgetType = controlData.widgetType;
+    }
+
+    public static ControlData createPerformanceWidget() {
+        ControlData data = new ControlData(
+                "FPS / Ping",
+                new int[]{},
+                "0.5 * ${screen_width} - 0.5 * ${width}",
+                "${margin} * 2 + px(36) / 100.0 * ${preferred_scale}",
+                150,
+                28,
+                false,
+                0.92f,
+                0xB31A2633,
+                0x994FE0C1,
+                1,
+                55,
+                true,
+                true,
+                false,
+                false
+        );
+        data.widgetType = WIDGET_PERFORMANCE;
+        return data;
+    }
+
+    public boolean isPerformanceWidget() {
+        return WIDGET_PERFORMANCE.equals(widgetType);
     }
 
     public static ControlData[] getSpecialButtons() {
@@ -171,7 +203,8 @@ public class ControlData {
                     new ControlData("MID", new int[]{SPECIALBTN_MOUSEMID}, "${margin}", "${margin}"),
                     new ControlData("SCROLLUP", new int[]{SPECIALBTN_SCROLLUP}, "${margin}", "${margin}"),
                     new ControlData("SCROLLDOWN", new int[]{SPECIALBTN_SCROLLDOWN}, "${margin}", "${margin}"),
-                    new ControlData("MENU", new int[]{SPECIALBTN_MENU}, "${margin}", "${margin}")
+                    new ControlData("MENU", new int[]{SPECIALBTN_MENU}, "${margin}", "${margin}"),
+                    new ControlData("KeyboardPan", new int[]{SPECIALBTN_KEYBOARDPAN}, "${margin}", "${margin}")
             };
         }
 

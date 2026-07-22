@@ -78,7 +78,7 @@ jint JNI_OnLoad(JavaVM* vm, __attribute__((unused)) void* reserved) {
 }
 
 static void ensureRuntimeGlfwBridge(JNIEnv *env, jclass glfwClass) {
-    if (pojav_environ->vmGlfwClass != NULL) {
+    if (env == NULL || glfwClass == NULL || pojav_environ->vmGlfwClass != NULL) {
         return;
     }
     pojav_environ->vmGlfwClass = (*env)->NewGlobalRef(env, glfwClass);
@@ -121,9 +121,21 @@ Java_org_lwjgl_glfw_GLFW_nativeInitializeGLFWNativeBridge(__attribute__((unused)
 }
 
 void updateMonitorSize(int width, int height) {
+    if (pojav_environ->glfwThreadVmEnv == NULL
+            || pojav_environ->vmGlfwClass == NULL
+            || pojav_environ->method_internalChangeMonitorSize == NULL) {
+        LOGE("Skipping monitor size update: GLFW JNI bridge is not initialized");
+        return;
+    }
     (*pojav_environ->glfwThreadVmEnv)->CallStaticVoidMethod(pojav_environ->glfwThreadVmEnv, pojav_environ->vmGlfwClass, pojav_environ->method_internalChangeMonitorSize, width, height);
 }
 void updateWindowSize(void* window) {
+    if (pojav_environ->glfwThreadVmEnv == NULL
+            || pojav_environ->vmGlfwClass == NULL
+            || pojav_environ->method_internalWindowSizeChanged == NULL) {
+        LOGE("Skipping window size update: GLFW JNI bridge is not initialized");
+        return;
+    }
     (*pojav_environ->glfwThreadVmEnv)->CallStaticVoidMethod(pojav_environ->glfwThreadVmEnv, pojav_environ->vmGlfwClass, pojav_environ->method_internalWindowSizeChanged, (jlong)window);
 }
 

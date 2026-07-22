@@ -96,6 +96,12 @@ def localDebugKeystore = rootProject.file("app_pojavlauncher/debug.keystore")
 def legacyLocalDebugKeystore = rootProject.file("release-secrets/debug.keystore")
 def hasLocalDebugKeystore = localDebugKeystore.exists() || legacyLocalDebugKeystore.exists()
 def selectedLocalDebugKeystore = localDebugKeystore.exists() ? localDebugKeystore : legacyLocalDebugKeystore
+def battlyGoogleDebugClientId = System.getenv("BATTLY_GOOGLE_DEBUG_CLIENT_ID")
+        ?: System.getenv("BATTLY_GOOGLE_WEB_CLIENT_ID")
+        ?: "490291541450-0ocq9cfvovh2ft45a9kgsvf12cos4emm.apps.googleusercontent.com"
+def battlyGoogleReleaseClientId = System.getenv("BATTLY_GOOGLE_RELEASE_CLIENT_ID")
+        ?: System.getenv("BATTLY_GOOGLE_WEB_CLIENT_ID")
+        ?: "490291541450-r17e3frigvot7b8a2lhu32k2dp8eqq28.apps.googleusercontent.com"
 
 android {
     namespace 'net.kdt.pojavlaunch'
@@ -103,7 +109,7 @@ android {
     compileSdk = 35
 
     lintOptions {
-        abortOnError false
+        abortOnError true
     }
 
     signingConfigs {
@@ -129,8 +135,8 @@ android {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
         targetSdkVersion 35
-        versionCode 10000005
-        versionName "2.0.0"
+        versionCode 10000008
+        versionName "2.0.3"
         multiDexEnabled true //important
         resValue 'string', 'curseforge_api_key', getCFApiKey()
         externalNativeBuild {
@@ -149,9 +155,13 @@ android {
             shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             signingConfig signingConfigs.debug
+            resValue 'string', 'battly_google_server_client_id', battlyGoogleDebugClientId
             resValue 'string', 'application_package', 'com.tecnobros.battlylauncher.debug'
             resValue 'string', 'storageProviderAuthorities', 'com.tecnobros.battlylauncher.scoped.gamefolder.debug'
             resValue 'string', 'shareProviderAuthority', 'com.tecnobros.battlylauncher.scoped.controlfolder.debug'
+            ndk {
+                abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
+            }
         }
         proguard {
             initWith debug
@@ -161,6 +171,7 @@ android {
         proguardNoDebug {
             initWith proguard
             debuggable false
+            matchingFallbacks = [ 'proguard', 'release' ]
         }
 
         release {
@@ -173,11 +184,15 @@ android {
             resValue 'string', 'storageProviderAuthorities', 'com.tecnobros.battlylauncher.scoped.gamefolder'
             resValue 'string', 'application_package', 'com.tecnobros.battlylauncher'
             resValue 'string', 'shareProviderAuthority', 'com.tecnobros.battlylauncher.scoped.controlfolder'
+            resValue 'string', 'battly_google_server_client_id', battlyGoogleReleaseClientId
         }
         gplay {
             initWith release
             signingConfig signingConfigs.googlePlayBuild
             matchingFallbacks = [ 'release' ]
+            ndk {
+                abiFilters 'arm64-v8a', 'armeabi-v7a'
+            }
         }
     }
 
@@ -190,6 +205,7 @@ android {
     }
 
     compileOptions {
+        coreLibraryDesugaringEnabled true
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
@@ -223,7 +239,41 @@ android {
 
 afterEvaluate {
     // Explicit dependencies for which the apk relies on
-    tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":lwjgl2_methods_injector:jar", ":jre_lwjgl3glfw:jar")
+    tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":lwjgl2_methods_injector:jar", ":jre_lwjgl3glfw:patchMergedLwjglModules")
+}
+
+android.applicationVariants.all { variant ->
+    def variantCap = variant.name.capitalize()
+    def pythonExe = System.getenv("PYTHON") ?: "python"
+    def nativePageSizeArgs = [
+            pythonExe,
+            "tools/android/elf_16k_page_align.py",
+            "--fix",
+            "--allow-missing"
+    ]
+    nativePageSizeArgs += [
+            "${buildDir}/intermediates/merged_native_libs/${variant.name}",
+            "${buildDir}/intermediates/stripped_native_libs/${variant.name}",
+            "${buildDir}/intermediates/assets/${variant.name}/merge${variantCap}Assets"
+    ]
+    def fixNativeLibPageSize = tasks.register("fix${variantCap}NativeLibPageSize", Exec) {
+        group = "verification"
+        description = "Patch merged native libraries for Android 16 KB page-size compatibility (${variant.name})."
+        workingDir rootProject.projectDir
+        commandLine nativePageSizeArgs
+    }
+
+    fixNativeLibPageSize.configure {
+        dependsOn "strip${variantCap}DebugSymbols", "merge${variantCap}Assets"
+    }
+    tasks.matching {
+        it.name == "package${variantCap}" ||
+                it.name == "bundle${variantCap}" ||
+                it.name == "sign${variantCap}Bundle" ||
+                it.name == "compress${variantCap}Assets"
+    }.configureEach {
+        dependsOn fixNativeLibPageSize
+    }
 }
 
 gradle.taskGraph.whenReady { taskGraph ->
@@ -236,8 +286,10 @@ gradle.taskGraph.whenReady { taskGraph ->
 }
 
 dependencies {
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation 'commons-codec:commons-codec:1.15'
+    implementation 'org.ow2.asm:asm:9.6'
     // implementation 'com.wu-man:android-bsf-api:3.1.3'
     implementation 'androidx.preference:preference:1.2.0'
     //implementation 'androidx.core:core:1.7.0'
@@ -262,7 +314,10 @@ dependencies {
     // Our version of exp4j can be built from source at
     // https://github.com/PojavLauncherTeam/exp4j
     implementation 'net.sourceforge.htmlcleaner:htmlcleaner:2.6.1'
-    implementation 'com.bytedance:bytehook:1.0.9'
+    implementation('com.bytedance:bytehook:1.1.1') {
+        exclude group: 'com.bytedance.android', module: 'shadowhook'
+    }
+    runtimeOnly 'com.bytedance.android:shadowhook:1.1.1'
 
     // implementation 'net.sourceforge.streamsupport:streamsupport-cfuture:1.7.0'
 

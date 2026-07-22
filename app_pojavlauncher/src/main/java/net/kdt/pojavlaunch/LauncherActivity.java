@@ -38,6 +38,8 @@ import com.kdt.mcgui.mcAccountSpinner;
 import net.kdt.pojavlaunch.contracts.OpenDocumentWithExtension;
 import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
+import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
+import net.kdt.pojavlaunch.battlysocial.BattlySocialNotifications;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.extra.ExtraListener;
@@ -73,19 +75,30 @@ import net.kdt.pojavlaunch.utils.BattlyPlusManager;
 import net.kdt.pojavlaunch.utils.BattlyPlusWelcomeDialog;
 import net.kdt.pojavlaunch.utils.BattlyUpdateVideoDialog;
 import net.kdt.pojavlaunch.utils.DateUtils;
-import net.kdt.pojavlaunch.utils.NotificationUtils;
+import net.kdt.pojavlaunch.utils.JavaRuntimeInstallDialog;
+import net.kdt.pojavlaunch.utils.CrashAnalysisEngine;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
+import net.kdt.pojavlaunch.utils.NotificationUtils;
+import net.kdt.pojavlaunch.onboarding.OnboardingActivity;
 
+import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.lang.ref.WeakReference;
+import java.nio.charset.StandardCharsets;
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
+import java.util.Locale;
 
 public class LauncherActivity extends BaseActivity {
     public static final String SETTING_FRAGMENT_TAG = "SETTINGS_FRAGMENT";
     public static final String EXTRA_GAME_EXIT_CODE = "net.kdt.pojavlaunch.extra.GAME_EXIT_CODE";
     public static final String EXTRA_GAME_EXIT_DETAILS = "net.kdt.pojavlaunch.extra.GAME_EXIT_DETAILS";
+    private static final String GAME_SESSION_PREFS = "battly_game_session";
+    private static final String GAME_SESSION_ACTIVE = "active";
+    private static final String GAME_SESSION_VERSION = "version";
+    private static final String GAME_SESSION_LOG_OFFSET = "log_offset";
 
     public final ActivityResultLauncher<Object> modInstallerLauncher = registerForActivityResult(
             new OpenDocumentWithExtension("jar"), (data) -> {
@@ -139,6 +152,13 @@ public class LauncherActivity extends BaseActivity {
     private boolean mStartupPromptChainStarted;
     private boolean mLauncherStartupInitialized;
     private boolean mGameExitInfoShown;
+    private Runnable mAfterWhatsNew;
+    private final ActivityResultLauncher<Intent> mWhatsNewLauncher = registerForActivityResult(
+            new ActivityResultContracts.StartActivityForResult(), result -> {
+                Runnable after = mAfterWhatsNew;
+                mAfterWhatsNew = null;
+                if (after != null) after.run();
+            });
     private BroadcastReceiver mBattlyInAppReceiver;
 
     /* Allows to switch from one button "type" to another */
@@ -207,6 +227,12 @@ public class LauncherActivity extends BaseActivity {
             resetLaunchGameUi();
             return false;
         }
+        if (!JavaRuntimeInstallDialog.isJava8Ready()) {
+            resetLaunchGameUi();
+            JavaRuntimeInstallDialog.ensureJava8(this,
+                    () -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
+            return false;
+        }
         String normalizedVersionId = AsyncMinecraftDownloader.normalizeVersionId(prof.lastVersionId);
         JMinecraftVersionList.Version mcVersion = AsyncMinecraftDownloader.getListedVersion(normalizedVersionId);
         Telemetry.logLaunchRequested(selectedProfile, normalizedVersionId);
@@ -271,6 +297,7 @@ public class LauncherActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pojav_launcher);
+        handleBattlyOAuthIntent(getIntent());
         FragmentManager fragmentManager = getSupportFragmentManager();
         // If we don't have a back stack root yet...
         if (fragmentManager.getBackStackEntryCount() < 1) {
@@ -290,11 +317,9 @@ public class LauncherActivity extends BaseActivity {
                 isAllowed -> {
                     if (!isAllowed)
                         handleNoNotificationPermission();
-                    else {
-                        Runnable runnable = Tools.getWeakReference(mRequestNotificationPermissionRunnable);
-                        if (runnable != null)
-                            runnable.run();
-                    }
+                    Runnable runnable = Tools.getWeakReference(mRequestNotificationPermissionRunnable);
+                    if (runnable != null)
+                        runnable.run();
                 });
         mRequestMicrophonePermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
@@ -315,15 +340,20 @@ public class LauncherActivity extends BaseActivity {
     }
 
     private void continueLauncherStartupAfterTrailer() {
-        if (mLauncherStartupInitialized || isFinishing()) {
+        if (mLauncherStartupInitialized || isFinishing()
+                || (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1 && isDestroyed())) {
             return;
         }
         mLauncherStartupInitialized = true;
 
         if (!LauncherPreferences.PREF_BATTLY_ONBOARDING_COMPLETED) {
             Intent intent = new Intent(this, net.kdt.pojavlaunch.onboarding.OnboardingActivity.class);
-            startActivity(intent);
-            finish();
+            try {
+                startActivity(intent);
+                finish();
+            } catch (IllegalStateException e) {
+                Log.w("LauncherActivity", "Ignoring onboarding launch after state was saved", e);
+            }
             return;
         }
 
@@ -341,6 +371,10 @@ public class LauncherActivity extends BaseActivity {
         // Force login screen if no accounts are configured.
         // executePendingTransactions() ensures MainMenuFragment is committed
         // before the listener fires, so findFragmentById() returns a valid fragment.
+        if (getSupportFragmentManager().isStateSaved()) {
+            Log.w("LauncherActivity", "Startup skipped because FragmentManager state is already saved");
+            return;
+        }
         getSupportFragmentManager().executePendingTransactions();
         if (PojavProfile.getAllProfilesList().isEmpty()) {
             ExtraCore.setValue(ExtraConstants.SELECT_AUTH_METHOD, true);
@@ -359,6 +393,7 @@ public class LauncherActivity extends BaseActivity {
         mProgressLayout.observe(ProgressLayout.AUTHENTICATE_MICROSOFT);
         mProgressLayout.observe(ProgressLayout.DOWNLOAD_VERSION_LIST);
         BattlyWorldsInvites.handleLauncherIntent(this, getIntent());
+        handleBattlySocialIntent(getIntent());
         handleSharedInstallationIntent(getIntent());
         showGameExitInfoIfNeeded(getIntent());
         BattlyInAppMessaging.showPendingIfAny(this);
@@ -367,7 +402,24 @@ public class LauncherActivity extends BaseActivity {
 
     private void showUpdateVideoWhenReady() {
         new Handler(Looper.getMainLooper()).postDelayed(
-                () -> BattlyUpdateVideoDialog.showIfNeeded(this, this::checkNotificationPermission), 900);
+                () -> BattlyUpdateVideoDialog.showIfNeeded(this,
+                        () -> showWhatsNewIfNeeded(
+                                () -> checkNotificationPermission(this::ensureJavaRuntimeAfterStartup))), 900);
+    }
+
+    private void showWhatsNewIfNeeded(Runnable afterDone) {
+        if (LauncherPreferences.DEFAULT_PREF.getBoolean(OnboardingActivity.PREF_WHATS_NEW_SEEN, false)) {
+            if (afterDone != null) afterDone.run();
+            return;
+        }
+        mAfterWhatsNew = afterDone;
+        Intent intent = new Intent(this, OnboardingActivity.class)
+                .putExtra(OnboardingActivity.EXTRA_WHATS_NEW, true);
+        mWhatsNewLauncher.launch(intent);
+    }
+
+    private void ensureJavaRuntimeAfterStartup() {
+        JavaRuntimeInstallDialog.ensureJava8(this, null);
     }
 
     public void runStartupPromptsAfterLogin() {
@@ -401,9 +453,46 @@ public class LauncherActivity extends BaseActivity {
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
         setIntent(intent);
+        handleBattlyOAuthIntent(intent);
         BattlyWorldsInvites.handleLauncherIntent(this, intent);
+        handleBattlySocialIntent(intent);
         handleSharedInstallationIntent(intent);
         showGameExitInfoIfNeeded(intent);
+    }
+
+    private void handleBattlyOAuthIntent(Intent intent) {
+        if (intent == null || intent.getData() == null || !Intent.ACTION_VIEW.equals(intent.getAction())) {
+            return;
+        }
+        Uri uri = intent.getData();
+        if (!"battlymobile".equalsIgnoreCase(uri.getScheme()) || !"oauth".equalsIgnoreCase(uri.getHost())) {
+            return;
+        }
+        String provider = uri.getQueryParameter("provider");
+        String token = uri.getQueryParameter("token");
+        String nonce = uri.getQueryParameter("nonce");
+        if (!Tools.isValidString(provider) || !Tools.isValidString(token)) {
+            return;
+        }
+        getSharedPreferences("battly_oauth", MODE_PRIVATE)
+                .edit()
+                .putString("provider", provider)
+                .putString("token", token)
+                .putString("nonce", nonce == null ? "" : nonce)
+                .apply();
+        intent.setData(null);
+        Toast.makeText(this, R.string.battly_login_completing, Toast.LENGTH_SHORT).show();
+    }
+
+    private void handleBattlySocialIntent(Intent intent) {
+        if (intent == null || !intent.getBooleanExtra(BattlySocialNotifications.EXTRA_OPEN_SOCIAL, false)) {
+            return;
+        }
+        intent.removeExtra(BattlySocialNotifications.EXTRA_OPEN_SOCIAL);
+        Tools.MAIN_HANDLER.post(() -> {
+            if (isFinishing() || getSupportFragmentManager().isStateSaved()) return;
+            Tools.swapFragment(this, BattlySocialFragment.class, BattlySocialFragment.TAG, null);
+        });
     }
 
     private void handleSharedInstallationIntent(Intent intent) {
@@ -439,6 +528,64 @@ public class LauncherActivity extends BaseActivity {
         context.startActivity(intent);
     }
 
+    public static void markGameSessionStarting(Context context, String versionId) {
+        File latestLog = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
+        context.getSharedPreferences(GAME_SESSION_PREFS, MODE_PRIVATE).edit()
+                .putBoolean(GAME_SESSION_ACTIVE, true)
+                .putString(GAME_SESSION_VERSION, versionId == null ? "" : versionId)
+                .putLong(GAME_SESSION_LOG_OFFSET, latestLog.isFile() ? latestLog.length() : 0L)
+                .apply();
+    }
+
+    private void inspectReturnedGameSession() {
+        android.content.SharedPreferences session = getSharedPreferences(GAME_SESSION_PREFS, MODE_PRIVATE);
+        if (!session.getBoolean(GAME_SESSION_ACTIVE, false)) return;
+        String version = session.getString(GAME_SESSION_VERSION, "");
+        long logOffset = session.getLong(GAME_SESSION_LOG_OFFSET, 0L);
+        session.edit().clear().apply();
+
+        File latestLog = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
+        if (!latestLog.isFile()) return;
+        try {
+            String log = readGameSessionLog(latestLog, logOffset);
+            String lower = log.toLowerCase(Locale.ROOT);
+            boolean crashed = lower.contains("game crashed!")
+                    || lower.contains("---- minecraft crash report ----")
+                    || lower.contains("exception in thread \"main\"")
+                    || lower.contains("unable to launch")
+                    || lower.contains("unsatisfiedlinkerror")
+                    || lower.contains("fatal exception")
+                    || lower.contains("error during pre-loading phase")
+                    || lower.contains("modloadingexception")
+                    || lower.contains("needs language provider javafml");
+            boolean cleanExit = !crashed && (lower.contains("stopping!")
+                    || lower.contains("java exit code: 0"));
+            if (crashed || !cleanExit && lower.contains("java exit code:")) {
+                mGameExitInfoShown = false;
+                Intent crashIntent = new Intent()
+                        .putExtra(EXTRA_GAME_EXIT_CODE, -1)
+                        .putExtra(EXTRA_GAME_EXIT_DETAILS,
+                                "Minecraft " + version + " ended unexpectedly.");
+                showGameExitInfoIfNeeded(crashIntent);
+            }
+        } catch (IOException exception) {
+            Log.w("LauncherActivity", "Unable to inspect the previous game session", exception);
+        }
+    }
+
+    private static String readGameSessionLog(File file, long requestedOffset) throws IOException {
+        long length = file.length();
+        long offset = requestedOffset >= 0 && requestedOffset <= length ? requestedOffset : 0L;
+        long available = length - offset;
+        if (available > 256 * 1024L) offset = length - 256 * 1024L;
+        byte[] bytes = new byte[(int) (length - offset)];
+        try (RandomAccessFile input = new RandomAccessFile(file, "r")) {
+            input.seek(offset);
+            input.readFully(bytes);
+        }
+        return new String(bytes, StandardCharsets.UTF_8);
+    }
+
     private void showGameExitInfoIfNeeded(Intent intent) {
         if (mGameExitInfoShown || intent == null || !intent.hasExtra(EXTRA_GAME_EXIT_CODE)) {
             return;
@@ -455,20 +602,43 @@ public class LauncherActivity extends BaseActivity {
         if (details != null && !details.trim().isEmpty()) {
             message += "\n\n" + details.trim();
         }
-        Tools.showStyledDialog(Tools.createStyledDialogBuilder(this)
+        MinecraftProfile crashProfile = LauncherProfiles.getCurrentProfile();
+        CrashAnalysisEngine.Report report = CrashAnalysisEngine.analyze(crashProfile, exitCode, details);
+        CrashAnalysisEngine.Finding primaryFinding = report.findings.isEmpty() ? null : report.findings.get(0);
+        if (primaryFinding != null) {
+            message += "\n\n" + primaryFinding.title + "\n" + primaryFinding.recommendation;
+        }
+        androidx.appcompat.app.AlertDialog.Builder builder = Tools.createStyledDialogBuilder(this)
                 .setTitle(R.string.minecraft_crash_title)
                 .setMessage(message)
                 .setPositiveButton(R.string.minecraft_crash_view_logs,
                         (dialog, which) -> Tools.swapFragment(this, LogViewerFragment.class, LogViewerFragment.TAG, null))
-                .setNegativeButton(android.R.string.ok, null));
+                .setNegativeButton(android.R.string.ok, null);
+        if (primaryFinding != null) {
+            builder.setNeutralButton(R.string.crash_apply_recovery, (dialog, which) -> {
+                try {
+                    if (CrashAnalysisEngine.applyRecovery(crashProfile, primaryFinding)) {
+                        LauncherProfiles.write();
+                        Toast.makeText(this, R.string.crash_recovery_applied, Toast.LENGTH_LONG).show();
+                    } else {
+                        Toast.makeText(this, R.string.crash_recovery_manual, Toast.LENGTH_LONG).show();
+                    }
+                } catch (Exception exception) {
+                    Tools.showError(this, exception);
+                }
+            });
+        }
+        Tools.showStyledDialog(builder);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
         ContextExecutor.setActivity(this);
+        inspectReturnedGameSession();
         applyLauncherBackground();
         BattlyWorldsInvites.heartbeat(this);
+        BattlySocialManager.heartbeatLauncher(this);
         if (mInstallTracker != null) {
             mInstallTracker.attach();
         }
@@ -525,11 +695,8 @@ public class LauncherActivity extends BaseActivity {
             }
         };
         IntentFilter filter = new IntentFilter(BattlyInAppMessaging.ACTION_SHOW_IN_APP_MESSAGE);
-        if (Build.VERSION.SDK_INT >= 33) {
-            registerReceiver(mBattlyInAppReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
-        } else {
-            registerReceiver(mBattlyInAppReceiver, filter);
-        }
+        ContextCompat.registerReceiver(this, mBattlyInAppReceiver, filter,
+                ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     /** Custom implementation to feel more natural when a backstack isn't present */
@@ -580,26 +747,38 @@ public class LauncherActivity extends BaseActivity {
     }
 
     private void checkNotificationPermission() {
+        checkNotificationPermission(null);
+    }
+
+    private void checkNotificationPermission(Runnable afterDone) {
         if (LauncherPreferences.PREF_SKIP_NOTIFICATION_PERMISSION_CHECK ||
                 checkForNotificationPermission()) {
+            if (afterDone != null) {
+                afterDone.run();
+            }
             return;
         }
 
         if (ActivityCompat.shouldShowRequestPermissionRationale(
                 this,
                 Manifest.permission.POST_NOTIFICATIONS)) {
-            showNotificationPermissionReasoning();
+            showNotificationPermissionReasoning(afterDone);
             return;
         }
-        askForNotificationPermission(null);
+        askForNotificationPermission(afterDone);
     }
 
-    private void showNotificationPermissionReasoning() {
+    private void showNotificationPermissionReasoning(Runnable afterDone) {
         Tools.showStyledDialog(Tools.createStyledDialogBuilder(this)
                 .setTitle(R.string.notification_permission_dialog_title)
                 .setMessage(R.string.notification_permission_dialog_text)
-                .setPositiveButton(android.R.string.ok, (d, w) -> askForNotificationPermission(null))
-                .setNegativeButton(android.R.string.cancel, (d, w) -> handleNoNotificationPermission()));
+                .setPositiveButton(android.R.string.ok, (d, w) -> askForNotificationPermission(afterDone))
+                .setNegativeButton(android.R.string.cancel, (d, w) -> {
+                    handleNoNotificationPermission();
+                    if (afterDone != null) {
+                        afterDone.run();
+                    }
+                }));
     }
 
     private void handleNoNotificationPermission() {
@@ -877,6 +1056,15 @@ public class LauncherActivity extends BaseActivity {
         }
         if (fragment instanceof LauncherPreferenceRendererSettingsFragment) {
             return getString(R.string.mcl_setting_title_renderer_settings);
+        }
+        if (fragment instanceof BattlySkinManagerFragment) {
+            return getString(R.string.battly_skins_title);
+        }
+        if (fragment instanceof BattlySocialFragment) {
+            return getString(R.string.battly_social_title);
+        }
+        if (fragment instanceof BattlyFileManagerFragment) {
+            return getString(R.string.battly_files_title);
         }
         if (fragment instanceof LauncherPreferenceFragment) {
             return getString(R.string.settings_panel_title);

@@ -1,27 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
-<fr.spse.extended_view.ExtendedTextView
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="68dp"
-    android:layout_marginBottom="8dp"
+    android:layout_height="72dp"
     android:background="@drawable/bg_battly_form_panel"
-    android:drawablePadding="16dp"
-    android:elevation="3dp"
     android:gravity="center_vertical"
-    android:paddingStart="18dp"
-    android:paddingEnd="14dp"
-    android:textColor="#FFFFFFFF"
-    android:textSize="14sp"
-    android:textStyle="bold"
-    app:drawableEndIntegerScaling="true"
-    app:drawableEndSize="18dp"
-    app:drawableStartIntegerScaling="true"
-    app:drawableStartSize="34dp"
-    tools:drawableEnd="@drawable/ic_battly_chevron"
-    android:drawableEnd="@drawable/ic_battly_chevron"
-    android:drawableTint="#80FFFFFF"
-    tools:drawableStart="@drawable/ic_gamepad_pointer"
-    tools:ignore="RtlSymmetry"
-    tools:text="Forge - 1.20.1" />
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingEnd="8dp"
+    android:elevation="3dp"
+    android:clickable="false">
+
+    <fr.spse.extended_view.ExtendedTextView
+        android:id="@+id/profile_item_label"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:drawablePadding="11dp"
+        android:ellipsize="end"
+        android:gravity="center_vertical"
+        android:maxLines="2"
+        android:textColor="#FFFFFFFF"
+        android:textSize="13sp"
+        android:textStyle="bold"
+        app:drawableStartIntegerScaling="true"
+        app:drawableStartSize="32dp" />
+
+    <ImageButton
+        android:id="@+id/profile_item_delete"
+        android:layout_width="34dp"
+        android:layout_height="34dp"
+        android:background="@drawable/bg_battly_launcher_chip"
+        android:contentDescription="@string/global_delete"
+        android:focusable="false"
+        android:focusableInTouchMode="false"
+        android:padding="0dp"
+        android:scaleType="center"
+        android:src="@drawable/ic_delete_compact"
+        app:tint="#FFFF9A9A" />
+</LinearLayout>
