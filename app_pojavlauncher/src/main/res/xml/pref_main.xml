@@ -12,14 +12,6 @@
         >
 
         <Preference
-            android:key="battlyworlds_disabled_warning"
-            android:title="@string/battlyworlds_temporarily_disabled_title"
-            android:summary="@string/battlyworlds_temporarily_disabled_settings"
-            android:selectable="false"
-            android:icon="@drawable/ic_battly_worlds_line" />
-
-
-        <Preference
             android:key="battly_plus_screen"
             android:title="@string/battly_plus_title"
             android:summary="@string/battly_plus_settings_summary"

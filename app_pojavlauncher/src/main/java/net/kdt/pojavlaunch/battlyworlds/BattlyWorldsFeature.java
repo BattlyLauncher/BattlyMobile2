@@ -7,13 +7,8 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 
 public final class BattlyWorldsFeature {
-    /**
-     * Temporary Google Play kill-switch.
-     *
-     * Keep the BattlyWorlds implementation in the codebase, but do not expose or
-     * start VPN/Terracotta functionality until Google grants access to VPNService.
-     */
-    public static final boolean ENABLED = false;
+    /** Central kill-switch kept for emergency rollback without removing the integration. */
+    public static final boolean ENABLED = true;
 
     private BattlyWorldsFeature() {
     }

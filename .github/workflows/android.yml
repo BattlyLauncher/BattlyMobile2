@@ -133,16 +133,16 @@ jobs:
           fi
           ./gradlew :app_pojavlauncher:bundleGplay :app_pojavlauncher:assembleGplay --console=plain
           mv app_pojavlauncher/build/outputs/bundle/gplay/app_pojavlauncher-gplay.aab out/app-gplay.aab
-          mv app_pojavlauncher/build/outputs/apk/gplay/app_pojavlauncher-gplay.apk out/Battly-Mobile-2.0.2.apk
+          mv app_pojavlauncher/build/outputs/apk/gplay/app_pojavlauncher-gplay.apk out/Battly-Mobile-2.0.3-beta.apk
           sha256sum out/app-gplay.aab > out/app-gplay.aab.sha256
-          sha256sum out/Battly-Mobile-2.0.2.apk > out/Battly-Mobile-2.0.2.apk.sha256
+          sha256sum out/Battly-Mobile-2.0.3-beta.apk > out/Battly-Mobile-2.0.3-beta.apk.sha256
 
       - name: Verify native 16 KB page-size compatibility
         if: hashFiles('out/app-gplay.aab') != ''
         shell: pwsh
         run: |
           ./tools/android/verify-native-16kb.ps1 -Path ./out/app-gplay.aab -SkipZipAlign
-          ./tools/android/verify-native-16kb.ps1 -Path ./out/Battly-Mobile-2.0.2.apk
+          ./tools/android/verify-native-16kb.ps1 -Path ./out/Battly-Mobile-2.0.3-beta.apk
 
       - name: Build Debug .apk
         run: |
@@ -170,13 +170,13 @@ jobs:
             out/app-gplay.aab.sha256
 
       - name: Upload signed release APK
-        if: hashFiles('out/Battly-Mobile-2.0.2.apk') != ''
+        if: hashFiles('out/Battly-Mobile-2.0.3-beta.apk') != ''
         uses: actions/upload-artifact@v4
         with:
           name: battly-mobile-release-apk
           path: |
-            out/Battly-Mobile-2.0.2.apk
-            out/Battly-Mobile-2.0.2.apk.sha256
+            out/Battly-Mobile-2.0.3-beta.apk
+            out/Battly-Mobile-2.0.3-beta.apk.sha256
 
       - name: Upload onto the Google Play testing track
         if: hashFiles('out/app-gplay.aab') != '' && env.GPLAY_SERVICE_JSON != ''
@@ -189,12 +189,12 @@ jobs:
           inAppUpdatePriority: 5
 
       - name: Publish GitHub release assets
-        if: startsWith(github.ref, 'refs/tags/') && hashFiles('out/Battly-Mobile-2.0.2.apk') != ''
+        if: startsWith(github.ref, 'refs/tags/') && hashFiles('out/Battly-Mobile-2.0.3-beta.apk') != ''
         uses: softprops/action-gh-release@v2
         with:
           generate_release_notes: true
           files: |
-            out/Battly-Mobile-2.0.2.apk
-            out/Battly-Mobile-2.0.2.apk.sha256
+            out/Battly-Mobile-2.0.3-beta.apk
+            out/Battly-Mobile-2.0.3-beta.apk.sha256
             out/app-gplay.aab
             out/app-gplay.aab.sha256

@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.3-beta - 2026-07-22
+
+- BattlyWorlds vuelve a estar disponible para crear salas privadas e invitar amigos.
+- Restaurado el servicio VPN y su servicio en primer plano para mantener la conexion mientras Minecraft esta abierto.
+- Conservado un interruptor central para poder desactivar BattlyWorlds rapidamente sin eliminar su codigo.
+- Version beta actualizada a `2.0.3-beta` (`versionCode 10000009`).
+
 ## 2.0.2 - 2026-07-21
 
 - Corregida la selección de instancias desde la lista de versiones del inicio.

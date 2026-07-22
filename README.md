@@ -1,4 +1,4 @@
-# Battly Mobile 2.0.2
+# Battly Mobile 2.0.3-beta
 
 Battly Mobile is the Android version of Battly Launcher. It runs Minecraft: Java Edition on Android with the Battly account system, Battly skins, mobile controls, modded versions, BattlyWorlds and Battly+ features.
 
@@ -12,7 +12,7 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes. Google Play publication addi
 - Runtime management for Java 8, Java 17, Java 21 and newer runtimes used by recent Minecraft builds.
 - Support for vanilla, Forge, Fabric, Quilt, NeoForge and LegacyFabric installation flows.
 - Battly account login with Battly avatars, skins and authlib injector support.
-- BattlyWorlds private LAN rooms for inviting friends without router port forwarding. This feature is temporarily disabled in production builds while Google Play reviews VPNService access.
+- BattlyWorlds private LAN rooms for inviting friends without router port forwarding.
 - Battly+ modules: BattlyWorlds Plus, Cloud Sync, Google Drive backups, shared installations, mod updates, Battly Boost, premium download queue, custom backgrounds and app icons.
 - Marketplace and local management for mods, resource packs, shader packs, datapacks and control layouts.
 - Firebase push notifications and in-app messages for Battly updates and friend invites.
@@ -109,7 +109,7 @@ The notification small icon is generated from the real Battly logo asset and kep
 
 ## BattlyWorlds Status
 
-BattlyWorlds code remains in the repository, but the feature is currently disabled through `BattlyWorldsFeature.ENABLED = false` and the VPN service declaration is not exported in the Android manifest. This keeps the app reversible while avoiding VPNService usage until Google Play grants access.
+BattlyWorlds is enabled in `2.0.3-beta`. It uses Android's `VpnService` to create the private LAN connection while Minecraft is running. The central `BattlyWorldsFeature.ENABLED` switch remains available for an emergency rollback without removing the implementation.
 
 ## Storage
 

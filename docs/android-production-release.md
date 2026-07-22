@@ -2,7 +2,7 @@
 
 Esta guía deja el repositorio listo para GitHub sin subir secretos y separa claramente pruebas de producción.
 
-La versión preparada por este documento es Battly Mobile `2.0.3` (`versionCode 10000008`).
+La versión preparada por este documento es Battly Mobile `2.0.3-beta` (`versionCode 10000009`).
 
 ## Variantes
 
@@ -111,7 +111,7 @@ Para convertir archivos a base64 desde PowerShell:
 
 ## BattlyWorlds
 
-BattlyWorlds está temporalmente desactivado en la app mientras se resuelve el acceso a `VPNService` con Google Play. El código permanece incluido para poder reactivarlo, pero la funcionalidad queda bloqueada con `BattlyWorldsFeature.ENABLED = false` y la declaración del servicio VPN no se publica en el manifest final.
+BattlyWorlds está habilitado en `2.0.3-beta`. La aplicación publica `BattlyWorldsVpnService` con el permiso protegido `BIND_VPN_SERVICE` y los tipos de servicio en primer plano `connectedDevice|dataSync`. El interruptor `BattlyWorldsFeature.ENABLED` se conserva para una desactivación de emergencia sin retirar el código.
 
 ## Builds
 
@@ -222,4 +222,4 @@ El control de release usa Android Lint con `abortOnError = true`. Los avisos her
 4. `adb install .\app_pojavlauncher\build\outputs\apk\debug\app_pojavlauncher-debug.apk`
 5. `.\gradlew :app_pojavlauncher:bundleGplay --console=plain`
 6. Verificar 16 KB con el script anterior.
-7. Confirmar que `versionName` es `2.0.3` y `versionCode` es `10000008` en el manifest fusionado o con `apkanalyzer`.
+7. Confirmar que `versionName` es `2.0.3-beta` y `versionCode` es `10000009` en el manifest fusionado o con `apkanalyzer`.
