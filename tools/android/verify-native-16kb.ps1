@@ -7,14 +7,16 @@ param(
 
 $ErrorActionPreference = "Stop"
 
-function Resolve-Tool([string]$Root, [string]$Pattern) {
-    $tool = Get-ChildItem -Path $Root -Recurse -Filter $Pattern -ErrorAction SilentlyContinue |
-        Sort-Object FullName -Descending |
-        Select-Object -First 1
-    if ($null -eq $tool) {
-        throw "No se ha encontrado $Pattern dentro de $Root"
+function Resolve-Tool([string]$Root, [string[]]$Names) {
+    foreach ($name in $Names) {
+        $tool = Get-ChildItem -Path $Root -Recurse -Filter $name -File -ErrorAction SilentlyContinue |
+            Sort-Object FullName -Descending |
+            Select-Object -First 1
+        if ($null -ne $tool) {
+            return $tool.FullName
+        }
     }
-    return $tool.FullName
+    throw "No se ha encontrado $($Names -join ' o ') dentro de $Root"
 }
 
 function Expand-Artifact([string]$ArtifactPath) {
@@ -58,8 +60,8 @@ if ([string]::IsNullOrWhiteSpace($AndroidHome)) {
     throw "ANDROID_HOME no esta definido."
 }
 
-$objdump = Resolve-Tool (Join-Path $AndroidHome "ndk") "llvm-objdump.exe"
-$zipalign = Resolve-Tool (Join-Path $AndroidHome "build-tools") "zipalign.exe"
+$objdump = Resolve-Tool (Join-Path $AndroidHome "ndk") @("llvm-objdump.exe", "llvm-objdump")
+$zipalign = Resolve-Tool (Join-Path $AndroidHome "build-tools") @("zipalign.exe", "zipalign")
 
 $resolvedPath = Resolve-Path $Path
 $scanRoot = $resolvedPath.Path
