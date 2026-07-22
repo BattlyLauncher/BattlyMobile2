@@ -5,6 +5,7 @@
 - BattlyWorlds vuelve a estar disponible para crear salas privadas e invitar amigos.
 - Restaurado el servicio VPN y su servicio en primer plano para mantener la conexion mientras Minecraft esta abierto.
 - Conservado un interruptor central para poder desactivar BattlyWorlds rapidamente sin eliminar su codigo.
+- La publicacion ya no depende de artefactos Java externos caducados; los runtimes se descargan bajo demanda desde Battly.
 - Version beta actualizada a `2.0.3-beta` (`versionCode 10000009`).
 
 ## 2.0.2 - 2026-07-21
