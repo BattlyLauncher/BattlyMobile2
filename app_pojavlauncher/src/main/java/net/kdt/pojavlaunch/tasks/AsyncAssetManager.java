@@ -118,7 +118,12 @@ public class AsyncAssetManager {
     private static void unpackLwjglNatives(Context ctx) throws IOException {
         AssetManager am = ctx.getAssets();
         String sArch = archAsStringAndroid(getDeviceArchitecture());
-        String[] lwjglVersions = {"3.3.3", "3.4.1", "3.4.2"};
+        File obsolete333Dir = new File(Tools.DIR_DATA, "lwjgl-3.3.3-natives/" + sArch);
+        if (obsolete333Dir.exists()) {
+            FileUtils.deleteDirectory(obsolete333Dir);
+            Log.i("UnpackLwjgl", "Removed obsolete LWJGL 3.3.3 native component " + obsolete333Dir);
+        }
+        String[] lwjglVersions = {"3.4.1", "3.4.2"};
         for (String lwjglVersion : lwjglVersions) {
             String component = "lwjgl-" + lwjglVersion + "-natives";
             String componentPath = component + "/" + sArch;
@@ -126,6 +131,10 @@ public class AsyncAssetManager {
             String[] fileList = am.list("components/" + componentPath);
             if (fileList == null || fileList.length == 0) {
                 Log.w("UnpackLwjgl", "No LWJGL natives found for " + lwjglVersion + " / " + sArch);
+                if (targetDir.exists()) {
+                    FileUtils.deleteDirectory(targetDir);
+                    Log.i("UnpackLwjgl", "Removed obsolete native component " + targetDir);
+                }
                 continue;
             }
             File versionMarker = new File(targetDir, ".version");

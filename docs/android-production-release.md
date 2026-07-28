@@ -2,7 +2,7 @@
 
 Esta guía deja el repositorio listo para GitHub sin subir secretos y separa claramente pruebas de producción.
 
-La versión preparada por este documento es Battly Mobile `2.0.7` (`versionCode 10000013`).
+La versión preparada por este documento es Battly Mobile `2.0.6` (`versionCode 10000013`).
 
 ## Variantes
 
@@ -162,7 +162,7 @@ Si falla una librería precompilada, hay que recompilarla con NDK r28+ y:
 -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 ```
 
-La configuración de publicación de Battly Mobile 2.0.7 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
+La configuración de publicación de Battly Mobile 2.0.6 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
 
 - `.\gradlew :app_pojavlauncher:assembleGplay :app_pojavlauncher:bundleGplay --console=plain` genera y firma correctamente el APK para GitHub y el AAB para Google Play.
 - El AAB contiene `arm64-v8a` y `armeabi-v7a` en `base/lib` y no empaqueta el runtime Java 8. Los assets LWJGL conservan sus cuatro arquitecturas porque se extraen en tiempo de ejecución.

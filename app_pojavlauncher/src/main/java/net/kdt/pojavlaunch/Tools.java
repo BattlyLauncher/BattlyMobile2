@@ -1323,10 +1323,8 @@ public final class Tools {
             {"linux/x64/org/lwjgl/vma/liblwjgl_vma.so",        "liblwjgl_vma.so"},
         };
         File outJar = new File(lwjgl3Folder, "lwjgl-android-natives.jar");
-        File versionedNativeDir = new File(DIR_DATA, "lwjgl-" + sLwjglVersion + "-natives/"
-                + archAsStringAndroid(getDeviceArchitecture()));
-        File versionedCore = new File(versionedNativeDir, "liblwjgl.so");
-        File refLib = versionedCore.exists() ? versionedCore : new File(NATIVE_LIB_DIR, "liblwjgl.so");
+        File selectedNativeDir = new File(resolveLwjglNativesDir(sLwjglVersion));
+        File refLib = new File(selectedNativeDir, "liblwjgl.so");
         if (!refLib.exists()) return false;
         if (isAndroidNativesJarCurrent(outJar, libEntries, refLib)) return false;
 
@@ -1334,8 +1332,8 @@ public final class Tools {
         File tmpJar = new File(lwjgl3Folder, "lwjgl-android-natives.jar.tmp");
         try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(tmpJar))) {
             for (String[] entry : libEntries) {
-                File versionedFile = new File(versionedNativeDir, entry[1]);
-                File soFile = versionedFile.exists() ? versionedFile : new File(NATIVE_LIB_DIR, entry[1]);
+                File selectedFile = new File(selectedNativeDir, entry[1]);
+                File soFile = selectedFile.exists() ? selectedFile : new File(NATIVE_LIB_DIR, entry[1]);
                 if (!soFile.exists()) {
                     Log.w(APP_NAME, "Android LWJGL native not found, skipping: " + entry[1]);
                     continue;
@@ -1396,8 +1394,7 @@ public final class Tools {
         StringBuilder libStr = new StringBuilder();
         String internalLwjglVersion = getInternalLwjglVersion(iLwjglVersion);
         sLwjglVersion = internalLwjglVersion;
-        lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion,
-                archAsStringAndroid(getDeviceArchitecture()));
+        lwjglNativesDir = resolveLwjglNativesDir(sLwjglVersion);
 
         File lwjgl3Folder = new File(Tools.DIR_GAME_HOME, "lwjgl3/" + internalLwjglVersion);
         ensureAndroidNativesJar(lwjgl3Folder);
@@ -1896,9 +1893,27 @@ public final class Tools {
             iLwjglVersion = 333;
         }
         sLwjglVersion = getInternalLwjglVersion(iLwjglVersion);
-        lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion,
-                archAsStringAndroid(getDeviceArchitecture()));
+        lwjglNativesDir = resolveLwjglNativesDir(sLwjglVersion);
         return libDir.toArray(new String[0]);
+    }
+
+    private static String resolveLwjglNativesDir(String lwjglVersion) {
+        // LWJGL 3.3.3 uses the JNI libraries packaged in the APK. Older Battly
+        // releases extracted a separate directory with a different build, which
+        // can survive an app update and cause Java/native version mismatches.
+        if ("3.3.3".equals(lwjglVersion)) {
+            return NATIVE_LIB_DIR;
+        }
+        File versionedDir = new File(DIR_DATA, "lwjgl-" + lwjglVersion + "-natives/"
+                + archAsStringAndroid(getDeviceArchitecture()));
+        File coreLibrary = new File(versionedDir, "liblwjgl.so");
+        File versionMarker = new File(versionedDir, ".version");
+        if (coreLibrary.isFile() && coreLibrary.length() > 0 && versionMarker.isFile()) {
+            return versionedDir.getAbsolutePath();
+        }
+        Log.w(APP_NAME, "LWJGL " + lwjglVersion
+                + " native component is unavailable or incomplete; using APK natives");
+        return NATIVE_LIB_DIR;
     }
 
     private static String getInternalLwjglVersion(int version) {

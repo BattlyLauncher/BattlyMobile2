@@ -72,7 +72,11 @@ public class PojavApplication extends Application {
 				// and not explode.
 				Tools.initEarlyConstants(this);
 			}
+			Architecture.initializeProcessArchitecture(getApplicationInfo().nativeLibraryDir);
 			Tools.DEVICE_ARCHITECTURE = Architecture.getDeviceArchitecture();
+			Log.i("BattlyArchitecture", "Process architecture: "
+					+ Architecture.archAsString(Tools.DEVICE_ARCHITECTURE)
+					+ " (nativeLibraryDir=" + getApplicationInfo().nativeLibraryDir + ")");
 			// This migration reads and rewrites a control-layout JSON file. It is not
 			// required to draw the first frame, so keep it off every Activity's startup.
 			if (Tools.checkStorageRoot(this)) {

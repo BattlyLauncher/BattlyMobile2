@@ -11,6 +11,7 @@ public class Architecture {
 	public static final int ARCH_ARM = 0x2;
 	public static final int ARCH_X86 = 0x4;
 	public static final int ARCH_X86_64 = 0x8;
+	private static volatile int sProcessArchitecture = UNSUPPORTED_ARCH;
 
 	/* On both 32-bit ARM and x86, the top 1GB is reserved for kernel use. */
 	public static final long ADDRESS_SPACE_LIMIT_32_BIT = 0xbfffffffL;
@@ -33,6 +34,9 @@ public class Architecture {
 	 * @return If the device supports 64 bits architecture
 	 */
 	public static boolean is64BitsDevice(){
+		if (sProcessArchitecture != UNSUPPORTED_ARCH) {
+			return sProcessArchitecture == ARCH_ARM64 || sProcessArchitecture == ARCH_X86_64;
+		}
 		return Build.SUPPORTED_64_BIT_ABIS.length != 0;
 	}
 
@@ -52,10 +56,45 @@ public class Architecture {
 	 * @return ARCH_ARM || ARCH_ARM64 || ARCH_X86 || ARCH_86_64
 	 */
 	public static int getDeviceArchitecture(){
+		if (sProcessArchitecture != UNSUPPORTED_ARCH) {
+			return sProcessArchitecture;
+		}
 		if(isx86Device()){
 			return is64BitsDevice() ? ARCH_X86_64 : ARCH_X86;
 		}
 		return is64BitsDevice() ? ARCH_ARM64 : ARCH_ARM;
+	}
+
+	/**
+	 * Pins architecture decisions to the ABI Android selected for this process.
+	 * This matters when an x86 emulator runs an ARM-only Play build through native
+	 * translation: Build.SUPPORTED_ABIS describes the host, while nativeLibraryDir
+	 * and every JNI library in this process are ARM.
+	 */
+	public static void initializeProcessArchitecture(String nativeLibraryDir) {
+		int architecture = architectureFromNativeLibraryDir(nativeLibraryDir);
+		if (architecture == UNSUPPORTED_ARCH) {
+			architecture = archAsInt(System.getProperty("os.arch", ""));
+		}
+		if (architecture != UNSUPPORTED_ARCH) {
+			sProcessArchitecture = architecture;
+		}
+	}
+
+	static int architectureFromNativeLibraryDir(String nativeLibraryDir) {
+		if (nativeLibraryDir == null) {
+			return UNSUPPORTED_ARCH;
+		}
+		String normalized = nativeLibraryDir.toLowerCase().replace('\\', '/');
+		while (normalized.endsWith("/")) {
+			normalized = normalized.substring(0, normalized.length() - 1);
+		}
+		String folderName = normalized.substring(normalized.lastIndexOf('/') + 1);
+		if ("arm64".equals(folderName) || "arm64-v8a".equals(folderName)) return ARCH_ARM64;
+		if ("arm".equals(folderName) || "armeabi-v7a".equals(folderName)) return ARCH_ARM;
+		if ("x86_64".equals(folderName)) return ARCH_X86_64;
+		if ("x86".equals(folderName)) return ARCH_X86;
+		return UNSUPPORTED_ARCH;
 	}
 
 	/**
@@ -64,6 +103,9 @@ public class Architecture {
 	 * @return Whether or not the device is x86 based.
 	 */
 	public static boolean isx86Device(){
+		if (sProcessArchitecture != UNSUPPORTED_ARCH) {
+			return sProcessArchitecture == ARCH_X86 || sProcessArchitecture == ARCH_X86_64;
+		}
 		//We check the whole range of supported ABIs,
 		//Since asus zenfones can place arm before their native instruction set.
 		String[] ABI = is64BitsDevice() ? Build.SUPPORTED_64_BIT_ABIS : Build.SUPPORTED_32_BIT_ABIS;
