@@ -2,14 +2,14 @@
 
 Esta guía deja el repositorio listo para GitHub sin subir secretos y separa claramente pruebas de producción.
 
-La versión preparada por este documento es Battly Mobile `2.0.3-beta` (`versionCode 10000009`).
+La versión preparada por este documento es Battly Mobile `2.0.7` (`versionCode 10000013`).
 
 ## Variantes
 
 - `debug`: `com.tecnobros.battlylauncher.debug`, Firebase de pruebas, firma debug local de Android.
-- `release`: `com.tecnobros.battlylauncher`, Firebase de producción, sin firma de subida obligatoria.
-- `gplay`: `com.tecnobros.battlylauncher`, Firebase de producción, firma de subida obligatoria.
-- `proguard` y `proguardNoDebug`: heredan de debug y usan Firebase de pruebas.
+- `release`: `com.tecnobros.battlylauncher`, Firebase de producción, sin R8 y sin firma de subida obligatoria.
+- `gplay`: `com.tecnobros.battlylauncher`, Firebase de producción, sin R8 y con firma de subida obligatoria.
+- `proguard` y `proguardNoDebug`: heredan de debug, usan Firebase de pruebas y conservan R8 solo para validación interna.
 
 ## Archivos Que No Se Suben
 
@@ -162,7 +162,7 @@ Si falla una librería precompilada, hay que recompilarla con NDK r28+ y:
 -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 ```
 
-La configuración de publicación de Battly Mobile 2.0.3 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
+La configuración de publicación de Battly Mobile 2.0.7 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
 
 - `.\gradlew :app_pojavlauncher:assembleGplay :app_pojavlauncher:bundleGplay --console=plain` genera y firma correctamente el APK para GitHub y el AAB para Google Play.
 - El AAB contiene `arm64-v8a` y `armeabi-v7a` en `base/lib` y no empaqueta el runtime Java 8. Los assets LWJGL conservan sus cuatro arquitecturas porque se extraen en tiempo de ejecución.
@@ -184,7 +184,8 @@ Detalles del control 16 KB:
 
 - `gplay` limita las librerías Android de `base/lib` a `arm64-v8a` y `armeabi-v7a`. Los binarios LWJGL de assets se mantienen para no alterar el mecanismo de extracción del launcher y también se verifican a 16 KB.
 - `libjnidispatch.so` y `libunpack200.so` se compilan desde JNA 5.13.0 y OpenJDK 8 con NDK r28.2, sin dependencias C++ externas y con segmentos `PT_LOAD` alineados a `0x4000`.
-- La aplicación compila con `compileSdk` y `targetSdk` 36, AGP 8.11.1 y R8 con reducción optimizada de recursos para las variantes de publicación.
+- La aplicación compila con `compileSdk` y `targetSdk` 36 y AGP 8.11.1. Las variantes de publicación no usan R8 ni reducción de recursos para evitar regresiones en clases cargadas mediante reflexión, XML, Gson, JNI y eventos débiles.
+- R8 se conserva únicamente en `proguard` y `proguardNoDebug`, que actúan como variantes internas de compatibilidad y nunca deben publicarse.
 - `tools/android/elf_16k_page_align.py` realinea los segmentos `PT_LOAD`, actualiza offsets de cabeceras y secciones ELF y establece `p_align` en `0x4000` antes del empaquetado.
 - La tarea se ejecuta tanto sobre las librerías fusionadas como sobre los assets nativos extraíbles. También se actualizan los marcadores de LWJGL para forzar su nueva extracción en instalaciones existentes.
 - ByteHook se actualiza a `1.1.1`, que sustituye el precompilado anterior usado por la aplicación.

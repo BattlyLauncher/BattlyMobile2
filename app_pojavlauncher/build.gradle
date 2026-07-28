@@ -108,16 +108,20 @@ def battlyWorldsEnabled = providers.gradleProperty("battlyWorldsEnabled")
         .get()
 def battlyWorldsManifestSource = file("src/main/AndroidManifest.xml")
 def battlyWorldsGeneratedManifest = file("${buildDir}/generated/battlyworlds/AndroidManifest.xml")
-def battlyWorldsManifestText = battlyWorldsManifestSource.getText("UTF-8")
-if (!battlyWorldsEnabled) {
-    battlyWorldsManifestText = battlyWorldsManifestText
-            .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_PERMISSION_START -->.*?<!-- BATTLYWORLDS_PERMISSION_END -->/, "")
-            .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_SERVICE_START -->.*?<!-- BATTLYWORLDS_SERVICE_END -->/, "")
-}
-battlyWorldsGeneratedManifest.parentFile.mkdirs()
-if (!battlyWorldsGeneratedManifest.exists()
-        || battlyWorldsGeneratedManifest.getText("UTF-8") != battlyWorldsManifestText) {
-    battlyWorldsGeneratedManifest.setText(battlyWorldsManifestText, "UTF-8")
+def generateBattlyWorldsManifest = tasks.register("generateBattlyWorldsManifest") {
+    inputs.file battlyWorldsManifestSource
+    inputs.property "battlyWorldsEnabled", battlyWorldsEnabled
+    outputs.file battlyWorldsGeneratedManifest
+    doLast {
+        String manifestText = battlyWorldsManifestSource.getText("UTF-8")
+        if (!battlyWorldsEnabled) {
+            manifestText = manifestText
+                    .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_PERMISSION_START -->.*?<!-- BATTLYWORLDS_PERMISSION_END -->/, "")
+                    .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_SERVICE_START -->.*?<!-- BATTLYWORLDS_SERVICE_END -->/, "")
+        }
+        battlyWorldsGeneratedManifest.parentFile.mkdirs()
+        battlyWorldsGeneratedManifest.setText(manifestText, "UTF-8")
+    }
 }
 
 android {
@@ -155,8 +159,8 @@ android {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 10000012
-        versionName "2.0.6"
+        versionCode 10000013
+        versionName "2.0.7"
         multiDexEnabled true //important
         buildConfigField "boolean", "BATTLY_WORLDS_ENABLED", battlyWorldsEnabled.toString()
         resValue 'string', 'curseforge_api_key', getCFApiKey()
@@ -196,8 +200,11 @@ android {
         }
 
         release {
-            minifyEnabled true
-            shrinkResources true
+            // Battly relies heavily on reflection, XML-instantiated classes, JNI,
+            // Gson models and weak event listeners. Keep production deterministic;
+            // R8 remains available only through the internal proguard variants.
+            minifyEnabled false
+            shrinkResources false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // defaultConfig already set
             // multiDexEnabled = true
@@ -263,6 +270,12 @@ android {
 }
 
 afterEvaluate {
+    tasks.matching {
+        it.name.startsWith("process") && it.name.endsWith("MainManifest")
+    }.configureEach {
+        dependsOn generateBattlyWorldsManifest
+    }
+
     // Explicit dependencies for which the apk relies on
     def generatedComponentTasks = [
             ":forge_installer:jar",
@@ -297,7 +310,7 @@ afterEvaluate {
             "net.kdt.pojavlaunch.extra.ExtraListener mMicrosoftLoginListener -> mMicrosoftLoginListener"
     ]
 
-    ["release", "gplay"].each { buildTypeName ->
+    ["proguard", "proguardNoDebug"].each { buildTypeName ->
         def buildTypeCap = buildTypeName.capitalize()
         def verifyTask = tasks.register("verify${buildTypeCap}R8Mapping") {
             group = "verification"
