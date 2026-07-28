@@ -40,8 +40,13 @@ public class LocalLoginFragment extends Fragment {
                 return;
             }
 
-            ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO, new String[]{
-                    mUsernameEditText.getText().toString(), "" });
+            String username = mUsernameEditText.getText().toString();
+            if (requireActivity() instanceof LauncherActivity) {
+                ((LauncherActivity) requireActivity()).completeMojangLogin(username, "", null);
+            } else {
+                ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO,
+                        new String[]{username, ""});
+            }
 
             Tools.swapFragment(requireActivity(), MainMenuFragment.class, MainMenuFragment.TAG, null);
             if (requireActivity() instanceof LauncherActivity) {

@@ -101,6 +101,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
     };
 
     private final DoneListener mDoneListener = account -> {
+        Log.i("McAccountSpinner", "Account login completed for " + account.username);
         Toast.makeText(getContext(), R.string.main_login_done, Toast.LENGTH_SHORT).show();
 
         // Check if the account being added is not one that is already existing
@@ -133,6 +134,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
     };
 
     /* Triggered when we need to do microsoft login */
+    @Keep
     private final ExtraListener<Uri> mMicrosoftLoginListener = (key, value) -> {
         mLoginBarPaint.setColor(getResources().getColor(R.color.minebutton_color));
         new MicrosoftBackgroundLogin(false, value.getQueryParameter("code")).performLogin(
@@ -141,7 +143,9 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
     };
 
     /* Triggered when we need to perform mojang login */
+    @Keep
     private final ExtraListener<String[]> mMojangLoginListener = (key, value) -> {
+        Log.i("McAccountSpinner", "Processing account login for " + value[0]);
         MinecraftAccount account = MinecraftAccount.load(value[0]);
         if (account == null) account = new MinecraftAccount();
         account.username = value[0];
@@ -164,6 +168,7 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
             }
             try {
                 finalAccount.save();
+                Log.i("McAccountSpinner", "Account saved for " + finalAccount.username);
             } catch (IOException e) {
                 Log.e("McAccountSpinner", "Failed to save the account : " + e);
             }
@@ -172,6 +177,14 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
         return false;
     };
 
+    public void completeMojangLogin(@NonNull String[] loginData) {
+        Log.i("McAccountSpinner", "Received direct account login for " + loginData[0]);
+        mMojangLoginListener.onValueSet(ExtraConstants.MOJANG_LOGIN_TODO, loginData);
+    }
+
+    public void completeMicrosoftLogin(@NonNull Uri callbackUri) {
+        mMicrosoftLoginListener.onValueSet(ExtraConstants.MICROSOFT_LOGIN_TODO, callbackUri);
+    }
 
     @SuppressLint("ClickableViewAccessibility")
     private void init(){
@@ -185,7 +198,6 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
         ExtraCore.addExtraListener(ExtraConstants.MOJANG_LOGIN_TODO, mMojangLoginListener);
         ExtraCore.addExtraListener(ExtraConstants.MICROSOFT_LOGIN_TODO, mMicrosoftLoginListener);
     }
-
 
     @Override
     public final void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
@@ -540,7 +552,6 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
                     .setMessage(R.string.warning_remove_account)
                     .setPositiveButton(android.R.string.cancel, null)
                     .setNeutralButton(R.string.global_delete, (dialog, which) -> {
-                        onDetachedFromWindow();
                         removeAccount(position);
                     })
                     .show();

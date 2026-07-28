@@ -17,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 
+import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
@@ -105,7 +106,12 @@ public class MicrosoftLoginFragment extends Fragment {
         public boolean shouldOverrideUrlLoading(WebView view, String url) {
             if(url.startsWith("ms-xal-00000000402b5328")) {
                 // Should be captured by the activity to kill the fragment and get
-                ExtraCore.setValue(ExtraConstants.MICROSOFT_LOGIN_TODO, Uri.parse(url));
+                Uri callbackUri = Uri.parse(url);
+                if (requireActivity() instanceof LauncherActivity) {
+                    ((LauncherActivity) requireActivity()).completeMicrosoftLogin(callbackUri);
+                } else {
+                    ExtraCore.setValue(ExtraConstants.MICROSOFT_LOGIN_TODO, callbackUri);
+                }
                 Toast.makeText(view.getContext(), R.string.microsoft_login_started, Toast.LENGTH_SHORT).show();
                 Tools.backToMainMenu(requireActivity());
 

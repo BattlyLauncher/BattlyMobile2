@@ -25,6 +25,7 @@ import android.widget.VideoView;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -822,6 +823,26 @@ public class LauncherActivity extends BaseActivity {
             mRequestMicrophonePermissionRunnable = new WeakReference<>(onSuccessRunnable);
         }
         mRequestMicrophonePermissionLauncher.launch(Manifest.permission.RECORD_AUDIO);
+    }
+
+    public void completeMojangLogin(@NonNull String username, @NonNull String token,
+                                    @Nullable String profileId) {
+        Log.i("LauncherActivity", "Completing account login for " + username);
+        if (mAccountSpinner == null) {
+            ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO,
+                    new String[]{username, token, profileId == null ? "" : profileId});
+            return;
+        }
+        mAccountSpinner.completeMojangLogin(
+                new String[]{username, token, profileId == null ? "" : profileId});
+    }
+
+    public void completeMicrosoftLogin(@NonNull Uri callbackUri) {
+        if (mAccountSpinner == null) {
+            ExtraCore.setValue(ExtraConstants.MICROSOFT_LOGIN_TODO, callbackUri);
+            return;
+        }
+        mAccountSpinner.completeMicrosoftLogin(callbackUri);
     }
 
     /** Stuff all the view boilerplate here */

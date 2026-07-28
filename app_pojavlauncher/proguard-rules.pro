@@ -36,6 +36,9 @@
 -keep,allowoptimization class com.kdt.mcgui.** extends android.view.View {
     public <init>(...);
 }
+# Login results are dispatched through weak listeners. Keep the account selector
+# intact so optimized builds retain its strong listener references.
+-keep class com.kdt.mcgui.mcAccountSpinner { *; }
 -keep,allowoptimization class net.kdt.pojavlaunch.prefs.** extends androidx.preference.Preference {
     public <init>(...);
 }

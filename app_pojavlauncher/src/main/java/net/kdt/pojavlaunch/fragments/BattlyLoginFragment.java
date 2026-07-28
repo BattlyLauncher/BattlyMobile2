@@ -551,7 +551,12 @@ public class BattlyLoginFragment extends Fragment {
         }
 
         runOnActivity(activity, () -> {
-            ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO, new String[]{username, token, uuid});
+            if (activity instanceof LauncherActivity) {
+                ((LauncherActivity) activity).completeMojangLogin(username, token, uuid);
+            } else {
+                ExtraCore.setValue(ExtraConstants.MOJANG_LOGIN_TODO,
+                        new String[]{username, token, uuid});
+            }
             Tools.swapFragment(activity, MainMenuFragment.class, MainMenuFragment.TAG, null);
             BattlyPlusManager.refreshAsync(activity, isPlus -> {
                 if (activity instanceof LauncherActivity) {
