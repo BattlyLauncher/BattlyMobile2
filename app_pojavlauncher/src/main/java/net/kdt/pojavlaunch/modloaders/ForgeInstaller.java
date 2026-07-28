@@ -6,6 +6,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.Logger;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.utils.FileUtils;
 
@@ -76,15 +77,61 @@ public class ForgeInstaller {
             throw new IOException("No compatible runtime found for Forge installer");
         }
 
+        IOException officialInstallerFailure = null;
+        try {
+            HeadlessInstallerRunner.run(context.getApplicationContext(), runtimeName, workspace,
+                    officialInstallerCommands(installerJar));
+        } catch (IOException exception) {
+            officialInstallerFailure = exception;
+            Logger.appendToLog("Warning: Official Forge CLI failed, retrying with compatibility bootstrapper: "
+                    + exception.getMessage());
+        }
+
+        ModloaderInstallUtils.writeVersionJson(forgeVersion.id, versionJson);
+        try {
+            ForgeInstallationValidator.assertComplete(new File(Tools.DIR_GAME_NEW), forgeVersion.id);
+        } catch (IOException incompleteInstallation) {
+            try {
+                HeadlessInstallerRunner.run(context.getApplicationContext(), runtimeName, workspace,
+                        compatibilityInstallerCommands(context, installerJar));
+                ModloaderInstallUtils.writeVersionJson(forgeVersion.id, versionJson);
+                ForgeInstallationValidator.assertComplete(new File(Tools.DIR_GAME_NEW), forgeVersion.id);
+            } catch (IOException compatibilityFailure) {
+                if (officialInstallerFailure != null) {
+                    compatibilityFailure.addSuppressed(officialInstallerFailure);
+                }
+                compatibilityFailure.addSuppressed(incompleteInstallation);
+                throw compatibilityFailure;
+            }
+        }
+        return forgeVersion.id;
+    }
+
+    private static ArrayList<String> officialInstallerCommands(File installerJar) {
+        ArrayList<String> commands = baseInstallerCommands();
+        commands.add("-classpath");
+        commands.add(installerJar.getAbsolutePath());
+        commands.add("net.minecraftforge.installer.SimpleInstaller");
+        commands.add("--installClient");
+        commands.add(Tools.DIR_GAME_NEW);
+        return commands;
+    }
+
+    private static ArrayList<String> compatibilityInstallerCommands(Context context, File installerJar)
+            throws IOException {
+        ArrayList<String> commands = baseInstallerCommands();
+        commands.add("-classpath");
+        commands.add(ModloaderInstallUtils.ensureForgeBootstrapper(context)
+                + ":" + installerJar.getAbsolutePath());
+        commands.add("com.bangbang93.ForgeInstaller");
+        commands.add(Tools.DIR_GAME_NEW);
+        return commands;
+    }
+
+    private static ArrayList<String> baseInstallerCommands() {
         ArrayList<String> commands = new ArrayList<>();
         commands.add("-Djava.io.tmpdir=" + Tools.DIR_CACHE.getAbsolutePath());
         commands.add("-Dos.name=Linux");
-        commands.add("-classpath");
-        commands.add(ModloaderInstallUtils.ensureForgeBootstrapper(context) + ":" + installerJar.getAbsolutePath());
-        commands.add("com.bangbang93.ForgeInstaller");
-        commands.add(Tools.DIR_GAME_NEW);
-        HeadlessInstallerRunner.run(context.getApplicationContext(), runtimeName, workspace, commands);
-        ModloaderInstallUtils.writeVersionJson(forgeVersion.id, versionJson);
-        return forgeVersion.id;
+        return commands;
     }
 }

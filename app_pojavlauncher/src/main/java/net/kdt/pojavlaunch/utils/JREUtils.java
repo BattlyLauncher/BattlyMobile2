@@ -24,6 +24,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.oracle.dalvik.*;
 import java.io.*;
 import java.util.*;
+import java.util.jar.JarFile;
 import net.kdt.pojavlaunch.*;
 import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
@@ -214,6 +215,12 @@ public class JREUtils {
         envMap.put("allow_glsl_extension_directive_midshader", "true");
         envMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
         envMap.put("VTEST_SOCKET_NAME", new File(Tools.DIR_CACHE, ".virgl_test").getAbsolutePath());
+        if (Tools.iLwjglVersion >= 341) {
+            // Minecraft 26.3+ uses LWJGL's SDL3 window backend. SDL receives Android
+            // touch events directly, while Minecraft menus still consume mouse input.
+            envMap.put("SDL_TOUCH_MOUSE_EVENTS", "1");
+            envMap.put("SDL_MOUSE_TOUCH_EVENTS", "0");
+        }
 
         envMap.put("LD_LIBRARY_PATH", LD_LIBRARY_PATH);
         envMap.put("PATH", jreHome + "/bin:" + Os.getenv("PATH"));
@@ -237,6 +244,12 @@ public class JREUtils {
             if(runtimeRenderer.equals("opengles_mobileglues")){
                 envMap.put("MG_DIR_PATH", Tools.DIR_DATA + "/MobileGlues");
                 envMap.put("POJAVEXEC_EGL","libmobileglues.so");
+                // LWJGL 3.4.1 creates its window through SDL3 instead of the Pojav GLFW
+                // bridge. Point SDL at the same translation layer and let the Android SDL
+                // backend request the GLES context MobileGlues renders through.
+                envMap.put("SDL_OPENGL_LIBRARY", "libmobileglues.so");
+                envMap.put("SDL_EGL_LIBRARY", "libmobileglues.so");
+                envMap.put("BATTLY_SDL_FORCE_GLES", "1");
             }
             if (runtimeRenderer.equals("opengles3_desktopgl_zink_kopper")){
                 envMap.put("POJAVEXEC_EGL","libEGL_mesa.so"); // Use Mesa EGL
@@ -339,6 +352,8 @@ public class JREUtils {
         purgeArg(userArgs, "-XX:+UseLargePages");
         purgeArg(userArgs, "-Dorg.lwjgl.opengl.libname");
         purgeArg(userArgs, "-Dorg.lwjgl.spvc.libname");
+        purgeArg(userArgs, "-Dorg.lwjgl.shaderc.libname");
+        purgeArg(userArgs, "-Dorg.lwjgl.vma.libname");
         // Don't let the user specify a custom Freetype library (as the user is unlikely to specify a version compiled for Android)
         purgeArg(userArgs, "-Dorg.lwjgl.freetype.libname");
         // Overridden by us to specify the exact number of cores that the android system has
@@ -353,18 +368,40 @@ public class JREUtils {
         }
         if(LOCAL_RENDERER != null) userArgs.add("-Dorg.lwjgl.opengl.libname=" + graphicsLib);
 
-        // Force LWJGL to use the Freetype library intended for it, instead of using the one
-        // that we ship with Java (since it may be older than what's needed)
-        String freetypeDir = Tools.isValidString(Tools.lwjglNativesDir) ? Tools.lwjglNativesDir : NATIVE_LIB_DIR;
-        userArgs.add("-Dorg.lwjgl.freetype.libname="+ freetypeDir +"/libfreetype.so");
+        // LWJGL's Android builds do not publish a separate Freetype native JAR.
+        // Use the Android native bundled with Battly, matching Mojo's launch path.
+        userArgs.add("-Dorg.lwjgl.freetype.libname="+ NATIVE_LIB_DIR +"/libfreetype.so");
         userArgs.add("-Dorg.lwjgl.spvc.libname="+ NATIVE_LIB_DIR +"/libspirv-cross-c-shared.so");
+        if (Tools.isValidString(Tools.lwjglNativesDir)) {
+            userArgs.add("-Dorg.lwjgl.shaderc.libname="
+                    + new File(Tools.lwjglNativesDir, "libshaderc.so").getAbsolutePath());
+            userArgs.add("-Dorg.lwjgl.vma.libname="
+                    + new File(Tools.lwjglNativesDir, "liblwjgl_vma.so").getAbsolutePath());
+        }
 
         // Some phones are not using the right number of cores, fix that
         userArgs.add("-XX:ActiveProcessorCount=" + java.lang.Runtime.getRuntime().availableProcessors());
-        // Adds missing lwjgl2 openal methods
-        userArgs.add("-javaagent:"+new File(Tools.DIR_DATA,"lwjgl2_methods_injector/lwjgl2_methods_injector.jar").getAbsolutePath());
+        // The injector patches LWJGL 2 and is compiled for Java 8. Attaching it
+        // to modern Java/LWJGL 3 launches can abort the VM before Minecraft starts.
+        File lwjgl2Injector = new File(
+                Tools.DIR_DATA,
+                "lwjgl2_methods_injector/lwjgl2_methods_injector.jar");
+        if (runtime.javaVersion == 8 && hasJarEntry(
+                lwjgl2Injector,
+                "org/angelauramc/lwjgl2_methods_injector/startInjectors.class")) {
+            userArgs.add("-javaagent:" + lwjgl2Injector.getAbsolutePath());
+        } else if (runtime.javaVersion == 8) {
+            Logger.appendToLog("Warning: LWJGL2 injector is missing or invalid; launching without it");
+        }
 
         userArgs.addAll(JVMArgs);
+        if (usesDesktopErrorWindowLoader(JVMArgs)) {
+            // Cacio may have added its own headless flag to JVMArgs. Apply this last so
+            // Fabric and Forge cannot replace the native Battly error screen with AWT.
+            purgeArg(userArgs, "-Djava.awt.headless");
+            userArgs.add("-Djava.awt.headless=true");
+            Logger.appendToLog("Battly: desktop mod-loader error windows disabled on Android");
+        }
         activity.runOnUiThread(() -> Toast.makeText(activity, activity.getString(R.string.autoram_info_msg,LauncherPreferences.PREF_RAM_ALLOCATION), Toast.LENGTH_SHORT).show());
         System.out.println(JVMArgs);
 
@@ -383,6 +420,35 @@ public class JREUtils {
                 () -> android.os.Process.killProcess(android.os.Process.myPid()),
                 450
         );
+    }
+
+    private static boolean usesDesktopErrorWindowLoader(List<String> gameArguments) {
+        if (gameArguments == null) return false;
+        for (String argument : gameArguments) {
+            if (argument == null) continue;
+            String lower = argument.toLowerCase(Locale.ROOT);
+            if (lower.contains("net.fabricmc.loader")
+                    || lower.contains("fabric-loader")
+                    || lower.contains("org.quiltmc.loader")
+                    || lower.contains("quilt-loader")
+                    || lower.contains("net.minecraftforge")
+                    || lower.contains("modlauncher")
+                    || lower.contains("net.neoforged")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean hasJarEntry(File jarFile, String entryName) {
+        if (jarFile == null || !jarFile.isFile()) return false;
+        try (JarFile jar = new JarFile(jarFile)) {
+            return jar.getJarEntry(entryName) != null;
+        } catch (IOException e) {
+            Logger.appendToLog("Warning: unable to inspect Java agent "
+                    + jarFile.getAbsolutePath() + ": " + e.getMessage());
+            return false;
+        }
     }
 
     public static int launchApiInstaller(Context context, Runtime runtime, File workDirectory, ArrayList<String> args) {
@@ -471,8 +537,12 @@ public class JREUtils {
                 //"-Dorg.lwjgl.util.DebugFunctions=true",
                 //"-Dorg.lwjgl.util.DebugLoader=true",
                 // GLFW Stub width height
-                "-Dglfwstub.windowWidth=" + Tools.getDisplayFriendlyRes(Math.max(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels), LauncherPreferences.PREF_SCALE_FACTOR),
-                "-Dglfwstub.windowHeight=" + Tools.getDisplayFriendlyRes(Math.min(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels), LauncherPreferences.PREF_SCALE_FACTOR),
+                "-Dglfwstub.windowWidth=" + resolveBridgeDimension(
+                        org.lwjgl.glfw.CallbackBridge.windowWidth,
+                        Math.max(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels)),
+                "-Dglfwstub.windowHeight=" + resolveBridgeDimension(
+                        org.lwjgl.glfw.CallbackBridge.windowHeight,
+                        Math.min(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels)),
                 "-Dglfwstub.initEgl=false",
                 "-Dext.net.resolvPath=" +resolvFile,
                 "-Dlog4j2.formatMsgNoLookups=true", //Log4j RCE mitigation
@@ -504,6 +574,13 @@ public class JREUtils {
         //Add all the arguments
         userArguments.addAll(additionalArguments);
         return userArguments;
+    }
+
+    private static int resolveBridgeDimension(int bridgeDimension, int displayFallback) {
+        if (bridgeDimension > 0) {
+            return bridgeDimension;
+        }
+        return Tools.getDisplayFriendlyRes(displayFallback, LauncherPreferences.PREF_SCALE_FACTOR);
     }
 
     private static File getNativeExtractDir() {

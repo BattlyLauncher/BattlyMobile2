@@ -42,7 +42,8 @@ public final class MinecraftCompatibilityEngine {
 
         String renderer = requestedRenderer;
         boolean userRendererValid = Tools.isValidString(renderer)
-                && Tools.checkRendererCompatible(context, renderer);
+                && Tools.checkRendererCompatible(context, renderer)
+                && !(family.requiresDesktopGl && isLegacyGlRenderer(renderer));
         if (!userRendererValid) {
             if (Tools.isValidString(renderer)) {
                 issues.add("Renderer unavailable on this device: " + renderer);
@@ -54,7 +55,7 @@ public final class MinecraftCompatibilityEngine {
         if (runtime == null) {
             issues.add("Java " + requiredJava + " is not installed");
         }
-        if (family.modern && "opengles2".equals(renderer)) {
+        if (family.modern && isLegacyGlRenderer(renderer)) {
             issues.add("GL4ES is a compatibility fallback for this Minecraft generation");
         }
         return new Report(effectiveVersion, family, requiredJava, lwjgl,
@@ -115,16 +116,27 @@ public final class MinecraftCompatibilityEngine {
                                      @NonNull VersionFamily family) {
         if (version != null && version.libraries != null) {
             for (net.kdt.pojavlaunch.value.DependentLibrary library : version.libraries) {
-                if (library == null || library.name == null || !library.name.startsWith("org.lwjgl:lwjgl:")) {
+                if (library == null || library.name == null) {
                     continue;
                 }
+                if (library.name.startsWith("org.lwjgl.lwjgl:lwjgl:")) {
+                    String[] split = library.name.split(":");
+                    return split.length >= 3 ? split[2] : "2";
+                }
+                if (!library.name.startsWith("org.lwjgl:lwjgl:")) continue;
                 String[] split = library.name.split(":");
                 if (split.length >= 3) {
+                    if (compareVersion(split[2], "3.4.2") >= 0) return "3.4.2";
                     return compareVersion(split[2], "3.4.0") >= 0 ? "3.4.1" : "3.3.3";
                 }
             }
         }
-        return family.yearVersion >= 26 ? "3.4.1" : "3.3.3";
+        if (family.yearVersion == 0 && family.minor > 0 && family.minor < 13) return "2";
+        return family.yearVersion >= 26 ? "3.4.2" : "3.3.3";
+    }
+
+    private static boolean isLegacyGlRenderer(@Nullable String renderer) {
+        return "opengles2".equals(renderer) || "opengles2_5".equals(renderer);
     }
 
     private static int compareVersion(String left, String right) {

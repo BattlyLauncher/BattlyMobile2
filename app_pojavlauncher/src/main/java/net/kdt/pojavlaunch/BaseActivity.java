@@ -17,12 +17,11 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         super.onCreate(savedInstanceState);
         LocaleUtils.setLocale(this);
         Tools.setFullscreen(this, setFullscreen());
         Tools.updateWindowSize(this);
-        BattlyControlLayouts.migrateDefaultPerformanceWidget();
     }
 
     /** @return Whether the activity should be set as a fullscreen one */
@@ -39,6 +38,7 @@ public abstract class BaseActivity extends AppCompatActivity {
 
     @Override
     protected void onResume() {
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
         super.onResume();
         Tools.checkStorageInteractive(this);
     }

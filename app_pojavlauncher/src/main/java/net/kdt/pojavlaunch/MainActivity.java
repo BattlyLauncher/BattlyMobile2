@@ -30,6 +30,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.os.Looper;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -87,12 +88,13 @@ import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.TouchControllerUtils;
 import net.kdt.pojavlaunch.utils.BattlyClientCompat;
 import net.kdt.pojavlaunch.utils.VanillaPostShaderCompat;
+
+import org.libsdl.app.SDLActivity;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import org.libsdl.app.SDL;
-import org.libsdl.app.SDLSurface;
 import org.lwjgl.glfw.CallbackBridge;
 
 import java.io.File;
@@ -132,6 +134,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public ArrayAdapter<String> ingameControlsEditorArrayAdapter;
     public AdapterView.OnItemClickListener ingameControlsEditorListener;
     private GameService.LocalBinder mServiceBinder;
+    private boolean mSdlWindowBridgeRequired;
 
     private QuickSettingSideDialog mQuickSettingSideDialog;
     private BroadcastReceiver mBattlyWorldsInviteReceiver;
@@ -149,36 +152,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (LauncherPreferences.PREF_GAMEPAD_SDL_PASSTHRU) {
-            // TODO: Use lower level HID capture that needs a dialogue box from the user for the
-            // app to fully take focus of the input devices. Might cause issues with older android
-            // versions so we don't use that right now. Needs testing.
-            // Currently tried but only identification works OOTB, inputs aren't being sent.
-
-            // TODO: Use a hook to load SDL logic depending on whether libSDL3.so is loaded.
-            try {
-                // Note: This doesn't dlopen it for the mod, they still have to do it themselves
-                // Why? https://github.com/android/ndk/issues/201#issuecomment-248060092
-                // Just in case that gets deleted off the internet:
-                // "On Android only the main executable and LD_PRELOADs are considered to be
-                // RTLD_GLOBAL, all the dependencies of the main executable remain RTLD_LOCAL." - dimitry
-                SDL.loadLibrary("SDL3", this);
-                SDL.loadLibrary("SDL2", this);
-                SDL.initialize();
-                SDL.setupJNI();
-                SDL.setContext(this);
-                new SDLSurface(this);
-                motionListener = (View.OnGenericMotionListener)
-                        runMethodbyReflection("org.libsdl.app.SDLActivity",
-                                "getMotionListener");
-                if (LauncherPreferences.PREF_GAMEPAD_FORCEDSDL_PASSTHRU) Tools.SDL.initializeControllerSubsystems();
-            } catch (UnsatisfiedLinkError ignored) {
-                // Ignore because if SDL.setupJNI(); fails, SDL wasn't loaded.
-            } catch (ReflectiveOperationException e) {
-                Tools.showErrorRemote("SDL did not load properly.", e);
-            }
-        }
-
         minecraftProfile = LauncherProfiles.getCurrentProfile();
         BattlySocialManager.heartbeatGame(this,
                 minecraftProfile == null ? "" : minecraftProfile.lastVersionId);
@@ -256,8 +229,12 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         // The surface backend is selected while activity_basemain is inflated. Resolve Auto here,
         // so it follows the same initialization path as an explicitly selected renderer.
         resolveRendererBeforeSurfaceCreation(version, mVersionInfo);
+        initializeSdlIntegration();
 
         setContentView(resId);
+        if (mSdlWindowBridgeRequired) {
+            SDLActivity.bindExternalHost(this, findViewById(R.id.content_frame));
+        }
         bindValues();
         mControlLayout.setMenuListener(this);
 
@@ -280,8 +257,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             CallbackBridge.nativeSetUseInputStackQueue(isInputStackCall);
 
             Tools.getDisplayMetrics(this);
-            windowWidth = Tools.getDisplayFriendlyRes(currentDisplayMetrics.widthPixels, 1f);
-            windowHeight = Tools.getDisplayFriendlyRes(currentDisplayMetrics.heightPixels, 1f);
+            windowWidth = Tools.getDisplayFriendlyRes(
+                    Math.max(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels), 1f);
+            windowHeight = Tools.getDisplayFriendlyRes(
+                    Math.min(currentDisplayMetrics.widthPixels, currentDisplayMetrics.heightPixels), 1f);
 
 
             // Menu
@@ -378,22 +357,54 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void resolveRendererBeforeSurfaceCreation(String versionId,
-                                                       JMinecraftVersionList.Version version) {
+                                                      JMinecraftVersionList.Version version) {
         String requestedRenderer = normalizeRendererSelection(minecraftProfile.pojavRendererName);
         if (requestedRenderer == null) {
             requestedRenderer = normalizeRendererSelection(LauncherPreferences.PREF_RENDERER);
         }
-
         mRendererAutoSelected = requestedRenderer == null;
-        if (mRendererAutoSelected) {
-            MinecraftCompatibilityEngine.Report compatibility = MinecraftCompatibilityEngine.evaluate(
-                    this, versionId, version, null);
+        MinecraftCompatibilityEngine.Report compatibility = MinecraftCompatibilityEngine.evaluate(
+                this, versionId, version, requestedRenderer);
+        mSdlWindowBridgeRequired = compatibility.lwjglChannel.startsWith("3.4.");
+        MinecraftGLSurface.setSdlWindowBridgeEnabled(mSdlWindowBridgeRequired);
+        if (mRendererAutoSelected || !compatibility.rendererId.equals(requestedRenderer)) {
             requestedRenderer = compatibility.rendererId;
             Log.i(TAG, "Auto renderer resolved before surface creation: " + requestedRenderer);
         } else {
             Log.i("RdrDebug", "__P_renderer=" + requestedRenderer);
         }
         Tools.LOCAL_RENDERER = RendererPluginRegistry.runtimeRendererFor(this, requestedRenderer);
+    }
+
+    private void initializeSdlIntegration() {
+        if (!mSdlWindowBridgeRequired && !LauncherPreferences.PREF_GAMEPAD_SDL_PASSTHRU) {
+            return;
+        }
+        try {
+            SDL.loadLibrary("SDL3", this);
+            try {
+                SDL.loadLibrary("SDL2", this);
+            } catch (UnsatisfiedLinkError ignored) {
+                // SDL2 is optional; modern Minecraft uses SDL3.
+            }
+            SDL.setupJNI();
+            if (mSdlWindowBridgeRequired) {
+                SDLActivity.nativeSetenv("SDL_TOUCH_MOUSE_EVENTS", "1");
+                SDLActivity.nativeSetenv("SDL_MOUSE_TOUCH_EVENTS", "0");
+            }
+            SDL.initialize();
+            SDL.setContext(this);
+            motionListener = (View.OnGenericMotionListener)
+                    runMethodbyReflection("org.libsdl.app.SDLActivity", "getMotionListener");
+            if (LauncherPreferences.PREF_GAMEPAD_FORCEDSDL_PASSTHRU) {
+                Tools.SDL.initializeControllerSubsystems();
+            }
+            Logger.appendToLog("Info: SDL Android surface bridge=" + mSdlWindowBridgeRequired);
+        } catch (UnsatisfiedLinkError ignored) {
+            // Older installations can still launch through GLFW without SDL.
+        } catch (ReflectiveOperationException e) {
+            Tools.showErrorRemote("SDL did not load properly.", e);
+        }
     }
 
     private String normalizeRendererSelection(String renderer) {
@@ -434,6 +445,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void hideGameStartingOverlay() {
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            Tools.runOnUiThread(this::hideGameStartingOverlay);
+            return;
+        }
         if (mGameStartingOverlay == null) {
             return;
         }
@@ -452,11 +467,14 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void returnToLauncherAfterGameFailure(Throwable throwable) {
-        hideGameStartingOverlay();
         Logger.appendToLog("Minecraft launch failed before Java runtime:\n" + Log.getStackTraceString(throwable));
-        LauncherActivity.openAfterGameExit(this, -1, throwable.getMessage());
-        finish();
-        Tools.MAIN_HANDLER.postDelayed(() -> android.os.Process.killProcess(android.os.Process.myPid()), 450);
+        Tools.runOnUiThread(() -> {
+            hideGameStartingOverlay();
+            LauncherActivity.openAfterGameExit(this, -1, throwable.getMessage());
+            finish();
+            Tools.MAIN_HANDLER.postDelayed(
+                    () -> android.os.Process.killProcess(android.os.Process.myPid()), 450);
+        });
     }
 
     private void updateGameStartingStage(int messageResId, int progress) {

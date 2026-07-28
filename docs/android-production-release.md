@@ -111,7 +111,7 @@ Para convertir archivos a base64 desde PowerShell:
 
 ## BattlyWorlds
 
-BattlyWorlds está habilitado en `2.0.3-beta`. La aplicación publica `BattlyWorldsVpnService` con el permiso protegido `BIND_VPN_SERVICE` y los tipos de servicio en primer plano `connectedDevice|dataSync`. El interruptor `BattlyWorldsFeature.ENABLED` se conserva para una desactivación de emergencia sin retirar el código.
+BattlyWorlds está desactivado por defecto mientras Google Play revisa el acceso a VPNService. La propiedad `battlyWorldsEnabled` controla a la vez la lógica, el servicio VPN y el permiso `FOREGROUND_SERVICE_CONNECTED_DEVICE`. Para una build autorizada usa `./gradlew assembleRelease -PbattlyWorldsEnabled=true`; sin esa propiedad, el servicio y el permiso no aparecen en el manifest fusionado.
 
 ## Builds
 
@@ -156,7 +156,7 @@ powershell -ExecutionPolicy Bypass -File .\tools\android\verify-native-16kb.ps1 
 python .\tools\android\elf_16k_page_align.py --zip .\app_pojavlauncher\build\outputs\bundle\gplay\app_pojavlauncher-gplay.aab
 ```
 
-Si falla una librería precompilada, hay que recompilarla con NDK r27+ y:
+Si falla una librería precompilada, hay que recompilarla con NDK r28+ y:
 
 ```text
 -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
@@ -165,7 +165,7 @@ Si falla una librería precompilada, hay que recompilarla con NDK r27+ y:
 La configuración de publicación de Battly Mobile 2.0.3 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
 
 - `.\gradlew :app_pojavlauncher:assembleGplay :app_pojavlauncher:bundleGplay --console=plain` genera y firma correctamente el APK para GitHub y el AAB para Google Play.
-- El AAB contiene solo `arm64-v8a` en `base/lib` y no empaqueta el runtime Java 8. Los assets LWJGL conservan sus cuatro arquitecturas porque se extraen en tiempo de ejecución.
+- El AAB contiene `arm64-v8a` y `armeabi-v7a` en `base/lib` y no empaqueta el runtime Java 8. Los assets LWJGL conservan sus cuatro arquitecturas porque se extraen en tiempo de ejecución.
 - `verify-native-16kb.ps1` valida correctamente todas las librerías de `base/lib` y las librerías LWJGL extraíbles incluidas como assets.
 - El AAB firmado verificado pesa aproximadamente 115 MB y está listo para la validación de Google Play.
 
@@ -182,7 +182,9 @@ El workflow de GitHub ejecuta esta verificación para bloquear una publicación 
 
 Detalles del control 16 KB:
 
-- `gplay` limita las librerías Android de `base/lib` a `arm64-v8a`. Los binarios LWJGL de assets se mantienen para no alterar el mecanismo de extracción del launcher y también se verifican a 16 KB.
+- `gplay` limita las librerías Android de `base/lib` a `arm64-v8a` y `armeabi-v7a`. Los binarios LWJGL de assets se mantienen para no alterar el mecanismo de extracción del launcher y también se verifican a 16 KB.
+- `libjnidispatch.so` y `libunpack200.so` se compilan desde JNA 5.13.0 y OpenJDK 8 con NDK r28.2, sin dependencias C++ externas y con segmentos `PT_LOAD` alineados a `0x4000`.
+- La aplicación compila con `compileSdk` y `targetSdk` 36, AGP 8.11.1 y R8 con reducción optimizada de recursos para las variantes de publicación.
 - `tools/android/elf_16k_page_align.py` realinea los segmentos `PT_LOAD`, actualiza offsets de cabeceras y secciones ELF y establece `p_align` en `0x4000` antes del empaquetado.
 - La tarea se ejecuta tanto sobre las librerías fusionadas como sobre los assets nativos extraíbles. También se actualizan los marcadores de LWJGL para forzar su nueva extracción en instalaciones existentes.
 - ByteHook se actualiza a `1.1.1`, que sustituye el precompilado anterior usado por la aplicación.

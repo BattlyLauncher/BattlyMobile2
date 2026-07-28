@@ -100,6 +100,7 @@ public class AsyncAssetManager {
                 unpackLwjglNatives(ctx);
                 unpackComponent(ctx, "lwjgl3/3.3.3", false);
                 unpackComponent(ctx, "lwjgl3/3.4.1", false);
+                unpackComponent(ctx, "lwjgl3/3.4.2", false);
                 unpackLwjglRootFiles(ctx);
                 unpackComponent(ctx, "security", true);
                 unpackComponent(ctx, "arc_dns_injector", true);
@@ -117,7 +118,7 @@ public class AsyncAssetManager {
     private static void unpackLwjglNatives(Context ctx) throws IOException {
         AssetManager am = ctx.getAssets();
         String sArch = archAsStringAndroid(getDeviceArchitecture());
-        String[] lwjglVersions = {"3.3.3", "3.4.1"};
+        String[] lwjglVersions = {"3.3.3", "3.4.1", "3.4.2"};
         for (String lwjglVersion : lwjglVersions) {
             String component = "lwjgl-" + lwjglVersion + "-natives";
             String componentPath = component + "/" + sArch;
@@ -133,6 +134,16 @@ public class AsyncAssetManager {
             if (versionMarker.exists()) {
                 try (FileInputStream fis = new FileInputStream(versionMarker)) {
                     shouldUpdate = !assetVersion.equals(Tools.read(fis));
+                }
+            }
+            if (!shouldUpdate) {
+                for (String fileName : fileList) {
+                    File installedFile = new File(targetDir, fileName);
+                    if (!installedFile.isFile() || installedFile.length() == 0) {
+                        Log.w("UnpackLwjgl", componentPath + " is incomplete; missing " + fileName);
+                        shouldUpdate = true;
+                        break;
+                    }
                 }
             }
             if (!shouldUpdate) {

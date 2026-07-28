@@ -77,6 +77,7 @@ import net.kdt.pojavlaunch.utils.BattlyUpdateVideoDialog;
 import net.kdt.pojavlaunch.utils.DateUtils;
 import net.kdt.pojavlaunch.utils.JavaRuntimeInstallDialog;
 import net.kdt.pojavlaunch.utils.CrashAnalysisEngine;
+import net.kdt.pojavlaunch.fragments.ModCompatibilityFragment;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import net.kdt.pojavlaunch.utils.NotificationUtils;
@@ -311,7 +312,7 @@ public class LauncherActivity extends BaseActivity {
                     .add(R.id.container_fragment, MainMenuFragment.class, null, "ROOT").commit();
         }
 
-        IconCacheJanitor.runJanitor();
+        PojavApplication.sExecutorService.execute(IconCacheJanitor::runJanitor);
         mRequestNotificationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isAllowed -> {
@@ -604,6 +605,12 @@ public class LauncherActivity extends BaseActivity {
         }
         MinecraftProfile crashProfile = LauncherProfiles.getCurrentProfile();
         CrashAnalysisEngine.Report report = CrashAnalysisEngine.analyze(crashProfile, exitCode, details);
+        if (report.modCompatibility.detected) {
+            Tools.swapFragment(this, ModCompatibilityFragment.class,
+                    ModCompatibilityFragment.TAG,
+                    ModCompatibilityFragment.createArguments(report.modCompatibility));
+            return;
+        }
         CrashAnalysisEngine.Finding primaryFinding = report.findings.isEmpty() ? null : report.findings.get(0);
         if (primaryFinding != null) {
             message += "\n\n" + primaryFinding.title + "\n" + primaryFinding.recommendation;
@@ -614,7 +621,7 @@ public class LauncherActivity extends BaseActivity {
                 .setPositiveButton(R.string.minecraft_crash_view_logs,
                         (dialog, which) -> Tools.swapFragment(this, LogViewerFragment.class, LogViewerFragment.TAG, null))
                 .setNegativeButton(android.R.string.ok, null);
-        if (primaryFinding != null) {
+        if (CrashAnalysisEngine.canApplyRecovery(primaryFinding)) {
             builder.setNeutralButton(R.string.crash_apply_recovery, (dialog, which) -> {
                 try {
                     if (CrashAnalysisEngine.applyRecovery(crashProfile, primaryFinding)) {

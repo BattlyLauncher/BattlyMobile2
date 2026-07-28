@@ -238,6 +238,13 @@ public class EfficientAndroidLWJGLKeycode {
         return 0;
     }
 
+    public static int getAndroidKeycode(int lwjglKey) {
+        for (int i = 0; i < mTmpCount; i++) {
+            if (sLwjglKeycodes[i] == lwjglKey) return sAndroidKeycodes[i];
+        }
+        return KeyEvent.KEYCODE_UNKNOWN;
+    }
+
     private static void add(int androidKeycode, short LWJGLKeycode){
         sAndroidKeycodes[mTmpCount] = androidKeycode;
         sLwjglKeycodes[mTmpCount] = LWJGLKeycode;

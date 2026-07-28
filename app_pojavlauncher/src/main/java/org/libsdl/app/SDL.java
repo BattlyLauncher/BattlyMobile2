@@ -1,13 +1,8 @@
-/*
- * This file is part of SDL3 android-project java code.
- * Licensed under the zlib license: https://www.libsdl.org/license.php
- */
-
 package org.libsdl.app;
 
+import android.app.Activity;
 import android.content.Context;
 
-import java.lang.Class;
 import java.lang.reflect.Method;
 
 /**
@@ -33,12 +28,12 @@ public class SDL {
     }
 
     // This function stores the current activity (SDL or not)
-    public static void setContext(Context context) {
+    public static void setContext(Activity context) {
         SDLAudioManager.setContext(context);
         mContext = context;
     }
 
-    public static Context getContext() {
+    public static Activity getContext() {
         return mContext;
     }
 
@@ -91,5 +86,5 @@ public class SDL {
         }
     }
 
-    protected static Context mContext;
+    protected static Activity mContext;
 }

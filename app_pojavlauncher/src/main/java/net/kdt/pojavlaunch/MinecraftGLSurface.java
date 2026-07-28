@@ -101,6 +101,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     private AndroidPointerCapture mPointerCapture;
     private boolean mLastGrabState = false;
     public static boolean sdlEnabled = false;
+    private static boolean sdlWindowBridgeEnabled = false;
     boolean useSurfaceView = LauncherPreferences.PREF_USE_ALTERNATE_SURFACE;
 
     public MinecraftGLSurface(Context context) {
@@ -112,6 +113,14 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         setFocusable(true);
         CallbackBridge.setDirectGamepadEnableHandler(this);
         SDLControllerManager.setDirectGamepadEnableHandler(this);
+    }
+
+    public static void setSdlWindowBridgeEnabled(boolean enabled) {
+        sdlWindowBridgeEnabled = enabled;
+    }
+
+    public static boolean isSdlWindowBridgeEnabled() {
+        return sdlWindowBridgeEnabled;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -140,6 +149,10 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
                 private boolean isCalled = isAlreadyRunning;
                 @Override
                 public void surfaceCreated(@NonNull SurfaceHolder holder) {
+                    if (sdlWindowBridgeEnabled) {
+                        SDLActivity.attachExternalSurface(holder.getSurface(),
+                                surfaceView.getWidth(), surfaceView.getHeight());
+                    }
                     if(isCalled) {
                         JREUtils.setupBridgeWindow(surfaceView.getHolder().getSurface());
                         startSurfaceViewFirstFrameProbe(surfaceView);
@@ -158,6 +171,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
 
                 @Override
                 public void surfaceDestroyed(@NonNull SurfaceHolder holder) {
+                    if (sdlWindowBridgeEnabled) {
+                        SDLActivity.detachExternalSurface(holder.getSurface());
+                    }
                     cancelSurfaceViewFirstFrameProbe();
                 }
             });
@@ -174,6 +190,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
                 @Override
                 public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surface, int width, int height) {
                     Surface tSurface = new Surface(surface);
+                    if (sdlWindowBridgeEnabled) {
+                        SDLActivity.attachExternalSurface(tSurface, width, height);
+                    }
                     if(isCalled) {
                         JREUtils.setupBridgeWindow(tSurface);
                         return;
@@ -190,6 +209,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
 
                 @Override
                 public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surface) {
+                    if (sdlWindowBridgeEnabled && mSurface instanceof TextureView) {
+                        SDLActivity.detachExternalSurface(null);
+                    }
                     return true;
                 }
 
@@ -224,6 +246,10 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         // Kinda need to send this back to the layout
         if(((ControlLayout)getParent()).getModifiable()) return false;
 
+        if (sdlWindowBridgeEnabled) {
+            forwardTouchToSdl(e);
+        }
+
         // Looking for a mouse to handle, won't have an effect if no mouse exists.
         for (int i = 0; i < e.getPointerCount(); i++) {
             int toolType = e.getToolType(i);
@@ -250,6 +276,40 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         TouchControllerUtils.processTouchEvent(e, this);
         if (mIngameProcessor == null || mInGUIProcessor == null) return true;
         return mCurrentTouchProcessor.processTouchEvent(e);
+    }
+
+    private void forwardTouchToSdl(MotionEvent event) {
+        int action = event.getActionMasked();
+        int firstPointer = (action == MotionEvent.ACTION_POINTER_UP
+                || action == MotionEvent.ACTION_POINTER_DOWN) ? event.getActionIndex() : 0;
+        int pointerCount = event.getPointerCount();
+        int width = Math.max(1, getWidth() - 1);
+        int height = Math.max(1, getHeight() - 1);
+
+        try {
+            for (int i = firstPointer; i < pointerCount; i++) {
+                int toolType = event.getToolType(i);
+                if (toolType == MotionEvent.TOOL_TYPE_MOUSE
+                        || toolType == MotionEvent.TOOL_TYPE_STYLUS
+                        || toolType == MotionEvent.TOOL_TYPE_ERASER) {
+                    continue;
+                }
+                float pressure = Math.min(1.0f, event.getPressure(i));
+                SDLActivity.onNativeTouch(
+                        event.getDeviceId(),
+                        event.getPointerId(i),
+                        action,
+                        event.getX(i) / width,
+                        event.getY(i) / height,
+                        pressure);
+                if (action == MotionEvent.ACTION_POINTER_UP
+                        || action == MotionEvent.ACTION_POINTER_DOWN) {
+                    break;
+                }
+            }
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Unable to forward touch event to SDL", throwable);
+        }
     }
 
     private void createGamepad(View contextView, InputDevice inputDevice) {
@@ -418,8 +478,10 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         // Use the width and height of the View instead of display dimensions to avoid
         // getting squiched/stretched due to inconsistencies between the layout and
         // screen dimensions.
-        int newWidth = Tools.getDisplayFriendlyRes(getWidth(), LauncherPreferences.PREF_SCALE_FACTOR);
-        int newHeight = Tools.getDisplayFriendlyRes(getHeight(), LauncherPreferences.PREF_SCALE_FACTOR);
+        int newWidth = Tools.getDisplayFriendlyRes(
+                Math.max(getWidth(), getHeight()), LauncherPreferences.PREF_SCALE_FACTOR);
+        int newHeight = Tools.getDisplayFriendlyRes(
+                Math.min(getWidth(), getHeight()), LauncherPreferences.PREF_SCALE_FACTOR);
         if (newHeight < 1 || newWidth < 1) {
             Log.e("MGLSurface", String.format("Impossible resolution : %dx%d", newWidth, newHeight));
             return;
@@ -440,6 +502,12 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
             if(view.getSurfaceTexture() != null){
                 view.getSurfaceTexture().setDefaultBufferSize(windowWidth, windowHeight);
             }
+        }
+
+        // GLFW, SDL and the Android buffer must agree on one pixel size. Sending the
+        // unscaled display size here caused modern LWJGL/SDL snapshots to render zoomed.
+        if (sdlWindowBridgeEnabled) {
+            SDLActivity.resizeExternalSurface(windowWidth, windowHeight);
         }
 
         CallbackBridge.sendUpdateWindowSize(windowWidth, windowHeight);

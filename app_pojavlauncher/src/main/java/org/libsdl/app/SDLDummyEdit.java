@@ -1,11 +1,7 @@
-/*
- * This file is part of SDL3 android-project java code.
- * Licensed under the zlib license: https://www.libsdl.org/license.php
- */
-
 package org.libsdl.app;
 
 import android.content.*;
+import android.text.InputType;
 import android.view.*;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
@@ -18,14 +14,14 @@ public class SDLDummyEdit extends View implements View.OnKeyListener
     InputConnection ic;
     int input_type;
 
-    public SDLDummyEdit(Context context) {
+    SDLDummyEdit(Context context) {
         super(context);
         setFocusableInTouchMode(true);
         setFocusable(true);
         setOnKeyListener(this);
     }
 
-    public void setInputType(int input_type) {
+    void setInputType(int input_type) {
         this.input_type = input_type;
     }
 

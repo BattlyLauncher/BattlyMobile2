@@ -5,10 +5,11 @@ import android.widget.Toast;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.BuildConfig;
 
 public final class BattlyWorldsFeature {
-    /** Central kill-switch kept for emergency rollback without removing the integration. */
-    public static final boolean ENABLED = true;
+    /** Build-time kill-switch; also controls the VPN permission and service manifest entries. */
+    public static final boolean ENABLED = BuildConfig.BATTLY_WORLDS_ENABLED;
 
     private BattlyWorldsFeature() {
     }

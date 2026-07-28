@@ -134,7 +134,7 @@ public class LauncherPreferences {
         if (DEFAULT_PREF.contains("downloadSource")) {
             DEFAULT_PREF.edit().remove("downloadSource").apply();
         }
-        PREF_DOWNLOAD_THREAD_COUNT = clamp(DEFAULT_PREF.getInt("downloadThreadCount", 8), 2, 16);
+        PREF_DOWNLOAD_THREAD_COUNT = clamp(DEFAULT_PREF.getInt("downloadThreadCount", 8), 2, 100);
         PREF_DOWNLOAD_THREADS_AUTO = DEFAULT_PREF.getBoolean("downloadThreadsAuto", true);
         PREF_VERIFY_MANIFEST = DEFAULT_PREF.getBoolean("verifyManifest", true);
         PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = DEFAULT_PREF.getBoolean(PREF_KEY_SKIP_NOTIFICATION_CHECK, false);

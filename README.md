@@ -31,8 +31,8 @@ See [CHANGELOG.md](CHANGELOG.md) for release notes. Google Play publication addi
 Requirements:
 
 - Android Studio or Android SDK command-line tools.
-- JDK compatible with Android Gradle Plugin 8.7.x.
-- Android NDK `27.3.13750724`.
+- JDK compatible with Android Gradle Plugin 8.11.x.
+- Android SDK 36 and Android NDK `28.2.13676358`.
 - `local.properties` pointing to your Android SDK.
 
 Debug build:
@@ -109,7 +109,7 @@ The notification small icon is generated from the real Battly logo asset and kep
 
 ## BattlyWorlds Status
 
-BattlyWorlds is enabled in `2.0.3-beta`. It uses Android's `VpnService` to create the private LAN connection while Minecraft is running. The central `BattlyWorldsFeature.ENABLED` switch remains available for an emergency rollback without removing the implementation.
+BattlyWorlds is disabled by default while Google Play VPNService access is pending. The integration remains in the source tree and is controlled by one build property: `-PbattlyWorldsEnabled=true`. That property enables the runtime feature and adds its VPN service and `FOREGROUND_SERVICE_CONNECTED_DEVICE` permission to the merged manifest.
 
 ## Storage
 

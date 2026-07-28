@@ -5,6 +5,7 @@ import android.accounts.AccountManager;
 import android.content.Intent;
 import android.content.Context;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
@@ -251,9 +252,16 @@ public class BattlyLoginFragment extends Fragment {
             mGoogleButton.setEnabled(false);
         }
         mErrorTextView.setVisibility(View.GONE);
-        Intent chooser = AccountManager.newChooseAccountIntent(
-                null, null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE},
-                null, null, null, null);
+        Intent chooser;
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            chooser = AccountManager.newChooseAccountIntent(
+                    null, null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE},
+                    null, null, null, null);
+        } else {
+            chooser = AccountManager.newChooseAccountIntent(
+                    null, null, new String[]{GoogleAuthUtil.GOOGLE_ACCOUNT_TYPE},
+                    true, null, null, null, null);
+        }
         mGoogleSignInLauncher.launch(chooser);
     }
 

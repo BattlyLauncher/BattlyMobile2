@@ -16,12 +16,14 @@ import com.kdt.mcgui.ProgressLayout;
 import net.kdt.pojavlaunch.JAssetInfo;
 import net.kdt.pojavlaunch.JAssets;
 import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.Logger;
 import net.kdt.pojavlaunch.NewJREUtil;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.analytics.Telemetry;
 import net.kdt.pojavlaunch.mirrors.DownloadMirror;
 import net.kdt.pojavlaunch.mirrors.MirrorTamperedException;
+import net.kdt.pojavlaunch.modloaders.ForgeInstallationValidator;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.AdaptiveDownloadPolicy;
@@ -92,30 +94,33 @@ public class MinecraftDownloader {
                     String versionMessage = realVersion; // Use provided version unless we find its a modded instance
 
                     // See if provided version is a modded version and if that version depends on another jar, check for presence of both jar's .json.
-                    try {
-                        // This reads the .json associated with the provided version. If it fails, we can assume it's not installed.
-                        File providedJsonFile = new File(Tools.DIR_HOME_VERSION + "/" + realVersion + "/" + realVersion + ".json");
-                        JMinecraftVersionList.Version providedJson = Tools.GLOBAL_GSON.fromJson(Tools.read(providedJsonFile.getAbsolutePath()), JMinecraftVersionList.Version.class);
+                    // This reads the .json associated with the provided version. If it fails, we can assume it's not installed.
+                    File providedJsonFile = new File(Tools.DIR_HOME_VERSION + "/" + realVersion + "/" + realVersion + ".json");
+                    JMinecraftVersionList.Version providedJson = Tools.GLOBAL_GSON.fromJson(
+                            Tools.read(providedJsonFile.getAbsolutePath()), JMinecraftVersionList.Version.class);
 
-                        // This checks if running modded version that depends on other jars, so we use that for the error message.
-                        File vanillaJsonFile = new File(Tools.DIR_HOME_VERSION + "/" + providedJson.inheritsFrom + "/" + providedJson.inheritsFrom + ".json");
-                        versionMessage = providedJson.inheritsFrom != null ? providedJson.inheritsFrom : versionMessage;
+                    // This checks if running modded version that depends on other jars, so we use that for the error message.
+                    File vanillaJsonFile = new File(Tools.DIR_HOME_VERSION + "/" + providedJson.inheritsFrom + "/" + providedJson.inheritsFrom + ".json");
+                    versionMessage = providedJson.inheritsFrom != null ? providedJson.inheritsFrom : versionMessage;
 
-                        // Ensure they're both not some 0 byte corrupted json
-                        if (providedJsonFile.length() == 0 || vanillaJsonFile.exists() && vanillaJsonFile.length() == 0){
-                            throw new RuntimeException(activity.getString(
-                                    R.string.minecraft_dependency_missing,
-                                    versionMessage,
-                                    realVersion)); }
-
-                        listener.onDownloadDone();
-                    } catch (Exception e) {
-                        Tools.showErrorRemote(activity.getString(
-                                R.string.minecraft_version_not_installed_network,
-                                versionMessage), e);
+                    // Ensure they're both not some 0 byte corrupted json
+                    if (providedJsonFile.length() == 0 || vanillaJsonFile.exists() && vanillaJsonFile.length() == 0) {
+                        throw new IOException(activity.getString(
+                                R.string.minecraft_dependency_missing,
+                                versionMessage,
+                                realVersion));
                     }
+                    ForgeInstallationValidator.assertComplete(new File(Tools.DIR_GAME_NEW), realVersion);
+                    listener.onDownloadDone();
                 }else {
                 downloadGame(activity, version, realVersion);
+                if (activity != null) {
+                    ForgeInstallationValidator.repairIfNeeded(
+                            activity.getApplicationContext(), realVersion);
+                } else {
+                    ForgeInstallationValidator.assertComplete(
+                            new File(Tools.DIR_GAME_NEW), realVersion);
+                }
                 Telemetry.logVersionDownload(realVersion, true, null);
                 listener.onDownloadDone();
                 }
@@ -159,9 +164,13 @@ public class MinecraftDownloader {
             return;
         }
 
-        int threadCount = LauncherPreferences.PREF_DOWNLOAD_THREADS_AUTO && activity != null
-                ? AdaptiveDownloadPolicy.recommendedWorkers(activity)
-                : Math.max(2, Math.min(16, LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT));
+        int threadCount = AdaptiveDownloadPolicy.resolveWorkers(
+                activity,
+                LauncherPreferences.PREF_DOWNLOAD_THREADS_AUTO && activity != null,
+                LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT,
+                mScheduledDownloadTasks.size());
+        Logger.appendToLog("Info: Download pool: " + threadCount + " workers for "
+                + mScheduledDownloadTasks.size() + " Minecraft files");
         ThreadPoolExecutor downloaderPool =
                 new ThreadPoolExecutor(threadCount, threadCount, 500, TimeUnit.MILLISECONDS,
                         new LinkedBlockingQueue<>());

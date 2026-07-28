@@ -23,7 +23,9 @@
         android:maxSdkVersion="30" />
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <!-- BATTLYWORLDS_PERMISSION_START -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_CONNECTED_DEVICE" />
+    <!-- BATTLYWORLDS_PERMISSION_END -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.VIBRATE" />
 
@@ -40,14 +42,13 @@
         android:process=":launcher"
         android:resizeableActivity="true"
         android:theme="@style/AppTheme">
+        <property
+            android:name="android.window.PROPERTY_COMPAT_ALLOW_RESTRICTED_RESIZABILITY"
+            android:value="true" />
         <activity
             android:name=".MissingStorageActivity"
             android:exported="false"
             android:screenOrientation="sensorLandscape" />
-
-        <meta-data
-            android:name="android.max_aspect"
-            android:value="ratio_float" />
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_icon"
             android:resource="@drawable/notif_icon" />
@@ -211,6 +212,7 @@
             android:configChanges="keyboard|keyboardHidden"
             android:exported="true"
             android:launchMode="singleInstance"
+            android:screenOrientation="sensorLandscape"
             android:windowSoftInputMode="stateVisible">
             <intent-filter
                 android:label="@string/import_control_label"
@@ -229,13 +231,16 @@
         <activity
             android:name=".FatalErrorActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
+            android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.AppCompat.DayNight.Dialog" />
         <activity android:name=".ShowErrorActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
+            android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.AppCompat.DayNight.Dialog" />
         <activity
             android:name=".ExitActivity"
             android:configChanges="keyboardHidden|orientation|screenSize|keyboard|navigation"
+            android:screenOrientation="sensorLandscape"
             android:theme="@style/Theme.AppCompat.DayNight.Dialog" />
         <activity
             android:process=":gui_installer"
@@ -280,6 +285,7 @@
             android:name=".services.GameService"
             android:process=":game"
             android:foregroundServiceType="dataSync" />
+        <!-- BATTLYWORLDS_SERVICE_START -->
         <service
             android:name=".battlyworlds.BattlyWorldsVpnService"
             android:exported="true"
@@ -292,6 +298,7 @@
                 android:name="android.net.VpnService.SUPPORTS_ALWAYS_ON"
                 android:value="false" />
         </service>
+        <!-- BATTLYWORLDS_SERVICE_END -->
         <service
             android:name=".services.BattlyMessagingService"
             android:exported="false">

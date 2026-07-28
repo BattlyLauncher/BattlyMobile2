@@ -3,6 +3,7 @@ package net.kdt.pojavlaunch.utils;
 import androidx.annotation.NonNull;
 
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.io.File;
@@ -14,10 +15,12 @@ import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-/** Deterministic local crash diagnosis; no log is uploaded. */
+/** Deterministic local crash diagnosis. Uploading is handled separately and only on user action. */
 public final class CrashAnalysisEngine {
     private static final int MAX_LOG_CHARS = 2_000_000;
     private static final Pattern MOD_JAR = Pattern.compile("(?:from mod |from )([^\\s/\\\\]+\\.jar)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern MIXIN_CONFIG = Pattern.compile(
+            "(?:mixin apply failed |mixin apply for mod )([^\\s.:]+)", Pattern.CASE_INSENSITIVE);
     private static final Pattern FORGE_LANGUAGE_MISMATCH = Pattern.compile(
             "Mod File ([^\\r\\n]+?\\.jar) needs language provider javafml:([0-9]+) or above.*?found ([0-9.]+)",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
@@ -28,13 +31,48 @@ public final class CrashAnalysisEngine {
     public static Report analyze(MinecraftProfile profile, int exitCode, String details) {
         StringBuilder log = new StringBuilder();
         appendFile(log, new File(Tools.DIR_GAME_HOME, "latestlog.txt"));
-        File crashDir = new File(Tools.getGameDirPath(profile), "crash-reports");
+        File gameDir = profile == null ? new File(Tools.DIR_GAME_HOME) : Tools.getGameDirPath(profile);
+        File crashDir = new File(gameDir, "crash-reports");
         File latestCrash = newest(crashDir);
         appendFile(log, latestCrash);
         if (details != null) log.append('\n').append(details);
         String source = log.toString();
         String lower = source.toLowerCase(Locale.ROOT);
         List<Finding> findings = new ArrayList<>();
+        ModCompatibilityAnalyzer.Analysis modCompatibility =
+                ModCompatibilityAnalyzer.analyze(source);
+
+        if (modCompatibility.detected) {
+            findings.add(new Finding(Severity.HIGH, "mod_dependencies",
+                    modCompatibility.summary,
+                    Tools.isValidString(modCompatibility.solution)
+                            ? modCompatibility.solution
+                            : "Review the incompatible mods and install versions made for this Minecraft and loader version.",
+                    Action.OPEN_LOG, null));
+        }
+
+        if (containsAny(lower, "org/lwjgl/sdl/sdlplatform", "org/lwjgl/sdl/sdl",
+                "required lwjgl sdl module is missing")) {
+            findings.add(new Finding(Severity.HIGH, "lwjgl_sdl",
+                    "The LWJGL SDL module required by this Minecraft version is missing",
+                    "Restart Battly so it can repair the LWJGL 3.4.1 component, then launch the game again.",
+                    Action.OPEN_LOG, null));
+        }
+        if (containsAny(lower,
+                "modules text2speech and android.text2speech.stub export package",
+                "classnotfoundexception: com.mojang.text2speech.narratorlinux",
+                "nosuchmethoderror: com.mojang.text2speech.narrator$initializeexception")) {
+            findings.add(new Finding(Severity.HIGH, "text_to_speech",
+                    "Battly's Android narrator component is inconsistent",
+                    "Restart Battly to reinstall the narrator adapter. Desktop text2speech libraries are now removed automatically.",
+                    Action.OPEN_LOG, null));
+        }
+        if (lower.contains("signer information does not match signer information of other classes in the same package")) {
+            findings.add(new Finding(Severity.HIGH, "corrupt_version",
+                    "This Minecraft installation contains mixed or corrupted classes",
+                    "Repair or reinstall this Minecraft version. Its client JAR contains classes with incompatible signatures.",
+                    Action.OPEN_INSTANCE, null));
+        }
 
         Matcher forgeMismatch = FORGE_LANGUAGE_MISMATCH.matcher(source);
         if (forgeMismatch.find()) {
@@ -50,15 +88,62 @@ public final class CrashAnalysisEngine {
             findings.add(new Finding(Severity.HIGH, "memory", "Minecraft ran out of memory",
                     "Lower the allocated RAM or close background apps.", Action.LOWER_MEMORY, null));
         }
-        if (containsAny(lower, "mixintweaker", "mixinapplyerror", "mixintransformererror", "invalidmixinexception")) {
+        if (containsAny(lower, "mixintweaker", "mixinapplyerror", "mixintransformererror",
+                "invalidmixinexception", "invalidinjectionexception", "mixin apply failed")) {
+            String suspectMod = findSuspectMod(gameDir, source);
             findings.add(new Finding(Severity.HIGH, "mixin", "A mod or its Mixin dependency is incompatible",
-                    "Disable the last installed mod or install its required Mixin provider.", Action.DISABLE_SUSPECT_MOD,
-                    findSuspectJar(source)));
+                    suspectMod == null
+                            ? "Disable the mod named immediately before the first Mixin error, or install its build for this exact Minecraft version."
+                            : "Disable " + suspectMod + " or install its build for this exact Minecraft and loader version.",
+                    Action.DISABLE_SUSPECT_MOD, suspectMod));
         }
-        if (containsAny(lower, "failed to locate library", "unsatisfiedlinkerror", "loading native libraries",
+        if (!modCompatibility.detected && !hasFinding(findings, "lwjgl_sdl") && containsAny(lower,
+                "failed to locate library", "unsatisfiedlinkerror", "loading native libraries",
                 "liblwjgl", "libglfw")) {
             findings.add(new Finding(Severity.HIGH, "native", "Native graphics libraries could not be loaded",
                     "Switch renderer and clear the LWJGL native cache.", Action.RESET_RENDERER, null));
+        }
+        if (containsAny(lower, "wrong elf class", "unexpected e_machine", "bad elf magic",
+                "is for em_386 instead of em_aarch64")) {
+            findings.add(new Finding(Severity.HIGH, "native_architecture",
+                    "A native library was built for a different CPU architecture",
+                    "Repair the instance and renderer files. Do not copy native libraries from another device.",
+                    Action.RESET_RENDERER, null));
+        }
+        if (containsAny(lower, "glfw error 65542", "failed to create opengl context",
+                "could not create gl context", "failed to create window", "egl_bad_match",
+                "egl_bad_attribute", "no supported graphics backend was found")) {
+            findings.add(new Finding(Severity.HIGH, "graphics_context",
+                    "The renderer could not create a compatible graphics context",
+                    "Reset the renderer to Automatic. If it repeats, select Holy GL4ES for old versions or Zink/MobileGlues for modern versions.",
+                    Action.RESET_RENDERER, null));
+        }
+        if (!modCompatibility.detected && containsAny(lower, "incompatible mod set", "incompatible mods found",
+                "mod resolution encountered", "requires version", "depends on version")
+                && !hasFinding(findings, "forge_version")) {
+            findings.add(new Finding(Severity.HIGH, "mod_dependencies",
+                    "One or more mods have incompatible or missing dependencies",
+                    "Open the full log, then install the required dependency version or disable the conflicting mod.",
+                    Action.DISABLE_SUSPECT_MOD, findSuspectJar(source)));
+        }
+        if (lower.contains("pose stack not empty")) {
+            findings.add(new Finding(Severity.HIGH, "mod_render_state",
+                    "A rendering mod left Minecraft in an invalid render state",
+                    "Update or disable the rendering, animation or HUD mod listed immediately before this error.",
+                    Action.OPEN_LOG, null));
+        }
+        if (!modCompatibility.detected && lower.contains("java.awt.insets.initids")) {
+            findings.add(new Finding(Severity.MEDIUM, "mod_error_screen",
+                    "A mod tried to open a desktop Java error window on Android",
+                    "The real failure appears earlier in the log. Resolve the incompatible mods listed before this AWT error.",
+                    Action.OPEN_LOG, null));
+        }
+        if (containsAny(lower, "sslhandshakeexception", "unknownhostexception", "connection timed out",
+                "failed to download file")) {
+            findings.add(new Finding(Severity.MEDIUM, "network",
+                    "A required file could not be downloaded",
+                    "Check the connection, disable DNS or VPN filters temporarily, and repair the instance.",
+                    Action.OPEN_LOG, null));
         }
         if (containsAny(lower, "shader compilation", "couldn't compile", "glsl", "texture2d is removed")) {
             findings.add(new Finding(Severity.MEDIUM, "shader", "The selected shader is incompatible with this renderer",
@@ -76,12 +161,19 @@ public final class CrashAnalysisEngine {
             findings.add(new Finding(Severity.MEDIUM, "unknown", "Minecraft exited unexpectedly (" + exitCode + ")",
                     "Open the complete log for the first Caused by section.", Action.OPEN_LOG, null));
         }
-        return new Report(exitCode, latestCrash, Collections.unmodifiableList(findings));
+        return new Report(exitCode, latestCrash, Collections.unmodifiableList(findings),
+                modCompatibility);
     }
 
     public static boolean applyRecovery(@NonNull MinecraftProfile profile, @NonNull Finding finding) throws IOException {
         File gameDir = Tools.getGameDirPath(profile);
         switch (finding.action) {
+            case LOWER_MEMORY:
+                if (LauncherPreferences.DEFAULT_PREF == null) return false;
+                int loweredMemory = Math.max(512, LauncherPreferences.PREF_RAM_ALLOCATION - 256);
+                LauncherPreferences.DEFAULT_PREF.edit().putInt("allocation", loweredMemory).apply();
+                LauncherPreferences.PREF_RAM_ALLOCATION = loweredMemory;
+                return true;
             case RESET_RENDERER:
                 profile.pojavRendererName = null;
                 deleteMatching(new File(Tools.DIR_CACHE.getAbsolutePath()), "lwjgl_");
@@ -101,6 +193,21 @@ public final class CrashAnalysisEngine {
             case RESET_JAVA:
                 profile.javaDir = null;
                 return true;
+            default:
+                return false;
+        }
+    }
+
+    public static boolean canApplyRecovery(Finding finding) {
+        if (finding == null) return false;
+        switch (finding.action) {
+            case LOWER_MEMORY:
+            case RESET_RENDERER:
+            case DISABLE_SHADERS:
+            case RESET_JAVA:
+                return true;
+            case DISABLE_SUSPECT_MOD:
+                return Tools.isValidString(finding.relatedFile);
             default:
                 return false;
         }
@@ -132,8 +239,28 @@ public final class CrashAnalysisEngine {
         return last;
     }
 
+    private static String findSuspectMod(File gameDir, String source) {
+        String jar = findSuspectJar(source);
+        if (Tools.isValidString(jar)) return jar;
+        Matcher matcher = MIXIN_CONFIG.matcher(source);
+        String modId = null;
+        while (matcher.find()) modId = matcher.group(1);
+        if (!Tools.isValidString(modId)) return null;
+        final String normalizedModId = modId.toLowerCase(Locale.ROOT);
+        File modsDir = new File(gameDir, "mods");
+        File[] candidates = modsDir.listFiles(file -> file.isFile()
+                && file.getName().toLowerCase(Locale.ROOT).startsWith(normalizedModId)
+                && file.getName().toLowerCase(Locale.ROOT).endsWith(".jar"));
+        return candidates != null && candidates.length == 1 ? candidates[0].getName() : null;
+    }
+
     private static boolean containsAny(String source, String... needles) {
         for (String needle : needles) if (source.contains(needle)) return true;
+        return false;
+    }
+
+    private static boolean hasFinding(List<Finding> findings, String code) {
+        for (Finding finding : findings) if (code.equals(finding.code)) return true;
         return false;
     }
 
@@ -172,11 +299,14 @@ public final class CrashAnalysisEngine {
         public final int exitCode;
         public final File crashReport;
         public final List<Finding> findings;
+        public final ModCompatibilityAnalyzer.Analysis modCompatibility;
 
-        Report(int exitCode, File crashReport, List<Finding> findings) {
+        Report(int exitCode, File crashReport, List<Finding> findings,
+               ModCompatibilityAnalyzer.Analysis modCompatibility) {
             this.exitCode = exitCode;
             this.crashReport = crashReport;
             this.findings = findings;
+            this.modCompatibility = modCompatibility;
         }
     }
 }

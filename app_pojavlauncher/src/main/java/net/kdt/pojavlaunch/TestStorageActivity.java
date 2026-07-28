@@ -2,7 +2,6 @@ package net.kdt.pojavlaunch;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.content.pm.ActivityInfo;
 import android.os.Bundle;
 
 import androidx.annotation.Nullable;
@@ -13,7 +12,6 @@ import net.kdt.pojavlaunch.tasks.AsyncAssetManager;
 public class TestStorageActivity extends Activity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
-        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE);
         super.onCreate(savedInstanceState);
         exit();
     }

@@ -1,3 +1,5 @@
+package net.kdt.patch;
+
 import java.lang.instrument.ClassFileTransformer;
 import java.lang.instrument.Instrumentation;
 import java.security.ProtectionDomain;

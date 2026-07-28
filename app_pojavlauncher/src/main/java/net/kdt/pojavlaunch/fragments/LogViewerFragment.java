@@ -5,6 +5,8 @@ import static net.kdt.pojavlaunch.Tools.openPath;
 import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -19,6 +21,7 @@ import androidx.fragment.app.Fragment;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.MclogsUploader;
 
 import java.io.File;
 import java.io.IOException;
@@ -37,6 +40,7 @@ public class LogViewerFragment extends Fragment {
     private Spinner mLogSelector;
     private TextView mLogContentView;
     private TextView mLogMetaView;
+    private TextView mUploadButton;
 
     public LogViewerFragment() {
         super(R.layout.fragment_log_viewer);
@@ -47,6 +51,7 @@ public class LogViewerFragment extends Fragment {
         mLogSelector = view.findViewById(R.id.log_viewer_selector);
         mLogContentView = view.findViewById(R.id.log_viewer_content);
         mLogMetaView = view.findViewById(R.id.log_viewer_meta);
+        mUploadButton = view.findViewById(R.id.log_viewer_upload);
 
         mAdapter = new ArrayAdapter<>(requireContext(), R.layout.item_simple_list_1, new ArrayList<>());
         mAdapter.setDropDownViewResource(R.layout.item_simple_list_1);
@@ -67,6 +72,7 @@ public class LogViewerFragment extends Fragment {
         view.findViewById(R.id.log_viewer_refresh).setOnClickListener(v -> refreshLogs(true));
         view.findViewById(R.id.log_viewer_copy).setOnClickListener(v -> copySelectedLog());
         view.findViewById(R.id.log_viewer_share).setOnClickListener(v -> shareSelectedLog());
+        mUploadButton.setOnClickListener(v -> uploadSelectedLog());
 
         refreshLogs(false);
     }
@@ -168,6 +174,68 @@ public class LogViewerFragment extends Fragment {
             return;
         }
         openPath(requireContext(), selectedLog, true);
+    }
+
+    private void uploadSelectedLog() {
+        File selectedLog = getSelectedLogFile();
+        if (selectedLog == null) {
+            Toast.makeText(requireContext(), R.string.log_viewer_no_selection, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        mUploadButton.setEnabled(false);
+        mUploadButton.setAlpha(0.6f);
+        mUploadButton.setText(R.string.log_viewer_uploading);
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                MclogsUploader.UploadResult result = MclogsUploader.upload(selectedLog);
+                android.app.Activity activity = getActivity();
+                if (activity == null) return;
+                activity.runOnUiThread(() -> {
+                    if (isAdded()) showUploadResult(result);
+                });
+            } catch (Exception exception) {
+                android.app.Activity activity = getActivity();
+                if (activity == null) return;
+                activity.runOnUiThread(() -> {
+                    if (!isAdded()) return;
+                    resetUploadButton();
+                    Tools.showStyledDialog(Tools.createStyledDialogBuilder(requireContext())
+                            .setTitle(R.string.log_viewer_upload_failed_title)
+                            .setMessage(getString(R.string.log_viewer_upload_failed, exception.getMessage()))
+                            .setPositiveButton(android.R.string.ok, null));
+                });
+            }
+        });
+    }
+
+    private void showUploadResult(MclogsUploader.UploadResult result) {
+        resetUploadButton();
+        Tools.showStyledDialog(Tools.createStyledDialogBuilder(requireContext())
+                .setTitle(R.string.log_viewer_upload_complete)
+                .setMessage(getString(R.string.log_viewer_upload_result, result.url, result.lines, result.errors))
+                .setPositiveButton(R.string.log_viewer_share_link, (dialog, which) -> {
+                    Intent share = new Intent(Intent.ACTION_SEND)
+                            .setType("text/plain")
+                            .putExtra(Intent.EXTRA_TEXT, result.url);
+                    startActivity(Intent.createChooser(share, getString(R.string.log_viewer_share_link)));
+                })
+                .setNeutralButton(R.string.log_viewer_copy_link, (dialog, which) -> {
+                    ClipboardManager clipboard = (ClipboardManager) requireContext()
+                            .getSystemService(Context.CLIPBOARD_SERVICE);
+                    if (clipboard != null) {
+                        clipboard.setPrimaryClip(ClipData.newPlainText("mclo.gs", result.url));
+                        Toast.makeText(requireContext(), R.string.log_viewer_link_copied,
+                                Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton(R.string.log_viewer_open_link, (dialog, which) ->
+                        startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(result.url)))));
+    }
+
+    private void resetUploadButton() {
+        mUploadButton.setEnabled(true);
+        mUploadButton.setAlpha(1f);
+        mUploadButton.setText(R.string.log_viewer_upload);
     }
 
     private File getSelectedLogFile() {

@@ -1,0 +1,7 @@
+#ifndef BATTLY_JNA_VERSION_H
+#define BATTLY_JNA_VERSION_H
+
+#define JNA_JNI_VERSION "6.1.6"
+#define CHECKSUM "147a998f0cbc89681a1ae6c0dd121629"
+
+#endif

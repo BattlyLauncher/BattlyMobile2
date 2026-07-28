@@ -6,10 +6,9 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
+import android.net.Uri;
 import android.text.Editable;
 import android.text.InputType;
 import android.text.TextWatcher;
@@ -27,6 +26,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
+import com.bumptech.glide.Glide;
 
 import net.burningtnt.terracotta.TerracottaAndroidAPI;
 import net.kdt.pojavlaunch.PojavApplication;
@@ -36,9 +36,6 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 
 import java.io.File;
-import java.net.URL;
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -432,17 +429,12 @@ public final class BattlyWorldsDialog {
     }
 
     private void loadFace(String username, ImageView imageView) {
-        PojavApplication.sExecutorService.execute(() -> {
-            try {
-                String url = "https://api.battlylauncher.com/api/face/"
-                        + URLEncoder.encode(username, StandardCharsets.UTF_8.name());
-                Bitmap bitmap = BitmapFactory.decodeStream(new URL(url).openStream());
-                if (bitmap != null) {
-                    Tools.MAIN_HANDLER.post(() -> imageView.setImageBitmap(bitmap));
-                }
-            } catch (Throwable ignored) {
-            }
-        });
+        String url = "https://api.battlylauncher.com/api/face/" + Uri.encode(username);
+        Glide.with(imageView)
+                .load(url)
+                .override(dp(38), dp(38))
+                .circleCrop()
+                .into(imageView);
     }
 
     private void searchFriend(String query) {

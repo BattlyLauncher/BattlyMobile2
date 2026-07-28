@@ -1,5 +1,5 @@
 plugins {
-    id 'com.android.application' version '8.7.2'
+    id 'com.android.application' version '8.11.1'
     id 'com.google.gms.google-services'
     id 'com.google.firebase.crashlytics'
 }
@@ -102,14 +102,34 @@ def battlyGoogleDebugClientId = System.getenv("BATTLY_GOOGLE_DEBUG_CLIENT_ID")
 def battlyGoogleReleaseClientId = System.getenv("BATTLY_GOOGLE_RELEASE_CLIENT_ID")
         ?: System.getenv("BATTLY_GOOGLE_WEB_CLIENT_ID")
         ?: "490291541450-r17e3frigvot7b8a2lhu32k2dp8eqq28.apps.googleusercontent.com"
+def battlyWorldsEnabled = providers.gradleProperty("battlyWorldsEnabled")
+        .map { value -> value.toBoolean() }
+        .orElse(false)
+        .get()
+def battlyWorldsManifestSource = file("src/main/AndroidManifest.xml")
+def battlyWorldsGeneratedManifest = file("${buildDir}/generated/battlyworlds/AndroidManifest.xml")
+def battlyWorldsManifestText = battlyWorldsManifestSource.getText("UTF-8")
+if (!battlyWorldsEnabled) {
+    battlyWorldsManifestText = battlyWorldsManifestText
+            .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_PERMISSION_START -->.*?<!-- BATTLYWORLDS_PERMISSION_END -->/, "")
+            .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_SERVICE_START -->.*?<!-- BATTLYWORLDS_SERVICE_END -->/, "")
+}
+battlyWorldsGeneratedManifest.parentFile.mkdirs()
+if (!battlyWorldsGeneratedManifest.exists()
+        || battlyWorldsGeneratedManifest.getText("UTF-8") != battlyWorldsManifestText) {
+    battlyWorldsGeneratedManifest.setText(battlyWorldsManifestText, "UTF-8")
+}
 
 android {
     namespace 'net.kdt.pojavlaunch'
 
-    compileSdk = 35
+    compileSdk = 36
 
     lintOptions {
         abortOnError true
+        // Back is deliberately forwarded to Minecraft and Battly's custom
+        // navigation. Predictive-back callbacks would change game input.
+        disable 'GestureBackNavigation'
     }
 
     signingConfigs {
@@ -134,10 +154,11 @@ android {
     defaultConfig {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
-        targetSdkVersion 35
-        versionCode 10000009
-        versionName "2.0.3-beta"
+        targetSdkVersion 36
+        versionCode 10000011
+        versionName "2.0.5"
         multiDexEnabled true //important
+        buildConfigField "boolean", "BATTLY_WORLDS_ENABLED", battlyWorldsEnabled.toString()
         resValue 'string', 'curseforge_api_key', getCFApiKey()
         externalNativeBuild {
             ndkBuild {
@@ -175,9 +196,9 @@ android {
         }
 
         release {
-            // Don't set to true or java.awt will be a.a or something similar.
-            minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            minifyEnabled true
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // defaultConfig already set
             // multiDexEnabled = true
             // debuggable = true
@@ -196,7 +217,11 @@ android {
         }
     }
 
-    ndkVersion "27.3.13750724"
+    sourceSets {
+        main.manifest.srcFile battlyWorldsGeneratedManifest
+    }
+
+    ndkVersion "28.2.13676358"
 
     externalNativeBuild {
         ndkBuild {
@@ -239,7 +264,63 @@ android {
 
 afterEvaluate {
     // Explicit dependencies for which the apk relies on
-    tasks.mergeDebugAssets.dependsOn(":forge_installer:jar", ":arc_dns_injector:jar", ":lwjgl2_methods_injector:jar", ":jre_lwjgl3glfw:patchMergedLwjglModules")
+    def generatedComponentTasks = [
+            ":forge_installer:jar",
+            ":arc_dns_injector:jar",
+            ":lwjgl2_methods_injector:jar",
+            ":jre_lwjgl3glfw:patchMergedLwjglModules"
+    ]
+    tasks.matching { task ->
+        (task.name.startsWith("merge") && task.name.endsWith("Assets"))
+                || task.name.toLowerCase(Locale.ROOT).contains("lint")
+    }.configureEach {
+        dependsOn(generatedComponentTasks)
+    }
+
+    def criticalR8Classes = [
+            "net.kdt.pojavlaunch.fragments.BattlyPlusFragment",
+            "net.kdt.pojavlaunch.fragments.BackgroundSettingsFragment",
+            "net.kdt.pojavlaunch.modloaders.modpacks.models.ModrinthIndex",
+            "net.kdt.pojavlaunch.modloaders.modpacks.models.CurseManifest",
+            "net.kdt.pojavlaunch.value.MinecraftAccount",
+            "net.kdt.pojavlaunch.customcontrols.CustomControls",
+            "net.kdt.pojavlaunch.customcontrols.gamepad.GamepadMapStore",
+            "net.kdt.pojavlaunch.utils.JREUtils",
+            "net.kdt.pojavlaunch.Logger",
+            "org.libsdl.app.SDLActivity",
+            "org.libsdl.app.SDLControllerManager",
+            "org.lwjgl.glfw.CallbackBridge"
+    ]
+
+    ["release", "gplay"].each { buildTypeName ->
+        def buildTypeCap = buildTypeName.capitalize()
+        def verifyTask = tasks.register("verify${buildTypeCap}R8Mapping") {
+            group = "verification"
+            description = "Fail if R8 renames classes loaded through XML, Gson, reflection or JNI (${buildTypeName})."
+            dependsOn "minify${buildTypeCap}WithR8"
+            doLast {
+                File mappingFile = file("${buildDir}/outputs/mapping/${buildTypeName}/mapping.txt")
+                if (!mappingFile.isFile()) {
+                    throw new GradleException("R8 mapping not found: ${mappingFile}")
+                }
+                Set<String> mappingLines = mappingFile.readLines("UTF-8") as Set
+                def renamedClasses = criticalR8Classes.findAll { className ->
+                    String expectedMapping = "${className} -> ${className}:"
+                    !mappingLines.contains(expectedMapping)
+                }
+                if (!renamedClasses.isEmpty()) {
+                    throw new GradleException(
+                            "R8 renamed reflection/JNI-critical classes:\n - " +
+                                    renamedClasses.join("\n - "))
+                }
+            }
+        }
+        tasks.matching {
+            it.name == "assemble${buildTypeCap}" || it.name == "bundle${buildTypeCap}"
+        }.configureEach {
+            dependsOn verifyTask
+        }
+    }
 }
 
 android.applicationVariants.all { variant ->
@@ -333,4 +414,6 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.android.gms:play-services-auth:21.3.0'
+    implementation 'com.github.bumptech.glide:glide:5.0.5'
+    implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
 }

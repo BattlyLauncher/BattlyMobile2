@@ -33,7 +33,8 @@ jar {
       String lwjglPatchVersion = getGitHash(project.projectDir) + "-cacio-ctc-labymod-stable-fix18-solclient-real-ui-battly-r9"
       versionFile.write(lwjglPatchVersion)
       file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.3.3/version").write(lwjglPatchVersion + "-3.3.3")
-      file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.1/version").write(lwjglPatchVersion + "-3.4.1-native-r5")
+      file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.1/version").write(lwjglPatchVersion + "-3.4.1-native-r7-sdl3412")
+      file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.2/version").write(lwjglPatchVersion + "-3.4.2-mojo5-sdl-input-r1")
     }
     from {
         configurations.default.collect {
@@ -48,12 +49,13 @@ tasks.register("patchMergedLwjglModules") {
     inputs.files(sourceSets.main.output.classesDirs)
     inputs.files(
         file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.3.3/lwjgl-3.3.3-merged-modules.jar"),
-        file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.1/lwjgl-3.4.1-merged-modules.jar")
+        file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.1/lwjgl-3.4.1-merged-modules.jar"),
+        file("../app_pojavlauncher/src/main/assets/components/lwjgl3/3.4.2/lwjgl-3.4.2-merged-modules.jar")
     )
     outputs.upToDateWhen { false }
 
     doLast {
-        ["3.3.3", "3.4.1"].each { version ->
+        ["3.3.3", "3.4.1", "3.4.2"].each { version ->
             File mergedJar = file("../app_pojavlauncher/src/main/assets/components/lwjgl3/${version}/lwjgl-${version}-merged-modules.jar")
             if (!mergedJar.exists()) {
                 throw new GradleException("Missing LWJGL merged module: ${mergedJar}")

@@ -25,9 +25,15 @@ import net.kdt.pojavlaunch.utils.FileUtils;
 public class PojavApplication extends Application {
 	public static final String CRASH_REPORT_TAG = "PojavCrashReport";
 	public static final ExecutorService sExecutorService = new ThreadPoolExecutor(4, 4, 500, TimeUnit.MILLISECONDS,  new LinkedBlockingQueue<>());
+	private static PojavApplication sInstance;
+
+	public static Context getAppContext() {
+		return sInstance;
+	}
 	
 	@Override
 	public void onCreate() {
+		sInstance = this;
 		ContextExecutor.setApplication(this);
 		Telemetry.initialize(this);
 		Thread.setDefaultUncaughtExceptionHandler((thread, th) -> {
@@ -67,6 +73,11 @@ public class PojavApplication extends Application {
 				Tools.initEarlyConstants(this);
 			}
 			Tools.DEVICE_ARCHITECTURE = Architecture.getDeviceArchitecture();
+			// This migration reads and rewrites a control-layout JSON file. It is not
+			// required to draw the first frame, so keep it off every Activity's startup.
+			if (Tools.checkStorageRoot(this)) {
+				sExecutorService.execute(BattlyControlLayouts::migrateDefaultPerformanceWidget);
+			}
 			//Force x86 lib directory for Asus x86 based zenfones
 			if(Architecture.isx86Device() && Architecture.is32BitsDevice()){
 				String originalJNIDirectory = getApplicationInfo().nativeLibraryDir;

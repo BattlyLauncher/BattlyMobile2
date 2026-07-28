@@ -2,6 +2,7 @@ package net.kdt.pojavlaunch.modloaders.modpacks.models;
 
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Keep;
 
 import org.jetbrains.annotations.Nullable;
 
@@ -11,6 +12,7 @@ import java.util.Map;
 /**
  * POJO to represent the modrinth index inside mrpacks
  */
+@Keep
 public class ModrinthIndex {
 
 
@@ -24,6 +26,7 @@ public class ModrinthIndex {
     public Map<String, String> dependencies;
 
 
+    @Keep
     public static class ModrinthIndexFile {
         public String path;
         public String[] downloads;
@@ -44,6 +47,7 @@ public class ModrinthIndex {
                     '}';
         }
 
+        @Keep
         public static class ModrinthIndexFileHashes {
             public String sha1;
             public String sha512;
@@ -58,6 +62,7 @@ public class ModrinthIndex {
             }
         }
 
+        @Keep
         public static class ModrinthIndexFileEnv {
             public String client;
             public String server;

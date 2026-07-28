@@ -119,6 +119,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.regex.Pattern;
 
 @SuppressWarnings("IOStreamConstructor")
 public final class Tools {
@@ -482,8 +483,14 @@ public final class Tools {
         OldVersionsUtils.selectOpenGlVersion(versionInfo);
 
 
+        boolean useAndroidNarratorAdapter = supportsGlobalUrlAgents(versionInfo);
         String launchClassPath = appendLegacyMixinClasspathIfNeeded(
                 gamedir, versionInfo, generateLaunchClassPath(versionInfo, versionId));
+        if (useAndroidNarratorAdapter) {
+            launchClassPath = stripMojangTextToSpeech(launchClassPath);
+        } else {
+            Logger.appendToLog("Info: Keeping the Minecraft text2speech module for the modular launcher");
+        }
 
         List<String> javaArgList = new ArrayList<>();
 
@@ -511,7 +518,8 @@ public final class Tools {
         // org.lwjgl.opengl.GL at class-load time, regardless of which JAR LabyMod
         // (or any other mod loader) loads GL from.
         File lwjglPatchAgent = new File(Tools.DIR_GAME_HOME, "lwjgl3/lwjgl-patch-agent.jar");
-        if (runtime.javaVersion >= 17 && canAttachJavaAgentForRuntime(runtime, lwjglPatchAgent, "LwjglPatchAgent.class")) {
+        if (runtime.javaVersion >= 17 && canAttachJavaAgentForRuntime(
+                runtime, lwjglPatchAgent, "net/kdt/patch/LwjglPatchAgent.class")) {
             javaArgList.add("-javaagent:" + lwjglPatchAgent.getAbsolutePath());
         }
 
@@ -523,18 +531,26 @@ public final class Tools {
         }
         OfflineSkinManager.appendJvmArgs(activity, minecraftAccount, versionInfo, javaArgList);
 
-        javaArgList.addAll(Arrays.asList(getMinecraftJVMArgs(versionId, gamedir)));
+        List<String> minecraftJvmArgs = new ArrayList<>(
+                Arrays.asList(getMinecraftJVMArgs(versionId, gamedir)));
+        if (useAndroidNarratorAdapter) {
+            minecraftJvmArgs = stripMojangTextToSpeechFromJvmArgs(minecraftJvmArgs);
+        }
+        javaArgList.addAll(minecraftJvmArgs);
         if (!supportsGlobalUrlAgents(versionInfo)) {
             javaArgList.removeIf(argument -> argument.startsWith("-javaagent:")
                     && argument.contains("arc_dns_injector"));
         }
+        String lwjglClassPath = getLWJGL3ClassPath(
+                activity, launchClassPath, useAndroidNarratorAdapter);
+        // Resolving the classpath also selects the exact bundled native directory.
         addNativeLibraryPathOverrides(javaArgList, versionId);
         javaArgList.add("-cp");
         if (launchClassPath.contains("bta-client-")){ // BTADownloadTask.BASE_JSON sets this. Jank.
             // BTA for some reason needs this to be last or else it uses the wrong lwjgl
-            javaArgList.add(launchClassPath + ":" + getLWJGL3ClassPath(launchClassPath));
+            javaArgList.add(launchClassPath + ":" + lwjglClassPath);
         // Legacy Fabric needs this to be first or else it uses the wrong lwjgl
-        } else javaArgList.add(getLWJGL3ClassPath(launchClassPath) + ":" + launchClassPath);
+        } else javaArgList.add(lwjglClassPath + ":" + launchClassPath);
 
         // Forge 1.6.4 crash mitigation
         // https://github.com/MinecraftForge/FML/blob/f1b3381e61fac1a0ae90f521223c6bc613eb4888/common/cpw/mods/fml/common/asm/FMLSanityChecker.java#L192-L208
@@ -1303,6 +1319,8 @@ public final class Tools {
             {"linux/x64/org/lwjgl/nanovg/liblwjgl_nanovg.so", "liblwjgl_nanovg.so"},
             {"linux/x64/org/lwjgl/tinyfd/liblwjgl_tinyfd.so", "liblwjgl_tinyfd.so"},
             {"linux/x64/org/lwjgl/openal/libopenal.so",        "libopenal.so"},
+            {"linux/x64/org/lwjgl/shaderc/libshaderc.so",      "libshaderc.so"},
+            {"linux/x64/org/lwjgl/vma/liblwjgl_vma.so",        "liblwjgl_vma.so"},
         };
         File outJar = new File(lwjgl3Folder, "lwjgl-android-natives.jar");
         File versionedNativeDir = new File(DIR_DATA, "lwjgl-" + sLwjglVersion + "-natives/"
@@ -1372,9 +1390,11 @@ public final class Tools {
         }
     }
 
-    private static String getLWJGL3ClassPath(String launchClassPath) {
+    private static String getLWJGL3ClassPath(Activity activity,
+                                             String launchClassPath,
+                                             boolean useAndroidNarratorAdapter) {
         StringBuilder libStr = new StringBuilder();
-        String internalLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
+        String internalLwjglVersion = getInternalLwjglVersion(iLwjglVersion);
         sLwjglVersion = internalLwjglVersion;
         lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion,
                 archAsStringAndroid(getDeviceArchitecture()));
@@ -1384,8 +1404,16 @@ public final class Tools {
         appendClasspathFile(libStr, new File(lwjgl3Folder, "lwjgl.jar"));
         appendClasspathFile(libStr, new File(lwjgl3Folder,
                 "lwjgl-" + internalLwjglVersion + "-merged-modules.jar"));
+        File lwjglSdl = new File(lwjgl3Folder, "lwjgl-sdl.jar");
+        if (iLwjglVersion >= 341 && !lwjglSdl.isFile()) {
+            throw new IllegalStateException("Required LWJGL SDL module is missing: " + lwjglSdl);
+        }
+        if (iLwjglVersion >= 341) appendClasspathFile(libStr, lwjglSdl);
         appendClasspathFile(libStr, new File(lwjgl3Folder, "lwjgl-android-natives.jar"));
-        appendClasspathFile(libStr, new File(Tools.DIR_GAME_HOME, "lwjgl3/android-text2speech-stub.jar"));
+        if (useAndroidNarratorAdapter) {
+            appendClasspathFile(libStr,
+                    new File(Tools.DIR_GAME_HOME, "lwjgl3/android-text2speech-stub.jar"));
+        }
 
         File[] lwjgl3Files = lwjgl3Folder.listFiles();
         if (lwjgl3Files != null) {
@@ -1394,18 +1422,99 @@ public final class Tools {
                 if (fileName.endsWith(".jar")
                         && !fileName.equals("lwjgl.jar")
                         && !fileName.equals("lwjgl-" + internalLwjglVersion + "-merged-modules.jar")
+                        && !fileName.equals("lwjgl-sdl.jar")
                         && !fileName.equals("lwjgl-android-natives.jar")
                         && !fileName.endsWith("lwjglx.jar")) {
                     appendClasspathFile(libStr, file);
                 }
             }
         }
-        if (iLwjglVersion <= 299) {
-            appendClasspathFile(libStr, new File(lwjgl3Folder, "lwjgl-lwjglx.jar"));
+        if (iLwjglVersion <= 299 || requiresLwjgl2Compatibility(launchClassPath)) {
+            File lwjgl2Compatibility = new File(lwjgl3Folder, "lwjgl-lwjglx.jar");
+            if (!lwjgl2Compatibility.isFile()) {
+                Logger.appendToLog("Info: Repairing the missing LWJGL 2 compatibility bridge");
+                AsyncAssetManager.unpackComponents(activity);
+            }
+            if (!lwjgl2Compatibility.isFile()) {
+                throw new IllegalStateException(
+                        "The LWJGL 2 compatibility bridge could not be installed: "
+                                + lwjgl2Compatibility);
+            }
+            appendClasspathFile(libStr, lwjgl2Compatibility);
         }
         // Remove the ':' at the end (guard against empty folder)
         if (libStr.length() > 0) libStr.setLength(libStr.length() - 1);
         return libStr.toString();
+    }
+
+    private static boolean requiresLwjgl2Compatibility(String launchClassPath) {
+        if (launchClassPath == null || launchClassPath.isEmpty()) return false;
+        for (String entry : launchClassPath.split(Pattern.quote(File.pathSeparator))) {
+            String normalized = entry.replace('\\', '/').toLowerCase(Locale.ROOT);
+            String name = new File(entry).getName().toLowerCase(Locale.ROOT);
+            if (normalized.contains("/org/lwjgl/lwjgl/")
+                    || name.matches("lwjgl-2(?:\\.[0-9]+)+\\.jar")) {
+                Logger.appendToLog("Info: LWJGL 2 compatibility API enabled for " + name);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static String stripMojangTextToSpeech(String classPath) {
+        if (classPath == null || classPath.isEmpty()) return classPath;
+        StringBuilder filtered = new StringBuilder();
+        for (String entry : classPath.split(Pattern.quote(File.pathSeparator))) {
+            String name = new File(entry).getName().toLowerCase(Locale.ROOT);
+            if (name.equals("text2speech.jar") || name.startsWith("text2speech-")) {
+                Logger.appendToLog("Info: Replaced desktop text2speech library with the Android narrator adapter: "
+                        + name);
+                continue;
+            }
+            if (filtered.length() > 0) filtered.append(File.pathSeparator);
+            filtered.append(entry);
+        }
+        return filtered.toString();
+    }
+
+    static List<String> stripMojangTextToSpeechFromJvmArgs(List<String> arguments) {
+        List<String> filtered = new ArrayList<>();
+        for (int i = 0; i < arguments.size(); i++) {
+            String argument = arguments.get(i);
+            if ("-p".equals(argument) || "--module-path".equals(argument)) {
+                if (i + 1 >= arguments.size()) {
+                    continue;
+                }
+                String modulePath = stripMojangTextToSpeech(arguments.get(++i));
+                if (!modulePath.isEmpty()) {
+                    filtered.add(argument);
+                    filtered.add(modulePath);
+                }
+                continue;
+            }
+            if (argument.startsWith("--module-path=")) {
+                String modulePath = stripMojangTextToSpeech(
+                        argument.substring("--module-path=".length()));
+                if (!modulePath.isEmpty()) {
+                    filtered.add("--module-path=" + modulePath);
+                }
+                continue;
+            }
+            if (isMojangTextToSpeechPath(argument)) {
+                Logger.appendToLog(
+                        "Info: Removed desktop text2speech JVM path: "
+                                + new File(argument).getName());
+                continue;
+            }
+            filtered.add(argument);
+        }
+        return filtered;
+    }
+
+    private static boolean isMojangTextToSpeechPath(String value) {
+        if (value == null || value.isEmpty()) return false;
+        String name = new File(value).getName().toLowerCase(Locale.ROOT);
+        return name.equals("text2speech.jar") || name.startsWith("text2speech-");
     }
 
     private static void appendClasspathFile(StringBuilder classPath, File file) {
@@ -1786,14 +1895,20 @@ public final class Tools {
             Log.w(APP_NAME, "Unable to determine LWJGL version from JSON, falling back to LWJGL 3.3.3");
             iLwjglVersion = 333;
         }
-        sLwjglVersion = iLwjglVersion >= 341 ? "3.4.1" : "3.3.3";
+        sLwjglVersion = getInternalLwjglVersion(iLwjglVersion);
         lwjglNativesDir = String.format("%s/lwjgl-%s-natives/%s", Tools.DIR_DATA, sLwjglVersion,
                 archAsStringAndroid(getDeviceArchitecture()));
         return libDir.toArray(new String[0]);
     }
 
+    private static String getInternalLwjglVersion(int version) {
+        if (version >= 342) return "3.4.2";
+        if (version >= 341) return "3.4.1";
+        return "3.3.3";
+    }
+
     private static void detectLwjglVersion(DependentLibrary libItem) {
-        if (libItem == null || libItem.name == null || (iLwjglVersion >= 200 && iLwjglVersion <= 999)) {
+        if (libItem == null || libItem.name == null) {
             return;
         }
         int versionOffset = 0;
@@ -1802,14 +1917,20 @@ public final class Tools {
         } else if (libItem.name.startsWith("org.lwjgl:lwjgl:")) {
             versionOffset = "org.lwjgl:lwjgl:".length();
         }
+        int detectedVersion = 0;
         while (versionOffset > 0 && versionOffset < libItem.name.length()) {
             char c = libItem.name.charAt(versionOffset);
             if (c >= '0' && c <= '9') {
-                iLwjglVersion = iLwjglVersion * 10 + (c - '0');
+                detectedVersion = detectedVersion * 10 + (c - '0');
             } else if (c != '.') {
                 break;
             }
             versionOffset++;
+        }
+        // Modern manifests may temporarily mix module revisions. Select the newest
+        // declared LWJGL revision so compatibility modules such as lwjgl-sdl are enabled.
+        if (detectedVersion >= 200 && detectedVersion <= 999) {
+            iLwjglVersion = Math.max(iLwjglVersion, detectedVersion);
         }
     }
 
