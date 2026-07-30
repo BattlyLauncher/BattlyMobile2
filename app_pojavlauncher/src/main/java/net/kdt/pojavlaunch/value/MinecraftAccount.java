@@ -64,6 +64,14 @@ public class MinecraftAccount {
     public boolean isDemo(){
         return username.startsWith("Demo.");
     }
+
+    /**
+     * Identifies the placeholder Microsoft profile created by older launcher versions when
+     * Minecraft: Java Edition ownership could not be verified.
+     */
+    public boolean isLegacyMicrosoftDemo() {
+        return isMicrosoft && isDemo() && isDefaultProfileId(profileId);
+    }
     
     public void updateSkinFace() {
         updateSkinFace(profileId);

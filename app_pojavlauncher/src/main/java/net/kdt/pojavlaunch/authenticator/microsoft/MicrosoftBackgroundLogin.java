@@ -114,7 +114,7 @@ public class MicrosoftBackgroundLogin {
 
     public String acquireAccessToken(boolean isRefresh, String authcode) throws IOException, JSONException {
         URL url = new URL(authTokenUrl);
-        Log.i("MicrosoftLogin", "isRefresh=" + isRefresh + ", authCode= "+authcode);
+        Log.i("MicrosoftLogin", "Requesting Microsoft access token; refresh=" + isRefresh);
 
         String formData = convertToFormData(
                 "client_id", "00000000402b5328",
@@ -123,8 +123,6 @@ public class MicrosoftBackgroundLogin {
                 "redirect_url", "https://login.live.com/oauth20_desktop.srf",
                 "scope", "service::user.auth.xboxlive.com::MBI_SSL"
         );
-
-        Log.i("MicroAuth", formData);
 
         //да пошла yf[eq1 она ваша джава 11
         HttpURLConnection conn = (HttpURLConnection)url.openConnection();
@@ -143,7 +141,7 @@ public class MicrosoftBackgroundLogin {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
             msRefreshToken = jo.getString("refresh_token");
             conn.disconnect();
-            Log.i("MicrosoftLogin","Acess Token = " + jo.getString("access_token"));
+            Log.i("MicrosoftLogin", "Microsoft access token acquired");
             return jo.getString("access_token");
             //acquireXBLToken(jo.getString("access_token"));
         }else{
@@ -174,7 +172,7 @@ public class MicrosoftBackgroundLogin {
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
             conn.disconnect();
-            Log.i("MicrosoftLogin","Xbl Token = "+jo.getString("Token"));
+            Log.i("MicrosoftLogin", "Xbox Live token acquired");
             return jo.getString("Token");
             //acquireXsts(jo.getString("Token"));
         }else{
@@ -195,10 +193,8 @@ public class MicrosoftBackgroundLogin {
         data.put("TokenType", "JWT");
 
         String req = data.toString();
-        Log.i("MicroAuth", req);
         HttpURLConnection conn = (HttpURLConnection)url.openConnection();
         setCommonProperties(conn, req);
-        Log.i("MicroAuth", conn.getRequestMethod());
         conn.connect();
 
         try(OutputStream wr = conn.getOutputStream()) {
@@ -210,7 +206,7 @@ public class MicrosoftBackgroundLogin {
             String uhs = jo.getJSONObject("DisplayClaims").getJSONArray("xui").getJSONObject(0).getString("uhs");
             String token = jo.getString("Token");
             conn.disconnect();
-            Log.i("MicrosoftLogin","Xbl Xsts = " + token + "; Uhs = " + uhs);
+            Log.i("MicrosoftLogin", "Xbox security token acquired");
             return new String[]{uhs, token};
             //acquireMinecraftToken(uhs,jo.getString("Token"));
         }else if(conn.getResponseCode() == 401) {
@@ -246,7 +242,7 @@ public class MicrosoftBackgroundLogin {
             expiresAt = System.currentTimeMillis() + 86400000;
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
             conn.disconnect();
-            Log.i("MicrosoftLogin","MC token: "+jo.getString("access_token"));
+            Log.i("MicrosoftLogin", "Minecraft services token acquired");
             mcToken = jo.getString("access_token");
             //checkMcProfile(jo.getString("access_token"));
             return jo.getString("access_token");
@@ -278,10 +274,10 @@ public class MicrosoftBackgroundLogin {
         conn.setUseCaches(false);
         conn.connect();
 
-        if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
+        int responseCode = conn.getResponseCode();
+        if(responseCode >= 200 && responseCode < 300) {
             String s= Tools.read(conn.getInputStream());
             conn.disconnect();
-            Log.i("MicrosoftLogin","profile:" + s);
             JSONObject jsonObject = new JSONObject(s);
             String name = (String) jsonObject.get("name");
             String uuid = (String) jsonObject.get("id");
@@ -293,13 +289,13 @@ public class MicrosoftBackgroundLogin {
             Log.i("MicrosoftLogin","Uuid Minecraft = " + uuidDashes);
             mcName=name;
             mcUuid=uuidDashes;
-        }else{
-            Log.i("MicrosoftLogin","It seems that this Microsoft Account does not own the game.");
+        } else if (responseCode == HttpURLConnection.HTTP_NOT_FOUND) {
+            Log.i("MicrosoftLogin", "Microsoft account has no Minecraft Java profile");
             doesOwnGame = false;
-            mcName = "Demo.Player";
-            mcUuid = "00000000-0000-0000-0000-000000000000";
-            //throw new PresentedException(new RuntimeException(conn.getResponseMessage()), R.string.minecraft_not_owned);
-            //throwResponseError(conn);
+            conn.disconnect();
+            throw new PresentedException(R.string.microsoft_game_required_use_battly);
+        } else {
+            throw getResponseThrowable(conn);
         }
     }
 

@@ -135,6 +135,26 @@
     <string name="log_viewer_latest_crash">Ultimo crash</string>
     <string name="log_viewer_installer_log">Log del instalador</string>
     <string name="log_viewer_log_file">Archivo log</string>
+    <string name="log_viewer_search">Buscar en este log...</string>
+    <string name="log_viewer_live_off">Directo: no</string>
+    <string name="log_viewer_live_on">Directo: sí</string>
+    <string name="log_viewer_filter_all">Todo</string>
+    <string name="log_viewer_filter_errors">Errores</string>
+    <string name="log_viewer_filter_warnings">Avisos</string>
+    <string name="log_viewer_lines">%1$d líneas</string>
+    <string name="log_viewer_warnings">%1$d avisos</string>
+    <string name="log_viewer_errors">%1$d errores</string>
+    <string name="log_viewer_no_matches">No hay líneas que coincidan con la búsqueda y el filtro.</string>
+    <string name="log_viewer_truncated">Se han ocultado %1$d líneas antiguas para mantener Battly fluido.</string>
+    <string name="log_live_title">Consola en directo</string>
+    <string name="log_live_subtitle">Salida de Minecraft en tiempo real</string>
+    <string name="log_live_search">Buscar en la salida actual...</string>
+    <string name="log_live_pause">Pausar</string>
+    <string name="log_live_resume">Continuar</string>
+    <string name="log_live_follow">Seguir</string>
+    <string name="log_live_copy">Copiar visible</string>
+    <string name="log_live_copied">Salida visible de la consola copiada.</string>
+    <string name="log_live_clear">Limpiar</string>
     <string name="log_viewer_meta">%1$s\n%2$d KB · %3$s</string>
     <!-- Vanilla installer strings -->
     <string name="vanilla_install_version_label">Versión de Minecraft</string>
@@ -376,6 +396,7 @@
     <string name="xerr_adult_verification">Un adulto debe verificar tu cuenta.</string>
     <string name="xerr_child">Su cuenta es una cuenta de menor y necesita ser añadida a una Familia para poder iniciar sesión.</string>
     <string name="minecraft_not_owned">Parece que esta cuenta no tiene un perfil Minecraft. Si tienes el Xbox Game Pass, por favor inicia sesión en https://minecraft.net/ y configurarlo.</string>
+    <string name="microsoft_game_required_use_battly">Esta cuenta de Microsoft no tiene Minecraft: Java Edition. El inicio de sesión con Microsoft es solo para quienes han comprado el juego. Para jugar sin una licencia de Microsoft, inicia sesión con una cuenta de Battly.</string>
     <string name="xerr_not_available">Xbox Live no está disponible en su país</string>
     <string name="preference_enable_gyro_title">Activar controles de giroscopio</string>
     <string name="preference_enable_gyro_description">Activar esto te permitirá mover la cámara al girar tu teléfono.</string>

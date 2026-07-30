@@ -302,8 +302,20 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
             mAccountList.add(getContext().getString(R.string.main_add_account));
             File accountFolder = new File(Tools.DIR_ACCOUNT_NEW);
             if(accountFolder.exists()){
-                for (String fileName : accountFolder.list()) {
-                    mAccountList.add(fileName.substring(0, fileName.length() - 5));
+                String[] accountFiles = accountFolder.list((dir, name) -> name.endsWith(".json"));
+                if (accountFiles != null) {
+                    for (String fileName : accountFiles) {
+                        String accountName = fileName.substring(0, fileName.length() - 5);
+                        MinecraftAccount account = MinecraftAccount.load(accountName);
+                        if (account != null && account.isLegacyMicrosoftDemo()) {
+                            File legacyAccount = new File(accountFolder, fileName);
+                            if (!legacyAccount.delete()) {
+                                Log.w("McAccountSpinner", "Could not remove legacy Microsoft demo profile");
+                            }
+                            continue;
+                        }
+                        mAccountList.add(accountName);
+                    }
                 }
             }
         }
