@@ -12,7 +12,6 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
-import androidx.collection.ArrayMap;
 import androidx.constraintlayout.widget.ConstraintLayout;
 
 import net.kdt.pojavlaunch.R;
@@ -154,13 +153,14 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
 
     class LayoutProgressListener implements ProgressListener {
         final String progressKey;
-        final TextProgressBar textView;
+        final BattlyProgressTaskView taskView;
         final LinearLayout.LayoutParams params;
         public LayoutProgressListener(String progressKey) {
             this.progressKey = progressKey;
-            textView = new TextProgressBar(getContext());
-            textView.setTextPadding(getContext().getResources().getDimensionPixelOffset(R.dimen._12sdp));
-            params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, getResources().getDimensionPixelOffset(R.dimen._36sdp));
+            taskView = new BattlyProgressTaskView(getContext());
+            taskView.setTaskIcon(iconForProgress(progressKey));
+            taskView.update(-1, getContext().getString(R.string.global_waiting));
+            params = new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.WRAP_CONTENT);
             params.bottomMargin = getResources().getDimensionPixelOffset(R.dimen._8sdp);
             ProgressKeeper.addListener(progressKey, this);
         }
@@ -169,8 +169,8 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
             post(()-> {
                 if (isProgressMuted(progressKey)) return;
                 Log.i("ProgressLayout", "onProgressStarted");
-                if (textView.getParent() == null) {
-                    mLinearLayout.addView(textView, params);
+                if (taskView.getParent() == null) {
+                    mLinearLayout.addView(taskView, params);
                 }
             });
         }
@@ -179,18 +179,19 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         public void onProgressUpdated(int progress, int resid, Object... va) {
             post(()-> {
                 if (isProgressMuted(progressKey)) {
-                    if (textView.getParent() != null) {
-                        mLinearLayout.removeView(textView);
+                    if (taskView.getParent() != null) {
+                        mLinearLayout.removeView(taskView);
                     }
                     return;
                 }
-                if (textView.getParent() == null) {
-                    mLinearLayout.addView(textView, params);
+                if (taskView.getParent() == null) {
+                    mLinearLayout.addView(taskView, params);
                 }
-                textView.setProgress(progress);
-                if(resid != -1) textView.setText(formatProgressText(resid, va));
-                else if(va != null && va.length > 0 && va[0] != null) textView.setText(String.valueOf(va[0]));
-                else textView.setText("");
+                String status;
+                if(resid != -1) status = formatProgressText(resid, va);
+                else if(va != null && va.length > 0 && va[0] != null) status = String.valueOf(va[0]);
+                else status = getContext().getString(R.string.global_waiting);
+                taskView.update(progress, status);
             });
         }
 
@@ -206,10 +207,20 @@ public class ProgressLayout extends ConstraintLayout implements View.OnClickList
         @Override
         public void onProgressEnded() {
             post(()-> {
-                if (textView.getParent() != null) {
-                    mLinearLayout.removeView(textView);
+                if (taskView.getParent() != null) {
+                    mLinearLayout.removeView(taskView);
                 }
             });
         }
+    }
+
+    private static int iconForProgress(String progressKey) {
+        if (UNPACK_RUNTIME.equals(progressKey)) {
+            return R.drawable.ic_setting_java_runtime;
+        }
+        if (AUTHENTICATE_MICROSOFT.equals(progressKey)) {
+            return R.drawable.ic_ms_logo;
+        }
+        return R.drawable.ic_menu_install_jar;
     }
 }

@@ -11,13 +11,13 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Button;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.annotation.NonNull;
 
+import com.kdt.mcgui.BattlyProgressTaskView;
 import com.kdt.mcgui.ProgressLayout;
 import com.google.android.gms.ads.AdListener;
 import com.google.android.gms.ads.AdLoader;
@@ -37,8 +37,7 @@ import java.util.concurrent.CountDownLatch;
 public final class InstallProgressDialogController {
     private final Activity mActivity;
     private final AlertDialog mDialog;
-    private final ProgressBar mProgressBar;
-    private final TextView mStatusText;
+    private final BattlyProgressTaskView mTaskView;
     private final ProgressListener mListener;
     private NativeAd mNativeAd;
 
@@ -73,8 +72,8 @@ public final class InstallProgressDialogController {
 
         LinearLayout root = new LinearLayout(activity);
         root.setOrientation(LinearLayout.VERTICAL);
-        root.setPadding(dp(24), dp(22), dp(24), dp(22));
-        root.setBackground(makeRound(28, 0xF0182A36, 0x558DEEDC));
+        root.setPadding(dp(18), dp(18), dp(18), dp(18));
+        root.setBackground(makeRound(18, 0xF0182A36, 0x558DEEDC));
 
         LinearLayout header = new LinearLayout(activity);
         header.setGravity(Gravity.CENTER_VERTICAL);
@@ -84,9 +83,9 @@ public final class InstallProgressDialogController {
 
         ImageView logo = new ImageView(activity);
         logo.setImageResource(R.drawable.logo);
-        logo.setPadding(dp(10), dp(10), dp(10), dp(10));
-        logo.setBackground(makeRound(18, 0x2637E9C5, 0x338DEEDC));
-        header.addView(logo, new LinearLayout.LayoutParams(dp(54), dp(54)));
+        logo.setPadding(dp(8), dp(8), dp(8), dp(8));
+        logo.setBackground(makeRound(12, 0x2637E9C5, 0x338DEEDC));
+        header.addView(logo, new LinearLayout.LayoutParams(dp(44), dp(44)));
 
         LinearLayout titleBlock = new LinearLayout(activity);
         titleBlock.setOrientation(LinearLayout.VERTICAL);
@@ -95,20 +94,21 @@ public final class InstallProgressDialogController {
         titleBlockParams.setMargins(dp(14), 0, 0, 0);
         header.addView(titleBlock, titleBlockParams);
 
-        TextView title = text(activity.getString(R.string.battly_plus_install_block_title), 20, true, 0xFFFFFFFF);
+        TextView title = text(activity.getString(R.string.battly_plus_install_block_title), 18, true, 0xFFFFFFFF);
         titleBlock.addView(title);
 
         TextView desc = text(activity.getString(R.string.battly_plus_install_block_message), 13, false, 0xFFC7D4DF);
         desc.setLineSpacing(dp(2), 1f);
         titleBlock.addView(desc);
 
-        mProgressBar = new ProgressBar(activity, null, android.R.attr.progressBarStyleHorizontal);
-        mProgressBar.setMax(100);
-        mProgressBar.setIndeterminate(true);
-        LinearLayout.LayoutParams barParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT, dp(10));
-        barParams.setMargins(0, dp(20), 0, 0);
-        root.addView(mProgressBar, barParams);
+        mTaskView = new BattlyProgressTaskView(activity);
+        mTaskView.setTaskIcon(R.drawable.ic_menu_install_jar);
+        mTaskView.update(-1, activity.getString(R.string.global_waiting));
+        LinearLayout.LayoutParams taskParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        taskParams.setMargins(0, dp(16), 0, 0);
+        root.addView(mTaskView, taskParams);
 
         LinearLayout adContainer = new LinearLayout(activity);
         adContainer.setVisibility(android.view.View.GONE);
@@ -117,13 +117,6 @@ public final class InstallProgressDialogController {
                 ViewGroup.LayoutParams.WRAP_CONTENT);
         adParams.setMargins(0, dp(10), 0, 0);
         root.addView(adContainer, adParams);
-        mStatusText = text(activity.getString(R.string.global_waiting), 14, true, 0xFF8DEEDC);
-        LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
-                ViewGroup.LayoutParams.MATCH_PARENT,
-                ViewGroup.LayoutParams.WRAP_CONTENT);
-        statusParams.setMargins(0, dp(12), 0, 0);
-        root.addView(mStatusText, statusParams);
-
         mDialog = new AlertDialog.Builder(activity, R.style.BattlyDialog)
                 .setView(root)
                 .create();
@@ -279,12 +272,10 @@ public final class InstallProgressDialogController {
 
     private void update(int progress, String status) {
         Tools.runOnUiThread(() -> {
-            boolean determinate = progress >= 0;
-            mProgressBar.setIndeterminate(!determinate);
-            if (determinate) {
-                mProgressBar.setProgress(Math.min(100, Math.max(0, progress)));
-            }
-            mStatusText.setText(Tools.isValidString(status) ? status : mActivity.getString(R.string.global_waiting));
+            String visibleStatus = Tools.isValidString(status)
+                    ? status
+                    : mActivity.getString(R.string.global_waiting);
+            mTaskView.update(progress, visibleStatus);
         });
     }
 

@@ -12,10 +12,10 @@
         android:layout_height="wrap_content"
         android:background="@drawable/bg_battly_progress_panel"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="14dp"
-        android:paddingEnd="16dp"
-        android:paddingBottom="14dp"
+        android:paddingStart="12dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="12dp"
+        android:paddingBottom="10dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
@@ -27,24 +27,24 @@
             android:layout_height="wrap_content"
             android:background="@drawable/bg_battly_progress_summary"
             android:gravity="center_vertical"
-            android:minHeight="58dp"
+            android:minHeight="52dp"
             android:orientation="horizontal"
-            android:paddingStart="14dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="10dp">
+            android:paddingStart="12dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="12dp"
+            android:paddingBottom="8dp">
 
             <ProgressBar
                 android:id="@+id/progress_generic_progressbar"
                 style="?android:attr/progressBarStyleSmall"
-                android:layout_width="28dp"
-                android:layout_height="28dp"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
                 android:indeterminateTint="#8FD4B3" />
 
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="10dp"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -54,7 +54,7 @@
                     android:layout_height="wrap_content"
                     android:text="@string/progresslayout_title"
                     android:textColor="#FFFFFFFF"
-                    android:textSize="14sp"
+                    android:textSize="13sp"
                     android:textStyle="bold" />
 
                 <TextView
@@ -63,7 +63,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginTop="2dp"
                     android:textColor="#C7D4DF"
-                    android:textSize="12sp"
+                    android:textSize="11sp"
                     tools:text="5 tasks in progress" />
             </LinearLayout>
 
@@ -73,11 +73,11 @@
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_battly_progress_badge"
                 android:gravity="center"
-                android:minWidth="34dp"
-                android:paddingStart="8dp"
-                android:paddingTop="5dp"
-                android:paddingEnd="8dp"
-                android:paddingBottom="5dp"
+                android:minWidth="30dp"
+                android:paddingStart="7dp"
+                android:paddingTop="4dp"
+                android:paddingEnd="7dp"
+                android:paddingBottom="4dp"
                 android:textColor="#FFFFFFFF"
                 android:textSize="12sp"
                 android:textStyle="bold"
@@ -85,9 +85,9 @@
 
             <ImageView
                 android:id="@+id/progress_flip_arrow"
-                android:layout_width="18dp"
-                android:layout_height="18dp"
-                android:layout_marginStart="12dp"
+                android:layout_width="16dp"
+                android:layout_height="16dp"
+                android:layout_marginStart="10dp"
                 android:src="@drawable/ic_battly_chevron"
                 app:tint="#E7F5FF" />
         </LinearLayout>
@@ -96,7 +96,7 @@
             android:id="@+id/progress_linear_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
+            android:layout_marginTop="8dp"
             android:orientation="vertical"
             android:visibility="gone"
             tools:visibility="visible" />
