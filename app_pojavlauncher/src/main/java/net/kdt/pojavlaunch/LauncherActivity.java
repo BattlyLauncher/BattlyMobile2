@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.graphics.SurfaceTexture;
+import android.media.MediaPlayer;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -16,11 +18,12 @@ import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
 import android.view.View;
+import android.view.Surface;
+import android.view.TextureView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.VideoView;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
@@ -53,6 +56,7 @@ import net.kdt.pojavlaunch.modloaders.modpacks.api.ModLoader;
 import net.kdt.pojavlaunch.modloaders.modpacks.api.ModpackInstaller;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
 import net.kdt.pojavlaunch.modloaders.modpacks.api.NotificationDownloadListener;
+import net.kdt.pojavlaunch.modloaders.modpacks.api.InstallProgressDialogController;
 import net.kdt.pojavlaunch.modloaders.SmartJarInstaller;
 import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.IconCacheJanitor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
@@ -110,6 +114,12 @@ public class LauncherActivity extends BaseActivity {
     public final ActivityResultLauncher<Object> modpackImportLauncher = registerForActivityResult(
             new OpenDocumentWithExtension(new String[] { "zip", "mrpack" }), (data) -> {
                 if (data != null) {
+                    boolean plusQueue = BattlyPlusCloud.canUsePremiumQueue(this);
+                    InstallProgressDialogController blocker = plusQueue
+                            ? null
+                            : InstallProgressDialogController.show(this, true);
+                    ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0,
+                            R.string.modpack_import_preparing);
                     PojavApplication.sExecutorService.execute(() -> {
                         try {
                             ModLoader loaderInfo = new CommonApi(getString(R.string.curseforge_api_key))
@@ -117,6 +127,10 @@ public class LauncherActivity extends BaseActivity {
                             if (loaderInfo == null)
                                 return;
                             loaderInfo.getDownloadTask(this, new NotificationDownloadListener(this, loaderInfo)).run();
+                            runOnUiThread(() -> {
+                                refreshHomeProfileUi();
+                                Toast.makeText(this, R.string.modpack_import_created, Toast.LENGTH_LONG).show();
+                            });
                         } catch (IOException e) {
                             Tools.showErrorRemote(this, R.string.modpack_install_download_failed, e);
                         } catch (IllegalArgumentException e) {
@@ -124,6 +138,11 @@ public class LauncherActivity extends BaseActivity {
                         } catch (NoSuchAlgorithmException e) {
                             // Should literally never happen because SHA-1 is required Java spec
                             throw new RuntimeException(e);
+                        } finally {
+                            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
+                            if (blocker != null) {
+                                blocker.dismiss();
+                            }
                         }
                     });
                 }
@@ -133,7 +152,8 @@ public class LauncherActivity extends BaseActivity {
     private FragmentContainerView mFragmentView;
     private ImageView mLauncherBackground;
     private ImageView mLauncherBackgroundNext;
-    private VideoView mLauncherBackgroundVideo;
+    private TextureView mLauncherBackgroundVideo;
+    private MediaPlayer mLauncherBackgroundPlayer;
     private ImageButton mSettingsButton;
     private ProgressLayout mProgressLayout;
     private View mLauncherHeader;
@@ -919,29 +939,86 @@ public class LauncherActivity extends BaseActivity {
         if (mLauncherBackgroundVideo == null) {
             return;
         }
-        mLauncherBackgroundVideo.setVideoURI(BattlyBackgrounds.getCustomBackgroundUri(this));
-        mLauncherBackgroundVideo.setOnPreparedListener(mp -> {
-            mp.setLooping(true);
-            mp.setVolume(0f, 0f);
-            mLauncherBackgroundVideo.setVisibility(View.VISIBLE);
-            mLauncherBackgroundVideo.start();
+        mLauncherBackgroundVideo.setVisibility(View.VISIBLE);
+        mLauncherBackgroundVideo.setSurfaceTextureListener(new TextureView.SurfaceTextureListener() {
+            @Override
+            public void onSurfaceTextureAvailable(@NonNull SurfaceTexture surfaceTexture,
+                                                  int width,
+                                                  int height) {
+                prepareVideoBackground(surfaceTexture);
+            }
+
+            @Override
+            public void onSurfaceTextureSizeChanged(@NonNull SurfaceTexture surfaceTexture,
+                                                    int width,
+                                                    int height) {
+            }
+
+            @Override
+            public boolean onSurfaceTextureDestroyed(@NonNull SurfaceTexture surfaceTexture) {
+                releaseVideoBackgroundPlayer();
+                return true;
+            }
+
+            @Override
+            public void onSurfaceTextureUpdated(@NonNull SurfaceTexture surfaceTexture) {
+            }
         });
-        mLauncherBackgroundVideo.setOnErrorListener((mp, what, extra) -> {
-            stopVideoBackground();
+        if (mLauncherBackgroundVideo.isAvailable()) {
+            prepareVideoBackground(mLauncherBackgroundVideo.getSurfaceTexture());
+        }
+    }
+
+    private void prepareVideoBackground(@Nullable SurfaceTexture surfaceTexture) {
+        if (surfaceTexture == null || isFinishing()) {
+            return;
+        }
+        releaseVideoBackgroundPlayer();
+        Surface surface = new Surface(surfaceTexture);
+        MediaPlayer player = new MediaPlayer();
+        mLauncherBackgroundPlayer = player;
+        try {
+            player.setSurface(surface);
+            player.setDataSource(this, BattlyBackgrounds.getCustomBackgroundUri(this));
+            player.setLooping(true);
+            player.setVolume(0f, 0f);
+            player.setOnPreparedListener(prepared -> prepared.start());
+            player.setOnErrorListener((failed, what, extra) -> {
+                stopVideoBackground();
+                BattlyBackgrounds.applySelectedBackground(this, mLauncherBackground);
+                return true;
+            });
+            player.prepareAsync();
+        } catch (Exception exception) {
+            releaseVideoBackgroundPlayer();
+            mLauncherBackgroundVideo.setVisibility(View.GONE);
             BattlyBackgrounds.applySelectedBackground(this, mLauncherBackground);
-            return true;
-        });
+            Log.e("BattlyBackground", "Unable to play selected video background", exception);
+        } finally {
+            surface.release();
+        }
     }
 
     private void stopVideoBackground() {
         if (mLauncherBackgroundVideo == null) {
             return;
         }
+        releaseVideoBackgroundPlayer();
+        mLauncherBackgroundVideo.setSurfaceTextureListener(null);
+        mLauncherBackgroundVideo.setVisibility(View.GONE);
+    }
+
+    private void releaseVideoBackgroundPlayer() {
+        MediaPlayer player = mLauncherBackgroundPlayer;
+        mLauncherBackgroundPlayer = null;
+        if (player == null) {
+            return;
+        }
         try {
-            mLauncherBackgroundVideo.stopPlayback();
+            player.stop();
         } catch (Throwable ignored) {
         }
-        mLauncherBackgroundVideo.setVisibility(View.GONE);
+        player.release();
     }
 
     private void startAnimatedBackground() {

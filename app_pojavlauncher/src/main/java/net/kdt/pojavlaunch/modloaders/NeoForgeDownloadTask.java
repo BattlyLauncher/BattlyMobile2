@@ -56,9 +56,7 @@ public class NeoForgeDownloadTask implements Runnable, Tools.DownloaderFeedback 
     private void downloadNeoForge() {
         ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.forge_dl_progress, mLoaderVersion);
         try {
-            File destinationFile = new File(Tools.DIR_CACHE, "neoforge-installer.jar");
-            byte[] buffer = new byte[8192];
-            DownloadUtils.downloadFileMonitored(mDownloadUrl, destinationFile, buffer, this);
+            File destinationFile = downloadVerifiedInstaller();
             ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
             NeoForgeInstaller.install(mContext, destinationFile, mLoaderVersion, mCreateProfile);
             mListener.onDownloadFinished(null);
@@ -67,6 +65,31 @@ public class NeoForgeDownloadTask implements Runnable, Tools.DownloaderFeedback 
         } catch (IOException e) {
             mListener.onDownloadError(e);
         }
+    }
+
+    private File downloadVerifiedInstaller() throws IOException {
+        String safeVersion = mLoaderVersion.replaceAll("[^a-zA-Z0-9._-]", "_");
+        File destinationFile = new File(Tools.DIR_CACHE,
+                "neoforge-" + safeVersion + "-installer.jar");
+        IOException lastError = null;
+        for (int attempt = 1; attempt <= 3; attempt++) {
+            if (destinationFile.exists() && !destinationFile.delete()) {
+                throw new IOException("Unable to clear the previous NeoForge installer download");
+            }
+            try {
+                byte[] buffer = new byte[65535];
+                DownloadUtils.downloadFileMonitored(mDownloadUrl, destinationFile, buffer, this);
+                ModloaderInstallUtils.validateInstallerJar(destinationFile);
+                return destinationFile;
+            } catch (IOException exception) {
+                lastError = exception;
+                if (destinationFile.exists() && !destinationFile.delete()) {
+                    throw new IOException("NeoForge installer is corrupt and could not be removed",
+                            exception);
+                }
+            }
+        }
+        throw new IOException("NeoForge installer download was corrupt after 3 attempts", lastError);
     }
 
     public boolean determineDownloadUrl() {

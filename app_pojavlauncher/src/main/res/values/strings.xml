@@ -920,6 +920,9 @@
     <string name="sodium_launch_anyway">Launch anyway</string>
     <string name="not_modpack_file">Not a modpack file!</string>
     <string name="create_modpack_import_archive">Import ZIP or MRPACK</string>
+    <string name="modpack_import_preparing">Preparing the modpack and creating its instance…</string>
+    <string name="modpack_import_finalizing">Finishing the new instance…</string>
+    <string name="modpack_import_created">Instance created. It is now available in your version list.</string>
     <string name="profile_custom_path">Custom path</string>
     <string name="preference_disable_autojre_select">Disable automatic JRE selection</string>
     <string name="content_install_select_profile_title">Select target instance</string>

@@ -217,9 +217,14 @@ public class JREUtils {
         envMap.put("VTEST_SOCKET_NAME", new File(Tools.DIR_CACHE, ".virgl_test").getAbsolutePath());
         if (Tools.iLwjglVersion >= 341) {
             // Minecraft 26.3+ uses LWJGL's SDL3 window backend. SDL receives Android
-            // touch events directly, while Minecraft menus still consume mouse input.
-            envMap.put("SDL_TOUCH_MOUSE_EVENTS", "1");
+            // touch events directly. Do not let SDL synthesize mouse clicks from
+            // camera swipes; Battly's control layer owns mouse button gestures.
+            envMap.put("SDL_TOUCH_MOUSE_EVENTS", "0");
             envMap.put("SDL_MOUSE_TOUCH_EVENTS", "0");
+            // MobileGlues already presents Minecraft's SDR output in sRGB space.
+            // Enabling SDL's framebuffer conversion applies gamma a second time
+            // and makes the image look washed out and excessively bright.
+            envMap.put("SDL_OPENGL_FORCE_SRGB_FRAMEBUFFER", "0");
         }
 
         envMap.put("LD_LIBRARY_PATH", LD_LIBRARY_PATH);

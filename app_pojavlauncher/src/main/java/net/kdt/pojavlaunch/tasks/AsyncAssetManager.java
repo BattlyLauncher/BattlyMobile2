@@ -115,7 +115,7 @@ public class AsyncAssetManager {
         });
     }
 
-    private static void unpackLwjglNatives(Context ctx) throws IOException {
+    public static synchronized void unpackLwjglNatives(Context ctx) throws IOException {
         AssetManager am = ctx.getAssets();
         String sArch = archAsStringAndroid(getDeviceArchitecture());
         File obsolete333Dir = new File(Tools.DIR_DATA, "lwjgl-3.3.3-natives/" + sArch);

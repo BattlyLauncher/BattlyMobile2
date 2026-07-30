@@ -43,7 +43,7 @@ public final class MinecraftCompatibilityEngine {
         String renderer = requestedRenderer;
         boolean userRendererValid = Tools.isValidString(renderer)
                 && Tools.checkRendererCompatible(context, renderer)
-                && !(family.requiresDesktopGl && isLegacyGlRenderer(renderer));
+                && !(family.requiresModernRenderer && isLegacyGlRenderer(renderer));
         if (!userRendererValid) {
             if (Tools.isValidString(renderer)) {
                 issues.add("Renderer unavailable on this device: " + renderer);
@@ -55,7 +55,7 @@ public final class MinecraftCompatibilityEngine {
         if (runtime == null) {
             issues.add("Java " + requiredJava + " is not installed");
         }
-        if (family.modern && isLegacyGlRenderer(renderer)) {
+        if (family.requiresModernRenderer && isLegacyGlRenderer(renderer)) {
             issues.add("GL4ES is a compatibility fallback for this Minecraft generation");
         }
         return new Report(effectiveVersion, family, requiredJava, lwjgl,
@@ -94,7 +94,7 @@ public final class MinecraftCompatibilityEngine {
         }
         if (family.modern) {
             for (String renderer : compatible) {
-                if (!"opengles2".equals(renderer)) {
+                if (!isLegacyGlRenderer(renderer)) {
                     return renderer;
                 }
             }
@@ -206,9 +206,11 @@ public final class MinecraftCompatibilityEngine {
         public final boolean snapshot;
         public final boolean modern;
         public final boolean requiresDesktopGl;
+        public final boolean requiresModernRenderer;
 
         private VersionFamily(int major, int minor, int patch, int yearVersion,
-                              boolean snapshot, boolean modern, boolean requiresDesktopGl) {
+                              boolean snapshot, boolean modern, boolean requiresDesktopGl,
+                              boolean requiresModernRenderer) {
             this.major = major;
             this.minor = minor;
             this.patch = patch;
@@ -216,21 +218,28 @@ public final class MinecraftCompatibilityEngine {
             this.snapshot = snapshot;
             this.modern = modern;
             this.requiresDesktopGl = requiresDesktopGl;
+            this.requiresModernRenderer = requiresModernRenderer;
         }
 
         static VersionFamily parse(String versionId, String inheritsFrom) {
             String combined = (versionId + " " + (inheritsFrom == null ? "" : inheritsFrom))
                     .toLowerCase(Locale.ROOT);
-            Matcher matcher = RELEASE.matcher(combined);
             int major = 0;
             int minor = 0;
             int patch = 0;
             int year = 0;
-            if (matcher.find()) {
-                major = parseLeadingInt(matcher.group(1));
-                minor = parseLeadingInt(matcher.group(2));
-                patch = matcher.group(3) == null ? 0 : parseLeadingInt(matcher.group(3));
-                if (major >= 20) year = major;
+
+            int[] parsedVersion = parseMinecraftRelease(inheritsFrom);
+            if (parsedVersion == null) {
+                parsedVersion = parseMinecraftRelease(versionId);
+            }
+            if (parsedVersion != null) {
+                major = parsedVersion[0];
+                minor = parsedVersion[1];
+                patch = parsedVersion[2];
+                if (major >= 20) {
+                    year = major;
+                }
             }
             Matcher week = Pattern.compile("(?:^|[^0-9])(\\d{2})w\\d+").matcher(combined);
             if (week.find()) year = parseLeadingInt(week.group(1));
@@ -238,7 +247,37 @@ public final class MinecraftCompatibilityEngine {
                     || combined.contains("pre") || combined.contains("rc");
             boolean modern = year >= 20 || major == 1 && minor >= 17;
             boolean desktop = year >= 26 || major == 1 && minor >= 21 && snapshot;
-            return new VersionFamily(major, minor, patch, year, snapshot, modern, desktop);
+            boolean modernRenderer = year >= 26
+                    || major == 1 && (minor > 21 || minor == 21 && patch >= 5);
+            return new VersionFamily(major, minor, patch, year, snapshot, modern, desktop,
+                    modernRenderer);
+        }
+
+        private static int[] parseMinecraftRelease(String value) {
+            if (value == null || value.trim().isEmpty()) {
+                return null;
+            }
+            Matcher matcher = RELEASE.matcher(value.toLowerCase(Locale.ROOT));
+            int[] yearVersion = null;
+            while (matcher.find()) {
+                int candidateMajor = parseLeadingInt(matcher.group(1));
+                int candidateMinor = parseLeadingInt(matcher.group(2));
+                int candidatePatch = matcher.group(3) == null
+                        ? 0
+                        : parseLeadingInt(matcher.group(3));
+
+                // Conventional Minecraft releases always start with 1. Prefer them over
+                // Forge/Fabric loader versions that can appear before or after the game version.
+                if (candidateMajor == 1) {
+                    return new int[]{candidateMajor, candidateMinor, candidatePatch};
+                }
+                // Mojang's new year-based releases use 20+ as their major. Keep the last
+                // candidate so fabric-loader-0.19.3-26.2 resolves to 26.2, not 0.19.3.
+                if (candidateMajor >= 20) {
+                    yearVersion = new int[]{candidateMajor, candidateMinor, candidatePatch};
+                }
+            }
+            return yearVersion;
         }
     }
 }

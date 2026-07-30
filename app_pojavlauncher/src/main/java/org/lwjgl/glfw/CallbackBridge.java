@@ -4,6 +4,8 @@ import net.kdt.pojavlaunch.*;
 import net.kdt.pojavlaunch.customcontrols.gamepad.direct.DirectGamepadEnableHandler;
 
 import android.content.*;
+import android.os.Handler;
+import android.os.Looper;
 import android.util.Log;
 import android.view.Choreographer;
 import android.view.KeyEvent;
@@ -24,11 +26,13 @@ import dalvik.annotation.optimization.CriticalNative;
 
 public class CallbackBridge {
     public static final Choreographer sChoreographer = Choreographer.getInstance();
+    private static final Handler sInputHandler = new Handler(Looper.getMainLooper());
     private static boolean isGrabbing = false;
     private static final ArrayList<GrabListener> grabListeners = new ArrayList<>();
     // Use a weak reference here to avoid possibly statically referencing a Context.
     private static @Nullable WeakReference<DirectGamepadEnableHandler> sDirectGamepadEnableHandler;
     private static boolean sSdlInputBridgeLogged;
+    private static int sSdlMouseButtonState;
     
     public static final int CLIPBOARD_COPY = 2000;
     public static final int CLIPBOARD_PASTE = 2001;
@@ -46,7 +50,9 @@ public class CallbackBridge {
 
     public static void putMouseEventWithCoords(int button, float x, float y) {
         putMouseEventWithCoords(button, true, x, y);
-        sChoreographer.postFrameCallbackDelayed(l -> putMouseEventWithCoords(button, false, x, y), 33);
+        // Menu transitions can pause Choreographer before its delayed frame callback
+        // executes. A main-loop task still runs and guarantees the matching release.
+        sInputHandler.postDelayed(() -> putMouseEventWithCoords(button, false, x, y), 33);
     }
     
     public static void putMouseEventWithCoords(int button, boolean isDown, float x, float y /* , int dz, long nanos */) {
@@ -58,18 +64,25 @@ public class CallbackBridge {
     public static void sendCursorPos(float x, float y) {
         mouseX = x;
         mouseY = y;
-        nativeSendCursorPos(mouseX, mouseY);
-        sendSdlMouse(0, MotionEvent.ACTION_HOVER_MOVE, mouseX, mouseY);
+        if (MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            sendSdlMouse(getSdlMouseButtonState(), MotionEvent.ACTION_MOVE, mouseX, mouseY);
+        } else {
+            nativeSendCursorPos(mouseX, mouseY);
+        }
     }
 
     public static void sendCursorDelta(float deltaX, float deltaY) {
-        mouseX += deltaX;
-        mouseY += deltaY;
-        nativeSendCursorPos(mouseX, mouseY);
-        // SDL's Android backend treats ACTION_MOVE with relative=true as captured
-        // pointer motion. ACTION_HOVER_MOVE is accepted for physical mice, but SDL3
-        // does not consistently feed it to Minecraft's grabbed cursor on touchscreens.
-        sendSdlMouse(0, MotionEvent.ACTION_MOVE, deltaX, deltaY, true);
+        if (MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            // SDL consumes captured pointer motion as deltas. Accumulating them into
+            // an absolute GLFW cursor caused the virtual cursor to drift and eventually
+            // stopped camera movement after interacting with a menu.
+            sendSdlMouse(getSdlMouseButtonState(),
+                    MotionEvent.ACTION_MOVE, deltaX, deltaY, true);
+        } else {
+            mouseX += deltaX;
+            mouseY += deltaY;
+            nativeSendCursorPos(mouseX, mouseY);
+        }
     }
 
     /**
@@ -84,15 +97,23 @@ public class CallbackBridge {
      * @param isDown If its being pressed down or not. 1 is true.
      */
     public static void sendKeycode(int keycode, char keychar, int scancode, int modifiers, boolean isDown) {
-        // TODO CHECK: This may cause input issue, not receive input!
-        if(keycode != 0)  nativeSendKey(keycode,scancode,isDown ? 1 : 0, modifiers);
         if (keycode != 0 && MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            // Battly control maps store GLFW keycodes, while SDL's Android backend
+            // consumes Android keycodes. Route the converted key only through SDL
+            // so overlay buttons such as ESC, TAB and inventory reach Minecraft.
             int androidKeycode = EfficientAndroidLWJGLKeycode.getAndroidKeycode(keycode);
             if (androidKeycode != KeyEvent.KEYCODE_UNKNOWN) {
                 logSdlInputBridge();
-                if (isDown) SDLActivity.onNativeKeyDown(androidKeycode);
-                else SDLActivity.onNativeKeyUp(androidKeycode);
+                if (isDown) {
+                    SDLActivity.onNativeKeyDown(androidKeycode);
+                } else {
+                    SDLActivity.onNativeKeyUp(androidKeycode);
+                }
+            } else {
+                Log.w("BattlyInput", "No Android mapping for GLFW keycode " + keycode);
             }
+        } else if (keycode != 0) {
+            nativeSendKey(keycode, scancode, isDown ? 1 : 0, modifiers);
         }
         // Only controlmaps goes through here, that means we need to block ISOControl or else
         // Minecraft tries to type :TAB: as a character in chat, fails, and then ignores the key,
@@ -138,9 +159,13 @@ public class CallbackBridge {
 
     public static void sendMouseKeycode(int button, int modifiers, boolean isDown) {
         // if (isGrabbing()) DEBUG_STRING.append("MouseGrabStrace: " + android.util.Log.getStackTraceString(new Throwable()) + "\n");
-        nativeSendMouseButton(button, isDown ? 1 : 0, modifiers);
-        sendSdlMouse(toAndroidMouseButton(button),
-                isDown ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP, mouseX, mouseY);
+        if (MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            int buttonState = updateSdlMouseButtonState(toAndroidMouseButton(button), isDown);
+            sendSdlMouse(buttonState,
+                    isDown ? MotionEvent.ACTION_DOWN : MotionEvent.ACTION_UP, mouseX, mouseY);
+        } else {
+            nativeSendMouseButton(button, isDown ? 1 : 0, modifiers);
+        }
     }
 
     public static void sendMouseKeycode(int keycode) {
@@ -149,8 +174,12 @@ public class CallbackBridge {
     }
     
     public static void sendScroll(double xoffset, double yoffset) {
-        nativeSendScroll(xoffset, yoffset);
-        sendSdlMouse(0, MotionEvent.ACTION_SCROLL, (float) xoffset, (float) yoffset);
+        if (MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            sendSdlMouse(getSdlMouseButtonState(),
+                    MotionEvent.ACTION_SCROLL, (float) xoffset, (float) yoffset);
+        } else {
+            nativeSendScroll(xoffset, yoffset);
+        }
     }
 
     private static int toAndroidMouseButton(int glfwButton) {
@@ -185,6 +214,28 @@ public class CallbackBridge {
         if (sSdlInputBridgeLogged) return;
         sSdlInputBridgeLogged = true;
         Log.i("BattlyInput", "Overlay controls are routed to the SDL window");
+    }
+
+    private static synchronized int updateSdlMouseButtonState(int button, boolean isDown) {
+        if (button == 0) return sSdlMouseButtonState;
+        if (isDown) sSdlMouseButtonState |= button;
+        else sSdlMouseButtonState &= ~button;
+        return sSdlMouseButtonState;
+    }
+
+    private static synchronized int getSdlMouseButtonState() {
+        return sSdlMouseButtonState;
+    }
+
+    public static void resetSdlInputState() {
+        int previousState;
+        synchronized (CallbackBridge.class) {
+            previousState = sSdlMouseButtonState;
+            sSdlMouseButtonState = 0;
+        }
+        if (previousState != 0 && MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            sendSdlMouse(0, MotionEvent.ACTION_UP, mouseX, mouseY);
+        }
     }
 
     public static void sendUpdateWindowSize(int w, int h) {
@@ -286,6 +337,9 @@ public class CallbackBridge {
     }
 
     private static void setGrabState(final boolean grabbing) {
+        if (isGrabbing != grabbing) {
+            resetSdlInputState();
+        }
         isGrabbing = grabbing;
         sChoreographer.postFrameCallbackDelayed((time) -> {
             // If the grab re-changed, skip notify process

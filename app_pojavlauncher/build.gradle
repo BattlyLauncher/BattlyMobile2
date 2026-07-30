@@ -184,6 +184,8 @@ android {
             resValue 'string', 'application_package', 'com.tecnobros.battlylauncher.debug'
             resValue 'string', 'storageProviderAuthorities', 'com.tecnobros.battlylauncher.scoped.gamefolder.debug'
             resValue 'string', 'shareProviderAuthority', 'com.tecnobros.battlylauncher.scoped.controlfolder.debug'
+            resValue 'string', 'admob_app_id', 'ca-app-pub-3940256099942544~3347511713'
+            resValue 'string', 'battly_modpack_native_ad_unit_id', 'ca-app-pub-3940256099942544/2247696110'
             ndk {
                 abiFilters 'arm64-v8a', 'armeabi-v7a', 'x86', 'x86_64'
             }
@@ -213,6 +215,8 @@ android {
             resValue 'string', 'application_package', 'com.tecnobros.battlylauncher'
             resValue 'string', 'shareProviderAuthority', 'com.tecnobros.battlylauncher.scoped.controlfolder'
             resValue 'string', 'battly_google_server_client_id', battlyGoogleReleaseClientId
+            resValue 'string', 'admob_app_id', 'ca-app-pub-2325315275982779~8627332387'
+            resValue 'string', 'battly_modpack_native_ad_unit_id', 'ca-app-pub-2325315275982779/1111917012'
         }
         gplay {
             initWith release
@@ -442,6 +446,7 @@ dependencies {
     implementation 'com.google.firebase:firebase-crashlytics'
     implementation 'com.google.firebase:firebase-messaging'
     implementation 'com.google.android.gms:play-services-auth:21.3.0'
+    implementation 'com.google.android.gms:play-services-ads:23.6.0'
     implementation 'com.github.bumptech.glide:glide:5.0.5'
     implementation 'androidx.profileinstaller:profileinstaller:1.4.1'
 }

@@ -82,7 +82,9 @@ public interface ModpackApi {
         // Doing this here since when starting installation, the progress does not start immediately
         // which may lead to two concurrent installations (very bad)
         boolean plusQueue = BattlyPlusCloud.canUsePremiumQueue(context);
-        InstallProgressDialogController blocker = showInstallGate(context, plusQueue);
+        boolean isModpack = modDetail.isModpack
+                || modDetail.contentType == SearchFilters.TYPE_MODPACK;
+        InstallProgressDialogController blocker = showInstallGate(context, plusQueue, isModpack);
         ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0,
                 plusQueue ? R.string.battly_plus_install_queue_message : R.string.global_waiting);
         PojavApplication.sExecutorService.execute(() -> {
@@ -94,6 +96,10 @@ public interface ModpackApi {
                 if (loaderInfo == null) return;
                 Telemetry.logContentInstall(modDetail.contentType, modDetail.title, true, null);
                 loaderInfo.getDownloadTask(context, new NotificationDownloadListener(context, loaderInfo)).run();
+                if (context instanceof net.kdt.pojavlaunch.LauncherActivity) {
+                    Tools.runOnUiThread(((net.kdt.pojavlaunch.LauncherActivity) context)
+                            ::refreshHomeProfileUi);
+                }
             }catch (Exception e) {
                 Telemetry.logContentInstall(modDetail.contentType, modDetail.title, false, e);
                 ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
@@ -113,7 +119,7 @@ public interface ModpackApi {
                                                 int selectedVersion,
                                                 MinecraftProfile targetProfile) {
         boolean plusQueue = BattlyPlusCloud.canUsePremiumQueue(context);
-        InstallProgressDialogController blocker = showInstallGate(context, plusQueue);
+        InstallProgressDialogController blocker = showInstallGate(context, plusQueue, false);
         ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0,
                 plusQueue ? R.string.battly_plus_install_queue_message : R.string.global_waiting);
         PojavApplication.sExecutorService.execute(() -> {
@@ -130,7 +136,9 @@ public interface ModpackApi {
     }
 
     @Nullable
-    default InstallProgressDialogController showInstallGate(Context context, boolean plusQueue) {
+    default InstallProgressDialogController showInstallGate(Context context,
+                                                            boolean plusQueue,
+                                                            boolean showNativeAd) {
         if (plusQueue) {
             Tools.runOnUiThread(() -> Toast.makeText(
                     context,
@@ -139,7 +147,7 @@ public interface ModpackApi {
             ).show());
             return null;
         }
-        return InstallProgressDialogController.show(context);
+        return InstallProgressDialogController.show(context, showNativeAd);
     }
 
     default void dismissInstallGate(@Nullable InstallProgressDialogController controller) {

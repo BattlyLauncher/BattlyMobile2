@@ -1326,14 +1326,17 @@ public final class Tools {
         File selectedNativeDir = new File(resolveLwjglNativesDir(sLwjglVersion));
         File refLib = new File(selectedNativeDir, "liblwjgl.so");
         if (!refLib.exists()) return false;
-        if (isAndroidNativesJarCurrent(outJar, libEntries, refLib)) return false;
+        if (!hasRequiredLwjglNatives(selectedNativeDir)) {
+            throw new IllegalStateException("Incomplete LWJGL " + sLwjglVersion
+                    + " native component: " + selectedNativeDir);
+        }
+        if (isAndroidNativesJarCurrent(outJar, libEntries, selectedNativeDir, refLib)) return false;
 
         lwjgl3Folder.mkdirs();
         File tmpJar = new File(lwjgl3Folder, "lwjgl-android-natives.jar.tmp");
         try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(tmpJar))) {
             for (String[] entry : libEntries) {
-                File selectedFile = new File(selectedNativeDir, entry[1]);
-                File soFile = selectedFile.exists() ? selectedFile : new File(NATIVE_LIB_DIR, entry[1]);
+                File soFile = new File(selectedNativeDir, entry[1]);
                 if (!soFile.exists()) {
                     Log.w(APP_NAME, "Android LWJGL native not found, skipping: " + entry[1]);
                     continue;
@@ -1370,13 +1373,16 @@ public final class Tools {
         return true;
     }
 
-    private static boolean isAndroidNativesJarCurrent(File jarFile, String[][] requiredEntries, File refLib) {
+    private static boolean isAndroidNativesJarCurrent(File jarFile,
+                                                      String[][] requiredEntries,
+                                                      File selectedNativeDir,
+                                                      File refLib) {
         if (!jarFile.exists() || jarFile.lastModified() < refLib.lastModified()) {
             return false;
         }
         try (JarFile jar = new JarFile(jarFile)) {
             for (String[] entry : requiredEntries) {
-                File soFile = new File(NATIVE_LIB_DIR, entry[1]);
+                File soFile = new File(selectedNativeDir, entry[1]);
                 if (soFile.exists() && jar.getJarEntry(entry[0]) == null) {
                     return false;
                 }
@@ -1395,6 +1401,20 @@ public final class Tools {
         String internalLwjglVersion = getInternalLwjglVersion(iLwjglVersion);
         sLwjglVersion = internalLwjglVersion;
         lwjglNativesDir = resolveLwjglNativesDir(sLwjglVersion);
+        if (!"3.3.3".equals(sLwjglVersion) && NATIVE_LIB_DIR.equals(lwjglNativesDir)) {
+            try {
+                AsyncAssetManager.unpackLwjglNatives(activity);
+            } catch (IOException exception) {
+                throw new IllegalStateException("Unable to repair LWJGL " + sLwjglVersion
+                        + " native component", exception);
+            }
+            lwjglNativesDir = resolveLwjglNativesDir(sLwjglVersion);
+        }
+        if (!"3.3.3".equals(sLwjglVersion) && NATIVE_LIB_DIR.equals(lwjglNativesDir)) {
+            throw new IllegalStateException("LWJGL " + sLwjglVersion
+                    + " native component is unavailable for "
+                    + archAsStringAndroid(getDeviceArchitecture()));
+        }
 
         File lwjgl3Folder = new File(Tools.DIR_GAME_HOME, "lwjgl3/" + internalLwjglVersion);
         ensureAndroidNativesJar(lwjgl3Folder);
@@ -1906,14 +1926,30 @@ public final class Tools {
         }
         File versionedDir = new File(DIR_DATA, "lwjgl-" + lwjglVersion + "-natives/"
                 + archAsStringAndroid(getDeviceArchitecture()));
-        File coreLibrary = new File(versionedDir, "liblwjgl.so");
         File versionMarker = new File(versionedDir, ".version");
-        if (coreLibrary.isFile() && coreLibrary.length() > 0 && versionMarker.isFile()) {
+        if (versionMarker.isFile() && hasRequiredLwjglNatives(versionedDir)) {
             return versionedDir.getAbsolutePath();
         }
         Log.w(APP_NAME, "LWJGL " + lwjglVersion
                 + " native component is unavailable or incomplete; using APK natives");
         return NATIVE_LIB_DIR;
+    }
+
+    private static boolean hasRequiredLwjglNatives(File directory) {
+        String[] required = {
+                "liblwjgl.so",
+                "liblwjgl_opengl.so",
+                "liblwjgl_stb.so",
+                "liblwjgl_nanovg.so",
+                "liblwjgl_tinyfd.so"
+        };
+        for (String fileName : required) {
+            File file = new File(directory, fileName);
+            if (!file.isFile() || file.length() == 0) {
+                return false;
+            }
+        }
+        return true;
     }
 
     private static String getInternalLwjglVersion(int version) {

@@ -246,10 +246,6 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         // Kinda need to send this back to the layout
         if(((ControlLayout)getParent()).getModifiable()) return false;
 
-        if (sdlWindowBridgeEnabled) {
-            forwardTouchToSdl(e);
-        }
-
         // Looking for a mouse to handle, won't have an effect if no mouse exists.
         for (int i = 0; i < e.getPointerCount(); i++) {
             int toolType = e.getToolType(i);
@@ -276,40 +272,6 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         TouchControllerUtils.processTouchEvent(e, this);
         if (mIngameProcessor == null || mInGUIProcessor == null) return true;
         return mCurrentTouchProcessor.processTouchEvent(e);
-    }
-
-    private void forwardTouchToSdl(MotionEvent event) {
-        int action = event.getActionMasked();
-        int firstPointer = (action == MotionEvent.ACTION_POINTER_UP
-                || action == MotionEvent.ACTION_POINTER_DOWN) ? event.getActionIndex() : 0;
-        int pointerCount = event.getPointerCount();
-        int width = Math.max(1, getWidth() - 1);
-        int height = Math.max(1, getHeight() - 1);
-
-        try {
-            for (int i = firstPointer; i < pointerCount; i++) {
-                int toolType = event.getToolType(i);
-                if (toolType == MotionEvent.TOOL_TYPE_MOUSE
-                        || toolType == MotionEvent.TOOL_TYPE_STYLUS
-                        || toolType == MotionEvent.TOOL_TYPE_ERASER) {
-                    continue;
-                }
-                float pressure = Math.min(1.0f, event.getPressure(i));
-                SDLActivity.onNativeTouch(
-                        event.getDeviceId(),
-                        event.getPointerId(i),
-                        action,
-                        event.getX(i) / width,
-                        event.getY(i) / height,
-                        pressure);
-                if (action == MotionEvent.ACTION_POINTER_UP
-                        || action == MotionEvent.ACTION_POINTER_DOWN) {
-                    break;
-                }
-            }
-        } catch (Throwable throwable) {
-            Log.w(TAG, "Unable to forward touch event to SDL", throwable);
-        }
     }
 
     private void createGamepad(View contextView, InputDevice inputDevice) {
@@ -666,6 +628,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     private void updateGrabState(boolean isGrabbing) {
         if(mLastGrabState != isGrabbing) {
             mCurrentTouchProcessor.cancelPendingActions();
+            CallbackBridge.resetSdlInputState();
             mCurrentTouchProcessor = pickEventProcessor(isGrabbing);
             mLastGrabState = isGrabbing;
         }

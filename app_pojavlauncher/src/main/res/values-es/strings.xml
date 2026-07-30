@@ -771,6 +771,9 @@
     <string name="download_client_missing_url">%1$s · sin descarga disponible</string>
     <string name="download_client_no_download">Este cliente no tiene descarga disponible en el catálogo.</string>
     <string name="create_modpack_import_archive">Importar ZIP o MRPACK</string>
+    <string name="modpack_import_preparing">Preparando el modpack y creando su instancia…</string>
+    <string name="modpack_import_finalizing">Terminando la nueva instancia…</string>
+    <string name="modpack_import_created">Instancia creada. Ya está disponible en tu lista de versiones.</string>
     <string name="profile_custom_path">Ruta personalizada</string>
     <string name="preference_disable_autojre_select">Desactivar selección automática de JRE</string>
     <string name="not_modpack_file">¡No es un archivo de modpack!</string>

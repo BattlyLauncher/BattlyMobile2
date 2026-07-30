@@ -239,6 +239,12 @@ public class EfficientAndroidLWJGLKeycode {
     }
 
     public static int getAndroidKeycode(int lwjglKey) {
+        // Android BACK and ESCAPE both map to GLFW_ESCAPE. SDL treats BACK as
+        // the Android navigation key, so overlay ESC buttons must use the real
+        // keyboard escape keycode to reach Minecraft.
+        if (lwjglKey == LwjglGlfwKeycode.GLFW_KEY_ESCAPE) {
+            return KeyEvent.KEYCODE_ESCAPE;
+        }
         for (int i = 0; i < mTmpCount; i++) {
             if (sLwjglKeycodes[i] == lwjglKey) return sAndroidKeycodes[i];
         }

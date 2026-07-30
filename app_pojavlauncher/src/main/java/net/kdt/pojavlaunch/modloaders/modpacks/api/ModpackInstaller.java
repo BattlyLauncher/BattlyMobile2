@@ -66,7 +66,6 @@ public class ModpackInstaller {
 
         } finally {
             modpackFile.delete();
-            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
         }
         if(modLoaderInfo == null) {
             return null;
@@ -84,6 +83,8 @@ public class ModpackInstaller {
 
         LauncherProfiles.mainProfileJson.profiles.put(modpackName, profile);
         LauncherProfiles.write();
+        ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 96,
+                R.string.modpack_import_finalizing);
 
         return modLoaderInfo;
     }
@@ -156,7 +157,6 @@ public class ModpackInstaller {
             // Install the actual pack into custom_instances
             ModLoader modLoaderInfo = installFunction.installModpack(modpackFile, new File(Tools.DIR_GAME_HOME, "custom_instances/"+modpackName));
             // We have to do this because installModpack doesn't clean up after itself
-            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
             modpackFile.delete();
             if(modLoaderInfo == null) {
                 return null;
@@ -175,6 +175,8 @@ public class ModpackInstaller {
             writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
             LauncherProfiles.mainProfileJson.profiles.put(modpackName, profile);
             LauncherProfiles.write();
+            ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 96,
+                    R.string.modpack_import_finalizing);
 
             return modLoaderInfo;
         }

@@ -1,55 +1,103 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:layout_gravity="center"
-    android:background="@color/background_app"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:paddingHorizontal="@dimen/fragment_padding_medium">
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="32dp"
+    android:scrollbars="none">
 
-    <View
-        android:id="@+id/create_modpack_profile_menu"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/_200sdp"
-
-        android:background="@drawable/background_card"
-        android:translationZ="-1dp"
-
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
-
-
-    <com.kdt.mcgui.MineButton
-        android:id="@+id/button_browse_modpacks"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/download_action_browse_modpacks_title"
-        android:textSize="@dimen/_12ssp"
-        android:layout_marginHorizontal="@dimen/_25sdp"
-        android:layout_marginBottom="@dimen/_20sdp"
-        app:layout_constraintBottom_toTopOf="@+id/button_import_modpack"
-        app:layout_constraintEnd_toEndOf="@+id/create_modpack_profile_menu"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/create_modpack_profile_menu"
-        app:layout_constraintTop_toTopOf="@id/create_modpack_profile_menu"
-        app:layout_constraintVertical_chainStyle="packed"
-        />
+        android:orientation="vertical">
 
-    <com.kdt.mcgui.MineButton
-        android:id="@+id/button_import_modpack"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/create_modpack_import_archive"
-        android:textSize="@dimen/_12ssp"
-        android:layout_marginHorizontal="@dimen/_25sdp"
-        app:layout_constraintBottom_toBottomOf="@id/create_modpack_profile_menu"
-        app:layout_constraintEnd_toEndOf="@+id/create_modpack_profile_menu"
-        app:layout_constraintHorizontal_bias="1.0"
-        app:layout_constraintStart_toStartOf="@+id/create_modpack_profile_menu"
-        app:layout_constraintTop_toBottomOf="@+id/button_browse_modpacks" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_battly_launcher_play"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingHorizontal="16dp"
+            android:paddingVertical="14dp">
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+            <ImageView
+                android:layout_width="42dp"
+                android:layout_height="42dp"
+                android:background="@drawable/bg_battly_profile_icon"
+                android:padding="9dp"
+                android:src="@drawable/minecraft_chest" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="14dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/download_action_modpack_title"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="19sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:text="@string/download_action_modpack_subtitle"
+                    android:textColor="#DDE7EEF5"
+                    android:textSize="13sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:alignmentMode="alignMargins"
+            android:columnCount="2"
+            android:useDefaultMargins="true">
+
+            <LinearLayout
+                android:id="@+id/button_import_modpack"
+                style="@style/Widget_Battly_LibraryCard">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/minecraft_name_tag" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardTitle"
+                    android:text="@string/create_modpack_import_archive" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardSubtitle"
+                    android:text="@string/download_action_modpack_subtitle" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/button_browse_modpacks"
+                style="@style/Widget_Battly_LibraryCard">
+
+                <ImageView
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:src="@drawable/minecraft_bookshelf" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardTitle"
+                    android:text="@string/download_action_browse_modpacks_title" />
+
+                <TextView
+                    style="@style/Widget_Battly_LibraryCardSubtitle"
+                    android:text="@string/download_action_browse_modpacks_subtitle" />
+            </LinearLayout>
+        </GridLayout>
+    </LinearLayout>
+</ScrollView>

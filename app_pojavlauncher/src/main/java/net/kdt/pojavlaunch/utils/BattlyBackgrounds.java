@@ -140,10 +140,10 @@ public final class BattlyBackgrounds {
 
     public static void saveCustomBackground(Context context, Uri sourceUri) throws Exception {
         String mime = context.getContentResolver().getType(sourceUri);
-        if (!Tools.isValidString(mime)) {
-            mime = "application/octet-stream";
-        }
         String extension = extensionFor(context, sourceUri, mime);
+        if (!Tools.isValidString(mime) || "application/octet-stream".equalsIgnoreCase(mime)) {
+            mime = mimeForExtension(extension);
+        }
         File parent = getCustomBackgroundDirectory(context);
         if (parent != null && !parent.exists() && !parent.mkdirs()) {
             throw new IllegalStateException("Could not create backgrounds folder");
@@ -423,22 +423,60 @@ public final class BattlyBackgrounds {
     }
 
     private static String extensionFor(Context context, Uri uri, String mime) {
-        String extension = android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mime);
+        String extension = Tools.isValidString(mime)
+                ? android.webkit.MimeTypeMap.getSingleton().getExtensionFromMimeType(mime)
+                : null;
         if (Tools.isValidString(extension)) {
             return extension;
+        }
+        String displayName = displayName(context, uri);
+        int displayDot = displayName.lastIndexOf('.');
+        if (displayDot >= 0 && displayDot < displayName.length() - 1) {
+            return displayName.substring(displayDot + 1)
+                    .replaceAll("[^a-zA-Z0-9]", "")
+                    .toLowerCase(Locale.ROOT);
         }
         String path = uri.getPath();
         int dot = path == null ? -1 : path.lastIndexOf('.');
         if (dot >= 0 && dot < path.length() - 1) {
             return path.substring(dot + 1).replaceAll("[^a-zA-Z0-9]", "").toLowerCase(Locale.ROOT);
         }
-        if (mime.startsWith("video/")) {
+        if (Tools.isValidString(mime) && mime.startsWith("video/")) {
             return "mp4";
         }
         if ("image/gif".equalsIgnoreCase(mime)) {
             return "gif";
         }
         return "png";
+    }
+
+    private static String displayName(Context context, Uri uri) {
+        try (android.database.Cursor cursor = context.getContentResolver().query(
+                uri,
+                new String[]{android.provider.OpenableColumns.DISPLAY_NAME},
+                null,
+                null,
+                null)) {
+            if (cursor != null && cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME);
+                if (index >= 0) {
+                    String value = cursor.getString(index);
+                    return value == null ? "" : value;
+                }
+            }
+        } catch (RuntimeException ignored) {
+        }
+        return "";
+    }
+
+    private static String mimeForExtension(String extension) {
+        if ("mp4".equals(extension)) return "video/mp4";
+        if ("webm".equals(extension)) return "video/webm";
+        if ("mkv".equals(extension)) return "video/x-matroska";
+        if ("gif".equals(extension)) return "image/gif";
+        String mime = android.webkit.MimeTypeMap.getSingleton()
+                .getMimeTypeFromExtension(extension);
+        return Tools.isValidString(mime) ? mime : "image/*";
     }
 
     private static void deleteOldCustomBackgrounds(File parent) {

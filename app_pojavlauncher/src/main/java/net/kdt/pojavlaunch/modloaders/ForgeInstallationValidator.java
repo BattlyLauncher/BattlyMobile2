@@ -42,6 +42,9 @@ public final class ForgeInstallationValidator {
     }
 
     static Status inspectJson(File minecraftDirectory, JsonObject versionJson) {
+        if (!containsMinecraftForgeLibrary(versionJson) || containsNeoForgeLibrary(versionJson)) {
+            return Status.notForge();
+        }
         JsonObject arguments = object(versionJson, "arguments");
         JsonArray gameArguments = arguments == null ? null : array(arguments, "game");
         if (gameArguments == null) {
@@ -83,6 +86,42 @@ public final class ForgeInstallationValidator {
         }
         return new Status(true, missing.isEmpty(), forgeCoordinate,
                 Collections.unmodifiableList(missing));
+    }
+
+    private static boolean containsMinecraftForgeLibrary(JsonObject versionJson) {
+        JsonArray libraries = array(versionJson, "libraries");
+        if (libraries == null) {
+            return false;
+        }
+        for (JsonElement element : libraries) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonElement name = element.getAsJsonObject().get("name");
+            if (name != null && name.isJsonPrimitive()
+                    && name.getAsString().startsWith("net.minecraftforge:forge:")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean containsNeoForgeLibrary(JsonObject versionJson) {
+        JsonArray libraries = array(versionJson, "libraries");
+        if (libraries == null) {
+            return false;
+        }
+        for (JsonElement element : libraries) {
+            if (!element.isJsonObject()) {
+                continue;
+            }
+            JsonElement name = element.getAsJsonObject().get("name");
+            if (name != null && name.isJsonPrimitive()
+                    && name.getAsString().startsWith("net.neoforged:")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static void assertComplete(File minecraftDirectory, String versionId) throws IOException {

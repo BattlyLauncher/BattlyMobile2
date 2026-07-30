@@ -263,6 +263,28 @@ public class ModloaderInstallUtils {
         }
     }
 
+    public static void validateInstallerJar(File jarFile) throws IOException {
+        if (jarFile == null || !jarFile.isFile() || jarFile.length() == 0) {
+            throw new IOException("Installer download is empty");
+        }
+        try (ZipFile zipFile = new ZipFile(jarFile)) {
+            ZipEntry manifest = zipFile.getEntry("META-INF/MANIFEST.MF");
+            ZipEntry installProfile = zipFile.getEntry("install_profile.json");
+            if (manifest == null || installProfile == null) {
+                throw new IOException("Installer archive is missing required metadata");
+            }
+            // Reading both entries forces ZipFile to validate their local headers as well as CEN.
+            try (InputStream manifestStream = zipFile.getInputStream(manifest);
+                 InputStream profileStream = zipFile.getInputStream(installProfile)) {
+                if (manifestStream.read() < 0 || profileStream.read() < 0) {
+                    throw new IOException("Installer archive contains empty metadata");
+                }
+            }
+        } catch (java.util.zip.ZipException exception) {
+            throw new IOException("Downloaded installer archive is corrupt", exception);
+        }
+    }
+
     public static String selectRuntimeForJar(File jarFile, int fallbackVersion) throws IOException {
         int javaVersion = getJavaVersion(jarFile);
         if (javaVersion < 0) {

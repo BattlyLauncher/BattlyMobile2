@@ -389,8 +389,9 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             }
             SDL.setupJNI();
             if (mSdlWindowBridgeRequired) {
-                SDLActivity.nativeSetenv("SDL_TOUCH_MOUSE_EVENTS", "1");
+                SDLActivity.nativeSetenv("SDL_TOUCH_MOUSE_EVENTS", "0");
                 SDLActivity.nativeSetenv("SDL_MOUSE_TOUCH_EVENTS", "0");
+                SDLActivity.nativeSetenv("SDL_OPENGL_FORCE_SRGB_FRAMEBUFFER", "0");
             }
             SDL.initialize();
             SDL.setContext(this);

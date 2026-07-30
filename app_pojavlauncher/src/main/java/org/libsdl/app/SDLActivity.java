@@ -1653,17 +1653,14 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
     private static void updateExternalSurfaceSize(int width, int height) {
         Activity activity = getContext();
-        if (activity == null) {
+        if (activity == null || width <= 0 || height <= 0) {
             return;
         }
-        DisplayMetrics metrics = new DisplayMetrics();
-        activity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
-        float density = (float) metrics.densityDpi / 160.0f;
         float refreshRate = activity.getWindowManager().getDefaultDisplay().getRefreshRate();
-        nativeSetScreenResolution(Math.max(width, height), Math.min(width, height),
-                Math.max(metrics.widthPixels, metrics.heightPixels),
-                Math.min(metrics.widthPixels, metrics.heightPixels),
-                density, refreshRate);
+        // SDL must receive the exact buffer dimensions. Mixing physical display
+        // metrics, Android density and a scaled game buffer produces incorrect
+        // viewport scaling and color/composition artifacts on modern snapshots.
+        nativeSetScreenResolution(width, height, width, height, 1.0f, refreshRate);
     }
 
     // Input

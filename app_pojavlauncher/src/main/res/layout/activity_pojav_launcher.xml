@@ -23,7 +23,7 @@
             android:scaleType="centerCrop"
             android:src="@drawable/background" />
 
-        <VideoView
+        <TextureView
             android:id="@+id/launcher_background_video"
             android:layout_width="match_parent"
             android:layout_height="match_parent"

@@ -7,14 +7,25 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Looper;
 import android.view.Gravity;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
+import android.widget.Button;
 
 import androidx.appcompat.app.AlertDialog;
+import androidx.annotation.NonNull;
 
 import com.kdt.mcgui.ProgressLayout;
+import com.google.android.gms.ads.AdListener;
+import com.google.android.gms.ads.AdLoader;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.LoadAdError;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.nativead.NativeAd;
+import com.google.android.gms.ads.nativead.NativeAdView;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -23,14 +34,15 @@ import net.kdt.pojavlaunch.progresskeeper.ProgressListener;
 
 import java.util.concurrent.CountDownLatch;
 
-final class InstallProgressDialogController {
+public final class InstallProgressDialogController {
     private final Activity mActivity;
     private final AlertDialog mDialog;
     private final ProgressBar mProgressBar;
     private final TextView mStatusText;
     private final ProgressListener mListener;
+    private NativeAd mNativeAd;
 
-    static InstallProgressDialogController show(Context context) {
+    public static InstallProgressDialogController show(Context context, boolean showNativeAd) {
         if (!(context instanceof Activity)) {
             return null;
         }
@@ -39,12 +51,12 @@ final class InstallProgressDialogController {
             return null;
         }
         if (Looper.myLooper() == Looper.getMainLooper()) {
-            return new InstallProgressDialogController(activity);
+            return new InstallProgressDialogController(activity, showNativeAd);
         }
         InstallProgressDialogController[] holder = new InstallProgressDialogController[1];
         CountDownLatch latch = new CountDownLatch(1);
         Tools.runOnUiThread(() -> {
-            holder[0] = new InstallProgressDialogController(activity);
+            holder[0] = new InstallProgressDialogController(activity, showNativeAd);
             latch.countDown();
         });
         try {
@@ -55,7 +67,7 @@ final class InstallProgressDialogController {
         return holder[0];
     }
 
-    private InstallProgressDialogController(Activity activity) {
+    private InstallProgressDialogController(Activity activity, boolean showNativeAd) {
         mActivity = activity;
         ProgressLayout.setProgressMuted(ProgressLayout.INSTALL_MODPACK, true);
 
@@ -98,6 +110,13 @@ final class InstallProgressDialogController {
         barParams.setMargins(0, dp(20), 0, 0);
         root.addView(mProgressBar, barParams);
 
+        LinearLayout adContainer = new LinearLayout(activity);
+        adContainer.setVisibility(android.view.View.GONE);
+        LinearLayout.LayoutParams adParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT);
+        adParams.setMargins(0, dp(10), 0, 0);
+        root.addView(adContainer, adParams);
         mStatusText = text(activity.getString(R.string.global_waiting), 14, true, 0xFF8DEEDC);
         LinearLayout.LayoutParams statusParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
@@ -135,12 +154,115 @@ final class InstallProgressDialogController {
         mDialog.setOnDismissListener(dialog -> {
             ProgressKeeper.removeListener(ProgressLayout.INSTALL_MODPACK, mListener);
             ProgressLayout.setProgressMuted(ProgressLayout.INSTALL_MODPACK, false);
+            if (mNativeAd != null) {
+                mNativeAd.destroy();
+                mNativeAd = null;
+            }
         });
         ProgressKeeper.addListener(ProgressLayout.INSTALL_MODPACK, mListener);
         mDialog.show();
+        applyDialogWidth();
+        if (showNativeAd) {
+            loadNativeAd(adContainer);
+        }
     }
 
-    void dismiss() {
+    private void loadNativeAd(LinearLayout container) {
+        MobileAds.initialize(mActivity, status -> {
+            if (mActivity.isFinishing()) {
+                return;
+            }
+            AdLoader loader = new AdLoader.Builder(
+                    mActivity,
+                    mActivity.getString(R.string.battly_modpack_native_ad_unit_id))
+                    .forNativeAd(nativeAd -> Tools.runOnUiThread(() -> {
+                        if (mActivity.isFinishing() || !mDialog.isShowing()) {
+                            nativeAd.destroy();
+                            return;
+                        }
+                        if (mNativeAd != null) {
+                            mNativeAd.destroy();
+                        }
+                        mNativeAd = nativeAd;
+                        container.removeAllViews();
+                        container.addView(createNativeAdView(nativeAd));
+                        container.setVisibility(android.view.View.VISIBLE);
+                        applyDialogWidth();
+                    }))
+                    .withAdListener(new AdListener() {
+                        @Override
+                        public void onAdFailedToLoad(@NonNull LoadAdError error) {
+                            container.setVisibility(android.view.View.GONE);
+                        }
+                    })
+                    .build();
+            loader.loadAd(new AdRequest.Builder().build());
+        });
+    }
+
+    private NativeAdView createNativeAdView(NativeAd nativeAd) {
+        NativeAdView adView = new NativeAdView(mActivity);
+        adView.setBackground(makeRound(14, 0xB5122430, 0x338DEEDC));
+        LinearLayout row = new LinearLayout(mActivity);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(12), dp(9), dp(12), dp(9));
+        adView.addView(row, new ViewGroup.LayoutParams(
+                ViewGroup.LayoutParams.MATCH_PARENT,
+                ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        ImageView icon = new ImageView(mActivity);
+        if (nativeAd.getIcon() != null) {
+            icon.setImageDrawable(nativeAd.getIcon().getDrawable());
+        }
+        row.addView(icon, new LinearLayout.LayoutParams(dp(42), dp(42)));
+        adView.setIconView(icon);
+
+        LinearLayout copy = new LinearLayout(mActivity);
+        copy.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams copyParams = new LinearLayout.LayoutParams(
+                0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f);
+        copyParams.setMargins(dp(10), 0, dp(10), 0);
+        row.addView(copy, copyParams);
+
+        TextView headline = text(nativeAd.getHeadline(), 14, true, 0xFFFFFFFF);
+        headline.setMaxLines(1);
+        headline.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        copy.addView(headline);
+        adView.setHeadlineView(headline);
+
+        TextView body = text(nativeAd.getBody(), 11, false, 0xFFC7D4DF);
+        body.setMaxLines(2);
+        body.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        copy.addView(body);
+        adView.setBodyView(body);
+
+        Button action = new Button(mActivity);
+        action.setMinWidth(0);
+        action.setMinimumWidth(0);
+        action.setAllCaps(false);
+        action.setText(nativeAd.getCallToAction());
+        action.setTextSize(11);
+        action.setTextColor(0xFF0E1B24);
+        action.setBackground(makeRound(12, 0xFF8DEEDC, 0));
+        row.addView(action, new LinearLayout.LayoutParams(dp(94), dp(40)));
+        adView.setCallToActionView(action);
+        adView.setNativeAd(nativeAd);
+        return adView;
+    }
+
+    private void applyDialogWidth() {
+        Window window = mDialog.getWindow();
+        if (window == null) {
+            return;
+        }
+        int screenWidth = mActivity.getResources().getDisplayMetrics().widthPixels;
+        int horizontalMargin = dp(24);
+        int maxWidth = dp(560);
+        int width = Math.min(maxWidth, Math.max(dp(300), screenWidth - horizontalMargin * 2));
+        window.setLayout(width, WindowManager.LayoutParams.WRAP_CONTENT);
+    }
+
+    public void dismiss() {
         Tools.runOnUiThread(() -> {
             if (!mActivity.isFinishing() && mDialog.isShowing()) {
                 mDialog.dismiss();

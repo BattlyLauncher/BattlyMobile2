@@ -51,6 +51,10 @@ public class TouchControllerUtils {
         int pointerId;
         switch (motionEvent.getActionMasked()) {
             case MotionEvent.ACTION_DOWN:
+                // A new stream must never inherit pointers left behind by an interrupted view.
+                proxyClient.clearPointer();
+                pointerIdMap.clear();
+                nextPointerId = 1;
                 pointerId = nextPointerId++;
                 pointerIdMap.put(motionEvent.getPointerId(0), pointerId);
                 proxyClient.addPointer(pointerId, motionEvent.getX(0) / view.getWidth(), motionEvent.getY(0) / view.getHeight());
@@ -76,6 +80,7 @@ public class TouchControllerUtils {
                 if (proxyClient != null) {
                     proxyClient.clearPointer();
                     pointerIdMap.clear();
+                    nextPointerId = 1;
                 }
                 break;
             case MotionEvent.ACTION_POINTER_UP:
@@ -86,7 +91,7 @@ public class TouchControllerUtils {
                         Log.d("TouchController", "Pointer up pointerId is 0");
                         break;
                     }
-                    pointerIdMap.delete(pointerId);
+                    pointerIdMap.delete(motionEvent.getPointerId(i));
                     proxyClient.removePointer(pointerId);
                 }
                 break;
