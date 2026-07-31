@@ -12,6 +12,7 @@ import org.json.JSONObject;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.Arrays;
 
 public class FabriclikeUtils {
 
@@ -114,7 +115,43 @@ public class FabriclikeUtils {
             }
             fabricVersions[i] = fabricVersion;
         }
+        Arrays.sort(fabricVersions, (left, right) ->
+                compareVersionDescending(left.version, right.version));
         return fabricVersions;
+    }
+
+    static int compareVersionDescending(String left, String right) {
+        return compareVersion(right, left);
+    }
+
+    private static int compareVersion(String left, String right) {
+        String[] leftParts = left.split("[.+-]");
+        String[] rightParts = right.split("[.+-]");
+        int max = Math.max(leftParts.length, rightParts.length);
+        for (int i = 0; i < max; i++) {
+            if (i >= leftParts.length) return isPreReleasePart(rightParts[i]) ? 1 : -1;
+            if (i >= rightParts.length) return isPreReleasePart(leftParts[i]) ? -1 : 1;
+            String leftPart = leftParts[i];
+            String rightPart = rightParts[i];
+            boolean leftNumeric = leftPart.matches("\\d+");
+            boolean rightNumeric = rightPart.matches("\\d+");
+            int result;
+            if (leftNumeric && rightNumeric) {
+                result = Integer.compare(Integer.parseInt(leftPart), Integer.parseInt(rightPart));
+            } else if (leftNumeric != rightNumeric) {
+                result = leftNumeric ? 1 : -1;
+            } else {
+                result = leftPart.compareToIgnoreCase(rightPart);
+            }
+            if (result != 0) return result;
+        }
+        return 0;
+    }
+
+    private static boolean isPreReleasePart(String part) {
+        String lower = part.toLowerCase();
+        return lower.startsWith("alpha") || lower.startsWith("beta")
+                || lower.startsWith("pre") || lower.startsWith("rc");
     }
 
     private static FabricVersion[] deserializeRawVersions(String jsonArrayIn) throws DownloadUtils.ParseException {

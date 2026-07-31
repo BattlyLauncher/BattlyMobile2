@@ -8,6 +8,8 @@ public final class ModCompatibilityAnalyzerTest {
     public static void main(String[] args) throws Exception {
         parsesFabricResolutionAndIgnoresSecondaryAwtFailure();
         parsesForgeLanguageProviderMismatch();
+        parsesMixinFailuresAndNamesTheMods();
+        parsesOutdatedQuiltBytecodeFailure();
         leavesUnrelatedCrashesUntouched();
         if (args.length > 0) parsesRealLog(args[0]);
         System.out.println("ModCompatibilityAnalyzer tests passed");
@@ -58,6 +60,38 @@ public final class ModCompatibilityAnalyzerTest {
                 "Forge mod filename was not parsed");
         check("47+".equals(analysis.issues.get(0).requirement), "Forge requirement mismatch");
         check("36.2".equals(analysis.issues.get(0).currentVersion), "Forge installed version mismatch");
+    }
+
+    private static void parsesMixinFailuresAndNamesTheMods() {
+        String log = "[main/INFO]: Loading Minecraft 26.2 with Fabric Loader 0.19.3\n"
+                + "\t- sodium 0.9.1+mc26.1.2\n"
+                + "\t- fabric-lifecycle-events-v1 4.1.0\n"
+                + "[main/ERROR]: Mixin apply for mod sodium failed config from mod sodium "
+                + "InvalidInjectionException\n"
+                + "[main/ERROR]: Mixin apply for mod fabric-lifecycle-events-v1 failed config "
+                + "from mod fabric-lifecycle-events-v1 InvalidInjectionException\n"
+                + "java.lang.UnsatisfiedLinkError: 'void java.awt.Insets.initIDs()'";
+        ModCompatibilityAnalyzer.Analysis analysis = ModCompatibilityAnalyzer.analyze(log);
+        check(analysis.detected, "Mixin incompatibility was not detected");
+        check(analysis.issues.size() == 2, "Mixin failures did not produce two mod rows");
+        check("sodium".equals(analysis.issues.get(0).modId), "Sodium was not identified");
+        check("0.9.1+mc26.1.2".equals(analysis.issues.get(0).installedVersion),
+                "Sodium version was not identified");
+        check(!analysis.primaryExcerpt.contains("Insets.initIDs"),
+                "Secondary AWT failure leaked into Mixin excerpt");
+    }
+
+    private static void parsesOutdatedQuiltBytecodeFailure() {
+        String log = "Loading Minecraft 26.1.2 with Quilt Loader 0.24.0\n"
+                + "java.lang.IllegalArgumentException: Unsupported class file major version 69\n"
+                + "Quilt Loader Version: 0.24.0\n"
+                + "FabricGuiEntry.open";
+        ModCompatibilityAnalyzer.Analysis analysis = ModCompatibilityAnalyzer.analyze(log);
+        check(analysis.detected, "Outdated Quilt bytecode failure was not detected");
+        check("Quilt".equals(analysis.loader), "Quilt loader was not identified");
+        check(analysis.summary.contains("Quilt 0.24.0"), "Quilt version is missing");
+        check(analysis.summary.contains("Java 25"), "Java version was not derived");
+        check(analysis.solution.contains("newer Quilt"), "Quilt upgrade was not recommended");
     }
 
     private static void parsesRealLog(String path) throws Exception {

@@ -3,6 +3,8 @@
     <!-- App name part -->
     <string name="app_name">Battly Launcher</string>
     <string name="launcher_mobile_badge">Mobile 2.0.3</string>
+    <string name="launcher_mobile_badge_dynamic">Mobile %1$s</string>
+    <string name="credits_version_dynamic">Version %1$s</string>
     <string name="launcher_versions_button">Versions</string>
     <string name="library_button_desc">Open library</string>
     <string name="battly_login_error_credentials">Incorrect username or password.</string>

@@ -6,9 +6,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 
 import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.Logger;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.AdaptiveDownloadPolicy;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.value.DependentLibrary;
@@ -25,6 +27,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.util.Enumeration;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.concurrent.CompletionService;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorCompletionService;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
 
@@ -66,41 +75,87 @@ public class ModloaderInstallUtils {
     }
 
     public static void downloadLibraries(DependentLibrary[] libraries) throws IOException {
-        downloadLibraries(libraries, null);
+        downloadLibraries(null, null, libraries);
     }
 
     public static void downloadLibraries(DependentLibrary[] libraries, String skippedArtifactPath) throws IOException {
-        if (libraries == null) {
-            return;
+        downloadLibraries(null, skippedArtifactPath, libraries);
+    }
+
+    @SafeVarargs
+    public static void downloadLibraries(Context context, String skippedArtifactPath,
+                                         DependentLibrary[]... libraryGroups) throws IOException {
+        Map<String, LibraryDownload> downloads = collectLibraryDownloads(
+                skippedArtifactPath, libraryGroups);
+        if (downloads.isEmpty()) return;
+
+        int workers = AdaptiveDownloadPolicy.resolveWorkers(
+                context, true, AdaptiveDownloadPolicy.MIN_WORKERS, downloads.size());
+        Logger.appendToLog("Forge installer: prefetching " + downloads.size()
+                + " libraries with " + workers + " workers");
+        ExecutorService executor = Executors.newFixedThreadPool(workers);
+        CompletionService<Void> completion = new ExecutorCompletionService<>(executor);
+        try {
+            for (LibraryDownload download : downloads.values()) {
+                completion.submit(() -> {
+                    DownloadUtils.ensureSha1(download.target, download.sha1, () -> {
+                        DownloadUtils.downloadFile(download.url, download.target);
+                        return null;
+                    });
+                    return null;
+                });
+            }
+            for (int i = 0; i < downloads.size(); i++) {
+                try {
+                    completion.take().get();
+                } catch (InterruptedException exception) {
+                    Thread.currentThread().interrupt();
+                    throw new IOException("Library prefetch was interrupted", exception);
+                } catch (ExecutionException exception) {
+                    Throwable cause = exception.getCause();
+                    if (cause instanceof IOException) throw (IOException) cause;
+                    throw new IOException("Unable to prefetch Forge libraries", cause);
+                }
+            }
+        } finally {
+            executor.shutdownNow();
         }
-        Tools.preProcessLibraries(libraries);
-        for (DependentLibrary library : libraries) {
-            if (library == null || library.name == null) {
-                continue;
-            }
-            if (library.name.startsWith("org.lwjgl")) {
-                continue;
-            }
-            if (library.name.contains("lwjgl-platform-2.9.1-nightly-20130708-debug3")) {
-                continue;
-            }
+    }
 
-            String artifactPath = artifactPath(library);
-            if (artifactPath == null || artifactPath.equals(skippedArtifactPath)) {
-                continue;
+    private static Map<String, LibraryDownload> collectLibraryDownloads(
+            String skippedArtifactPath, DependentLibrary[][] libraryGroups) {
+        Map<String, LibraryDownload> downloads = new LinkedHashMap<>();
+        if (libraryGroups == null) return downloads;
+        for (DependentLibrary[] libraries : libraryGroups) {
+            if (libraries == null) continue;
+            Tools.preProcessLibraries(libraries);
+            for (DependentLibrary library : libraries) {
+                if (library == null || library.name == null
+                        || library.name.startsWith("org.lwjgl")
+                        || library.name.contains("lwjgl-platform-2.9.1-nightly-20130708-debug3")) {
+                    continue;
+                }
+                String artifactPath = artifactPath(library);
+                if (artifactPath == null || artifactPath.equals(skippedArtifactPath)) continue;
+                String url = libraryUrl(library, artifactPath);
+                if (url == null) continue;
+                downloads.putIfAbsent(artifactPath, new LibraryDownload(
+                        url, librarySha1(library),
+                        new File(Tools.DIR_HOME_LIBRARY, artifactPath)));
             }
+        }
+        return downloads;
+    }
 
-            String url = libraryUrl(library, artifactPath);
-            if (url == null) {
-                continue;
-            }
+    private static final class LibraryDownload {
+        private final String url;
+        private final String sha1;
+        private final File target;
 
-            String sha1 = librarySha1(library);
-            File targetFile = new File(Tools.DIR_HOME_LIBRARY, artifactPath);
-            DownloadUtils.ensureSha1(targetFile, sha1, () -> {
-                DownloadUtils.downloadFile(url, targetFile);
-                return null;
-            });
+        private LibraryDownload(String url, String sha1, File target) {
+            this.url = url;
+            this.sha1 = sha1;
+            this.target = target;
         }
     }
 

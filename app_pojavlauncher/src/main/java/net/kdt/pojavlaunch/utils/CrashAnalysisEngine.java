@@ -88,7 +88,8 @@ public final class CrashAnalysisEngine {
             findings.add(new Finding(Severity.HIGH, "memory", "Minecraft ran out of memory",
                     "Lower the allocated RAM or close background apps.", Action.LOWER_MEMORY, null));
         }
-        if (containsAny(lower, "mixintweaker", "mixinapplyerror", "mixintransformererror",
+        if (!modCompatibility.detected && containsAny(lower,
+                "mixintweaker", "mixinapplyerror", "mixintransformererror",
                 "invalidmixinexception", "invalidinjectionexception", "mixin apply failed")) {
             String suspectMod = findSuspectMod(gameDir, source);
             findings.add(new Finding(Severity.HIGH, "mixin", "A mod or its Mixin dependency is incompatible",

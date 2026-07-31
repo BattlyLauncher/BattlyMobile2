@@ -159,8 +159,8 @@ android {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 10000013
-        versionName "2.0.6"
+        versionCode 10000014
+        versionName "2.0.7"
         multiDexEnabled true //important
         buildConfigField "boolean", "BATTLY_WORLDS_ENABLED", battlyWorldsEnabled.toString()
         resValue 'string', 'curseforge_api_key', getCFApiKey()

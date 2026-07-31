@@ -39,6 +39,8 @@
     <string name="launcher_status_local">Cuenta local</string>
     <string name="launcher_version_unknown">Desconocida</string>
     <string name="launcher_download_modpack">Importar modpack</string>
+    <string name="launcher_mobile_badge_dynamic">Mobile %1$s</string>
+    <string name="credits_version_dynamic">Versión %1$s</string>
     <string name="launcher_credits_html"><![CDATA[
         <b>Battly Launcher 2.0.3</b><br/><br/>
         Launcher basado en PojavLauncher y Boardwalk.<br/><br/>

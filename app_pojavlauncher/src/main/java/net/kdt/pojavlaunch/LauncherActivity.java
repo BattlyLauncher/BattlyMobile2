@@ -319,6 +319,8 @@ public class LauncherActivity extends BaseActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_pojav_launcher);
+        TextView buildBadge = findViewById(R.id.launcher_build_badge);
+        buildBadge.setText(getString(R.string.launcher_mobile_badge_dynamic, BuildConfig.VERSION_NAME));
         handleBattlyOAuthIntent(getIntent());
         FragmentManager fragmentManager = getSupportFragmentManager();
         // If we don't have a back stack root yet...

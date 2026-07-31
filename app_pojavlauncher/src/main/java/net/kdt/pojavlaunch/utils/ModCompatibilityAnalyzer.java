@@ -47,6 +47,18 @@ public final class ModCompatibilityAnalyzer {
                     + "(?:requires|needs|depends on)\\s+(?:mod\\s+)?['\"]?([^'\"\\s,]+)['\"]?"
                     + "(?:\\s+(?:version|range)\\s+([^\\r\\n,]+))?",
             Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
+    private static final Pattern MIXIN_MOD_FAILURE = Pattern.compile(
+            "Mixin apply for mod\\s+([^\\s]+)\\s+failed",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern LOADING_MINECRAFT = Pattern.compile(
+            "Loading Minecraft\\s+([^\\s]+)\\s+with\\s+(?:Fabric|Quilt) Loader\\s+([^\\s]+)",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern UNSUPPORTED_CLASS_MAJOR = Pattern.compile(
+            "Unsupported class file major version\\s+(\\d+)",
+            Pattern.CASE_INSENSITIVE);
+    private static final Pattern QUILT_VERSION = Pattern.compile(
+            "Quilt Loader Version:\\s*([^\\s]+)",
+            Pattern.CASE_INSENSITIVE);
 
     private ModCompatibilityAnalyzer() {
     }
@@ -57,11 +69,15 @@ public final class ModCompatibilityAnalyzer {
         if (!containsMarker(lower)) return Analysis.none();
 
         String loader = detectLoader(lower);
+        Analysis bytecodeFailure = analyzeUnsupportedBytecode(source, loader);
+        if (bytecodeFailure != null) return bytecodeFailure;
+
         LinkedHashMap<String, MutableIssue> issues = new LinkedHashMap<>();
         parseStructuredDependencies(source, issues);
         parseReadableDependencies(source, SPANISH_DEPENDENCY, issues);
         parseReadableDependencies(source, ENGLISH_DEPENDENCY, issues);
         parseForgeFailures(source, issues);
+        parseMixinFailures(source, issues);
 
         Replacement replacement = parseReplacement(source);
         List<Issue> immutableIssues = new ArrayList<>();
@@ -88,7 +104,10 @@ public final class ModCompatibilityAnalyzer {
                 || lower.contains("formattedexception")
                 || lower.contains("modloadingexception")
                 || lower.contains("missing mandatory dependencies")
-                || lower.contains("needs language provider javafml");
+                || lower.contains("needs language provider javafml")
+                || lower.contains("mixin apply for mod")
+                || lower.contains("invalidinjectionexception")
+                || lower.contains("unsupported class file major version");
     }
 
     private static String detectLoader(String lower) {
@@ -152,6 +171,63 @@ public final class ModCompatibilityAnalyzer {
         }
     }
 
+    private static void parseMixinFailures(String source, Map<String, MutableIssue> issues) {
+        Matcher game = LOADING_MINECRAFT.matcher(source);
+        String minecraftVersion = game.find() ? game.group(1).trim() : "";
+        Matcher matcher = MIXIN_MOD_FAILURE.matcher(source);
+        while (matcher.find()) {
+            String modId = matcher.group(1).trim();
+            MutableIssue issue = issue(issues, modId, findModVersion(source, modId),
+                    "minecraft", minecraftVersion.isEmpty()
+                            ? "a build for this Minecraft version"
+                            : "a build for Minecraft " + minecraftVersion);
+            issue.dependencyName = "Minecraft";
+            issue.currentVersion = minecraftVersion;
+        }
+    }
+
+    private static Analysis analyzeUnsupportedBytecode(String source, String loader) {
+        Matcher majorMatcher = UNSUPPORTED_CLASS_MAJOR.matcher(source);
+        if (!majorMatcher.find()) return null;
+
+        int major = Integer.parseInt(majorMatcher.group(1));
+        int javaVersion = Math.max(0, major - 44);
+        Matcher gameMatcher = LOADING_MINECRAFT.matcher(source);
+        boolean hasLoadingLine = gameMatcher.find();
+        String minecraftVersion = hasLoadingLine ? gameMatcher.group(1).trim() : "";
+        String loaderVersion = hasLoadingLine ? gameMatcher.group(2).trim() : "";
+        if (loaderVersion.isEmpty()) {
+            Matcher quiltMatcher = QUILT_VERSION.matcher(source);
+            if (quiltMatcher.find()) loaderVersion = quiltMatcher.group(1).trim();
+        }
+
+        String loaderName = "Mod loader".equals(loader) ? "Quilt" : loader;
+        String versionLabel = loaderVersion.isEmpty() ? loaderName : loaderName + " " + loaderVersion;
+        String javaLabel = javaVersion > 0 ? "Java " + javaVersion : "class version " + major;
+        MutableIssue mutable = new MutableIssue(
+                versionLabel, loaderVersion, "java", javaLabel);
+        mutable.modName = versionLabel;
+        mutable.dependencyName = "Java bytecode";
+        mutable.currentVersion = Integer.toString(major);
+        List<Issue> issues = Collections.singletonList(mutable.freeze());
+        String gameLabel = minecraftVersion.isEmpty() ? "this Minecraft version"
+                : "Minecraft " + minecraftVersion;
+        String summary = versionLabel + " is too old to read " + gameLabel
+                + " (" + javaLabel + ").";
+        String solution = "Recommended solution: install a newer " + loaderName
+                + " build made for " + gameLabel + ".";
+        return new Analysis(true, loaderName, summary, solution, "", "",
+                issues, primaryExcerpt(source));
+    }
+
+    private static String findModVersion(String source, String modId) {
+        Pattern versionLine = Pattern.compile(
+                "(?m)^\\s*-\\s+" + Pattern.quote(modId) + "\\s+([^\\s]+)",
+                Pattern.CASE_INSENSITIVE);
+        Matcher matcher = versionLine.matcher(source);
+        return matcher.find() ? matcher.group(1).trim() : "";
+    }
+
     private static MutableIssue issue(Map<String, MutableIssue> issues, String modId,
                                       String installedVersion, String dependencyId,
                                       String requirement) {
@@ -206,7 +282,8 @@ public final class ModCompatibilityAnalyzer {
     private static String primaryExcerpt(String source) {
         int start = firstIndex(source,
                 "Mod resolution failed", "Incompatible mods found", "Some of your mods are incompatible",
-                "Missing mandatory dependencies", "ModLoadingException");
+                "Missing mandatory dependencies", "ModLoadingException",
+                "Mixin apply for mod", "Unsupported class file major version");
         if (start < 0) start = 0;
         int awt = firstIndexAfter(source, start,
                 "java.awt.Insets.initIDs", "FabricMainWindow.open", "FabricGuiEntry.open");
