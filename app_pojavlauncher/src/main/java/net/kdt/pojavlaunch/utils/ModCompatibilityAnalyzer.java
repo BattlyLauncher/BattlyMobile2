@@ -66,6 +66,18 @@ public final class ModCompatibilityAnalyzer {
     public static Analysis analyze(String source) {
         if (source == null || source.trim().isEmpty()) return Analysis.none();
         String lower = source.toLowerCase(Locale.ROOT);
+        if (lower.contains("embeddium.mixins.json") && lower.contains("optifine")) {
+            MutableIssue conflict = new MutableIssue(
+                    "embeddium", findModVersion(source, "embeddium"),
+                    "optifine", "remove one of these rendering replacements");
+            conflict.modName = "Embeddium + OptiFine";
+            conflict.dependencyName = "Rendering conflict";
+            return new Analysis(true, "Forge",
+                    "OptiFine and Embeddium are modifying the same Minecraft renderer and cannot start together.",
+                    "Recommended solution: disable Embeddium or OptiFine. Battly does not delete either mod automatically.",
+                    "", "", Collections.singletonList(conflict.freeze()),
+                    primaryExcerpt(source));
+        }
         if (!containsMarker(lower)) return Analysis.none();
 
         String loader = detectLoader(lower);

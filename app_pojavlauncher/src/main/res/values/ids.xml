@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <item name="tag_battly_plus_animator" type="id" />
+    <item name="maintenance_status_tag" type="id" />
 </resources>

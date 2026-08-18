@@ -15,6 +15,7 @@ import java.io.File;
 public class NotificationDownloadListener implements ModloaderDownloadListener {
     private final Context mContext;
     private final ModLoader mModLoader;
+    private volatile boolean mSuccessful;
     
     public NotificationDownloadListener(Context context, ModLoader modLoader) {
         mModLoader = modLoader;
@@ -23,11 +24,16 @@ public class NotificationDownloadListener implements ModloaderDownloadListener {
 
     @Override
     public void onDownloadFinished(File downloadedFile) {
+        mSuccessful = true;
         if (mModLoader.requiresGuiInstallation() && downloadedFile != null) {
             ModloaderInstallTracker.saveModLoader(mContext, mModLoader, downloadedFile);
         }
         Intent mainActivityIntent = new Intent(mContext, LauncherActivity.class);
         sendIntentNotification(mainActivityIntent, R.string.modpack_install_notification_success);
+    }
+
+    public boolean wasSuccessful() {
+        return mSuccessful;
     }
 
     @Override

@@ -18,6 +18,8 @@ public final class BattlyAuthlibManager {
     private static final String FILES_URL = "https://api.battlylauncher.com/battlylauncher/files";
     private static final String AUTHLIB_PATH = "authlib-injector.jar";
     private static final String AUTH_SERVER = "https://api.battlylauncher.com";
+    private static final String DOWNLOAD_SUFFIX = ".download";
+    private static final String BACKUP_SUFFIX = ".backup";
 
     private BattlyAuthlibManager() {
     }
@@ -34,18 +36,7 @@ public final class BattlyAuthlibManager {
             }
             throw new IOException("Unable to load Battly files manifest", e);
         }
-        JSONObject authlibEntry = null;
-        for (int i = 0; i < files.length(); i++) {
-            JSONObject entry = files.optJSONObject(i);
-            if (entry == null || !AUTHLIB_PATH.equals(entry.optString("path"))) {
-                continue;
-            }
-            if (!supportsAndroid(entry.optJSONArray("compatibilities"))) {
-                continue;
-            }
-            authlibEntry = entry;
-            break;
-        }
+        JSONObject authlibEntry = selectAndroidAuthlib(files);
 
         if (authlibEntry == null) {
             throw new IOException("Battly authlib is not available for android");
@@ -62,14 +53,36 @@ public final class BattlyAuthlibManager {
         if (url.isEmpty()) {
             throw new IOException("Battly authlib url is empty");
         }
-        DownloadUtils.downloadFile(url, destination);
-        if (!isValid(destination, sha1, size)) {
-            if (!destination.delete()) {
-                Log.w(TAG, "Could not delete invalid authlib: " + destination.getAbsolutePath());
+        File temporary = new File(destination.getAbsolutePath() + DOWNLOAD_SUFFIX);
+        if (temporary.exists() && !temporary.delete()) {
+            throw new IOException("Unable to clear stale Battly authlib download");
+        }
+        DownloadUtils.downloadFile(url, temporary);
+        if (!isValid(temporary, sha1, size)) {
+            if (!temporary.delete()) {
+                Log.w(TAG, "Could not delete invalid authlib download: " + temporary.getAbsolutePath());
             }
             throw new IOException("Battly authlib verification failed");
         }
+        replaceVerifiedDownload(temporary, destination);
+        Log.i(TAG, "Battly authlib updated from API: " + sha1);
         return destination;
+    }
+
+    static JSONObject selectAndroidAuthlib(JSONArray files) {
+        if (files == null) {
+            return null;
+        }
+        for (int i = 0; i < files.length(); i++) {
+            JSONObject entry = files.optJSONObject(i);
+            if (entry == null || !AUTHLIB_PATH.equals(entry.optString("path"))) {
+                continue;
+            }
+            if (supportsAndroid(entry.optJSONArray("compatibilities"))) {
+                return entry;
+            }
+        }
+        return null;
     }
 
     public static void addJvmArgumentsIfAvailable(java.util.List<String> javaArgList) {
@@ -97,6 +110,27 @@ public final class BattlyAuthlibManager {
             }
         }
         return false;
+    }
+
+    static void replaceVerifiedDownload(File temporary, File destination) throws IOException {
+        File backup = new File(destination.getAbsolutePath() + BACKUP_SUFFIX);
+        if (backup.exists() && !backup.delete()) {
+            throw new IOException("Unable to clear stale Battly authlib backup");
+        }
+
+        boolean hadDestination = destination.isFile();
+        if (hadDestination && !destination.renameTo(backup)) {
+            throw new IOException("Unable to back up the current Battly authlib");
+        }
+        if (!temporary.renameTo(destination)) {
+            if (hadDestination && !backup.renameTo(destination)) {
+                Log.e(TAG, "Unable to restore Battly authlib backup: " + backup.getAbsolutePath());
+            }
+            throw new IOException("Unable to activate the downloaded Battly authlib");
+        }
+        if (backup.exists() && !backup.delete()) {
+            Log.w(TAG, "Could not delete old Battly authlib backup: " + backup.getAbsolutePath());
+        }
     }
 
     private static File resolveDestination(String path) throws IOException {

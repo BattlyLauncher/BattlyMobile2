@@ -27,6 +27,7 @@ import java.util.*;
 import java.util.jar.JarFile;
 import net.kdt.pojavlaunch.*;
 import net.kdt.pojavlaunch.analytics.Telemetry;
+import net.kdt.pojavlaunch.customcontrols.MinecraftServerSessionTracker;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.lifecycle.LifecycleAwareAlertDialog;
@@ -123,6 +124,7 @@ public class JREUtils {
                     int len;
                     while ((len = p.getInputStream().read(buf)) != -1) {
                         String currStr = new String(buf, 0, len);
+                        MinecraftServerSessionTracker.ingest(currStr);
                         Logger.appendToLog(currStr);
                     }
 
@@ -337,6 +339,7 @@ public class JREUtils {
         }
     }
     public static void launchJavaVM(final AppCompatActivity activity, final Runtime runtime, File gameDirectory, final List<String> JVMArgs, final String userArgsString) throws Throwable {
+        MinecraftServerSessionTracker.reset();
         String runtimeHome = MultiRTUtils.getRuntimeHome(runtime.name).getAbsolutePath();
 
         JREUtils.relocateLibPath(runtime, runtimeHome);

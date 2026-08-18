@@ -34,6 +34,10 @@ import androidx.annotation.RequiresApi;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
 import net.kdt.pojavlaunch.customcontrols.gamepad.DefaultDataProvider;
 import net.kdt.pojavlaunch.customcontrols.gamepad.Gamepad;
+import net.kdt.pojavlaunch.customcontrols.gamepad.ControllerTypeResolver;
+import net.kdt.pojavlaunch.customcontrols.gamepad.ControllerInputSettings;
+import net.kdt.pojavlaunch.customcontrols.gamepad.ControllerInputVisualizer;
+import net.kdt.pojavlaunch.customcontrols.gamepad.ControllerRemapperBridge;
 import net.kdt.pojavlaunch.customcontrols.gamepad.direct.DirectGamepad;
 import net.kdt.pojavlaunch.customcontrols.gamepad.direct.DirectGamepadEnableHandler;
 import net.kdt.pojavlaunch.customcontrols.mouse.AbstractTouchpad;
@@ -62,7 +66,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     /* Gamepad object for gamepad inputs, instantiated on need */
     private GamepadHandler mGamepadHandler;
     /* The RemapperView.Builder object allows you to set which buttons to remap */
-    private final RemapperManager mInputManager = new RemapperManager(getContext(), new RemapperView.Builder(null)
+    private final RemapperView.Builder mRemapperViewBuilder = new RemapperView.Builder(null)
             .remapA(true)
             .remapB(true)
             .remapX(true)
@@ -76,7 +80,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
             .remapRightShoulder(true)
             .remapLeftTrigger(true)
             .remapRightTrigger(true)
-            .remapDpad(true));
+            .remapDpad(true);
+    private RemapperManager mInputManager;
+    private String mInputManagerDescriptor;
 
     /* Sensitivity, adjusted according to screen size */
     private final double mSensitivityFactor = (1.4 * (1080f/ Tools.getDisplayMetrics((Activity) getContext()).heightPixels));
@@ -102,6 +108,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     private boolean mLastGrabState = false;
     public static boolean sdlEnabled = false;
     private static boolean sdlWindowBridgeEnabled = false;
+    private static boolean sdlInputBridgeEnabled = false;
     boolean useSurfaceView = LauncherPreferences.PREF_USE_ALTERNATE_SURFACE;
 
     public MinecraftGLSurface(Context context) {
@@ -121,6 +128,14 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
 
     public static boolean isSdlWindowBridgeEnabled() {
         return sdlWindowBridgeEnabled;
+    }
+
+    public static void setSdlInputBridgeEnabled(boolean enabled) {
+        sdlInputBridgeEnabled = enabled;
+    }
+
+    public static boolean isSdlInputBridgeEnabled() {
+        return sdlInputBridgeEnabled;
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -275,11 +290,33 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     }
 
     private void createGamepad(View contextView, InputDevice inputDevice) {
-        if(CallbackBridge.sGamepadDirectInput && !sdlEnabled) {
-            mGamepadHandler = new DirectGamepad();
-        }else if(!sdlEnabled) {
-            mGamepadHandler = new Gamepad(contextView, inputDevice, DefaultDataProvider.INSTANCE, true);
+        boolean useNativeInput = ControllerInputSettings.shouldUseNativeInput(
+                LauncherPreferences.PREF_GAMEPAD_INPUT_MODE,
+                CallbackBridge.sGamepadDirectInput || sdlEnabled);
+        if(useNativeInput && !sdlEnabled) {
+            ControllerTypeResolver.Style style = ControllerTypeResolver.Style.fromPreference(
+                    LauncherPreferences.DEFAULT_PREF.getString(ControllerTypeResolver.PREFERENCE_KEY, "auto"));
+            mGamepadHandler = new DirectGamepad(inputDevice, style);
+        }else if(!useNativeInput) {
+            ControllerTypeResolver.Style style = ControllerTypeResolver.Style.fromPreference(
+                    LauncherPreferences.DEFAULT_PREF.getString(ControllerTypeResolver.PREFERENCE_KEY, "auto"));
+            mGamepadHandler = new Gamepad(contextView, inputDevice, DefaultDataProvider.INSTANCE, true, style);
         }else mGamepadHandler = (code, value) -> {}; // Ensure it isn't null while also not processing the events.
+    }
+
+    private RemapperManager getInputManager(InputDevice device) {
+        String descriptor = device == null ? "" : device.getDescriptor();
+        if (mInputManager == null || !descriptor.equals(mInputManagerDescriptor)) {
+            ControllerRemapperBridge.ensureProfile(getContext(), device);
+            mInputManager = new RemapperManager(getContext(), mRemapperViewBuilder);
+            mInputManagerDescriptor = descriptor;
+        }
+        return mInputManager;
+    }
+
+    private boolean routesGamepadThroughSdl() {
+        return sdlEnabled && ControllerInputSettings.shouldUseNativeInput(
+                LauncherPreferences.PREF_GAMEPAD_INPUT_MODE, true);
     }
 
     /**
@@ -288,7 +325,9 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     @SuppressLint("NewApi")
     @Override
     public boolean dispatchGenericMotionEvent(MotionEvent event) {
-        if(sdlEnabled && Gamepad.isGamepadEvent(event)) {
+        boolean gamepadEvent = Gamepad.isGamepadEvent(event);
+        if (gamepadEvent) ControllerInputVisualizer.onMotionEvent(event);
+        if(routesGamepadThroughSdl() && gamepadEvent) {
             final MotionEvent copy = MotionEvent.obtain(event);
             PojavApplication.sExecutorService.execute(()->{
                 try {
@@ -300,15 +339,18 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
             });
             return true;
         }
-        super.dispatchGenericMotionEvent(event);
-        int mouseCursorIndex = -1;
-
-        if(!sdlEnabled && Gamepad.isGamepadEvent(event)){
+        if(gamepadEvent){
             if(mGamepadHandler == null) createGamepad(this, event.getDevice());
-
-            mInputManager.handleMotionEventInput(getContext(), event, mGamepadHandler);
+            getInputManager(event.getDevice()).handleMotionEventInput(
+                    getContext(), event, mGamepadHandler);
             return true;
         }
+
+        // A joystick event must be consumed before View dispatch. Calling super first lets
+        // Android synthesize compatibility DPAD keys for stick movement on DualShock/DualSense;
+        // those fake keys then execute the user's DPAD bindings (chat, F5, etc.).
+        super.dispatchGenericMotionEvent(event);
+        int mouseCursorIndex = -1;
 
         for(int i = 0; i < event.getPointerCount(); i++) {
             if(event.getToolType(i) != MotionEvent.TOOL_TYPE_MOUSE && event.getToolType(i) != MotionEvent.TOOL_TYPE_STYLUS ) continue;
@@ -341,6 +383,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
 
     /** The event for keyboard/ gamepad button inputs */
     public boolean processKeyEvent(KeyEvent event) {
+        ControllerInputVisualizer.onKeyEvent(event);
         //Log.i("KeyEvent", event.toString());
 
         //Filtering useless events by order of probability
@@ -377,7 +420,7 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         // Android bundles in garbage KeyEvents for compatibility with old apps
         // that don't have controller code so we are, checking for em.
         boolean isGamepadEvent = Gamepad.isGamepadEvent(event);
-        if (sdlEnabled && isGamepadEvent) {
+        if (routesGamepadThroughSdl() && isGamepadEvent) {
             final KeyEvent copy = new KeyEvent(event);
             PojavApplication.sExecutorService.execute(() -> {
                 try {
@@ -388,10 +431,38 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
             });
             return true;
         }
-        if(!sdlEnabled && isGamepadEvent){
+        if(isGamepadEvent){
             if(mGamepadHandler == null) createGamepad(this, event.getDevice());
 
-            mInputManager.handleKeyEventInput(getContext(), event, mGamepadHandler);
+            // DualShock/DualSense expose their real D-pad through HAT_X/HAT_Y. Android may also
+            // synthesize DPAD KeyEvents from analog movement without marking them FLAG_FALLBACK.
+            // Consume that duplicate key path; the physical D-pad remains handled by HAT axes.
+            InputDevice controller = event.getDevice();
+            boolean hasHatDpad = controller != null
+                    && controller.getMotionRange(MotionEvent.AXIS_HAT_X) != null
+                    && controller.getMotionRange(MotionEvent.AXIS_HAT_Y) != null;
+            if (ControllerInputSettings.shouldSuppressDuplicateDpadKey(
+                    eventKeycode, event.getFlags(), hasHatDpad)) {
+                Log.i(TAG, "Ignoring synthetic controller DPAD key "
+                        + KeyEvent.keyCodeToString(eventKeycode));
+                return true;
+            }
+
+            if (event.getAction() == KeyEvent.ACTION_DOWN
+                    && eventKeycode >= KeyEvent.KEYCODE_DPAD_UP
+                    && eventKeycode <= KeyEvent.KEYCODE_DPAD_CENTER) {
+                String device = event.getDevice() == null ? "unknown" : event.getDevice().getName();
+                String message = "[Battly/Gamepad] key device=" + device
+                        + " code=" + KeyEvent.keyCodeToString(eventKeycode)
+                        + " source=0x" + Integer.toHexString(event.getSource())
+                        + " flags=0x" + Integer.toHexString(event.getFlags())
+                        + " scan=" + event.getScanCode();
+                Log.i(TAG, message);
+                System.out.println(message);
+            }
+
+            getInputManager(event.getDevice()).handleKeyEventInput(
+                    getContext(), event, mGamepadHandler);
             return true;
         }
 

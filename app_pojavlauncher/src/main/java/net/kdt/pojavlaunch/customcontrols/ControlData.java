@@ -24,6 +24,7 @@ import java.util.Map;
 @Keep
 public class ControlData {
     public static final String WIDGET_PERFORMANCE = "performance";
+    public static final String WIDGET_DEVICE_IMAGE = "device_image";
 
     public static final int SPECIALBTN_KEYBOARD = -1;
     public static final int SPECIALBTN_TOGGLECTRL = -2;
@@ -61,6 +62,8 @@ public class ControlData {
     public String displayType;
     public String displayValue;
     public String widgetType;
+    public String imageSource;
+    public String imagePath;
     public int[] keycodes;      //Should store up to 4 keys
     public float opacity;       //Alpha value from 0 to 1;
     public int bgColor;
@@ -137,6 +140,8 @@ public class ControlData {
         this.displayType = ControlDisplayUtils.TYPE_TEXT;
         this.displayValue = "";
         this.widgetType = "";
+        this.imageSource = "";
+        this.imagePath = "";
     }
 
     //Deep copy constructor
@@ -162,6 +167,8 @@ public class ControlData {
         this.displayType = controlData.displayType;
         this.displayValue = controlData.displayValue;
         this.widgetType = controlData.widgetType;
+        this.imageSource = controlData.imageSource;
+        this.imagePath = controlData.imagePath;
     }
 
     public static ControlData createPerformanceWidget() {
@@ -189,6 +196,35 @@ public class ControlData {
 
     public boolean isPerformanceWidget() {
         return WIDGET_PERFORMANCE.equals(widgetType);
+    }
+
+    public static ControlData createDeviceImageWidget(String source, String path) {
+        ControlData data = new ControlData(
+                "Input device",
+                new int[]{},
+                "0.5 * ${screen_width} - 0.5 * ${width}",
+                "${margin} * 2 + px(70) / 100.0 * ${preferred_scale}",
+                210,
+                118,
+                false,
+                0.88f,
+                0x00000000,
+                0x00000000,
+                0,
+                0,
+                true,
+                true,
+                false,
+                false
+        );
+        data.widgetType = WIDGET_DEVICE_IMAGE;
+        data.imageSource = source == null ? "auto" : source;
+        data.imagePath = path == null ? "" : path;
+        return data;
+    }
+
+    public boolean isDeviceImageWidget() {
+        return WIDGET_DEVICE_IMAGE.equals(widgetType);
     }
 
     public static ControlData[] getSpecialButtons() {

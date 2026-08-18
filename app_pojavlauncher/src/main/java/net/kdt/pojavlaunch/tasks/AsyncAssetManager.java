@@ -115,6 +115,21 @@ public class AsyncAssetManager {
         });
     }
 
+    /** Restores launcher-owned components synchronously for the maintenance screen. */
+    public static synchronized void repairPackagedComponents(Context ctx) throws IOException {
+        unpackLwjglNatives(ctx);
+        unpackComponent(ctx, "caciocavallo", false);
+        unpackComponent(ctx, "caciocavallo17", false);
+        unpackComponent(ctx, "lwjgl3/3.3.3", false);
+        unpackComponent(ctx, "lwjgl3/3.4.1", false);
+        unpackComponent(ctx, "lwjgl3/3.4.2", false);
+        unpackLwjglRootFiles(ctx);
+        unpackComponent(ctx, "security", true);
+        unpackComponent(ctx, "arc_dns_injector", true);
+        unpackComponent(ctx, "lwjgl2_methods_injector", true);
+        unpackComponent(ctx, "forge_installer", true);
+    }
+
     public static synchronized void unpackLwjglNatives(Context ctx) throws IOException {
         AssetManager am = ctx.getAssets();
         String sArch = archAsStringAndroid(getDeviceArchitecture());
@@ -193,35 +208,44 @@ public class AsyncAssetManager {
         String rootDir = privateDirectory ? Tools.DIR_DATA : Tools.DIR_GAME_HOME;
 
         File versionFile = new File(rootDir + "/" + component + "/version");
-        InputStream is = am.open("components/" + component + "/version");
-        if(!versionFile.exists()) {
+        String[] fileList = am.list("components/" + component);
+        if (fileList == null || fileList.length == 0) {
+            throw new IOException("Packaged component is empty: " + component);
+        }
+        String release1;
+        try (InputStream is = am.open("components/" + component + "/version")) {
+            release1 = Tools.read(is);
+        }
+        boolean shouldUnpack = !versionFile.isFile();
+        if (!shouldUnpack) {
+            try (FileInputStream fis = new FileInputStream(versionFile)) {
+                shouldUnpack = !release1.equals(Tools.read(fis));
+            }
+        }
+        if (!shouldUnpack) {
+            File componentDirectory = versionFile.getParentFile();
+            for (String fileName : fileList) {
+                if ("version".equals(fileName)) continue;
+                File installedFile = new File(componentDirectory, fileName);
+                if (!installedFile.isFile() || installedFile.length() == 0) {
+                    Log.w("UnpackPrep", component + ": missing or empty " + fileName);
+                    shouldUnpack = true;
+                    break;
+                }
+            }
+        }
+        if (shouldUnpack) {
             if (versionFile.getParentFile().exists() && versionFile.getParentFile().isDirectory()) {
                 FileUtils.deleteDirectory(versionFile.getParentFile());
             }
-            versionFile.getParentFile().mkdir();
+            versionFile.getParentFile().mkdirs();
 
-            Log.i("UnpackPrep", component + ": Pack was installed manually, or does not exist, unpacking new...");
-            String[] fileList = am.list("components/" + component);
+            Log.i("UnpackPrep", component + ": unpacking verified packaged component...");
             for(String s : fileList) {
                 Tools.copyAssetFile(ctx, "components/" + component + "/" + s, rootDir + "/" + component, true);
             }
         } else {
-            FileInputStream fis = new FileInputStream(versionFile);
-            String release1 = Tools.read(is);
-            String release2 = Tools.read(fis);
-            if (!release1.equals(release2)) {
-                if (versionFile.getParentFile().exists() && versionFile.getParentFile().isDirectory()) {
-                    FileUtils.deleteDirectory(versionFile.getParentFile());
-                }
-                versionFile.getParentFile().mkdir();
-
-                String[] fileList = am.list("components/" + component);
-                for (String fileName : fileList) {
-                    Tools.copyAssetFile(ctx, "components/" + component + "/" + fileName, rootDir + "/" + component, true);
-                }
-            } else {
-                Log.i("UnpackPrep", component + ": Pack is up-to-date with the launcher, continuing...");
-            }
+            Log.i("UnpackPrep", component + ": Pack is up-to-date with the launcher, continuing...");
         }
     }
 

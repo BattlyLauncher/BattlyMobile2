@@ -4,7 +4,6 @@ import android.content.Context;
 
 import net.kdt.pojavlaunch.JMinecraftVersionList;
 import net.kdt.pojavlaunch.Tools;
-import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.value.DependentLibrary;
@@ -49,10 +48,8 @@ public class OptiFineInstaller {
         ));
 
         if (new File(workspace, "optifine/Patcher.class").isFile()) {
-            String runtimeName = MultiRTUtils.getExactJreName(17);
-            if (runtimeName == null) {
-                runtimeName = ModloaderInstallUtils.selectRuntimeForJar(installerJar, 8);
-            }
+            String runtimeName = ModloaderInstallUtils.selectRuntimeForJar(
+                    installerJar, "optifine/Patcher.class", 8);
             if (runtimeName == null) {
                 throw new IOException("No compatible runtime found for OptiFine installer");
             }
@@ -63,7 +60,8 @@ public class OptiFineInstaller {
             commands.add(new File(Tools.DIR_HOME_VERSION, normalizedMcVersion + "/" + normalizedMcVersion + ".jar").getAbsolutePath());
             commands.add(installerJar.getAbsolutePath());
             commands.add(runtimeLibrary.getAbsolutePath());
-            HeadlessInstallerRunner.run(context.getApplicationContext(), runtimeName, workspace, commands);
+            HeadlessInstallerRunner.run(context.getApplicationContext(), runtimeName, workspace,
+                    commands, runtimeLibrary);
             if (!runtimeLibrary.isFile() || runtimeLibrary.length() < 1) {
                 throw new IOException("OptiFine patcher did not generate the runtime jar");
             }

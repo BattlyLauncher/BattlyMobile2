@@ -67,7 +67,13 @@ public final class ControlPerformanceWidget extends ControlButton {
         int fps = PerformanceHudStats.getFps();
         int ping = PerformanceHudStats.getPingMs();
         String fpsText = fps > 0 ? Integer.toString(fps) : "--";
-        String pingText = ping >= 0 ? Integer.toString(ping) : "--";
-        setText(getContext().getString(R.string.customctrl_performance_value, fpsText, pingText));
+        if (ping >= 0) {
+            setText(getContext().getString(
+                    R.string.customctrl_performance_value,
+                    fpsText,
+                    Integer.toString(ping)));
+        } else {
+            setText(getContext().getString(R.string.customctrl_performance_fps_only, fpsText));
+        }
     }
 }

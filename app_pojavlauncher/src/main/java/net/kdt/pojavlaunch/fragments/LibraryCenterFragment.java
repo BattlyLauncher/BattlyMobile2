@@ -1,12 +1,14 @@
 package net.kdt.pojavlaunch.fragments;
 
 import android.graphics.Typeface;
+import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -21,6 +23,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
 import net.kdt.pojavlaunch.utils.ContentDependencyAnalyzer;
+import net.kdt.pojavlaunch.utils.InstalledContentIconLoader;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
@@ -47,6 +50,7 @@ public class LibraryCenterFragment extends Fragment {
     private static final Pattern JSON_VERSION = Pattern.compile("\"(?:version|mod_version)\"\\s*:\\s*\"([^\"]+)\"");
     private static final Pattern TOML_NAME = Pattern.compile("displayName\\s*=\\s*\"([^\"]+)\"");
     private static final Pattern TOML_VERSION = Pattern.compile("version\\s*=\\s*\"([^\"]+)\"");
+    private static final Pattern TOML_ICON = Pattern.compile("logoFile\\s*=\\s*\"([^\"]+)\"");
     private LinearLayout mInstalledContentContainer;
     private int mInstalledContentRequestId;
 
@@ -256,6 +260,25 @@ public class LibraryCenterFragment extends Fragment {
         params.setMargins(0, dp(10), 0, 0);
         row.setLayoutParams(params);
 
+        LinearLayout content = new LinearLayout(requireContext());
+        content.setGravity(Gravity.CENTER_VERTICAL);
+        content.setOrientation(LinearLayout.HORIZONTAL);
+
+        ImageView icon = new ImageView(requireContext());
+        icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
+        icon.setImageResource(android.R.drawable.ic_menu_gallery);
+        icon.setColorFilter(0xFF8DEEDC);
+        icon.setPadding(dp(10), dp(10), dp(10), dp(10));
+        icon.setBackgroundResource(R.drawable.bg_battly_profile_icon);
+        icon.setClipToOutline(true);
+        LinearLayout.LayoutParams iconParams = new LinearLayout.LayoutParams(dp(54), dp(54));
+        iconParams.setMargins(0, 0, dp(12), 0);
+        content.addView(icon, iconParams);
+
+        LinearLayout details = new LinearLayout(requireContext());
+        details.setOrientation(LinearLayout.VERTICAL);
+        content.addView(details, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+
         LinearLayout top = new LinearLayout(requireContext());
         top.setGravity(Gravity.CENTER_VERTICAL);
         top.setOrientation(LinearLayout.HORIZONTAL);
@@ -273,14 +296,14 @@ public class LibraryCenterFragment extends Fragment {
         badge.setTextSize(11);
         badge.setTypeface(Typeface.DEFAULT_BOLD);
         top.addView(badge);
-        row.addView(top);
+        details.addView(top);
 
         TextView meta = new TextView(requireContext());
         meta.setText(info.metaLine());
         meta.setTextColor(0xFF9FB8C5);
         meta.setTextSize(11);
         meta.setPadding(0, dp(2), 0, 0);
-        row.addView(meta);
+        details.addView(meta);
 
         if (Tools.isValidString(info.description)) {
             TextView description = new TextView(requireContext());
@@ -289,8 +312,10 @@ public class LibraryCenterFragment extends Fragment {
             description.setTextSize(12);
             description.setMaxLines(2);
             description.setPadding(0, dp(6), 0, 0);
-            row.addView(description);
+            details.addView(description);
         }
+        row.addView(content);
+        loadContentIcon(icon, info);
         LinearLayout actions = new LinearLayout(requireContext());
         actions.setGravity(Gravity.CENTER_VERTICAL | Gravity.END);
         actions.setOrientation(LinearLayout.HORIZONTAL);
@@ -306,6 +331,22 @@ public class LibraryCenterFragment extends Fragment {
                 v -> confirmDelete(info)));
         row.addView(actions);
         return row;
+    }
+
+    private void loadContentIcon(ImageView imageView, ContentInfo info) {
+        String tag = info.file.getAbsolutePath() + ':' + info.file.lastModified();
+        imageView.setTag(tag);
+        PojavApplication.sExecutorService.execute(() -> {
+            Bitmap bitmap = InstalledContentIconLoader.load(info.file, info.iconPath);
+            if (bitmap == null) return;
+            Tools.runOnUiThread(() -> {
+                if (!isAdded() || !tag.equals(imageView.getTag())) return;
+                imageView.clearColorFilter();
+                imageView.setPadding(0, 0, 0, 0);
+                imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+                imageView.setImageBitmap(bitmap);
+            });
+        });
     }
 
     private Button actionButton(int textRes, int iconRes, View.OnClickListener listener) {
@@ -361,6 +402,10 @@ public class LibraryCenterFragment extends Fragment {
                     ? readFile(new File(file, "pack.mcmeta"))
                     : readZipEntry(file, "pack.mcmeta");
             applyPackMeta(info, packMeta);
+            info.iconPath = "pack.png";
+        }
+        if (titleRes == R.string.library_installed_shaders) {
+            info.iconPath = "pack.png";
         }
         return info;
     }
@@ -373,6 +418,7 @@ public class LibraryCenterFragment extends Fragment {
             info.version = object.optString("version", info.version);
             info.description = object.optString("description", info.description);
             info.loader = loader;
+            info.iconPath = readJsonIcon(object, info.iconPath);
             JSONObject depends = object.optJSONObject("depends");
             if (depends != null) {
                 info.minecraft = depends.optString("minecraft", "");
@@ -394,6 +440,7 @@ public class LibraryCenterFragment extends Fragment {
             info.description = object.optString("description", info.description);
             info.minecraft = object.optString("mcversion", info.minecraft);
             info.loader = "Forge";
+            info.iconPath = object.optString("logoFile", info.iconPath);
         } catch (Exception ignored) {
             applyJsonRegex(info, text, "Forge");
         }
@@ -420,6 +467,39 @@ public class LibraryCenterFragment extends Fragment {
         if (descriptionMatcher.find()) info.description = descriptionMatcher.group(1).replace("\\n", " ").trim();
         Matcher loaderMatcher = Pattern.compile("modLoader\\s*=\\s*\"([^\"]+)\"").matcher(text);
         info.loader = loaderMatcher.find() ? loaderMatcher.group(1) : "Forge";
+        Matcher iconMatcher = TOML_ICON.matcher(text);
+        if (iconMatcher.find()) info.iconPath = iconMatcher.group(1);
+    }
+
+    private String readJsonIcon(JSONObject object, String fallback) {
+        Object icon = object.opt("icon");
+        if (icon instanceof String) return (String) icon;
+        if (icon instanceof JSONObject) {
+            JSONObject icons = (JSONObject) icon;
+            String selected = fallback;
+            int selectedSize = -1;
+            java.util.Iterator<String> keys = icons.keys();
+            while (keys.hasNext()) {
+                String key = keys.next();
+                int size;
+                try {
+                    size = Integer.parseInt(key);
+                } catch (NumberFormatException ignored) {
+                    size = 0;
+                }
+                if (size >= selectedSize) {
+                    selected = icons.optString(key, selected);
+                    selectedSize = size;
+                }
+            }
+            return selected;
+        }
+        JSONObject quiltLoader = object.optJSONObject("quilt_loader");
+        if (quiltLoader != null) {
+            JSONObject metadata = quiltLoader.optJSONObject("metadata");
+            if (metadata != null) return readJsonIcon(metadata, fallback);
+        }
+        return fallback;
     }
 
     private void applyPackMeta(ContentInfo info, String text) {
@@ -672,6 +752,7 @@ public class LibraryCenterFragment extends Fragment {
         String description;
         String size;
         String badge;
+        String iconPath;
         File file;
         int sectionTitleRes;
         boolean enabled;

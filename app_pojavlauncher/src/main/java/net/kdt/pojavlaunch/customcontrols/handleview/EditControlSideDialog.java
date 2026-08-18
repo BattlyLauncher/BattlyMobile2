@@ -65,6 +65,11 @@ public class EditControlSideDialog extends SideDialogView {
                 mHeightEditText.setText(String.valueOf(bottom - top));
             }
 
+            if (mCurrentlyEditedButton != null
+                    && mCurrentlyEditedButton.getProperties().isDeviceImageWidget()) {
+                updateDeviceImageVisualSizeFromView();
+            }
+
             internalChanges = false;
         }
     };
@@ -74,13 +79,16 @@ public class EditControlSideDialog extends SideDialogView {
     private Spinner mDisplaySpinner, mOrientationSpinner;
     private Button mIconPickerButton;
     private final TextView[] mKeycodeTextviews = new TextView[4];
-    private SeekBar mStrokeWidthSeekbar, mCornerRadiusSeekbar, mAlphaSeekbar;
-    private TextView mStrokePercentTextView, mCornerRadiusPercentTextView, mAlphaPercentTextView;
+    private SeekBar mStrokeWidthSeekbar, mCornerRadiusSeekbar, mAlphaSeekbar, mDeviceImageVisualSizeSeekbar;
+    private TextView mStrokePercentTextView, mCornerRadiusPercentTextView, mAlphaPercentTextView,
+            mDeviceImageVisualSizeValue;
     private TextView mSelectBackgroundColor, mSelectStrokeColor;
     private ArrayAdapter<String> mAdapter, mDisplayAdapter;
     private List<String> mSpecialArray;
-    private CheckBox mDisplayInGameCheckbox, mDisplayInMenuCheckbox;
+    private CheckBox mDisplayInGameCheckbox, mDisplayInMenuCheckbox, mDeviceImagePixelSizeCheckbox;
     private ControlInterface mCurrentlyEditedButton;
+    private LinearLayout mDeviceImageVisualSizeLayout;
+    private float mDeviceImageAspectRatio = 16f / 9f;
     // Decorative textviews
     private TextView mDisplayTextView, mOrientationTextView, mMappingTextView, mNameTextView,
             mCornerRadiusTextView, mVisibilityTextView, mSizeTextview, mSizeXTextView;
@@ -164,6 +172,7 @@ public class EditControlSideDialog extends SideDialogView {
      */
     public void loadValues(ControlData data) {
         setDefaultVisibilitySetting();
+        mDeviceImageVisualSizeLayout.setVisibility(GONE);
         mOrientationTextView.setVisibility(GONE);
         mOrientationSpinner.setVisibility(GONE);
         mForwardLockSwitch.setVisibility(GONE);
@@ -241,6 +250,26 @@ public class EditControlSideDialog extends SideDialogView {
         mSwipeableSwitch.setVisibility(GONE);
         mPassthroughSwitch.setVisibility(GONE);
         mToggleSwitch.setVisibility(GONE);
+    }
+
+    public void loadDeviceImageValues(ControlData data) {
+        loadPerformanceValues(data);
+        mDeviceImageAspectRatio = data.getHeight() > 0f
+                ? data.getWidth() / data.getHeight()
+                : 16f / 9f;
+        mDeviceImageVisualSizeLayout.setVisibility(VISIBLE);
+        mDeviceImagePixelSizeCheckbox.setChecked(false);
+        setDeviceImagePixelEditorVisible(false);
+        updateDeviceImageVisualSizeFromView();
+        mSelectBackgroundColor.setVisibility(GONE);
+        mSelectStrokeColor.setVisibility(GONE);
+        mStrokeWidthSeekbar.setVisibility(GONE);
+        mStrokePercentTextView.setVisibility(GONE);
+        mCornerRadiusTextView.setVisibility(GONE);
+        mCornerRadiusSeekbar.setVisibility(GONE);
+        mCornerRadiusPercentTextView.setVisibility(GONE);
+        View strokeLabel = mDialogContent.findViewById(R.id.editStrokeWidth_textView);
+        if (strokeLabel != null) strokeLabel.setVisibility(GONE);
     }
 
     /**
@@ -358,6 +387,10 @@ public class EditControlSideDialog extends SideDialogView {
         mStrokeWidthSeekbar = mDialogContent.findViewById(R.id.editStrokeWidth_seekbar);
         mCornerRadiusSeekbar = mDialogContent.findViewById(R.id.editCornerRadius_seekbar);
         mAlphaSeekbar = mDialogContent.findViewById(R.id.editButtonOpacity_seekbar);
+        mDeviceImageVisualSizeSeekbar = mDialogContent.findViewById(R.id.editDeviceImageVisualSize_seekbar);
+        mDeviceImageVisualSizeValue = mDialogContent.findViewById(R.id.editDeviceImageVisualSize_value);
+        mDeviceImagePixelSizeCheckbox = mDialogContent.findViewById(R.id.editDeviceImagePixelSize_checkbox);
+        mDeviceImageVisualSizeLayout = mDialogContent.findViewById(R.id.editDeviceImageVisualSize_layout);
         mSelectBackgroundColor = mDialogContent.findViewById(R.id.editBackgroundColor_textView);
         mSelectStrokeColor = mDialogContent.findViewById(R.id.editStrokeColor_textView);
         mStrokePercentTextView = mDialogContent.findViewById(R.id.editStrokeWidth_textView_percent);
@@ -434,6 +467,34 @@ public class EditControlSideDialog extends SideDialogView {
                 mCurrentlyEditedButton.updateProperties();
             }
         });
+
+        mDeviceImageVisualSizeSeekbar.setOnSeekBarChangeListener((SimpleSeekBarListener) (seekBar, progress, fromUser) -> {
+            if (internalChanges || !fromUser || mCurrentlyEditedButton == null
+                    || !mCurrentlyEditedButton.getProperties().isDeviceImageWidget()) return;
+
+            float targetWidth = currentDisplayMetrics.widthPixels * ((progress + 10) / 100f);
+            float targetHeight = targetWidth / Math.max(0.1f, mDeviceImageAspectRatio);
+            float currentTop = Math.max(0f, mCurrentlyEditedButton.getControlView().getY());
+            float bottomMargin = Tools.dpToPx(12);
+            float maxHeight = Math.max(
+                    Tools.dpToPx(48),
+                    currentDisplayMetrics.heightPixels - currentTop - bottomMargin
+            );
+            if (targetHeight > maxHeight) {
+                targetHeight = maxHeight;
+                targetWidth = targetHeight * mDeviceImageAspectRatio;
+            }
+
+            ControlData data = mCurrentlyEditedButton.getProperties();
+            data.setWidth(targetWidth);
+            data.setHeight(targetHeight);
+            mCurrentlyEditedButton.updateProperties();
+            mCurrentlyEditedButton.regenerateDynamicCoordinates();
+            updateDeviceImageVisualSizeFromView();
+        });
+
+        mDeviceImagePixelSizeCheckbox.setOnCheckedChangeListener((buttonView, isChecked) ->
+                setDeviceImagePixelEditorVisible(isChecked));
 
         mSwipeableSwitch.setOnCheckedChangeListener((buttonView, isChecked) -> {
             if (internalChanges) return;
@@ -546,6 +607,22 @@ public class EditControlSideDialog extends SideDialogView {
 
     private void refreshCurrentlyEditedButtonDisplay() {
         mCurrentlyEditedButton.setProperties(mCurrentlyEditedButton.getProperties(), false);
+    }
+
+    private void setDeviceImagePixelEditorVisible(boolean visible) {
+        int visibility = visible ? VISIBLE : GONE;
+        mWidthEditText.setVisibility(visibility);
+        mHeightEditText.setVisibility(visibility);
+        mSizeXTextView.setVisibility(visibility);
+    }
+
+    private void updateDeviceImageVisualSizeFromView() {
+        if (mCurrentlyEditedButton == null || mDeviceImageVisualSizeSeekbar == null) return;
+        float width = mCurrentlyEditedButton.getProperties().getWidth();
+        int percent = Math.max(10, Math.min(90,
+                Math.round(width * 100f / Math.max(1, currentDisplayMetrics.widthPixels))));
+        mDeviceImageVisualSizeSeekbar.setProgress(percent - 10);
+        setPercentageText(mDeviceImageVisualSizeValue, percent);
     }
 
     private void showIconPicker() {

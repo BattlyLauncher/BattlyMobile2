@@ -1,0 +1,11 @@
+DualSense controller model
+
+Title: Ps5
+Author: KIARASH 3D
+Source: https://sketchfab.com/3d-models/ps5-f0b4a0131f784059b0b339d2911478f3
+License: Creative Commons Attribution 4.0 International (CC BY 4.0)
+License URL: https://creativecommons.org/licenses/by/4.0/
+
+The model is packaged as dualsense-parts.glb and adapted at runtime for the
+Battly controller setup preview. Battly's highlighting and interaction code is
+not part of the original model.

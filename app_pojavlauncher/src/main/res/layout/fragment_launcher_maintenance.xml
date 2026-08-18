@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:clipToPadding="false"
+    android:fillViewport="true"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="16dp"
+    android:paddingBottom="28dp"
+    android:scrollbars="none">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/noto_sans_bold"
+            android:text="@string/maintenance_title"
+            android:textColor="#FFFFFFFF"
+            android:textSize="22sp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/maintenance_subtitle"
+            android:textColor="#C7D4DF"
+            android:textSize="13sp" />
+
+        <GridLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="14dp"
+            android:alignmentMode="alignMargins"
+            android:columnCount="2"
+            android:useDefaultMargins="true">
+
+            <LinearLayout
+                android:id="@+id/maintenance_graphics_card"
+                style="@style/Widget_Battly_LibraryCard"
+                android:gravity="center_vertical"
+                android:minHeight="96dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_battly_profile_icon"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_setting_video" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardTitle"
+                        android:layout_marginTop="0dp"
+                        android:text="@string/maintenance_graphics_title" />
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardSubtitle"
+                        android:text="@string/maintenance_graphics_summary" />
+
+                    <TextView
+                        android:id="@+id/maintenance_graphics_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/maintenance_graphics_idle"
+                        android:textColor="#82E0C9"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/maintenance_repair_card"
+                style="@style/Widget_Battly_LibraryCard"
+                android:gravity="center_vertical"
+                android:minHeight="96dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_battly_profile_icon"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_setting_java_runtime" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardTitle"
+                        android:layout_marginTop="0dp"
+                        android:text="@string/maintenance_repair_title" />
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardSubtitle"
+                        android:text="@string/maintenance_repair_summary" />
+
+                    <TextView
+                        android:id="@+id/maintenance_repair_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/maintenance_repair_idle"
+                        android:textColor="#82E0C9"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/maintenance_touch_card"
+                style="@style/Widget_Battly_LibraryCard"
+                android:gravity="center_vertical"
+                android:minHeight="96dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_battly_profile_icon"
+                    android:padding="9dp"
+                    android:src="@drawable/ic_setting_mouse_speed" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardTitle"
+                        android:layout_marginTop="0dp"
+                        android:text="@string/maintenance_touch_title" />
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardSubtitle"
+                        android:text="@string/maintenance_touch_summary" />
+
+                    <TextView
+                        android:id="@+id/maintenance_touch_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:textColor="#82E0C9"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/maintenance_components_card"
+                style="@style/Widget_Battly_LibraryCard"
+                android:gravity="center_vertical"
+                android:minHeight="96dp"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="42dp"
+                    android:layout_height="42dp"
+                    android:background="@drawable/bg_battly_profile_icon"
+                    android:padding="9dp"
+                    android:src="@drawable/minecraft_book" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardTitle"
+                        android:layout_marginTop="0dp"
+                        android:text="@string/maintenance_components_title" />
+
+                    <TextView
+                        style="@style/Widget_Battly_LibraryCardSubtitle"
+                        android:text="@string/maintenance_components_summary" />
+
+                    <TextView
+                        android:id="@+id/maintenance_components_status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="@string/maintenance_components_idle"
+                        android:textColor="#82E0C9"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
+        </GridLayout>
+    </LinearLayout>
+</ScrollView>

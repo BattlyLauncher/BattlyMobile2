@@ -24,6 +24,7 @@ import java.util.UUID;
 @SuppressWarnings("IOStreamConstructor")
 @Keep
 public class MinecraftAccount {
+    private static final Object ACCOUNT_SAVE_LOCK = new Object();
     public String accessToken = "0"; // access token
     public String clientToken = "0"; // clientID: refresh and invalidate
     public String profileId = "00000000-0000-0000-0000-000000000000"; // profile UUID, for obtaining skin
@@ -85,7 +86,31 @@ public class MinecraftAccount {
     }
     
     public String save(String outPath) throws IOException {
-        Tools.write(outPath, Tools.GLOBAL_GSON.toJson(this));
+        File target = new File(outPath);
+        File temp = new File(outPath + ".tmp");
+        File backup = new File(outPath + ".bak");
+        synchronized (ACCOUNT_SAVE_LOCK) {
+            FileUtils.ensureParentDirectory(target);
+            try (FileOutputStream output = new FileOutputStream(temp)) {
+                output.write(Tools.GLOBAL_GSON.toJson(this).getBytes(StandardCharsets.UTF_8));
+                output.flush();
+                output.getFD().sync();
+            }
+
+            if (backup.exists() && !backup.delete()) {
+                throw new IOException("Unable to remove stale account backup");
+            }
+            if (target.exists() && !target.renameTo(backup)) {
+                throw new IOException("Unable to back up existing account");
+            }
+            if (!temp.renameTo(target)) {
+                if (backup.exists()) backup.renameTo(target);
+                throw new IOException("Unable to replace account atomically");
+            }
+            if (backup.exists() && !backup.delete()) {
+                Log.w("MinecraftAccount", "Could not remove account backup after save");
+            }
+        }
         return username;
     }
     

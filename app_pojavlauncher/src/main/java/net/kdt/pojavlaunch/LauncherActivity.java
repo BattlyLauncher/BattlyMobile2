@@ -82,10 +82,12 @@ import net.kdt.pojavlaunch.utils.BattlyUpdateVideoDialog;
 import net.kdt.pojavlaunch.utils.DateUtils;
 import net.kdt.pojavlaunch.utils.JavaRuntimeInstallDialog;
 import net.kdt.pojavlaunch.utils.CrashAnalysisEngine;
+import net.kdt.pojavlaunch.utils.GameSessionExitClassifier;
 import net.kdt.pojavlaunch.fragments.ModCompatibilityFragment;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import net.kdt.pojavlaunch.utils.NotificationUtils;
+import net.kdt.pojavlaunch.utils.PromotedServersManager;
 import net.kdt.pojavlaunch.onboarding.OnboardingActivity;
 
 import java.io.File;
@@ -169,9 +171,11 @@ public class LauncherActivity extends BaseActivity {
     private ModloaderInstallTracker mInstallTracker;
     private NotificationManager mNotificationManager;
     private final Handler mBackgroundAnimationHandler = new Handler(Looper.getMainLooper());
+    private final Handler mStartupPromptHandler = new Handler(Looper.getMainLooper());
     private Runnable mBackgroundAnimationRunnable;
     private int mAnimatedBackgroundIndex;
     private boolean mStartupPromptChainStarted;
+    private boolean mActivityDestroyed;
     private boolean mLauncherStartupInitialized;
     private boolean mGameExitInfoShown;
     private Runnable mAfterWhatsNew;
@@ -306,11 +310,6 @@ public class LauncherActivity extends BaseActivity {
     private WeakReference<Runnable> mRequestMicrophonePermissionRunnable;
 
     @Override
-    protected boolean shouldIgnoreNotch() {
-        return true;
-    }
-
-    @Override
     public boolean setFullscreen() {
         return true;
     }
@@ -381,6 +380,9 @@ public class LauncherActivity extends BaseActivity {
             return;
         }
 
+        PojavApplication.sExecutorService.execute(
+                () -> PromotedServersManager.syncAllAtLauncherStart(getApplicationContext()));
+
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         ProgressKeeper.addTaskCountListener(mDoubleLaunchPreventionListener);
         ProgressKeeper.addTaskCountListener((mProgressServiceKeeper = new ProgressServiceKeeper(this)));
@@ -425,13 +427,16 @@ public class LauncherActivity extends BaseActivity {
     }
 
     private void showUpdateVideoWhenReady() {
-        new Handler(Looper.getMainLooper()).postDelayed(
-                () -> BattlyUpdateVideoDialog.showIfNeeded(this,
-                        () -> showWhatsNewIfNeeded(
-                                () -> checkNotificationPermission(this::ensureJavaRuntimeAfterStartup))), 900);
+        mStartupPromptHandler.postDelayed(() -> {
+            if (!canShowStartupPrompt()) return;
+            BattlyUpdateVideoDialog.showIfNeeded(this,
+                    () -> showWhatsNewIfNeeded(
+                            () -> checkNotificationPermission(this::ensureJavaRuntimeAfterStartup)));
+        }, 900);
     }
 
     private void showWhatsNewIfNeeded(Runnable afterDone) {
+        if (!canShowStartupPrompt()) return;
         if (LauncherPreferences.DEFAULT_PREF.getBoolean(OnboardingActivity.PREF_WHATS_NEW_SEEN, false)) {
             if (afterDone != null) afterDone.run();
             return;
@@ -442,13 +447,20 @@ public class LauncherActivity extends BaseActivity {
         mWhatsNewLauncher.launch(intent);
     }
 
+    private boolean canShowStartupPrompt() {
+        return !mActivityDestroyed
+                && !isFinishing()
+                && !isDestroyed()
+                && getLifecycle().getCurrentState().isAtLeast(androidx.lifecycle.Lifecycle.State.STARTED);
+    }
+
     private void ensureJavaRuntimeAfterStartup() {
         JavaRuntimeInstallDialog.ensureJava8(this, null);
     }
 
     public void runStartupPromptsAfterLogin() {
         mStartupPromptChainStarted = false;
-        new Handler(Looper.getMainLooper()).postDelayed(
+        mStartupPromptHandler.postDelayed(
                 () -> runStartupPromptChain(false, true),
                 650
         );
@@ -572,19 +584,7 @@ public class LauncherActivity extends BaseActivity {
         if (!latestLog.isFile()) return;
         try {
             String log = readGameSessionLog(latestLog, logOffset);
-            String lower = log.toLowerCase(Locale.ROOT);
-            boolean crashed = lower.contains("game crashed!")
-                    || lower.contains("---- minecraft crash report ----")
-                    || lower.contains("exception in thread \"main\"")
-                    || lower.contains("unable to launch")
-                    || lower.contains("unsatisfiedlinkerror")
-                    || lower.contains("fatal exception")
-                    || lower.contains("error during pre-loading phase")
-                    || lower.contains("modloadingexception")
-                    || lower.contains("needs language provider javafml");
-            boolean cleanExit = !crashed && (lower.contains("stopping!")
-                    || lower.contains("java exit code: 0"));
-            if (crashed || !cleanExit && lower.contains("java exit code:")) {
+            if (GameSessionExitClassifier.endedUnexpectedly(log)) {
                 mGameExitInfoShown = false;
                 Intent crashIntent = new Intent()
                         .putExtra(EXTRA_GAME_EXIT_CODE, -1)
@@ -693,6 +693,8 @@ public class LauncherActivity extends BaseActivity {
 
     @Override
     protected void onDestroy() {
+        mActivityDestroyed = true;
+        mStartupPromptHandler.removeCallbacksAndMessages(null);
         super.onDestroy();
         mProgressLayout.cleanUpObservers();
         ProgressKeeper.removeTaskCountListener(mProgressLayout);

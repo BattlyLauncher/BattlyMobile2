@@ -8,10 +8,8 @@ import android.text.Editable;
 import android.text.TextWatcher;
 
 import androidx.preference.EditTextPreference;
-import androidx.preference.ListPreference;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
-import androidx.preference.SwitchPreference;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -25,16 +23,11 @@ import java.util.Set;
 
 public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferenceFragment {
     EditTextPreference GLSLCachePreference;
-    ListPreference MultiDrawEmulationPreference;
-    SwitchPreference ComputeMultiDrawPreference;
-    Preference.SummaryProvider MultiDrawSummaryProvider;
 
     @Override
     public void onCreatePreferences(Bundle b, String str) {
         addPreferencesFromResource(R.xml.pref_renderer);
         GLSLCachePreference = findPreference("mg_renderer_setting_glsl_cache_size");
-        ComputeMultiDrawPreference = findPreference("mg_renderer_multidrawCompute");
-        MultiDrawEmulationPreference = findPreference("mg_renderer_setting_multidraw");
         GLSLCachePreference.setOnBindEditTextListener((editText) -> {
             editText.setInputType(TYPE_CLASS_NUMBER);
             editText.addTextChangedListener(new TextWatcher() {
@@ -64,7 +57,6 @@ public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferen
             });
         });
         updateGLSLCacheSummary(); // Just updates the summary with the value when user opens the menu. Yes it's out of place.
-        updateMultiDrawSummary(); // Same as above
         populateRendererStatus();
     }
 
@@ -72,23 +64,6 @@ public class LauncherPreferenceRendererSettingsFragment extends LauncherPreferen
     public void onSharedPreferenceChanged(SharedPreferences p, String s) {
         GLSLCachePreference = findPreference("mg_renderer_setting_glsl_cache_size");
         updateGLSLCacheSummary();
-        updateMultiDrawSummary();
-    }
-
-    private void updateMultiDrawSummary() {
-        if (MultiDrawEmulationPreference != null) {
-            if (MultiDrawEmulationPreference.getSummaryProvider() != null) {
-                MultiDrawSummaryProvider = MultiDrawEmulationPreference.getSummaryProvider();
-            }
-            if (ComputeMultiDrawPreference.isChecked()) {
-                MultiDrawEmulationPreference.setEnabled(false);
-                MultiDrawEmulationPreference.setSummaryProvider(null);
-                MultiDrawEmulationPreference.setSummary("(Experimental) Compute");
-            } else if (MultiDrawEmulationPreference != null) {
-                MultiDrawEmulationPreference.setEnabled(true);
-                MultiDrawEmulationPreference.setSummaryProvider(MultiDrawSummaryProvider);
-            }
-        }
     }
 
     private void updateGLSLCacheSummary() {

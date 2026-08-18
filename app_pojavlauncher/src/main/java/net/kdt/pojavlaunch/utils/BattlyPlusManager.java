@@ -27,6 +27,7 @@ public final class BattlyPlusManager {
 
     public static final String PREFS_NAME = "battly_account";
     public static final String PREF_IS_PREMIUM = "battly_is_premium";
+    public static final String PREF_PREMIUM_ACCOUNT = "battly_premium_account";
     public static final String PREF_TOKEN = "battly_token";
 
     private static final String ENTITLEMENTS_URL = "https://api.battlylauncher.com/api/v2/battlyworlds/entitlements";
@@ -38,7 +39,26 @@ public final class BattlyPlusManager {
         if (context == null) {
             return false;
         }
-        return accountPrefs(context).getBoolean(PREF_IS_PREMIUM, false);
+        MinecraftAccount currentAccount = PojavProfile.getCurrentProfileContent(
+                context.getApplicationContext(), null);
+        if (!isBattlyAccountEligible(currentAccount)) {
+            return false;
+        }
+        SharedPreferences preferences = accountPrefs(context);
+        String premiumAccount = preferences.getString(PREF_PREMIUM_ACCOUNT, "");
+        return preferences.getBoolean(PREF_IS_PREMIUM, false)
+                && sameAccount(currentAccount, premiumAccount);
+    }
+
+    static boolean isBattlyAccountEligible(MinecraftAccount account) {
+        return account != null && account.isBattly();
+    }
+
+    static boolean sameAccount(MinecraftAccount account, String username) {
+        return account != null
+                && account.username != null
+                && !account.username.trim().isEmpty()
+                && account.username.equalsIgnoreCase(username == null ? "" : username.trim());
     }
 
     public static String getToken(Context context) {
@@ -89,7 +109,17 @@ public final class BattlyPlusManager {
         if (context == null) {
             return;
         }
-        accountPrefs(context).edit().putBoolean(PREF_IS_PREMIUM, plus).apply();
+        SharedPreferences.Editor editor = accountPrefs(context).edit()
+                .putBoolean(PREF_IS_PREMIUM, plus);
+        MinecraftAccount currentAccount = PojavProfile.getCurrentProfileContent(
+                context.getApplicationContext(), null);
+        if (plus && isBattlyAccountEligible(currentAccount)
+                && Tools.isValidString(currentAccount.username)) {
+            editor.putString(PREF_PREMIUM_ACCOUNT, currentAccount.username);
+        } else {
+            editor.remove(PREF_PREMIUM_ACCOUNT);
+        }
+        editor.apply();
     }
 
     public static void updateFromLoginResponse(Context context, JSONObject response) {
@@ -107,7 +137,20 @@ public final class BattlyPlusManager {
             }
             return;
         }
-        List<String> tokens = getTokenCandidates(appContext);
+        MinecraftAccount currentAccount = PojavProfile.getCurrentProfileContent(appContext, null);
+        if (!isBattlyAccountEligible(currentAccount)) {
+            setPlus(appContext, false);
+            if (callback != null) {
+                callback.onResult(false);
+            }
+            return;
+        }
+        String activeToken = tokenFromAccount(currentAccount);
+        List<String> tokens = new ArrayList<>();
+        if (isUsableBattlyToken(activeToken)) {
+            saveResolvedToken(appContext, currentAccount, activeToken);
+            tokens.add(activeToken);
+        }
         if (tokens.isEmpty()) {
             setPlus(appContext, false);
             if (callback != null) {

@@ -1,5 +1,6 @@
 package net.kdt.pojavlaunch.fragments;
 
+import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -91,7 +92,8 @@ public class ControlMarketplaceFragment extends Fragment {
         ImageButton backBtn = view.findViewById(R.id.ctrl_back_btn);
         backBtn.setOnClickListener(v -> requireActivity().getSupportFragmentManager().popBackStack());
 
-        mRecyclerView.setLayoutManager(new GridLayoutManager(requireContext(), 2));
+        GridLayoutManager layoutManager = new GridLayoutManager(requireContext(), 2);
+        mRecyclerView.setLayoutManager(layoutManager);
         mAdapter = new ControlMarketplaceAdapter(new ControlMarketplaceAdapter.OnApplyListener() {
             @Override
             public void onApply(JSONObject item) {
@@ -121,6 +123,12 @@ public class ControlMarketplaceFragment extends Fragment {
             @Override
             public boolean isSaved(JSONObject item) {
                 return hasMarketplaceFlag(PREF_SAVED, item);
+            }
+        });
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return mAdapter.isFullSpanPosition(position) ? 2 : 1;
             }
         });
         mRecyclerView.setAdapter(mAdapter);
@@ -233,10 +241,14 @@ public class ControlMarketplaceFragment extends Fragment {
                     final int total = resp.optInt("total", 0);
                     mTotalPages = pages;
 
-                    if (!isAdded()) return;
-                    requireActivity().runOnUiThread(() -> {
+                    Activity activity = getActivity();
+                    if (activity == null) return;
+                    activity.runOnUiThread(() -> {
+                        if (!isAdded() || mAdapter == null) return;
                         setLoading(false);
                         mAdapter.setItems(items);
+                        mAdapter.loadNativeAds(activity,
+                                getString(R.string.battly_controls_native_ad_unit_id));
                         mPageInfo.setText(getString(R.string.ctrl_page_info, mCurrentPage, mTotalPages));
                         mPrevBtn.setEnabled(mCurrentPage > 1);
                         mNextBtn.setEnabled(mCurrentPage < mTotalPages);
@@ -254,6 +266,12 @@ public class ControlMarketplaceFragment extends Fragment {
                 showErrorOnUi(getString(R.string.ctrl_error_network));
             }
         }).start();
+    }
+
+    @Override
+    public void onDestroyView() {
+        if (mAdapter != null) mAdapter.clearNativeAds();
+        super.onDestroyView();
     }
 
     private void onApplyControl(JSONObject item) {

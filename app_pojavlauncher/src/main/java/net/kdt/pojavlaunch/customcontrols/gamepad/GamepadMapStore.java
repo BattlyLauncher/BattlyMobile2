@@ -63,6 +63,12 @@ public class GamepadMapStore {
         return sMapStore.mInMenuMap;
     }
 
+    public static void applyMinecraftDefaults(ControllerTypeResolver.Style style) {
+        loadIfNecessary();
+        sMapStore.mInGameMap = MinecraftControllerDefaults.createGameMap(style);
+        sMapStore.mInMenuMap = MinecraftControllerDefaults.createMenuMap(style);
+    }
+
     public static void invalidate() {
         sMapStore = null;
     }

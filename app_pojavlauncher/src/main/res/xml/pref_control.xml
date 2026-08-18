@@ -90,6 +90,22 @@
             android:max="@integer/mouse_speed_seekbar_max"
             app2:seekBarIncrement="@integer/mouse_speed_seekbar_increment"
             app2:showSeekBarValue="true" />
+        <net.kdt.pojavlaunch.prefs.CustomSeekBarPreference
+            android:key="touchscreenSensitivity"
+            android:defaultValue="100"
+            android:summary="@string/preference_touchscreen_sensitivity_description"
+            android:title="@string/preference_touchscreen_sensitivity_title"
+            android:icon="@drawable/ic_setting_mouse_speed"
+            app2:selectable="false"
+            app2:min="@integer/touch_sensitivity_seekbar_min"
+            android:max="@integer/touch_sensitivity_seekbar_max"
+            app2:seekBarIncrement="@integer/touch_sensitivity_seekbar_increment"
+            app2:showSeekBarValue="true" />
+        <androidx.preference.SwitchPreferenceCompat
+            android:key="ingameMenuLeft"
+            android:defaultValue="false"
+            android:title="@string/preference_ingame_menu_side_title"
+            android:summary="@string/preference_ingame_menu_side_description" />
         <SwitchPreference
             android:key="mouse_start"
             android:title="@string/preference_mouse_start_title"

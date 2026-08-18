@@ -17,11 +17,14 @@ import java.io.IOException;
 public final class ControllerProfileManager {
     private static final String[] BOOLEAN_KEYS = {
             "enableGyro", "gyroSmoothing", "gyroInvertX", "gyroInvertY",
-            "gamepadPassthru", "gamepadPassthruForced"
+            "gamepadPassthru", "gamepadPassthruForced", "gamepadCameraInvertX",
+            "gamepadCameraInvertY"
     };
     private static final String[] INTEGER_KEYS = {
-            "gyroSensitivity", "gyroSampleRate", "gamepad_deadzone_scale"
+            "gyroSensitivity", "gyroSampleRate", "gamepad_deadzone_scale",
+            "gamepadCameraSensitivity"
     };
+    private static final String[] STRING_KEYS = {"gamepadInputMode"};
 
     private ControllerProfileManager() {
     }
@@ -33,6 +36,7 @@ public final class ControllerProfileManager {
             root.put("schema", "battly-controller-profile-v1");
             for (String key : BOOLEAN_KEYS) root.put(key, preferences.getBoolean(key, false));
             for (String key : INTEGER_KEYS) root.put(key, preferences.getInt(key, defaultInt(key)));
+            for (String key : STRING_KEYS) root.put(key, preferences.getString(key, "battly"));
             root.put("mapFile", GamepadMapStore.getStoreFile().getAbsolutePath());
             File file = fileFor(profile);
             FileUtils.ensureParentDirectory(file);
@@ -51,6 +55,7 @@ public final class ControllerProfileManager {
             SharedPreferences.Editor editor = LauncherPreferences.DEFAULT_PREF.edit();
             for (String key : BOOLEAN_KEYS) if (root.has(key)) editor.putBoolean(key, root.getBoolean(key));
             for (String key : INTEGER_KEYS) if (root.has(key)) editor.putInt(key, root.getInt(key));
+            for (String key : STRING_KEYS) if (root.has(key)) editor.putString(key, root.getString(key));
             editor.apply();
             LauncherPreferences.loadPreferences(context.getApplicationContext());
             GamepadMapStore.invalidate();
@@ -67,7 +72,8 @@ public final class ControllerProfileManager {
     }
 
     private static int defaultInt(String key) {
-        if ("gyroSensitivity".equals(key) || "gamepad_deadzone_scale".equals(key)) return 100;
+        if ("gyroSensitivity".equals(key) || "gamepad_deadzone_scale".equals(key)
+                || "gamepadCameraSensitivity".equals(key)) return 100;
         if ("gyroSampleRate".equals(key)) return 16;
         return 0;
     }

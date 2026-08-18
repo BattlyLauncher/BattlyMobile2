@@ -28,6 +28,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlButton;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlDrawer;
+import net.kdt.pojavlaunch.customcontrols.buttons.ControlDeviceImage;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlJoystick;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlPerformanceWidget;
@@ -135,12 +136,15 @@ public class ControlLayout extends FrameLayout {
 	}
 
 	private void addControlView(ControlData controlButton) {
-		final ControlButton view = controlButton.isPerformanceWidget()
+		final ControlInterface control = controlButton.isDeviceImageWidget()
+				? new ControlDeviceImage(this, controlButton)
+				: controlButton.isPerformanceWidget()
 				? new ControlPerformanceWidget(this, controlButton)
 				: new ControlButton(this, controlButton);
+		final View view = control.getControlView();
 
 		if (!mModifiable) {
-			view.setAlpha(view.getProperties().opacity);
+			view.setAlpha(control.getProperties().opacity);
 			view.setFocusable(false);
 			view.setFocusableInTouchMode(false);
 		}

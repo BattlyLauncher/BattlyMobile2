@@ -132,7 +132,38 @@ public final class MinecraftCompatibilityEngine {
             }
         }
         if (family.yearVersion == 0 && family.minor > 0 && family.minor < 13) return "2";
-        return family.yearVersion >= 26 ? "3.4.2" : "3.3.3";
+        // 26.x manifests without an explicit LWJGL coordinate use the SDL-enabled
+        // 3.4.1 bundle shipped by Battly. Mixing the 3.4.2 Java modules with older
+        // launcher natives is rejected by LWJGL during startup.
+        if (family.yearVersion >= 26) return "3.4.1";
+        return "3.3.3";
+    }
+
+    static String inferLwjglForTesting(@Nullable JMinecraftVersionList.Version version,
+                                       @NonNull VersionFamily family) {
+        return inferLwjgl(version, family);
+    }
+
+    /**
+     * Returns the launcher-managed LWJGL channel for both Java modules and native
+     * libraries. Keeping this policy public prevents the classpath builder from
+     * silently falling back to the revision declared by Mojang's metadata.
+     */
+    @NonNull
+    public static String resolveLwjglChannel(@Nullable String versionId,
+                                             @Nullable JMinecraftVersionList.Version version) {
+        String effectiveVersion = firstNonEmpty(versionId, version == null ? null : version.id, "unknown");
+        VersionFamily family = VersionFamily.parse(effectiveVersion,
+                version == null ? null : version.inheritsFrom);
+        return inferLwjgl(version, family);
+    }
+
+    /**
+     * LWJGL 3.4.2 switched the Android window/input path to SDL. The 3.4.1
+     * bundle used by Minecraft 26.1/26.2 still consumes Pojav's GLFW callbacks.
+     */
+    public static boolean requiresSdlInputBridge(@Nullable String lwjglChannel) {
+        return lwjglChannel != null && compareVersion(lwjglChannel, "3.4.2") >= 0;
     }
 
     private static boolean isLegacyGlRenderer(@Nullable String renderer) {
@@ -161,8 +192,8 @@ public final class MinecraftCompatibilityEngine {
     }
 
     private static String firstNonEmpty(String first, String second, String fallback) {
-        if (Tools.isValidString(first)) return first;
-        if (Tools.isValidString(second)) return second;
+        if (first != null && !first.trim().isEmpty()) return first;
+        if (second != null && !second.trim().isEmpty()) return second;
         return fallback;
     }
 

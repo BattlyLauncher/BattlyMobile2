@@ -12,8 +12,11 @@ import android.widget.TextView;
 
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import net.kdt.pojavlaunch.customcontrols.ControlData;
+import net.kdt.pojavlaunch.customcontrols.ControlDeviceImageManager;
 import net.kdt.pojavlaunch.customcontrols.ControlDrawerData;
 import net.kdt.pojavlaunch.customcontrols.ControlJoystickData;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
@@ -40,6 +43,8 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
     private ControlLayout mControlLayout;
     private boolean mPreviewMode;
     private String mPreviewPath;
+    private final ActivityResultLauncher<String[]> mControlImagePicker = registerForActivityResult(
+            new ActivityResultContracts.OpenDocument(), this::onControlImagePicked);
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,19 +124,43 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
                 mControlLayout.addControlButton(ControlData.createPerformanceWidget());
                 break;
             case 4:
-                mControlLayout.openLoadDialog();
+                addDeviceImage();
                 break;
             case 5:
-                mControlLayout.openSaveDialog(this);
+                mControlLayout.openLoadDialog();
                 break;
             case 6:
-                mControlLayout.openSetDefaultDialog();
+                mControlLayout.openSaveDialog(this);
                 break;
             case 7:
+                mControlLayout.openSetDefaultDialog();
+                break;
+            case 8:
                 exportCurrentControl();
                 break;
             default:
                 break;
+        }
+    }
+
+    private void addDeviceImage() {
+        ControlDeviceImageManager.showSourcePicker(this, source -> {
+            if (ControlDeviceImageManager.SOURCE_CUSTOM.equals(source)) {
+                mControlImagePicker.launch(new String[]{"image/*"});
+                return;
+            }
+            mControlLayout.addControlButton(ControlData.createDeviceImageWidget(source, ""));
+        });
+    }
+
+    private void onControlImagePicked(Uri uri) {
+        if (uri == null) return;
+        try {
+            String imagePath = ControlDeviceImageManager.importCustomImage(this, uri);
+            mControlLayout.addControlButton(ControlData.createDeviceImageWidget(
+                    ControlDeviceImageManager.SOURCE_CUSTOM, imagePath));
+        } catch (IOException error) {
+            Tools.showError(this, error);
         }
     }
 

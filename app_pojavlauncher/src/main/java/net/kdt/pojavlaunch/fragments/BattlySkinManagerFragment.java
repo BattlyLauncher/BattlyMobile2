@@ -321,7 +321,8 @@ public class BattlySkinManagerFragment extends Fragment {
             loadSkin3dPlaceholder();
         }
         String current = Tools.isValidString(library.establishedSkinId)
-                ? getString(R.string.battly_skins_selected_clean)
+                ? getString(R.string.battly_skins_selected_model,
+                        getString(library.slim ? R.string.battly_skins_model_slim : R.string.battly_skins_model_classic))
                 : getString(R.string.battly_skins_no_selected);
         mCurrentStatus.setText(current);
         mSkinListContainer.removeAllViews();

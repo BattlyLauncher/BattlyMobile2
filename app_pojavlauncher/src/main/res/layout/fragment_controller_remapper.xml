@@ -1,37 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:background="@drawable/bg_battly_form_panel"
     android:clipToPadding="false"
     android:orientation="vertical"
-    android:paddingStart="24dp"
-    android:paddingTop="18dp"
-    android:paddingEnd="24dp"
-    android:paddingBottom="24dp">
+    android:paddingStart="16dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="16dp"
+    android:paddingBottom="10dp">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="54dp"
         android:background="@drawable/bg_battly_launcher_play"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingHorizontal="16dp"
-        android:paddingVertical="12dp">
+        android:paddingHorizontal="14dp">
 
         <ImageView
-            android:layout_width="44dp"
-            android:layout_height="44dp"
+            android:layout_width="38dp"
+            android:layout_height="38dp"
             android:background="@drawable/bg_battly_profile_icon"
             android:contentDescription="@null"
-            android:padding="10dp"
+            android:padding="9dp"
             android:src="@drawable/ic_battly_gamepad_line" />
 
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="14dp"
+            android:layout_marginStart="12dp"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -39,120 +37,296 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:fontFamily="@font/noto_sans_bold"
-                android:text="@string/preference_remap_controller_title"
+                android:maxLines="1"
+                android:text="@string/controller_configurator_title"
                 android:textColor="#FFFFFFFF"
-                android:textSize="20sp" />
+                android:textSize="17sp" />
 
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="3dp"
-                android:text="@string/preference_remap_controller_description"
+                android:ellipsize="end"
+                android:maxLines="1"
+                android:text="@string/controller_configurator_description"
                 android:textColor="#D5E3EC"
-                android:textSize="12sp" />
-        </LinearLayout>
+                android:textSize="10sp" />
+            </LinearLayout>
+
+        <Button
+            android:id="@+id/gamepad_setup_assistant"
+            android:layout_width="172dp"
+            android:layout_height="40dp"
+            android:layout_marginStart="10dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:minHeight="40dp"
+            android:paddingHorizontal="10dp"
+            android:text="@string/controller_setup_assistant"
+            android:textAllCaps="false"
+            android:textColor="#FFFFFFFF"
+            android:textSize="10sp" />
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:background="@drawable/bg_battly_button_secondary"
-        android:gravity="center_vertical"
-        android:orientation="horizontal"
-        android:paddingHorizontal="14dp"
-        android:paddingVertical="10dp">
+        android:layout_height="0dp"
+        android:layout_marginTop="7dp"
+        android:layout_weight="1"
+        android:baselineAligned="false"
+        android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_height="match_parent"
+            android:layout_marginEnd="7dp"
+            android:layout_weight="0.92"
+            android:background="@drawable/bg_battly_form_section"
+            android:orientation="vertical"
+            android:padding="10dp">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/controller_remapper_exit_part1"
-                android:textColor="#D5E3EC"
-                android:textSize="12sp" />
+            <net.kdt.pojavlaunch.customcontrols.gamepad.AnimatedControllerView
+                android:id="@+id/gamepad_controller_visual"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_weight="1"
+                android:contentDescription="@string/controller_visual_description"
+                android:minHeight="128dp" />
 
-            <ImageView
-                android:id="@+id/imageView2"
-                android:layout_width="26dp"
-                android:layout_height="26dp"
-                android:layout_marginHorizontal="8dp"
-                android:contentDescription="@string/controller_button_select"
-                app:srcCompat="@drawable/button_select" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:layout_marginTop="3dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/controller_remapper_exit_part2"
-                android:textColor="#D5E3EC"
-                android:textSize="12sp" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:text="@string/controller_style_title"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="11sp" />
+
+                    <TextView
+                        android:id="@+id/gamepad_controller_device"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/controller_device_waiting"
+                        android:textColor="#AFC1CC"
+                        android:textSize="9sp" />
+                </LinearLayout>
+
+                <Spinner
+                    android:id="@+id/gamepad_controller_style_spinner"
+                    android:layout_width="142dp"
+                    android:layout_height="40dp"
+                    android:minHeight="40dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/controller_input_mode_title"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp" />
+
+                <Spinner
+                    android:id="@+id/gamepad_input_mode_spinner"
+                    android:layout_width="190dp"
+                    android:layout_height="40dp"
+                    android:minHeight="40dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="48dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/controller_camera_sensitivity"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp" />
+
+                <SeekBar
+                    android:id="@+id/gamepad_camera_sensitivity"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginHorizontal="8dp"
+                    android:layout_weight="1"
+                    android:max="275"
+                    android:progress="75" />
+
+                <TextView
+                    android:id="@+id/gamepad_camera_sensitivity_value"
+                    android:layout_width="45dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:gravity="end"
+                    android:text="100%"
+                    android:textColor="#8DEEDC"
+                    android:textSize="11sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="42dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <CheckBox
+                    android:id="@+id/gamepad_camera_invert_x"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:buttonTint="#8DEEDC"
+                    android:text="@string/controller_camera_invert_x"
+                    android:textColor="#D5E3EC"
+                    android:textSize="10sp" />
+
+                <CheckBox
+                    android:id="@+id/gamepad_camera_invert_y"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:buttonTint="#8DEEDC"
+                    android:text="@string/controller_camera_invert_y"
+                    android:textColor="#D5E3EC"
+                    android:textSize="10sp" />
+
+                <Button
+                    android:id="@+id/gamepad_calibrate"
+                    android:layout_width="110dp"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_battly_button_secondary"
+                    android:minHeight="38dp"
+                    android:paddingHorizontal="6dp"
+                    android:text="@string/controller_calibrate"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="10sp" />
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout
-            android:id="@+id/gamepad_remapper_mode_container"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center_vertical"
-            android:orientation="horizontal">
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1.08"
+            android:background="@drawable/bg_battly_form_section"
+            android:orientation="vertical"
+            android:padding="9dp">
 
-            <TextView
-                android:id="@+id/gamepad_remapper_mode_label"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginEnd="8dp"
-                android:fontFamily="@font/noto_sans_bold"
-                android:text="@string/controller_remapper_operating_mode"
-                android:textColor="#FFFFFFFF"
-                android:textSize="12sp" />
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
 
-            <Spinner
-                android:id="@+id/gamepad_remapper_mode_spinner"
-                android:layout_width="wrap_content"
-                android:layout_height="42dp"
-                android:minHeight="42dp" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:fontFamily="@font/noto_sans_bold"
+                        android:text="@string/controller_mapping_title"
+                        android:textColor="#FFFFFFFF"
+                        android:textSize="12sp" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:ellipsize="end"
+                        android:maxLines="1"
+                        android:text="@string/controller_mapping_hint"
+                        android:textColor="#AFC1CC"
+                        android:textSize="9sp" />
+                </LinearLayout>
+
+                <Spinner
+                    android:id="@+id/gamepad_remapper_mode_spinner"
+                    android:layout_width="112dp"
+                    android:layout_height="40dp"
+                    android:minHeight="40dp" />
+
+                <Button
+                    android:id="@+id/gamepad_save_profile"
+                    android:layout_width="112dp"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="5dp"
+                    android:background="@drawable/bg_battly_launcher_play"
+                    android:minHeight="38dp"
+                    android:paddingHorizontal="6dp"
+                    android:text="@string/controller_profile_save_short"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="10sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="44dp"
+                android:layout_marginTop="2dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:text="@string/controller_scroll_title"
+                    android:textColor="#8DEEDC"
+                    android:textSize="10sp" />
+
+                <Spinner
+                    android:id="@+id/gamepad_scroll_up_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="7dp"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/controller_scroll_up"
+                    android:minHeight="40dp" />
+
+                <Spinner
+                    android:id="@+id/gamepad_scroll_down_spinner"
+                    android:layout_width="0dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_weight="1"
+                    android:contentDescription="@string/controller_scroll_down"
+                    android:minHeight="40dp" />
+            </LinearLayout>
+
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/gamepad_remapper_recycler"
+                android:layout_width="match_parent"
+                android:layout_height="0dp"
+                android:layout_marginTop="4dp"
+                android:layout_weight="1"
+                android:clipToPadding="false"
+                android:paddingBottom="10dp"
+                android:scrollbars="vertical" />
         </LinearLayout>
     </LinearLayout>
-
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="10dp"
-        android:gravity="end"
-        android:orientation="horizontal">
-
-        <Button
-            android:id="@+id/gamepad_calibrate"
-            android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:background="@drawable/bg_battly_button_secondary"
-            android:text="@string/controller_calibrate"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFFFF" />
-
-        <Button
-            android:id="@+id/gamepad_save_profile"
-            android:layout_width="wrap_content"
-            android:layout_height="42dp"
-            android:layout_marginStart="8dp"
-            android:background="@drawable/bg_battly_button_secondary"
-            android:text="@string/controller_profile_save"
-            android:textAllCaps="false"
-            android:textColor="#FFFFFFFF" />
-    </LinearLayout>
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/gamepad_remapper_recycler"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginTop="12dp"
-        android:layout_weight="1"
-        android:background="@drawable/bg_battly_form_section"
-        android:clipToPadding="false"
-        android:padding="10dp"
-        android:scrollbars="none" />
 </LinearLayout>

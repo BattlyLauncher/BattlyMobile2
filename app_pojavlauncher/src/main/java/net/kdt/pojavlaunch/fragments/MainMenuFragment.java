@@ -48,6 +48,7 @@ import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 
 import java.io.File;
+import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -120,6 +121,27 @@ public class MainMenuFragment extends Fragment {
             if (mLaunchStarting) {
                 return;
             }
+            File optiFine = Tools.findEnabledMod("optifine");
+            File embeddium = Tools.findEnabledMod("embeddium");
+            if (optiFine != null && embeddium != null) {
+                AlertDialog conflictDialog = Tools.createStyledDialogBuilder(requireContext())
+                        .setTitle(R.string.mod_conflict_optifine_embeddium_title)
+                        .setMessage(R.string.mod_conflict_optifine_embeddium_message)
+                        .setIcon(R.drawable.minecraft_tnt)
+                        .setPositiveButton(R.string.mod_conflict_disable_embeddium, (dialog, which) -> {
+                            if (Tools.disableMod(embeddium)) {
+                                requestLaunch();
+                            } else {
+                                Tools.showError(requireContext(), new IOException(
+                                        "Could not disable " + embeddium.getName()));
+                            }
+                        })
+                        .setNegativeButton(android.R.string.cancel, null)
+                        .create();
+                Tools.styleDialog(conflictDialog);
+                conflictDialog.show();
+                return;
+            }
             List<File> incompatibleNativeMods = Tools.getAndroidIncompatibleNativeMods();
             if (!incompatibleNativeMods.isEmpty()) {
                 StringBuilder modNames = new StringBuilder();
@@ -147,23 +169,7 @@ public class MainMenuFragment extends Fragment {
                 incompatibleModsDialog.show();
                 return;
             }
-            if (Tools.hasMods("sodium") && !(LauncherPreferences.DEFAULT_PREF.getBoolean("sodium_override", false))) {
-                AlertDialog sodiumWarningDialog = Tools.createStyledDialogBuilder(requireContext())
-                        .setTitle(R.string.sodium_warning_title)
-                        .setMessage(R.string.sodium_warning_message)
-                        .setIcon(R.drawable.minecraft_tnt)
-                        .setPositiveButton(R.string.sodium_launch_anyway, (d, w) -> requestLaunch())
-                        .setNegativeButton(android.R.string.cancel, null)
-                        .setNeutralButton(R.string.delete_sodium, (d, w) -> {
-                            Tools.deleteSodiumMods();
-                            requestLaunch();
-                        })
-                        .create();
-                Tools.styleDialog(sodiumWarningDialog);
-                sodiumWarningDialog.show();
-            } else {
-                requestLaunch();
-            }
+            requestLaunch();
         });
 
         updateSelectedVersionLabel();

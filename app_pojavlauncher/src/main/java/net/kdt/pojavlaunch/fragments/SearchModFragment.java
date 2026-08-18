@@ -92,7 +92,14 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
         if (mSubtitleTextView != null) mSubtitleTextView.setText(getSubtitleRes());
         mSearchEditText.setHint(getHintRes());
 
-        mRecyclerview.setLayoutManager(new GridLayoutManager(getContext(), 2));
+        GridLayoutManager layoutManager = new GridLayoutManager(getContext(), 2);
+        layoutManager.setSpanSizeLookup(new GridLayoutManager.SpanSizeLookup() {
+            @Override
+            public int getSpanSize(int position) {
+                return mModItemAdapter.isFullSpanPosition(position) ? 2 : 1;
+            }
+        });
+        mRecyclerview.setLayoutManager(layoutManager);
         mRecyclerview.setAdapter(mModItemAdapter);
 
         mSearchEditText.setOnEditorActionListener((v, actionId, event) -> {
@@ -114,8 +121,9 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         ProgressKeeper.removeTaskCountListener(mModItemAdapter);
+        mModItemAdapter.clearNativeAds();
+        super.onDestroyView();
     }
 
     @Override
@@ -144,6 +152,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
         mSearchProgressBar.setVisibility(View.VISIBLE);
         mSearchFilters.name = name == null ? "" : name;
         mModItemAdapter.performSearchQuery(mSearchFilters);
+        mModItemAdapter.loadNativeAds(requireActivity(),
+                getString(R.string.battly_workspace_native_ad_unit_id));
     }
 
     private void setupFilters(View view) {

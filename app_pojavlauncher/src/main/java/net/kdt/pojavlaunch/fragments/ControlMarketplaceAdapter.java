@@ -1,5 +1,6 @@
 package net.kdt.pojavlaunch.fragments;
 
+import android.app.Activity;
 import android.graphics.drawable.Drawable;
 import android.text.SpannableStringBuilder;
 import android.text.Spanned;
@@ -9,12 +10,16 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.ads.nativead.NativeAd;
+
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.utils.BattlyNativeAdHelper;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -22,7 +27,9 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarketplaceAdapter.ViewHolder> {
+public class ControlMarketplaceAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
+    private static final int VIEW_TYPE_CONTROL = 0;
+    private static final int VIEW_TYPE_AD = 1;
 
     public interface OnApplyListener {
         void onApply(JSONObject item);
@@ -39,7 +46,11 @@ public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarke
     }
 
     private final List<JSONObject> mItems = new ArrayList<>();
+    private final List<NativeAd> mNativeAds = new ArrayList<>();
+    private List<Integer> mAdPositions = java.util.Collections.emptyList();
     private final OnApplyListener mListener;
+    private int mAdGeneration;
+    private long mAdSeed;
 
     public ControlMarketplaceAdapter(OnApplyListener listener) {
         mListener = listener;
@@ -53,26 +64,103 @@ public class ControlMarketplaceAdapter extends RecyclerView.Adapter<ControlMarke
                 if (obj != null) mItems.add(obj);
             }
         }
+        mAdSeed = mItems.toString().hashCode();
+        rebuildAdPositions();
         notifyDataSetChanged();
     }
 
     @NonNull
     @Override
-    public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        if (viewType == VIEW_TYPE_AD) {
+            FrameLayout container = new FrameLayout(parent.getContext());
+            container.setLayoutParams(new RecyclerView.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+            return new AdViewHolder(container);
+        }
         View v = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_control_marketplace, parent, false);
         return new ViewHolder(v);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull ViewHolder holder, int position) {
-        JSONObject item = mItems.get(position);
-        holder.bind(item, mListener);
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (getItemViewType(position) == VIEW_TYPE_AD) {
+            ((AdViewHolder) holder).bind(mNativeAds.get(mAdPositions.indexOf(position)));
+            return;
+        }
+        JSONObject item = mItems.get(toContentPosition(position));
+        ((ViewHolder) holder).bind(item, mListener);
     }
 
     @Override
     public int getItemCount() {
-        return mItems.size();
+        return mItems.size() + mAdPositions.size();
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        return mAdPositions.contains(position) ? VIEW_TYPE_AD : VIEW_TYPE_CONTROL;
+    }
+
+    public boolean isFullSpanPosition(int position) {
+        return getItemViewType(position) == VIEW_TYPE_AD;
+    }
+
+    public void loadNativeAds(Activity activity, String unitId) {
+        clearNativeAds();
+        int generation = mAdGeneration;
+        for (int i = 0; i < 2; i++) {
+            BattlyNativeAdHelper.load(activity, unitId, new BattlyNativeAdHelper.Callback() {
+                @Override
+                public void onLoaded(NativeAd ad) {
+                    if (generation != mAdGeneration) {
+                        ad.destroy();
+                        return;
+                    }
+                    mNativeAds.add(ad);
+                    rebuildAdPositions();
+                    notifyDataSetChanged();
+                }
+
+                @Override
+                public void onFailed() {
+                }
+            });
+        }
+    }
+
+    public void clearNativeAds() {
+        mAdGeneration++;
+        for (NativeAd ad : mNativeAds) ad.destroy();
+        mNativeAds.clear();
+        mAdPositions = java.util.Collections.emptyList();
+    }
+
+    private void rebuildAdPositions() {
+        mAdPositions = BattlyNativeAdHelper.randomAdPositions(
+                mItems.size(), mNativeAds.size(), mAdSeed);
+    }
+
+    private int toContentPosition(int adapterPosition) {
+        int offset = 0;
+        for (int position : mAdPositions) if (position < adapterPosition) offset++;
+        return adapterPosition - offset;
+    }
+
+    static class AdViewHolder extends RecyclerView.ViewHolder {
+        private final FrameLayout mContainer;
+
+        AdViewHolder(FrameLayout container) {
+            super(container);
+            mContainer = container;
+        }
+
+        void bind(NativeAd ad) {
+            mContainer.removeAllViews();
+            mContainer.addView(BattlyNativeAdHelper.createCompactView(
+                    mContainer.getContext(), ad));
+        }
     }
 
     static class ViewHolder extends RecyclerView.ViewHolder {

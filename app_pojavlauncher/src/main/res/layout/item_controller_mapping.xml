@@ -38,21 +38,37 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toTopOf="parent"
             app:srcCompat="@drawable/spinner_arrow" />
-        <!-- Set in code -->
-        <TextView
-            android:id="@+id/controller_mapper_keycode_label"
+        <LinearLayout
+            android:id="@+id/controller_mapper_labels"
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/padding_large"
-            android:maxLines="2"
-            android:minLines="1"
-            android:singleLine="false"
-            android:ellipsize="end"
-            tools:text="MOUSE_LEFT"
+            android:orientation="vertical"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toStartOf="@+id/controller_mapper_expand_button"
             app:layout_constraintStart_toEndOf="@+id/controller_mapper_button"
-            app:layout_constraintTop_toTopOf="parent" />
+            app:layout_constraintTop_toTopOf="parent">
+
+            <TextView
+                android:id="@+id/controller_mapper_button_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:textColor="#FFFFFFFF"
+                android:textSize="14sp"
+                tools:text="Cross" />
+
+            <TextView
+                android:id="@+id/controller_mapper_keycode_label"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:ellipsize="end"
+                android:maxLines="2"
+                android:textColor="#B8C8D4"
+                android:textSize="12sp"
+                tools:text="MOUSE_LEFT" />
+        </LinearLayout>
     </androidx.constraintlayout.widget.ConstraintLayout>
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/controller_mapper_expanded_view"

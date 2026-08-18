@@ -31,6 +31,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -57,6 +58,7 @@ import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.kdt.LoggerView;
+import com.google.android.gms.ads.nativead.NativeAd;
 
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsDialog;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsFeature;
@@ -65,11 +67,13 @@ import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsManager;
 import net.kdt.pojavlaunch.customcontrols.ControlButtonMenuListener;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
+import net.kdt.pojavlaunch.customcontrols.ControlDeviceImageManager;
 import net.kdt.pojavlaunch.customcontrols.ControlDrawerData;
 import net.kdt.pojavlaunch.customcontrols.ControlJoystickData;
 import net.kdt.pojavlaunch.customcontrols.ControlLayout;
 import net.kdt.pojavlaunch.customcontrols.CustomControls;
 import net.kdt.pojavlaunch.customcontrols.EditorExitable;
+import net.kdt.pojavlaunch.customcontrols.gamepad.Gamepad;
 import net.kdt.pojavlaunch.customcontrols.keyboard.LwjglCharSender;
 import net.kdt.pojavlaunch.customcontrols.keyboard.TouchCharInput;
 import net.kdt.pojavlaunch.customcontrols.mouse.GyroControl;
@@ -87,6 +91,7 @@ import net.kdt.pojavlaunch.utils.ControllerProfileManager;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.TouchControllerUtils;
 import net.kdt.pojavlaunch.utils.BattlyClientCompat;
+import net.kdt.pojavlaunch.utils.BattlyNativeAdHelper;
 import net.kdt.pojavlaunch.utils.VanillaPostShaderCompat;
 
 import org.libsdl.app.SDLActivity;
@@ -106,6 +111,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public static volatile ClipboardManager GLOBAL_CLIPBOARD;
     public static final String TAG = "MainActivity";
     public static final String INTENT_MINECRAFT_VERSION = "intent_version";
+    private static final int REQUEST_CONTROL_DEVICE_IMAGE = 6204;
 
     volatile public static boolean isInputStackCall;
     protected static View.OnGenericMotionListener motionListener = (v, event) -> false;
@@ -119,6 +125,14 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private TextView mGameStartingSubtitle;
     private ImageView mGameStartingLogo;
     private ProgressBar mGameStartingProgress;
+    private FrameLayout mGameStartingAdContainer;
+    private NativeAd mGameStartingNativeAd;
+    private boolean mGameStartingAdLoadComplete;
+    private boolean mGameStartingFirstFrameReady;
+    private long mGameStartingShownAt;
+    private final Runnable mFinishGameStartingOverlay = this::finishGameStartingOverlay;
+    private static final long STARTING_OVERLAY_MIN_MS = 1200L;
+    private static final long STARTING_AD_MAX_WAIT_MS = 1800L;
     private DrawerLayout drawerLayout;
     private ListView navDrawer;
     private View mDrawerPullButton;
@@ -135,6 +149,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     public AdapterView.OnItemClickListener ingameControlsEditorListener;
     private GameService.LocalBinder mServiceBinder;
     private boolean mSdlWindowBridgeRequired;
+    private boolean mSdlInputBridgeRequired;
 
     private QuickSettingSideDialog mQuickSettingSideDialog;
     private BroadcastReceiver mBattlyWorldsInviteReceiver;
@@ -189,10 +204,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 case 1: mControlLayout.addDrawer(new ControlDrawerData()); break;
                 case 2: mControlLayout.addJoystickButton(new ControlJoystickData()); break;
                 case 3: mControlLayout.addControlButton(ControlData.createPerformanceWidget()); break;
-                case 4: mControlLayout.openLoadDialog(); break;
-                case 5: mControlLayout.openSaveDialog(this); break;
-                case 6: mControlLayout.openSetDefaultDialog(); break;
-                case 7: mControlLayout.openExitDialog(this);
+                case 4: addDeviceImage(); break;
+                case 5: mControlLayout.openLoadDialog(); break;
+                case 6: mControlLayout.openSaveDialog(this); break;
+                case 7: mControlLayout.openSetDefaultDialog(); break;
+                case 8: mControlLayout.openExitDialog(this); break;
             }
         };
 
@@ -343,6 +359,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         mGameStartingSubtitle = findViewById(R.id.main_game_starting_subtitle);
         mGameStartingLogo = findViewById(R.id.main_game_starting_logo);
         mGameStartingProgress = findViewById(R.id.main_game_starting_progress);
+        mGameStartingAdContainer = findViewById(R.id.main_game_starting_ad);
         mControlLayout = findViewById(R.id.main_control_layout);
         minecraftGLView = findViewById(R.id.main_game_render_view);
         touchpad = findViewById(R.id.main_touchpad);
@@ -353,7 +370,16 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         touchCharInput = findViewById(R.id.mainTouchCharInput);
         mDrawerPullButton = findViewById(R.id.drawer_button);
         mHotbarView = findViewById(R.id.hotbar_view);
+        applyIngameMenuSide();
         minecraftGLView.setFirstFrameListener(this::hideGameStartingOverlay);
+    }
+
+    private void applyIngameMenuSide() {
+        ViewGroup.LayoutParams rawParams = navDrawer.getLayoutParams();
+        if (!(rawParams instanceof DrawerLayout.LayoutParams)) return;
+        DrawerLayout.LayoutParams params = (DrawerLayout.LayoutParams) rawParams;
+        params.gravity = LauncherPreferences.PREF_INGAME_MENU_LEFT ? Gravity.LEFT : Gravity.RIGHT;
+        navDrawer.setLayoutParams(params);
     }
 
     private void resolveRendererBeforeSurfaceCreation(String versionId,
@@ -366,7 +392,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         MinecraftCompatibilityEngine.Report compatibility = MinecraftCompatibilityEngine.evaluate(
                 this, versionId, version, requestedRenderer);
         mSdlWindowBridgeRequired = compatibility.lwjglChannel.startsWith("3.4.");
+        mSdlInputBridgeRequired = MinecraftCompatibilityEngine.requiresSdlInputBridge(
+                compatibility.lwjglChannel);
         MinecraftGLSurface.setSdlWindowBridgeEnabled(mSdlWindowBridgeRequired);
+        MinecraftGLSurface.setSdlInputBridgeEnabled(mSdlInputBridgeRequired);
         if (mRendererAutoSelected || !compatibility.rendererId.equals(requestedRenderer)) {
             requestedRenderer = compatibility.rendererId;
             Log.i(TAG, "Auto renderer resolved before surface creation: " + requestedRenderer);
@@ -400,7 +429,8 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             if (LauncherPreferences.PREF_GAMEPAD_FORCEDSDL_PASSTHRU) {
                 Tools.SDL.initializeControllerSubsystems();
             }
-            Logger.appendToLog("Info: SDL Android surface bridge=" + mSdlWindowBridgeRequired);
+            Logger.appendToLog("Info: SDL Android surface bridge=" + mSdlWindowBridgeRequired
+                    + ", input bridge=" + mSdlInputBridgeRequired);
         } catch (UnsatisfiedLinkError ignored) {
             // Older installations can still launch through GLFW without SDL.
         } catch (ReflectiveOperationException e) {
@@ -422,8 +452,13 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             return;
         }
         updateGameStartingStage(R.string.launcher_starting_stage_surface, 8);
+        Tools.MAIN_HANDLER.removeCallbacks(mFinishGameStartingOverlay);
+        mGameStartingShownAt = SystemClock.uptimeMillis();
+        mGameStartingFirstFrameReady = false;
+        mGameStartingAdLoadComplete = false;
         mGameStartingOverlay.setVisibility(View.VISIBLE);
         mGameStartingOverlay.setAlpha(1f);
+        loadGameStartingAd();
         if (mGameStartingLogo != null) {
             mGameStartingLogo.setScaleX(0.92f);
             mGameStartingLogo.setScaleY(0.92f);
@@ -445,6 +480,50 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         }
     }
 
+    private void loadGameStartingAd() {
+        if (mGameStartingAdContainer == null || mGameStartingNativeAd != null
+                || mGameStartingOverlay.getVisibility() != View.VISIBLE) return;
+        BattlyNativeAdHelper.load(this, getString(R.string.battly_starting_native_ad_unit_id),
+                new BattlyNativeAdHelper.Callback() {
+                    @Override
+                    public void onLoaded(NativeAd ad) {
+                        if (mGameStartingOverlay == null
+                                || mGameStartingOverlay.getVisibility() != View.VISIBLE) {
+                            ad.destroy();
+                            return;
+                        }
+                        destroyGameStartingAd();
+                        mGameStartingNativeAd = ad;
+                        mGameStartingAdContainer.removeAllViews();
+                        mGameStartingAdContainer.addView(
+                                BattlyNativeAdHelper.createCompactView(MainActivity.this, ad));
+                        mGameStartingAdContainer.setVisibility(View.VISIBLE);
+                        mGameStartingAdLoadComplete = true;
+                        maybeFinishGameStartingOverlay();
+                    }
+
+                    @Override
+                    public void onFailed() {
+                        if (mGameStartingAdContainer != null) {
+                            mGameStartingAdContainer.setVisibility(View.GONE);
+                        }
+                        mGameStartingAdLoadComplete = true;
+                        maybeFinishGameStartingOverlay();
+                    }
+                });
+    }
+
+    private void destroyGameStartingAd() {
+        if (mGameStartingAdContainer != null) {
+            mGameStartingAdContainer.removeAllViews();
+            mGameStartingAdContainer.setVisibility(View.GONE);
+        }
+        if (mGameStartingNativeAd != null) {
+            mGameStartingNativeAd.destroy();
+            mGameStartingNativeAd = null;
+        }
+    }
+
     private void hideGameStartingOverlay() {
         if (Looper.myLooper() != Looper.getMainLooper()) {
             Tools.runOnUiThread(this::hideGameStartingOverlay);
@@ -453,6 +532,24 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         if (mGameStartingOverlay == null) {
             return;
         }
+        mGameStartingFirstFrameReady = true;
+        maybeFinishGameStartingOverlay();
+    }
+
+    private void maybeFinishGameStartingOverlay() {
+        if (!mGameStartingFirstFrameReady || mGameStartingOverlay == null
+                || mGameStartingOverlay.getVisibility() != View.VISIBLE) return;
+        long elapsed = SystemClock.uptimeMillis() - mGameStartingShownAt;
+        long wait = Math.max(0L, STARTING_OVERLAY_MIN_MS - elapsed);
+        if (!mGameStartingAdLoadComplete && elapsed < STARTING_AD_MAX_WAIT_MS) {
+            wait = Math.max(wait, STARTING_AD_MAX_WAIT_MS - elapsed);
+        }
+        Tools.MAIN_HANDLER.removeCallbacks(mFinishGameStartingOverlay);
+        Tools.MAIN_HANDLER.postDelayed(mFinishGameStartingOverlay, wait);
+    }
+
+    private void finishGameStartingOverlay() {
+        if (mGameStartingOverlay == null || !mGameStartingFirstFrameReady) return;
         updateGameStartingStage(R.string.launcher_starting_stage_ready, 100);
         mGameStartingOverlay.animate()
                 .alpha(0f)
@@ -460,6 +557,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 .withEndAction(() -> {
                     mGameStartingOverlay.setVisibility(View.GONE);
                     mGameStartingOverlay.setAlpha(1f);
+                    destroyGameStartingAd();
                 })
                 .start();
         if (mGameStartingLogo != null) {
@@ -540,6 +638,8 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onDestroy() {
+        Tools.MAIN_HANDLER.removeCallbacks(mFinishGameStartingOverlay);
+        destroyGameStartingAd();
         super.onDestroy();
         Tools.MAIN_HANDLER.removeCallbacks(mLanInviteChecker);
         if (BattlyWorldsFeature.ENABLED) {
@@ -596,9 +696,34 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 e.printStackTrace();
             }
         }
+        if (requestCode == REQUEST_CONTROL_DEVICE_IMAGE
+                && resultCode == Activity.RESULT_OK
+                && data != null
+                && data.getData() != null) {
+            try {
+                String imagePath = ControlDeviceImageManager.importCustomImage(this, data.getData());
+                mControlLayout.addControlButton(ControlData.createDeviceImageWidget(
+                        ControlDeviceImageManager.SOURCE_CUSTOM, imagePath));
+            } catch (IOException error) {
+                Tools.showError(this, error);
+            }
+        }
         if (BattlyWorldsFeature.ENABLED && requestCode == BattlyWorldsManager.REQUEST_VPN_PERMISSION) {
             BattlyWorldsManager.onVpnPermissionResult(this, resultCode);
         }
+    }
+
+    private void addDeviceImage() {
+        ControlDeviceImageManager.showSourcePicker(this, source -> {
+            if (ControlDeviceImageManager.SOURCE_CUSTOM.equals(source)) {
+                Intent picker = new Intent(Intent.ACTION_OPEN_DOCUMENT);
+                picker.addCategory(Intent.CATEGORY_OPENABLE);
+                picker.setType("image/*");
+                startActivityForResult(picker, REQUEST_CONTROL_DEVICE_IMAGE);
+                return;
+            }
+            mControlLayout.addControlButton(ControlData.createDeviceImageWidget(source, ""));
+        });
     }
 
     private void runCraft(String versionId, JMinecraftVersionList.Version version) throws Throwable {
@@ -671,7 +796,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
         MinecraftAccount minecraftAccount = PojavProfile.getCurrentProfileContent(this, null);
         if (hasMods("sodium"))
-            Logger.appendToLog("WARNING: Sodium is being used, Battly Launcher does NOT support this mod, you are on your own");
+            Logger.appendToLog("WARNING: Sodium detected. Compatibility may depend on the selected renderer and installed mods.");
         Logger.appendToLog("--------- Starting game with Launcher Debug!");
         Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS);
         if(Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
@@ -997,6 +1122,18 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             }
         }
         return handleEvent;
+    }
+
+    @Override
+    public boolean dispatchGenericMotionEvent(MotionEvent event) {
+        // The custom-control overlay can own focus while Minecraft is running. In that state
+        // Android does not dispatch joystick MotionEvents to MinecraftGLSurface and may instead
+        // synthesize DPAD compatibility keys from a stick. Route controller motion at Activity
+        // level so analog sticks always reach Battly's gamepad handler exactly once.
+        if (minecraftGLView != null && Gamepad.isGamepadEvent(event)) {
+            return minecraftGLView.dispatchGenericMotionEvent(event);
+        }
+        return super.dispatchGenericMotionEvent(event);
     }
 
     public static void switchKeyboardState() {

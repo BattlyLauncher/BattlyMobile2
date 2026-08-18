@@ -104,14 +104,15 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
         Log.i("McAccountSpinner", "Account login completed for " + account.username);
         Toast.makeText(getContext(), R.string.main_login_done, Toast.LENGTH_SHORT).show();
 
-        // Check if the account being added is not one that is already existing
-        // Like login twice on the same mc account...
-        for(String mcAccountName : mAccountList){
-            if(mcAccountName.equals(account.username)) return;
-        }
-
+        int existingPosition = mAccountList.indexOf(account.username);
         mSelectecAccount = account;
         invalidate();
+        if (existingPosition > 0) {
+            reloadAccounts(false, existingPosition);
+            setImageFromSelectedAccount();
+            return;
+        }
+
         mAccountList.add(account.username);
         reloadAccounts(false, mAccountList.size() -1);
     };
@@ -344,9 +345,9 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
 
         mLoginBarPaint.setColor(getResources().getColor(R.color.minebutton_color));
         if(minecraftAccount.isMicrosoft){
-            if(System.currentTimeMillis() > minecraftAccount.expiresAt){
+            if(System.currentTimeMillis() + 300_000L >= minecraftAccount.expiresAt){
                 // Perform login only if needed
-                new MicrosoftBackgroundLogin(true, minecraftAccount.msaRefreshToken)
+                new MicrosoftBackgroundLogin(minecraftAccount)
                         .performLogin(mProgressListener, mDoneListener, mErrorListener);
             }
             return;
@@ -401,8 +402,6 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
     @Deprecated()
     /* Legacy behavior, update the head image manually for the selected account */
     private void setImageFromSelectedAccount(){
-        BitmapDrawable oldBitmapDrawable = mHeadDrawable;
-
         if(mSelectecAccount != null){
             View layout = getSelectedView();
             if(layout != null){
@@ -418,9 +417,6 @@ public class mcAccountSpinner extends AppCompatSpinner implements AdapterView.On
             }
         }
 
-        if(oldBitmapDrawable != null){
-            oldBitmapDrawable.getBitmap().recycle();
-        }
     }
 
     private class AccountAdapter extends ArrayAdapter<String> {

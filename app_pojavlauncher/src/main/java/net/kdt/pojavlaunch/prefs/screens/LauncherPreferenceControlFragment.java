@@ -23,6 +23,7 @@ public class LauncherPreferenceControlFragment extends LauncherPreferenceFragmen
         int gyroSampleRate = LauncherPreferences.PREF_GYRO_SAMPLE_RATE;
         int touchControllerVibrateLength = LauncherPreferences.PREF_TOUCHCONTROLLER_VIBRATE_LENGTH;
         float mouseSpeed = LauncherPreferences.PREF_MOUSESPEED;
+        float touchscreenSensitivity = LauncherPreferences.PREF_TOUCHSCREEN_SENSITIVITY;
         float gyroSpeed = LauncherPreferences.PREF_GYRO_SENSITIVITY;
         float joystickDeadzone = LauncherPreferences.PREF_DEADZONE_SCALE;
 
@@ -49,6 +50,11 @@ public class LauncherPreferenceControlFragment extends LauncherPreferenceFragmen
                 CustomSeekBarPreference.class);
         seek6.setValue((int) (mouseSpeed * 100f));
         seek6.setSuffix(" %");
+
+        CustomSeekBarPreference touchscreenSensitivitySeek = requirePreference(
+                "touchscreenSensitivity", CustomSeekBarPreference.class);
+        touchscreenSensitivitySeek.setValue((int) (touchscreenSensitivity * 100f));
+        touchscreenSensitivitySeek.setSuffix(" %");
 
         CustomSeekBarPreference deadzoneSeek = requirePreference("gamepad_deadzone_scale",
                 CustomSeekBarPreference.class);

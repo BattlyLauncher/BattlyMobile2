@@ -5,6 +5,9 @@ import android.content.SharedPreferences;
 import android.util.Log;
 
 import net.kdt.pojavlaunch.Logger;
+import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
+import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -56,7 +59,7 @@ public final class PromotedServersManager {
         if (context == null || gameDirectory == null) return;
         try {
             SharedPreferences preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
-            List<Promotion> promotions = loadPromotions(preferences);
+            List<Promotion> promotions = loadPromotions(preferences, false);
             if (promotions == null) {
                 Logger.appendToLog("Warning: Promoted servers were not updated because Battly config is unavailable");
                 return;
@@ -68,10 +71,41 @@ public final class PromotedServersManager {
         }
     }
 
-    private static List<Promotion> loadPromotions(SharedPreferences preferences) throws Exception {
+    /** Refreshes the API config and persists promoted servers in every known instance. */
+    public static synchronized void syncAllAtLauncherStart(Context context) {
+        if (context == null) return;
+        try {
+            SharedPreferences preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
+            List<Promotion> promotions = loadPromotions(preferences, true);
+            if (promotions == null) {
+                Logger.appendToLog("Warning: Promoted servers were not updated because Battly config is unavailable");
+                return;
+            }
+
+            List<File> gameDirectories = knownGameDirectories();
+            int synchronizedDirectories = 0;
+            for (File gameDirectory : gameDirectories) {
+                try {
+                    merge(preferences, gameDirectory, promotions);
+                    synchronizedDirectories++;
+                } catch (IOException exception) {
+                    Log.w(TAG, "Could not update promoted servers for " + gameDirectory, exception);
+                }
+            }
+            Logger.appendToLog("Info: Promoted servers refreshed at Battly startup for "
+                    + synchronizedDirectories + "/" + gameDirectories.size() + " instances");
+        } catch (Throwable throwable) {
+            Log.w(TAG, "Could not refresh promoted servers at Battly startup", throwable);
+            Logger.appendToLog("Warning: Promoted servers startup refresh failed: " + safeMessage(throwable));
+        }
+    }
+
+    private static List<Promotion> loadPromotions(SharedPreferences preferences, boolean forceRefresh)
+            throws Exception {
         long now = System.currentTimeMillis();
         String cached = preferences.getString(CACHE_JSON, null);
-        if (cached != null && now - preferences.getLong(CACHE_TIME, 0L) < CACHE_TTL_MS) {
+        if (!forceRefresh && cached != null
+                && now - preferences.getLong(CACHE_TIME, 0L) < CACHE_TTL_MS) {
             return parsePromotions(cached);
         }
         try {
@@ -86,6 +120,32 @@ public final class PromotedServersManager {
             }
             throw networkError;
         }
+    }
+
+    private static List<File> knownGameDirectories() {
+        LinkedHashMap<String, File> directories = new LinkedHashMap<>();
+        addGameDirectory(directories, new File(Tools.DIR_GAME_NEW));
+
+        if (LauncherProfiles.mainProfileJson == null) LauncherProfiles.load();
+        if (LauncherProfiles.mainProfileJson != null && LauncherProfiles.mainProfileJson.profiles != null) {
+            List<MinecraftProfile> profiles = new ArrayList<>(
+                    LauncherProfiles.mainProfileJson.profiles.values());
+            for (MinecraftProfile profile : profiles) {
+                if (profile != null) addGameDirectory(directories, Tools.getGameDirPath(profile));
+            }
+        }
+        return new ArrayList<>(directories.values());
+    }
+
+    private static void addGameDirectory(Map<String, File> directories, File directory) {
+        if (directory == null) return;
+        File canonical;
+        try {
+            canonical = directory.getCanonicalFile();
+        } catch (IOException ignored) {
+            canonical = directory.getAbsoluteFile();
+        }
+        directories.put(canonical.getAbsolutePath(), canonical);
     }
 
     private static String fetchConfig() throws IOException {

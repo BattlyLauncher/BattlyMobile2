@@ -20,6 +20,7 @@ import net.kdt.pojavlaunch.*;
 import net.kdt.pojavlaunch.multirt.MultiRTUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.utils.JREUtils;
+import net.kdt.pojavlaunch.utils.AdaptiveDownloadPolicy;
 
 import java.io.File;
 import java.io.IOException;
@@ -49,6 +50,8 @@ public class LauncherPreferences {
     public static boolean PREF_GAMEPAD_FORCEDSDL_PASSTHRU = false;
     public static boolean PREF_DISABLE_SWAP_HAND = false;
     public static float PREF_MOUSESPEED = 1f;
+    public static float PREF_TOUCHSCREEN_SENSITIVITY = 1f;
+    public static boolean PREF_INGAME_MENU_LEFT = false;
     public static int PREF_RAM_ALLOCATION;
     public static String PREF_DEFAULT_RUNTIME;
     public static boolean PREF_SUSTAINED_PERFORMANCE = false;
@@ -72,13 +75,16 @@ public class LauncherPreferences {
     public static boolean PREF_BUTTON_ALL_CAPS = true;
     public static boolean PREF_DUMP_SHADERS = false;
     public static float PREF_DEADZONE_SCALE = 1f;
+    public static String PREF_GAMEPAD_INPUT_MODE = "battly";
+    public static float PREF_GAMEPAD_CAMERA_SENSITIVITY = 1f;
+    public static boolean PREF_GAMEPAD_CAMERA_INVERT_X = false;
+    public static boolean PREF_GAMEPAD_CAMERA_INVERT_Y = false;
     public static boolean PREF_BIG_CORE_AFFINITY = false;
     public static boolean PREF_ZINK_PREFER_SYSTEM_DRIVER = false;
     
     public static boolean PREF_VERIFY_MANIFEST = true;
     public static String PREF_DOWNLOAD_SOURCE = "default";
-    public static int PREF_DOWNLOAD_THREAD_COUNT = 8;
-    public static boolean PREF_DOWNLOAD_THREADS_AUTO = true;
+    public static int PREF_DOWNLOAD_THREAD_COUNT = AdaptiveDownloadPolicy.DEFAULT_WORKERS;
     public static boolean PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = false;
     public static boolean PREF_VSYNC_IN_ZINK = true;
     public static boolean PREF_FORCE_ENABLE_TOUCHCONTROLLER = false;
@@ -99,6 +105,9 @@ public class LauncherPreferences {
         PREF_BUTTONSIZE = DEFAULT_PREF.getInt("buttonscale", 100);
         PREF_MOUSESCALE = DEFAULT_PREF.getInt("mousescale", 100)/100f;
         PREF_MOUSESPEED = ((float)DEFAULT_PREF.getInt("mousespeed",100))/100f;
+        PREF_TOUCHSCREEN_SENSITIVITY = ((float) DEFAULT_PREF.getInt(
+                "touchscreenSensitivity", 100)) / 100f;
+        PREF_INGAME_MENU_LEFT = DEFAULT_PREF.getBoolean("ingameMenuLeft", false);
         PREF_IGNORE_NOTCH = DEFAULT_PREF.getBoolean("ignoreNotch", false);
 		PREF_LONGPRESS_TRIGGER = DEFAULT_PREF.getInt("timeLongPressTrigger", 300);
 		PREF_DEFAULTCTRL_PATH = DEFAULT_PREF.getString("defaultCtrl", Tools.CTRLDEF_FILE);
@@ -128,14 +137,30 @@ public class LauncherPreferences {
         PREF_BUTTON_ALL_CAPS = DEFAULT_PREF.getBoolean("buttonAllCaps", true);
         PREF_DUMP_SHADERS = DEFAULT_PREF.getBoolean("dump_shaders", false);
         PREF_DEADZONE_SCALE = ((float) DEFAULT_PREF.getInt("gamepad_deadzone_scale", 100))/100f;
+        PREF_GAMEPAD_INPUT_MODE = DEFAULT_PREF.getString("gamepadInputMode", "battly");
+        PREF_GAMEPAD_CAMERA_SENSITIVITY = DEFAULT_PREF.getInt("gamepadCameraSensitivity", 100) / 100f;
+        PREF_GAMEPAD_CAMERA_INVERT_X = DEFAULT_PREF.getBoolean("gamepadCameraInvertX", false);
+        PREF_GAMEPAD_CAMERA_INVERT_Y = DEFAULT_PREF.getBoolean("gamepadCameraInvertY", false);
         PREF_BIG_CORE_AFFINITY = DEFAULT_PREF.getBoolean("bigCoreAffinity", false);
         PREF_ZINK_PREFER_SYSTEM_DRIVER = DEFAULT_PREF.getBoolean("zinkPreferSystemDriver", false);
         PREF_DOWNLOAD_SOURCE = "default";
         if (DEFAULT_PREF.contains("downloadSource")) {
             DEFAULT_PREF.edit().remove("downloadSource").apply();
         }
-        PREF_DOWNLOAD_THREAD_COUNT = clamp(DEFAULT_PREF.getInt("downloadThreadCount", 8), 2, 100);
-        PREF_DOWNLOAD_THREADS_AUTO = DEFAULT_PREF.getBoolean("downloadThreadsAuto", true);
+        int storedDownloadThreads = DEFAULT_PREF.getInt(
+                "downloadThreadCount", AdaptiveDownloadPolicy.DEFAULT_WORKERS);
+        boolean hadAutomaticDownloadSetting = DEFAULT_PREF.contains("downloadThreadsAuto");
+        int configuredDownloadThreads = hadAutomaticDownloadSetting
+                && DEFAULT_PREF.getBoolean("downloadThreadsAuto", true)
+                ? AdaptiveDownloadPolicy.DEFAULT_WORKERS
+                : storedDownloadThreads;
+        PREF_DOWNLOAD_THREAD_COUNT = AdaptiveDownloadPolicy.clamp(configuredDownloadThreads);
+        if (hadAutomaticDownloadSetting || PREF_DOWNLOAD_THREAD_COUNT != storedDownloadThreads) {
+            DEFAULT_PREF.edit()
+                    .putInt("downloadThreadCount", PREF_DOWNLOAD_THREAD_COUNT)
+                    .remove("downloadThreadsAuto")
+                    .apply();
+        }
         PREF_VERIFY_MANIFEST = DEFAULT_PREF.getBoolean("verifyManifest", true);
         PREF_SKIP_NOTIFICATION_PERMISSION_CHECK = DEFAULT_PREF.getBoolean(PREF_KEY_SKIP_NOTIFICATION_CHECK, false);
         PREF_VSYNC_IN_ZINK = DEFAULT_PREF.getBoolean("vsync_in_zink", true);
@@ -266,7 +291,7 @@ public class LauncherPreferences {
 
         }catch (Exception e){
             Log.i("NOTCH DETECTION", "No notch detected, or the device if in split screen mode");
-            LauncherPreferences.PREF_NOTCH_SIZE = -1;
+            LauncherPreferences.PREF_NOTCH_SIZE = 0;
         }
         Tools.updateWindowSize(activity);
     }
@@ -304,7 +329,8 @@ public class LauncherPreferences {
         // These guys are SwitchPreferences so they get special treatment, they need to be converted to ints
         int gl43exts = DEFAULT_PREF.getBoolean("mg_renderer_setting_gl43exts", false) ? 1 : 0;
         int computeShaderext = DEFAULT_PREF.getBoolean("mg_renderer_computeShaderext", false) ? 1 : 0;
-        int angleDepthClearFixMode = DEFAULT_PREF.getBoolean("mg_renderer_setting_angleDepthClearFixMode", false) ? 1 : 0;
+        int angleDepthClearFixMode = Integer.parseInt(
+                DEFAULT_PREF.getString("mg_renderer_setting_angleDepthClearFixModeV2", "0"));
         int timerQueryExt = DEFAULT_PREF.getBoolean("mg_renderer_setting_timerQueryExt", false) ? 1 : 0;
         int dsaExt = DEFAULT_PREF.getBoolean("mg_renderer_dsaExt", false) ? 1 : 0;
         MGConfigJson.put("enableExtGL43", gl43exts);
@@ -312,14 +338,24 @@ public class LauncherPreferences {
         MGConfigJson.put("angleDepthClearFixMode", angleDepthClearFixMode);
         MGConfigJson.put("enableExtTimerQuery", timerQueryExt);
         MGConfigJson.put("enableExtDirectStateAccess", dsaExt);
-        if (DEFAULT_PREF.getBoolean("mg_renderer_multidrawCompute", false) && !androidEmulator) {
-            MGConfigJson.put("multidrawMode", 5); // Special handling for the (special mayhaps) compute emulation
-        } else {
-            String multidrawMode = DEFAULT_PREF.getString("mg_renderer_setting_multidraw", "0");
-            if (androidEmulator && "0".equals(multidrawMode)) {
-                multidrawMode = "4";
-            }
-            MGConfigJson.put("multidrawMode", Integer.parseInt(multidrawMode));
+        putNonEmpty(MGConfigJson, "multidrawOrder",
+                DEFAULT_PREF.getString("mg_renderer_multidraw_order", ""));
+        putNonEmpty(MGConfigJson, "multidrawOrderArrays",
+                DEFAULT_PREF.getString("mg_renderer_multidraw_arrays", ""));
+        putNonEmpty(MGConfigJson, "multidrawOrderElements",
+                DEFAULT_PREF.getString("mg_renderer_multidraw_elements", ""));
+        putNonEmpty(MGConfigJson, "multidrawOrderElementsBaseVertex",
+                DEFAULT_PREF.getString("mg_renderer_multidraw_elements_base_vertex", ""));
+        putNonEmpty(MGConfigJson, "multidrawOrderArraysIndirect",
+                DEFAULT_PREF.getString("mg_renderer_multidraw_arrays_indirect", ""));
+        putNonEmpty(MGConfigJson, "multidrawOrderElementsIndirect",
+                DEFAULT_PREF.getString("mg_renderer_multidraw_elements_indirect", ""));
+        MGConfigJson.put("hideMGEnvLevel", Integer.parseInt(
+                DEFAULT_PREF.getString("mg_renderer_hide_environment", "0")));
+        int customGlVersion = Integer.parseInt(
+                DEFAULT_PREF.getString("mg_renderer_custom_gl_version", "0"));
+        if (customGlVersion > 0) {
+            MGConfigJson.put("customGLVersion", customGlVersion);
         }
         if (androidEmulator) {
             MGConfigJson.put("customGLVersion", 33);
@@ -333,6 +369,12 @@ public class LauncherPreferences {
             Logger.appendToLog("MG Config is " + Tools.GLOBAL_GSON.toJson(MGConfigJson));
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    private static void putNonEmpty(LinkedHashMap<String, Object> target, String key, String value) {
+        if (value != null && !value.trim().isEmpty()) {
+            target.put(key, value.trim());
         }
     }
 

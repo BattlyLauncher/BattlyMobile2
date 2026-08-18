@@ -6,7 +6,7 @@ plugins{
     id 'com.google.firebase.crashlytics' version '3.0.6' apply false
 }
 
-def mobileGluesPatch = file('patches/mobileglues/1.3.5-battly.patch')
+def mobileGluesPatch = file('patches/mobileglues/2.0.0-battly.patch')
 def sdlPatch = file('patches/sdl/3.2.20-battly.patch')
 
 tasks.register('applyMobileGluesPatches') {

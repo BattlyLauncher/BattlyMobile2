@@ -5,12 +5,12 @@ import static android.view.MotionEvent.AXIS_HAT_X;
 import static android.view.MotionEvent.AXIS_HAT_Y;
 import static android.view.MotionEvent.AXIS_LTRIGGER;
 import static android.view.MotionEvent.AXIS_RTRIGGER;
-import static android.view.MotionEvent.AXIS_RZ;
 import static android.view.MotionEvent.AXIS_X;
 import static android.view.MotionEvent.AXIS_Y;
-import static android.view.MotionEvent.AXIS_Z;
 
 import android.content.Context;
+import android.os.Handler;
+import android.os.Looper;
 import android.view.Choreographer;
 import android.view.InputDevice;
 import android.view.KeyEvent;
@@ -42,6 +42,9 @@ import static net.kdt.pojavlaunch.customcontrols.gamepad.GamepadJoystick.DIRECTI
 import static net.kdt.pojavlaunch.customcontrols.gamepad.GamepadJoystick.DIRECTION_WEST;
 import static net.kdt.pojavlaunch.customcontrols.gamepad.GamepadJoystick.isJoystickEvent;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_DEADZONE_SCALE;
+import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_GAMEPAD_CAMERA_INVERT_X;
+import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_GAMEPAD_CAMERA_INVERT_Y;
+import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_GAMEPAD_CAMERA_SENSITIVITY;
 import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_SCALE_FACTOR;
 import static net.kdt.pojavlaunch.utils.MCOptionUtils.getMcScale;
 import static org.lwjgl.glfw.CallbackBridge.sendKeyPress;
@@ -58,9 +61,21 @@ public class Gamepad implements GrabListener, GamepadHandler {
     private final ImageView mPointerImageView;
 
     private final GamepadJoystick mLeftJoystick;
+    private final ControllerAnalogFilter.StickState mLeftStickFilter;
     private int mCurrentJoystickDirection = DIRECTION_NONE;
 
     private final GamepadJoystick mRightJoystick;
+    private final ControllerAnalogFilter.StickState mRightStickFilter;
+    private final ControllerAnalogFilter.TriggerState mLeftTriggerState =
+            new ControllerAnalogFilter.TriggerState();
+    private final ControllerAnalogFilter.TriggerState mRightTriggerState =
+            new ControllerAnalogFilter.TriggerState();
+    private final Handler mInputHandler = new Handler(Looper.getMainLooper());
+    private Runnable mLeftTriggerTapRelease;
+    private Runnable mLeftTriggerHoldStart;
+    private Runnable mRightTriggerTapRelease;
+    private Runnable mRightTriggerHoldStart;
+    private final ControllerTypeResolver.Style mControllerStyle;
     private float mLastHorizontalValue = 0.0f;
     private float mLastVerticalValue = 0.0f;
 
@@ -90,6 +105,11 @@ public class Gamepad implements GrabListener, GamepadHandler {
     private boolean mRemoved = false;
 
     public Gamepad(View contextView, InputDevice inputDevice, GamepadDataProvider mapProvider, boolean showCursor){
+        this(contextView, inputDevice, mapProvider, showCursor, ControllerTypeResolver.Style.AUTO);
+    }
+
+    public Gamepad(View contextView, InputDevice inputDevice, GamepadDataProvider mapProvider, boolean showCursor,
+                   ControllerTypeResolver.Style requestedStyle){
 
         Settings.setDeadzoneScale(PREF_DEADZONE_SCALE);
 
@@ -107,11 +127,15 @@ public class Gamepad implements GrabListener, GamepadHandler {
         /* Add the listener for the cross hair */
         MCOptionUtils.addMCOptionListener(mGuiScaleListener);
 
-        mLeftJoystick = new GamepadJoystick(AXIS_X, AXIS_Y, inputDevice);
-        mRightJoystick = new GamepadJoystick(AXIS_Z, AXIS_RZ, inputDevice);
-
-
         Context ctx = contextView.getContext();
+        mControllerStyle = ControllerTypeResolver.resolve(requestedStyle, inputDevice);
+        // RemapperManager emits canonical axes regardless of the physical controller layout.
+        mLeftJoystick = new GamepadJoystick(AXIS_X, AXIS_Y, inputDevice);
+        mRightJoystick = new GamepadJoystick(MotionEvent.AXIS_Z, MotionEvent.AXIS_RZ, inputDevice);
+        mLeftStickFilter = new ControllerAnalogFilter.StickState(PREF_DEADZONE_SCALE);
+        mRightStickFilter = new ControllerAnalogFilter.StickState(PREF_DEADZONE_SCALE);
+
+
         mPointerImageView = new ImageView(contextView.getContext());
         mPointerImageView.setImageDrawable(ResourcesCompat.getDrawable(ctx.getResources(), R.drawable.ic_gamepad_pointer, ctx.getTheme()));
         mPointerImageView.getDrawable().setFilterBitmap(false);
@@ -136,6 +160,7 @@ public class Gamepad implements GrabListener, GamepadHandler {
 
 
     public void reloadGamepadMaps() {
+        cancelTriggerActions();
         if(mGameMap != null) mGameMap.resetPressedState();
         if(mMenuMap != null) mMenuMap.resetPressedState();
         GamepadMapStore.load();
@@ -196,10 +221,7 @@ public class Gamepad implements GrabListener, GamepadHandler {
     }
 
     public static boolean isGamepadEvent(KeyEvent event){
-        boolean isGamepad = ((event.getSource() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD)
-                || ((event.getDevice() != null) && ((event.getDevice().getSources() & InputDevice.SOURCE_GAMEPAD) == InputDevice.SOURCE_GAMEPAD));
-
-        return isGamepad && GamepadDpad.isDpadEvent(event);
+        return GamepadDpad.isDpadEvent(event);
     }
 
     /**
@@ -243,12 +265,19 @@ public class Gamepad implements GrabListener, GamepadHandler {
         GamepadJoystick currentJoystick = isGrabbing ? mRightJoystick : mLeftJoystick;
         float horizontalValue = currentJoystick.getHorizontalAxis();
         float verticalValue = currentJoystick.getVerticalAxis();
+        if (isGrabbing) {
+            int sensitivity = Math.round(PREF_GAMEPAD_CAMERA_SENSITIVITY * 100f);
+            horizontalValue = ControllerInputSettings.applyCameraAxis(
+                    horizontalValue, sensitivity, PREF_GAMEPAD_CAMERA_INVERT_X);
+            verticalValue = ControllerInputSettings.applyCameraAxis(
+                    verticalValue, sensitivity, PREF_GAMEPAD_CAMERA_INVERT_Y);
+        }
         if(horizontalValue != mLastHorizontalValue || verticalValue != mLastVerticalValue){
             mLastHorizontalValue = horizontalValue;
             mLastVerticalValue = verticalValue;
 
-            mMouseMagnitude = currentJoystick.getMagnitude();
-            mMouseAngle = currentJoystick.getAngleRadian();
+            mMouseMagnitude = Math.min(1d, Math.hypot(horizontalValue, verticalValue));
+            mMouseAngle = -Math.atan2(verticalValue, horizontalValue);
 
             tick(System.nanoTime());
             return;
@@ -256,8 +285,8 @@ public class Gamepad implements GrabListener, GamepadHandler {
         mLastHorizontalValue = horizontalValue;
         mLastVerticalValue = verticalValue;
 
-        mMouseMagnitude = currentJoystick.getMagnitude();
-        mMouseAngle = currentJoystick.getAngleRadian();
+        mMouseMagnitude = Math.min(1d, Math.hypot(horizontalValue, verticalValue));
+        mMouseAngle = -Math.atan2(verticalValue, horizontalValue);
 
     }
 
@@ -325,6 +354,10 @@ public class Gamepad implements GrabListener, GamepadHandler {
         if(lastGrabbingValue == isGrabbing) return;
 
         // Switch grabbing state then
+        cancelTriggerActions();
+        mLeftStickFilter.reset();
+        mRightStickFilter.reset();
+        applyFilteredSticks();
         mCurrentMap.resetPressedState();
         if(isGrabbing){
             mCurrentMap = mGameMap;
@@ -345,6 +378,7 @@ public class Gamepad implements GrabListener, GamepadHandler {
 
     @Override
     public void handleGamepadInput(int keycode, float value) {
+        keycode = ControllerTypeResolver.normalizeKeyCode(mControllerStyle, keycode);
         boolean isKeyEventDown = value == 1f;
         switch (keycode){
             case KeyEvent.KEYCODE_BUTTON_A:
@@ -370,10 +404,14 @@ public class Gamepad implements GrabListener, GamepadHandler {
 
             //Triggers
             case KeyEvent.KEYCODE_BUTTON_L2:
-                getCurrentMap().TRIGGER_LEFT.update(isKeyEventDown);
+                if (mLeftTriggerState.setDigitalPressed(isKeyEventDown)) {
+                    dispatchTrigger(true, mLeftTriggerState.isPressed());
+                }
                 break;
             case KeyEvent.KEYCODE_BUTTON_R2:
-                getCurrentMap().TRIGGER_RIGHT.update(isKeyEventDown);
+                if (mRightTriggerState.setDigitalPressed(isKeyEventDown)) {
+                    dispatchTrigger(false, mRightTriggerState.isPressed());
+                }
                 break;
 
             //L3 || R3
@@ -424,34 +462,38 @@ public class Gamepad implements GrabListener, GamepadHandler {
 
             // Left joystick
             case AXIS_X:
-                mLeftJoystick.setXAxisValue(value);
-                updateJoysticks();
+                mLeftStickFilter.setX(value);
+                applyFilteredSticks();
                 break;
             case AXIS_Y:
-                mLeftJoystick.setYAxisValue(value);
-                updateJoysticks();
+                mLeftStickFilter.setY(value);
+                applyFilteredSticks();
                 break;
 
             // Right joystick
-            case AXIS_Z:
-                mRightJoystick.setXAxisValue(value);
-                updateJoysticks();
+            case MotionEvent.AXIS_Z:
+                mRightStickFilter.setX(value);
+                applyFilteredSticks();
                 break;
-            case AXIS_RZ:
-                mRightJoystick.setYAxisValue(value);
-                updateJoysticks();
+            case MotionEvent.AXIS_RZ:
+                mRightStickFilter.setY(value);
+                applyFilteredSticks();
                 break;
 
             // Triggers
             case AXIS_RTRIGGER:
-                getCurrentMap().TRIGGER_RIGHT.update(value > 0.5);
+                if (mRightTriggerState.setAnalogValue(value)) {
+                    dispatchTrigger(false, mRightTriggerState.isPressed());
+                }
                 break;
             case AXIS_LTRIGGER:
-                getCurrentMap().TRIGGER_LEFT.update(value > 0.5);
+                if (mLeftTriggerState.setAnalogValue(value)) {
+                    dispatchTrigger(true, mLeftTriggerState.isPressed());
+                }
                 break;
 
             default:
-                sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_SPACE, CallbackBridge.getCurrentMods(), isKeyEventDown);
+                // Extra controller buttons must not become keyboard input accidentally.
                 break;
         }
     }
@@ -462,8 +504,80 @@ public class Gamepad implements GrabListener, GamepadHandler {
      */
     public void removeSelf() {
         mRemoved = true;
+        cancelTriggerActions();
         mMapProvider.detachGrabListener(this);
         ViewGroup viewGroup = (ViewGroup) mPointerImageView.getParent();
         if(viewGroup != null) viewGroup.removeView(mPointerImageView);
+    }
+
+    private void applyFilteredSticks() {
+        mLeftJoystick.setXAxisValue(mLeftStickFilter.getX());
+        mLeftJoystick.setYAxisValue(mLeftStickFilter.getY());
+        mRightJoystick.setXAxisValue(mRightStickFilter.getX());
+        mRightJoystick.setYAxisValue(mRightStickFilter.getY());
+        updateJoysticks();
+    }
+
+    private void dispatchTrigger(boolean left, boolean pressed) {
+        GamepadButton button = left ? getCurrentMap().TRIGGER_LEFT : getCurrentMap().TRIGGER_RIGHT;
+        if (!containsKeycode(button, GamepadMap.MOUSE_RIGHT)) {
+            button.update(pressed);
+            return;
+        }
+
+        cancelTriggerRunnables(left);
+        if (!pressed) {
+            button.update(false);
+            return;
+        }
+
+        // A short trigger touch is one use/place click. A deliberate hold resumes after
+        // a small delay so eating, bows, shields and other held-use actions keep working.
+        button.update(true);
+        Runnable tapRelease = () -> button.update(false);
+        Runnable holdStart = () -> {
+            ControllerAnalogFilter.TriggerState state = left ? mLeftTriggerState : mRightTriggerState;
+            if (state.isPressed() && getCurrentMap() != null) {
+                (left ? getCurrentMap().TRIGGER_LEFT : getCurrentMap().TRIGGER_RIGHT).update(true);
+            }
+        };
+        if (left) {
+            mLeftTriggerTapRelease = tapRelease;
+            mLeftTriggerHoldStart = holdStart;
+        } else {
+            mRightTriggerTapRelease = tapRelease;
+            mRightTriggerHoldStart = holdStart;
+        }
+        mInputHandler.postDelayed(tapRelease, 70L);
+        mInputHandler.postDelayed(holdStart, 350L);
+    }
+
+    private static boolean containsKeycode(GamepadButton button, short keycode) {
+        if (button == null || button.keycodes == null) return false;
+        for (short mapped : button.keycodes) {
+            if (mapped == keycode) return true;
+        }
+        return false;
+    }
+
+    private void cancelTriggerActions() {
+        cancelTriggerRunnables(true);
+        cancelTriggerRunnables(false);
+        mLeftTriggerState.reset();
+        mRightTriggerState.reset();
+    }
+
+    private void cancelTriggerRunnables(boolean left) {
+        Runnable tapRelease = left ? mLeftTriggerTapRelease : mRightTriggerTapRelease;
+        Runnable holdStart = left ? mLeftTriggerHoldStart : mRightTriggerHoldStart;
+        if (tapRelease != null) mInputHandler.removeCallbacks(tapRelease);
+        if (holdStart != null) mInputHandler.removeCallbacks(holdStart);
+        if (left) {
+            mLeftTriggerTapRelease = null;
+            mLeftTriggerHoldStart = null;
+        } else {
+            mRightTriggerTapRelease = null;
+            mRightTriggerHoldStart = null;
+        }
     }
 }

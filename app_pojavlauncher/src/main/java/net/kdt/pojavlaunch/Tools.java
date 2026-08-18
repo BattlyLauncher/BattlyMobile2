@@ -38,8 +38,10 @@ import android.provider.OpenableColumns;
 import android.util.ArrayMap;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.DisplayCutout;
 import android.view.InputDevice;
 import android.view.View;
+import android.view.Window;
 import android.view.WindowManager;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -75,6 +77,7 @@ import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.JSONUtils;
 import net.kdt.pojavlaunch.utils.LegacyShaderpackCompat;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
+import net.kdt.pojavlaunch.utils.MinecraftCompatibilityEngine;
 import net.kdt.pojavlaunch.utils.OfflineSkinManager;
 import net.kdt.pojavlaunch.utils.PromotedServersManager;
 import net.kdt.pojavlaunch.utils.OldVersionsUtils;
@@ -292,15 +295,26 @@ public final class Tools {
      * @return Whether or not the .jar is found
      */
     public static boolean hasMods(String... filenames) {
+        return findEnabledMod(filenames) != null;
+    }
+
+    @Nullable
+    public static File findEnabledMod(String... filenames) {
         File gameDir = getGameDir();
         File modsDir = new File(gameDir, "mods");
         File[] modFiles = modsDir.listFiles(file -> file.isFile() && file.getName().endsWith(".jar"));
-        if (modFiles == null) return false;
+        if (modFiles == null) return null;
         for (File file : modFiles) {
+            String lowerName = file.getName().toLowerCase(Locale.ROOT);
             for (String filename : filenames)
-                if (file.getName().contains(filename)) return true;
+                if (filename != null && lowerName.contains(filename.toLowerCase(Locale.ROOT))) return file;
         }
-        return false;
+        return null;
+    }
+
+    public static boolean disableMod(File modFile) {
+        if (modFile == null || !modFile.isFile()) return false;
+        return modFile.renameTo(new File(modFile.getParentFile(), modFile.getName() + ".disabledmod"));
     }
 
     public static List<File> getAndroidIncompatibleNativeMods() {
@@ -444,6 +458,13 @@ public final class Tools {
                     activity.getString(localeString, finalDeviceMemory, LauncherPreferences.PREF_RAM_ALLOCATION)
             );
         }
+        if (hasMods("sodium")) {
+            BattlyNotify.warning(
+                    activity,
+                    activity.getString(R.string.sodium_compatibility_notice_title),
+                    activity.getString(R.string.sodium_compatibility_notice_message)
+            );
+        }
         LauncherProfiles.load();
         File gamedir = Tools.getGameDirPath(minecraftProfile);
         startControllableMitigation(activity, gamedir);
@@ -523,11 +544,8 @@ public final class Tools {
             javaArgList.add("-javaagent:" + lwjglPatchAgent.getAbsolutePath());
         }
 
-        if (minecraftAccount.isBattly() && shouldAttachBattlyAuthlib(versionInfo)) {
+        if (minecraftAccount.isBattly()) {
             BattlyAuthlibManager.addJvmArgumentsIfAvailable(javaArgList);
-        } else if (minecraftAccount.isBattly()) {
-            Logger.appendToLog("Info: Battly authlib skipped for " + versionInfo.id
-                    + " (safe compatibility range: Minecraft 1.7.10-1.16.5)");
         }
         OfflineSkinManager.appendJvmArgs(activity, minecraftAccount, versionInfo, javaArgList);
 
@@ -588,27 +606,6 @@ public final class Tools {
         } catch (ParseException exception) {
             return false;
         }
-    }
-
-    private static boolean shouldAttachBattlyAuthlib(JMinecraftVersionList.Version versionInfo) {
-        if (versionInfo == null || !supportsGlobalUrlAgents(versionInfo)) {
-            return false;
-        }
-        String id = ((versionInfo.id == null ? "" : versionInfo.id) + " "
-                + (versionInfo.inheritsFrom == null ? "" : versionInfo.inheritsFrom))
-                .toLowerCase(Locale.ROOT);
-        java.util.regex.Matcher matcher = java.util.regex.Pattern
-                .compile("(?:^|[^0-9])(\\d+)\\.(\\d+)(?:\\.(\\d+))?")
-                .matcher(id);
-        if (!matcher.find()) {
-            return false;
-        }
-        int major = parseIntOrZero(matcher.group(1));
-        int minor = parseIntOrZero(matcher.group(2));
-        int patch = parseIntOrZero(matcher.group(3));
-        return major == 1
-                && (minor > 7 || (minor == 7 && patch >= 10))
-                && minor < 17;
     }
 
     private static boolean supportsGlobalUrlAgents(JMinecraftVersionList.Version versionInfo) {
@@ -1581,7 +1578,7 @@ public final class Tools {
             } else { // Removed the clause for devices with unofficial notch support, since it also ruins all devices with virtual nav bars before P
                 activity.getWindowManager().getDefaultDisplay().getRealMetrics(displayMetrics);
             }
-            if(!PREF_IGNORE_NOTCH){
+            if(!PREF_IGNORE_NOTCH && PREF_NOTCH_SIZE > 0){
                 //Remove notch width when it isn't ignored.
                 if(activity.getResources().getConfiguration().orientation == Configuration.ORIENTATION_PORTRAIT)
                     displayMetrics.heightPixels -= PREF_NOTCH_SIZE;
@@ -1912,6 +1909,14 @@ public final class Tools {
             Log.w(APP_NAME, "Unable to determine LWJGL version from JSON, falling back to LWJGL 3.3.3");
             iLwjglVersion = 333;
         }
+        String compatibilityChannel = MinecraftCompatibilityEngine.resolveLwjglChannel(info.id, info);
+        if ("3.4.2".equals(compatibilityChannel)) {
+            iLwjglVersion = 342;
+        } else if ("3.4.1".equals(compatibilityChannel)) {
+            iLwjglVersion = 341;
+        } else if ("3.3.3".equals(compatibilityChannel)) {
+            iLwjglVersion = 333;
+        }
         sLwjglVersion = getInternalLwjglVersion(iLwjglVersion);
         lwjglNativesDir = resolveLwjglNativesDir(sLwjglVersion);
         return libDir.toArray(new String[0]);
@@ -2173,12 +2178,38 @@ public final class Tools {
 
     public static void ignoreNotch(boolean shouldIgnore, Activity ctx){
         if (SDK_INT >= P) {
-            if (shouldIgnore) {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
-            } else {
-                ctx.getWindow().getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+            Window window = ctx.getWindow();
+            WindowManager.LayoutParams attributes = window.getAttributes();
+            attributes.layoutInDisplayCutoutMode = shouldIgnore && SDK_INT >= Build.VERSION_CODES.R
+                    ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    : shouldIgnore
+                    ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES
+                    : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_NEVER;
+            window.setAttributes(attributes);
+            window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                    WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
+
+            View content = window.findViewById(android.R.id.content);
+            if (content != null) {
+                content.setOnApplyWindowInsetsListener((view, insets) -> {
+                    int left = 0;
+                    int top = 0;
+                    int right = 0;
+                    int bottom = 0;
+                    if (!shouldIgnore) {
+                        DisplayCutout cutout = insets.getDisplayCutout();
+                        if (cutout != null) {
+                            left = cutout.getSafeInsetLeft();
+                            top = cutout.getSafeInsetTop();
+                            right = cutout.getSafeInsetRight();
+                            bottom = cutout.getSafeInsetBottom();
+                        }
+                    }
+                    view.setPadding(left, top, right, bottom);
+                    return insets;
+                });
+                content.requestApplyInsets();
             }
-            ctx.getWindow().setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN, WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN);
             Tools.updateWindowSize(ctx);
         }
     }

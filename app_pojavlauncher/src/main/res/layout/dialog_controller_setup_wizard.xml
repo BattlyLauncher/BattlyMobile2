@@ -1,0 +1,145 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="#D0000710"
+    android:padding="5dp">
+
+    <LinearLayout
+        android:id="@+id/controller_setup_panel"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_battly_form_panel"
+        android:orientation="vertical"
+        android:padding="10dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:baselineAligned="false"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="0.75"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/controller_setup_title"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:maxLines="1"
+                    android:text="@string/controller_setup_title"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp" />
+
+                <TextView
+                    android:id="@+id/controller_setup_device"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="2dp"
+                    android:ellipsize="end"
+                    android:maxLines="1"
+                    android:text="@string/controller_setup_connect_prompt"
+                    android:textColor="#AFC3CE"
+                    android:textSize="8sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1.25"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/controller_setup_step"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/noto_sans_bold"
+                    android:gravity="center"
+                    android:text="@string/controller_setup_waiting"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="14sp" />
+
+                <TextView
+                    android:id="@+id/controller_setup_instruction"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="1dp"
+                    android:gravity="center"
+                    android:maxLines="2"
+                    android:text="@string/controller_setup_waiting_description"
+                    android:textColor="#C6D6DF"
+                    android:textSize="9sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:gravity="end|center_vertical"
+                android:orientation="horizontal">
+
+                <Button
+                    android:id="@+id/controller_setup_cancel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:background="@drawable/bg_battly_button_secondary"
+                    android:minHeight="38dp"
+                    android:minWidth="84dp"
+                    android:text="@string/global_cancel"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp" />
+
+                <Button
+                    android:id="@+id/controller_setup_skip"
+                    android:layout_width="wrap_content"
+                    android:layout_height="38dp"
+                    android:layout_marginStart="7dp"
+                    android:background="@drawable/bg_battly_launcher_play"
+                    android:minHeight="38dp"
+                    android:minWidth="84dp"
+                    android:text="@string/controller_setup_skip"
+                    android:textAllCaps="false"
+                    android:textColor="#FFFFFFFF"
+                    android:textSize="11sp" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/controller_setup_progress"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:layout_marginTop="7dp"
+            android:max="20"
+            android:progress="0"
+            android:progressTint="#72E0C8" />
+
+        <TextView
+            android:id="@+id/controller_setup_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:gravity="center"
+            android:maxLines="1"
+            android:text="@string/controller_setup_actions_note"
+            android:textColor="#8DEEDC"
+            android:textSize="9sp" />
+
+        <net.kdt.pojavlaunch.customcontrols.gamepad.ControllerThreeView
+            android:id="@+id/controller_setup_visual"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginTop="2dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/controller_visual_description" />
+    </LinearLayout>
+</FrameLayout>

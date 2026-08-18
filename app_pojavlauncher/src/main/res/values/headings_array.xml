@@ -14,10 +14,11 @@
         <item name="1">@string/customctrl_addbutton_drawer</item>
         <item name="2">@string/customctrl_addbutton_joystick</item>
         <item name="3">@string/customctrl_performance_widget</item>
-        <item name="4">@string/global_load</item>
-        <item name="5">@string/global_save</item>
-        <item name="6">@string/customctrl_selectdefault</item>
-        <item name="7">@string/customctrl_editor_exit</item>
+        <item name="4">@string/customctrl_device_image_add</item>
+        <item name="5">@string/global_load</item>
+        <item name="6">@string/global_save</item>
+        <item name="7">@string/customctrl_selectdefault</item>
+        <item name="8">@string/customctrl_editor_exit</item>
     </string-array>
 
     <string-array name="menu_customcontrol_customactivity">
@@ -25,10 +26,21 @@
         <item name="1">@string/customctrl_addbutton_drawer</item>
         <item name="2">@string/customctrl_addbutton_joystick</item>
         <item name="3">@string/customctrl_performance_widget</item>
-        <item name="4">@string/global_load</item>
-        <item name="5">@string/global_save</item>
-        <item name="6">@string/customctrl_selectdefault</item>
-        <item name="7">@string/customctrl_export</item>
+        <item name="4">@string/customctrl_device_image_add</item>
+        <item name="5">@string/global_load</item>
+        <item name="6">@string/global_save</item>
+        <item name="7">@string/customctrl_selectdefault</item>
+        <item name="8">@string/customctrl_export</item>
+    </string-array>
+
+    <string-array name="control_device_image_sources">
+        <item>@string/customctrl_device_image_auto</item>
+        <item>@string/customctrl_device_image_xbox</item>
+        <item>@string/customctrl_device_image_dualsense</item>
+        <item>@string/customctrl_device_image_dualshock</item>
+        <item>@string/customctrl_device_image_switch</item>
+        <item>@string/customctrl_device_image_keyboard_mouse</item>
+        <item>@string/customctrl_device_image_custom</item>
     </string-array>
 
     <string-array name="menu_ingame">
@@ -84,6 +96,32 @@
         <item>3</item>
         <item>4</item>
     </string-array>
+    <string-array name="mg_renderer_names_multidraw_order">
+        <item>@string/global_default</item>
+        <item>@string/mg_renderer_md_native_first</item>
+        <item>@string/mg_renderer_md_compatibility_first</item>
+        <item>@string/mg_renderer_md_compute_first</item>
+    </string-array>
+    <string-array name="mg_renderer_values_multidraw_order" translatable="false">
+        <item></item>
+        <item>native,multiindirect,multibasevertex,multiarrays,indirect,basevertex,unroll,compute</item>
+        <item>unroll,basevertex,indirect,multiarrays,multibasevertex,multiindirect,compute</item>
+        <item>compute,native,multibasevertex,multiindirect,multiarrays,basevertex,indirect,unroll</item>
+    </string-array>
+    <string-array name="mg_renderer_names_md_arrays"><item>@string/global_default</item><item>MultiArrays</item><item>MultiIndirect</item><item>Unroll</item></string-array>
+    <string-array name="mg_renderer_values_md_arrays" translatable="false"><item></item><item>multiarrays</item><item>multiindirect</item><item>unroll</item></string-array>
+    <string-array name="mg_renderer_names_md_elements"><item>@string/global_default</item><item>MultiArrays</item><item>MultiBaseVertex</item><item>MultiIndirect</item><item>Indirect</item><item>Unroll</item></string-array>
+    <string-array name="mg_renderer_values_md_elements" translatable="false"><item></item><item>multiarrays</item><item>multibasevertex</item><item>multiindirect</item><item>indirect</item><item>unroll</item></string-array>
+    <string-array name="mg_renderer_names_md_base_vertex"><item>@string/global_default</item><item>MultiBaseVertex</item><item>MultiIndirect</item><item>Compute</item><item>Indirect</item><item>BaseVertex</item><item>Unroll</item></string-array>
+    <string-array name="mg_renderer_values_md_base_vertex" translatable="false"><item></item><item>multibasevertex</item><item>multiindirect</item><item>compute</item><item>indirect</item><item>basevertex</item><item>unroll</item></string-array>
+    <string-array name="mg_renderer_names_md_indirect"><item>@string/global_default</item><item>MultiIndirect</item><item>Indirect</item></string-array>
+    <string-array name="mg_renderer_values_md_indirect" translatable="false"><item></item><item>multiindirect</item><item>indirect</item></string-array>
+    <string-array name="mg_renderer_names_depth_clear"><item>@string/global_off</item><item>@string/mg_renderer_depth_clear_mode_1</item><item>@string/mg_renderer_depth_clear_mode_2</item></string-array>
+    <string-array name="mg_renderer_values_depth_clear" translatable="false"><item>0</item><item>1</item><item>2</item></string-array>
+    <string-array name="mg_renderer_names_gl_version"><item>@string/global_default</item><item>OpenGL 3.2</item><item>OpenGL 3.3</item><item>OpenGL 4.0</item><item>OpenGL 4.3</item><item>OpenGL 4.6</item></string-array>
+    <string-array name="mg_renderer_values_gl_version" translatable="false"><item>0</item><item>32</item><item>33</item><item>40</item><item>43</item><item>46</item></string-array>
+    <string-array name="mg_renderer_names_hide_environment"><item>@string/global_off</item><item>@string/global_on</item></string-array>
+    <string-array name="mg_renderer_values_hide_environment" translatable="false"><item>0</item><item>1</item></string-array>
     <string-array name="mg_renderer_names_errorSetting">
         <item>Auto</item>
         <item>Don\'t ignore</item>

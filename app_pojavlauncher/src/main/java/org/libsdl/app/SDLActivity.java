@@ -51,6 +51,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 
 import org.lwjgl.glfw.CallbackBridge;
 
@@ -950,9 +952,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
                             window.clearFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN);
                             SDLActivity.mFullscreenModeActive = false;
                         }
-                        if (Build.VERSION.SDK_INT >= 30 /* Android 11 (R) */) {
-                            window.getAttributes().layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS;
-                        }
+                        Tools.ignoreNotch(LauncherPreferences.PREF_IGNORE_NOTCH, (Activity) context);
                         if (Build.VERSION.SDK_INT >= 30 /* Android 11 (R) */ &&
                             Build.VERSION.SDK_INT < 35 /* Android 15 */) {
                             SDLActivity.onNativeInsetsChanged(0, 0, 0, 0);
@@ -1064,6 +1064,7 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
     // C functions we call
     public static native String nativeGetVersion();
+    public static native int nativeGetRendererFps();
     public static native void nativeSetupJNI();
     public static native void nativeInitMainThread();
     public static native void nativeCleanupMainThread();
@@ -1653,14 +1654,17 @@ public class SDLActivity extends Activity implements View.OnSystemUiVisibilityCh
 
     private static void updateExternalSurfaceSize(int width, int height) {
         Activity activity = getContext();
-        if (activity == null || width <= 0 || height <= 0) {
+        if (activity == null) {
             return;
         }
+        DisplayMetrics metrics = new DisplayMetrics();
+        activity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);
+        float density = (float) metrics.densityDpi / 160.0f;
         float refreshRate = activity.getWindowManager().getDefaultDisplay().getRefreshRate();
-        // SDL must receive the exact buffer dimensions. Mixing physical display
-        // metrics, Android density and a scaled game buffer produces incorrect
-        // viewport scaling and color/composition artifacts on modern snapshots.
-        nativeSetScreenResolution(width, height, width, height, 1.0f, refreshRate);
+        nativeSetScreenResolution(Math.max(width, height), Math.min(width, height),
+                Math.max(metrics.widthPixels, metrics.heightPixels),
+                Math.min(metrics.widthPixels, metrics.heightPixels),
+                density, refreshRate);
     }
 
     // Input

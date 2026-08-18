@@ -1,0 +1,753 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+    <style>
+        html,body{margin:0;width:100%;height:100%;overflow:hidden;background:transparent;touch-action:none}
+        canvas,#fallback{position:absolute;inset:0;width:100%;height:100%}
+        canvas{display:block}
+        #fallback{object-fit:contain;opacity:0;transition:opacity .2s ease}
+        #marker{position:absolute;width:34px;height:34px;border:3px solid #79f3db;border-radius:50%;
+          box-sizing:border-box;opacity:0;transform:translate(-50%,-50%);pointer-events:none;
+          box-shadow:0 0 0 5px rgba(121,243,219,.14),0 0 18px rgba(121,243,219,.8)}
+        #marker.active{opacity:1;animation:pulse .9s ease-in-out infinite alternate}
+        #loading{position:absolute;left:50%;top:50%;width:34px;height:34px;margin:-17px;
+          border:3px solid rgba(121,243,219,.18);border-top-color:#79f3db;border-radius:50%;
+          animation:spin .8s linear infinite}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        @keyframes pulse{from{transform:translate(-50%,-50%) scale(.86)}to{transform:translate(-50%,-50%) scale(1.16)}}
+        @media(max-height:300px){#marker{width:28px;height:28px}}
+    </style>
+</head>
+<body>
+<img id="fallback" alt="">
+<div id="loading"></div>
+<div id="marker"></div>
+<script type="module">
+import * as THREE from './three.module.min.js';
+import { GLTFLoader } from './GLTFLoader.js';
+
+const scene = new THREE.Scene();
+const camera = new THREE.PerspectiveCamera(30, 1, .05, 100);
+const renderer = new THREE.WebGLRenderer({alpha:true,antialias:true,powerPreference:'low-power'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,1.5));
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = .78;
+document.body.prepend(renderer.domElement);
+
+scene.add(new THREE.HemisphereLight(0xffffff,0x18242d,1.65));
+const keyLight = new THREE.DirectionalLight(0xffffff,3.2);
+keyLight.position.set(3,4,6);
+scene.add(keyLight);
+const fillLight = new THREE.DirectionalLight(0x72e0c8,.72);
+fillLight.position.set(-4,1,3);
+scene.add(fillLight);
+
+const root = new THREE.Group();
+scene.add(root);
+const loader = new GLTFLoader();
+const fallback = document.getElementById('fallback');
+const loading = document.getElementById('loading');
+const marker = document.getElementById('marker');
+let model = null;
+let currentStyle = '';
+let highlighted = '';
+let dragging = false;
+let px = 0, py = 0;
+let loadGeneration = 0;
+let markerAnchor = null;
+let markerSprite = null;
+let markerHalo = null;
+let anchorPoints = Object.create(null);
+let labelGroup = null;
+let buttonLabels = Object.create(null);
+let controllerParts = Object.create(null);
+const animatedPartStates = new Map();
+let targetRotationX = 0;
+let targetRotationY = 0;
+const raycaster = new THREE.Raycaster();
+const activePartColor = new THREE.Color(0x79f3db);
+
+const dualsensePartNames = {
+  faceTop:['polySurface83_VRayMtl46_0','polySurface91_VRayMtl45_0'],
+  faceRight:['polySurface82_VRayMtl46_0','polySurface90_VRayMtl45_0'],
+  faceBottom:['polySurface81_VRayMtl46_0','polySurface89_VRayMtl45_0'],
+  faceLeft:['polySurface80_VRayMtl46_0','polySurface88_VRayMtl45_0'],
+  dpadUp:['polySurface78_VRayMtl46_0','polySurface86_VRayMtl45_0'],
+  dpadRight:['polySurface79_VRayMtl46_0','polySurface87_VRayMtl45_0'],
+  dpadDown:['polySurface76_VRayMtl46_0','polySurface84_VRayMtl45_0'],
+  dpadLeft:['polySurface77_VRayMtl46_0','polySurface85_VRayMtl45_0'],
+  leftStick:['polySurface72_VRayMtl39_0'],
+  rightStick:['polySurface73_VRayMtl39_0']
+};
+
+const dualsenseViews = {
+  leftShoulder:[1.14,.88], leftTrigger:[1.45,1.02],
+  rightShoulder:[1.14,-.88], rightTrigger:[1.45,-1.02]
+};
+
+const dualsenseDpadHorizontalPairs = [
+  ['polySurface77_VRayMtl46_0','polySurface79_VRayMtl46_0'],
+  ['polySurface85_VRayMtl45_0','polySurface87_VRayMtl45_0']
+];
+
+const layouts = {
+  xbox:{model:'xbox.glb',image:'xbox-series.png',offsetY:-.12,points:{faceBottom:[.600,.430],faceRight:[.632,.350],faceLeft:[.578,.350],faceTop:[.600,.275],start:[.530,.350],select:[.469,.350],rightTrigger:[.596,.160],leftTrigger:[.404,.160],rightShoulder:[.554,.205],leftShoulder:[.446,.205],rightStick:[.552,.493],leftStick:[.394,.342],dpadUp:[.446,.485],dpadDown:[.446,.585],dpadRight:[.475,.535],dpadLeft:[.416,.535]}},
+  switch:{model:'switch.glb',image:'switch-pro.png',offsetY:-.12,displayScale:1.24,points:{faceBottom:[.644,.426],faceRight:[.688,.322],faceLeft:[.602,.322],faceTop:[.644,.213],start:[.568,.203],select:[.433,.204],rightTrigger:[.620,.075],leftTrigger:[.380,.075],rightShoulder:[.590,.125],leftShoulder:[.410,.125],rightStick:[.564,.539],leftStick:[.354,.316],dpadUp:[.417,.461],dpadDown:[.416,.618],dpadRight:[.443,.540],dpadLeft:[.389,.540]}},
+  dualsense:{model:'dualsense-parts.glb',image:'dualsense.png',points:{faceBottom:[.749,.444],faceRight:[.807,.362],faceLeft:[.692,.362],faceTop:[.748,.282],start:[.595,.247],select:[.405,.247],rightTrigger:[.790,.181],leftTrigger:[.210,.181],rightShoulder:[.755,.254],leftShoulder:[.245,.254],rightStick:[.619,.494],leftStick:[.382,.494],dpadUp:[.251,.301],dpadDown:[.252,.418],dpadRight:[.291,.361],dpadLeft:[.211,.361]}},
+  dualshock:{model:null,image:'dualshock4.png',points:{faceBottom:[.79,.49],faceRight:[.85,.40],faceLeft:[.72,.40],faceTop:[.79,.31],start:[.68,.20],select:[.32,.20],rightTrigger:[.87,.06],leftTrigger:[.13,.06],rightShoulder:[.77,.10],leftShoulder:[.23,.10],rightStick:[.62,.66],leftStick:[.38,.66],dpadUp:[.21,.31],dpadDown:[.21,.49],dpadRight:[.29,.40],dpadLeft:[.13,.40]}}
+};
+
+const controllerViews = {
+  xbox:{leftShoulder:[.78,.62],leftTrigger:[1.12,.82],rightShoulder:[.78,-.62],rightTrigger:[1.12,-.82]},
+  switch:{leftShoulder:[.78,.62],leftTrigger:[1.12,.82],rightShoulder:[.78,-.62],rightTrigger:[1.12,-.82]},
+  dualsense:dualsenseViews
+};
+
+function disposeModel(){
+  if(!model)return;
+  model.traverse(child=>{
+    if(child.geometry)child.geometry.dispose();
+    if(child.material){
+      const materials=Array.isArray(child.material)?child.material:[child.material];
+      materials.forEach(material=>{for(const key in material){const value=material[key];if(value&&value.isTexture)value.dispose()}material.dispose()});
+    }
+  });
+  root.remove(model); model=null;
+  clear3dMarker();
+  clearButtonLabels();
+  anchorPoints=Object.create(null);
+  controllerParts=Object.create(null);
+  animatedPartStates.clear();
+}
+
+function markerTexture(){
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=128;
+  const context=canvas.getContext('2d');
+  const gradient=context.createRadialGradient(64,64,10,64,64,60);
+  gradient.addColorStop(0,'rgba(121,243,219,.08)');
+  gradient.addColorStop(.54,'rgba(121,243,219,.18)');
+  gradient.addColorStop(.66,'rgba(121,243,219,1)');
+  gradient.addColorStop(.76,'rgba(121,243,219,.75)');
+  gradient.addColorStop(1,'rgba(121,243,219,0)');
+  context.fillStyle=gradient;
+  context.fillRect(0,0,128,128);
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.colorSpace=THREE.SRGBColorSpace;
+  return texture;
+}
+
+function ensure3dMarker(){
+  if(markerAnchor)return;
+  markerAnchor=new THREE.Group();
+  const texture=markerTexture();
+  markerSprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,
+    depthTest:false,depthWrite:false,toneMapped:false}));
+  markerHalo=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,
+    opacity:.34,depthTest:false,depthWrite:false,toneMapped:false}));
+  markerSprite.scale.set(.48,.48,.48);
+  markerHalo.scale.set(.78,.78,.78);
+  markerAnchor.add(markerHalo,markerSprite);
+  root.add(markerAnchor);
+}
+
+function clear3dMarker(){
+  if(!markerAnchor)return;
+  root.remove(markerAnchor);
+  [markerSprite,markerHalo].forEach(sprite=>{
+    if(!sprite)return;
+    sprite.material.map?.dispose();
+    sprite.material.dispose();
+  });
+  markerAnchor=markerSprite=markerHalo=null;
+}
+
+function buildAnchors(){
+  anchorPoints=Object.create(null);
+  if(!model)return;
+  scene.updateMatrixWorld(true);
+  const layout=layouts[currentStyle]||layouts.xbox;
+  for(const [name,point] of Object.entries(layout.points)){
+    raycaster.setFromCamera(new THREE.Vector2(point[0]*2-1,1-point[1]*2),camera);
+    const hit=raycaster.intersectObject(model,true)
+      .find(candidate=>!candidate.object.userData.battlyOverlay);
+    if(!hit)continue;
+    const worldPoint=hit.point.clone();
+    if(hit.face){
+      const normal=hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+      worldPoint.addScaledVector(normal,.055);
+    }
+    anchorPoints[name]=root.worldToLocal(worldPoint);
+    if((currentStyle==='xbox'||currentStyle==='switch')&&!controllerParts[name]?.length){
+      createSurfaceOverlay(name,hit);
+    }
+    if(!controllerParts[name]?.length&&isSmallControllerPart(hit.object)){
+      registerControllerPart(name,hit.object);
+    }
+  }
+  buildButtonLabels();
+}
+
+function isSmallControllerPart(object){
+  if(!object?.isMesh||!model)return false;
+  const modelSize=new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+  const partSize=new THREE.Box3().setFromObject(object).getSize(new THREE.Vector3());
+  const modelMax=Math.max(modelSize.x,modelSize.y,modelSize.z,.001);
+  return Math.max(partSize.x,partSize.y,partSize.z)<modelMax*.30;
+}
+
+function cloneAnimatedMaterials(object){
+  if(object.userData.battlyAnimatedMaterial)return;
+  const source=Array.isArray(object.material)?object.material:[object.material];
+  const clones=source.filter(Boolean).map(material=>{
+    const clone=material.clone();
+    clone.userData.battlyBaseColor=clone.color?.clone();
+    clone.userData.battlyBaseEmissive=clone.emissive?.clone();
+    clone.userData.battlyBaseEmissiveIntensity=clone.emissiveIntensity||0;
+    return clone;
+  });
+  object.material=Array.isArray(object.material)?clones:clones[0];
+  object.userData.battlyAnimatedMaterial=true;
+}
+
+function registerControllerPart(control,object){
+  if(!object||controllerParts[control]?.includes(object))return;
+  cloneAnimatedMaterials(object);
+  controllerParts[control]??=[];
+  controllerParts[control].push(object);
+  if(!animatedPartStates.has(object)){
+    animatedPartStates.set(object,{control,amount:0,basePosition:object.position.clone()});
+  }
+}
+
+function findConnectedComponents(geometry){
+  const position=geometry?.getAttribute('position');
+  if(!position)return [];
+  const index=geometry.index;
+  const triangleCount=index?index.count/3:position.count/3;
+  const parent=Array.from({length:position.count},(_,i)=>i);
+  const find=value=>{
+    while(parent[value]!==value){
+      parent[value]=parent[parent[value]];
+      value=parent[value];
+    }
+    return value;
+  };
+  const union=(a,b)=>{
+    const rootA=find(a),rootB=find(b);
+    if(rootA!==rootB)parent[rootB]=rootA;
+  };
+  const triangles=[];
+  for(let triangle=0;triangle<triangleCount;triangle++){
+    const vertices=index
+      ? [index.getX(triangle*3),index.getX(triangle*3+1),index.getX(triangle*3+2)]
+      : [triangle*3,triangle*3+1,triangle*3+2];
+    union(vertices[0],vertices[1]);
+    union(vertices[1],vertices[2]);
+    triangles.push(vertices);
+  }
+  const components=new Map();
+  triangles.forEach(vertices=>{
+    const rootVertex=find(vertices[0]);
+    if(!components.has(rootVertex))components.set(rootVertex,[]);
+    components.get(rootVertex).push(vertices);
+  });
+  return [...components.values()];
+}
+
+function createComponentOverlay(source,triangles,expansion=1){
+  const sourceGeometry=source?.geometry;
+  const position=sourceGeometry?.getAttribute('position');
+  if(!position||!triangles?.length)return null;
+  const vertices=[];
+  triangles.forEach(face=>face.forEach(vertex=>vertices.push(
+    position.getX(vertex),position.getY(vertex),position.getZ(vertex))));
+  const geometry=new THREE.BufferGeometry();
+  geometry.setAttribute('position',new THREE.Float32BufferAttribute(vertices,3));
+  if(expansion!==1){
+    geometry.computeBoundingBox();
+    const center=geometry.boundingBox.getCenter(new THREE.Vector3());
+    const overlayPosition=geometry.getAttribute('position');
+    for(let index=0;index<overlayPosition.count;index++){
+      overlayPosition.setXYZ(index,
+        center.x+(overlayPosition.getX(index)-center.x)*expansion,
+        center.y+(overlayPosition.getY(index)-center.y)*expansion,
+        center.z+(overlayPosition.getZ(index)-center.z)*expansion);
+    }
+    overlayPosition.needsUpdate=true;
+  }
+  geometry.computeVertexNormals();
+  const material=new THREE.MeshBasicMaterial({
+    color:activePartColor,
+    transparent:true,
+    opacity:0,
+    depthTest:true,
+    depthWrite:false,
+    toneMapped:false,
+    side:THREE.DoubleSide,
+    polygonOffset:true,
+    polygonOffsetFactor:-2,
+    polygonOffsetUnits:-2
+  });
+  const overlay=new THREE.Mesh(geometry,material);
+  overlay.userData.battlyOverlay=true;
+  overlay.frustumCulled=false;
+  overlay.renderOrder=12;
+  source.add(overlay);
+  return overlay;
+}
+
+function createSurfaceOverlay(control,hit){
+  const source=hit?.object;
+  const geometry=source?.geometry;
+  const position=geometry?.getAttribute('position');
+  if(!source?.isMesh||!position||source.userData.battlyOverlay)return;
+  geometry.computeBoundingBox();
+  const modelMax=Math.max(...geometry.boundingBox.getSize(new THREE.Vector3()).toArray(),.001);
+  const localHit=source.worldToLocal(hit.point.clone());
+  const index=geometry.index;
+  const triangleCount=index?index.count/3:position.count/3;
+  const radiusFactor=/Stick/.test(control)?.065:/Trigger|Shoulder/.test(control)?.050:
+    /dpad/.test(control)?.028:/start|select/.test(control)?.024:.030;
+  const radius=modelMax*radiusFactor;
+  const selected=[];
+  const vertex=new THREE.Vector3();
+  for(let triangle=0;triangle<triangleCount;triangle++){
+    const vertices=index
+      ? [index.getX(triangle*3),index.getX(triangle*3+1),index.getX(triangle*3+2)]
+      : [triangle*3,triangle*3+1,triangle*3+2];
+    let nearest=Infinity;
+    vertices.forEach(value=>{
+      vertex.set(position.getX(value),position.getY(value),position.getZ(value));
+      nearest=Math.min(nearest,vertex.distanceTo(localHit));
+    });
+    if(nearest<=radius)selected.push(vertices);
+  }
+  registerOverlay(control,createComponentOverlay(source,selected,1.012));
+}
+
+function registerOverlay(control,overlay){
+  if(!overlay)return;
+  controllerParts[control]??=[];
+  controllerParts[control].push(overlay);
+  animatedPartStates.set(overlay,{
+    control,amount:0,basePosition:overlay.position.clone(),overlay:true
+  });
+}
+
+function swapGeometryPositions(first,second){
+  if(!first?.geometry||!second?.geometry)return;
+  first.geometry.computeBoundingBox();
+  second.geometry.computeBoundingBox();
+  const firstCenter=first.geometry.boundingBox.getCenter(new THREE.Vector3());
+  const secondCenter=second.geometry.boundingBox.getCenter(new THREE.Vector3());
+  const offset=secondCenter.clone().sub(firstCenter);
+  first.geometry.translate(offset.x,offset.y,offset.z);
+  second.geometry.translate(-offset.x,-offset.y,-offset.z);
+  first.geometry.computeBoundingBox();
+  first.geometry.computeBoundingSphere();
+  second.geometry.computeBoundingBox();
+  second.geometry.computeBoundingSphere();
+}
+
+function swapObjectWorldCenters(first,second){
+  if(!first?.parent||!second?.parent)return;
+  scene.updateMatrixWorld(true);
+  const firstCenter=new THREE.Box3().setFromObject(first).getCenter(new THREE.Vector3());
+  const secondCenter=new THREE.Box3().setFromObject(second).getCenter(new THREE.Vector3());
+  const firstTarget=first.parent.worldToLocal(secondCenter.clone());
+  const secondTarget=second.parent.worldToLocal(firstCenter.clone());
+  const firstCurrent=first.parent.worldToLocal(firstCenter.clone());
+  const secondCurrent=second.parent.worldToLocal(secondCenter.clone());
+  first.position.add(firstTarget.sub(firstCurrent));
+  second.position.add(secondTarget.sub(secondCurrent));
+  scene.updateMatrixWorld(true);
+}
+
+function repairDualSenseGeometry(){
+  // This GLB exports Circle/Square and the horizontal D-pad directions mirrored.
+  // Correct the D-pad geometry independently from the face-button symbols.
+  dualsenseDpadHorizontalPairs.forEach(([firstName,secondName])=>
+    swapGeometryPositions(model?.getObjectByName(firstName),model?.getObjectByName(secondName)));
+  // Circle and Square are separate symbol objects; their button shells are already correct.
+  swapObjectWorldCenters(
+    model?.getObjectByName('pPipe1_VRayMtl49_0')?.parent,
+    model?.getObjectByName('pCube38_VRayMtl49_0')?.parent);
+}
+
+function prepareDualSenseShoulders(){
+  const source=model?.getObjectByName('_Group4_VRayMtl37_0');
+  const geometry=source?.geometry;
+  if(!geometry)return;
+  geometry.computeBoundingBox();
+  const bounds=geometry.boundingBox;
+  const middleX=(bounds.min.x+bounds.max.x)/2;
+  const middleY=(bounds.min.y+bounds.max.y)/2;
+  for(const triangles of findConnectedComponents(geometry)){
+    const usedVertices=new Set();
+    triangles.forEach(face=>face.forEach(vertex=>usedVertices.add(vertex)));
+    const componentBounds=new THREE.Box3();
+    const position=geometry.getAttribute('position');
+    usedVertices.forEach(vertex=>componentBounds.expandByPoint(new THREE.Vector3(
+      position.getX(vertex),position.getY(vertex),position.getZ(vertex))));
+    const center=componentBounds.getCenter(new THREE.Vector3());
+    // The source model is mirrored on X. The low-Y pair is the rear trigger;
+    // the high-Y pair is the front bumper after applying the import rotation.
+    const side=center.x<middleX?'left':'right';
+    const control=center.y<middleY?'Trigger':'Shoulder';
+    registerOverlay(side+control,createComponentOverlay(source,triangles));
+  }
+}
+
+function prepareDualSenseMenuButtons(){
+  const controls={
+    select:['pCube16_VRayMtl29_0'],
+    start:['pCube19_VRayMtl29_0','pCube20_VRayMtl29_0','pCube21_VRayMtl29_0']
+  };
+  for(const [control,names] of Object.entries(controls)){
+    names.forEach(name=>{
+      const source=model?.getObjectByName(name);
+      const components=findConnectedComponents(source?.geometry);
+      components.forEach(triangles=>registerOverlay(
+        control,createComponentOverlay(source,triangles,1.35)));
+    });
+  }
+
+  // The two physical menu buttons share one mesh. Split it into connected pieces
+  // so Create and Options illuminate the complete pill as well as their glyphs.
+  const buttonSource=model?.getObjectByName('pCube49_VRayMtl29_0');
+  const geometry=buttonSource?.geometry;
+  const position=geometry?.getAttribute('position');
+  if(!geometry||!position)return;
+  geometry.computeBoundingBox();
+  const middleX=(geometry.boundingBox.min.x+geometry.boundingBox.max.x)/2;
+  for(const triangles of findConnectedComponents(geometry)){
+    const usedVertices=new Set();
+    triangles.forEach(face=>face.forEach(vertex=>usedVertices.add(vertex)));
+    const componentBounds=new THREE.Box3();
+    usedVertices.forEach(vertex=>componentBounds.expandByPoint(new THREE.Vector3(
+      position.getX(vertex),position.getY(vertex),position.getZ(vertex))));
+    const center=componentBounds.getCenter(new THREE.Vector3());
+    registerOverlay(center.x<middleX?'select':'start',
+      createComponentOverlay(buttonSource,triangles,1.08));
+  }
+}
+
+function componentWorldBounds(source,geometry,triangles){
+  const position=geometry?.getAttribute('position');
+  if(!position)return null;
+  const usedVertices=new Set();
+  triangles.forEach(face=>face.forEach(vertex=>usedVertices.add(vertex)));
+  const bounds=new THREE.Box3();
+  const vertex=new THREE.Vector3();
+  usedVertices.forEach(index=>{
+    vertex.set(position.getX(index),position.getY(index),position.getZ(index));
+    bounds.expandByPoint(source.localToWorld(vertex.clone()));
+  });
+  return bounds.isEmpty()?null:bounds;
+}
+
+function prepareSegmentedControllerParts(){
+  if((currentStyle!=='xbox'&&currentStyle!=='switch')||!model)return;
+  scene.updateMatrixWorld(true);
+  const layout=layouts[currentStyle];
+  const modelSize=new THREE.Box3().setFromObject(model).getSize(new THREE.Vector3());
+  const modelMax=Math.max(modelSize.x,modelSize.y,modelSize.z,.001);
+  const candidates=[];
+  model.traverse(source=>{
+    if(!source.isMesh||source.userData.battlyOverlay)return;
+    const geometry=source.geometry;
+    for(const triangles of findConnectedComponents(geometry)){
+      const bounds=componentWorldBounds(source,geometry,triangles);
+      if(!bounds)continue;
+      const size=bounds.getSize(new THREE.Vector3());
+      if(Math.max(size.x,size.y,size.z)>modelMax*.19)continue;
+      const projected=bounds.getCenter(new THREE.Vector3()).project(camera);
+      const point=[(projected.x+1)/2,(1-projected.y)/2];
+      let control=null;
+      let distance=Infinity;
+      for(const [name,target] of Object.entries(layout.points)){
+        const current=Math.hypot(point[0]-target[0],point[1]-target[1]);
+        if(current<distance){control=name;distance=current}
+      }
+      if(control&&distance<.105)candidates.push({source,triangles,control,distance});
+    }
+  });
+  const bestDistance=Object.create(null);
+  candidates.forEach(candidate=>{
+    bestDistance[candidate.control]=Math.min(
+      bestDistance[candidate.control]??Infinity,candidate.distance);
+  });
+  candidates.forEach(candidate=>{
+    if(candidate.distance>bestDistance[candidate.control]+.018)return;
+    registerOverlay(candidate.control,
+      createComponentOverlay(candidate.source,candidate.triangles,1.018));
+  });
+}
+
+function prepareControllerParts(){
+  controllerParts=Object.create(null);
+  animatedPartStates.clear();
+  if(!model)return;
+  if(currentStyle==='xbox'||currentStyle==='switch'){
+    prepareSegmentedControllerParts();
+    return;
+  }
+  if(currentStyle!=='dualsense')return;
+  for(const [control,names] of Object.entries(dualsensePartNames)){
+    names.forEach(name=>registerControllerPart(control,model.getObjectByName(name)));
+  }
+  prepareDualSenseShoulders();
+  prepareDualSenseMenuButtons();
+}
+
+function symbolTexture(style,name){
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=128;
+  const context=canvas.getContext('2d');
+  context.translate(64,64);
+  context.lineWidth=10;
+  context.lineCap='round';
+  context.lineJoin='round';
+  context.shadowBlur=8;
+  const face={faceTop:0,faceRight:1,faceBottom:2,faceLeft:3}[name];
+  if(face===undefined)return null;
+  if(style==='dualsense'){
+    const colors=['#79e6df','#ff829d','#8ebcff','#e995dc'];
+    context.strokeStyle=colors[face];
+    context.shadowColor=colors[face];
+    context.beginPath();
+    if(face===0){context.moveTo(0,-30);context.lineTo(29,24);context.lineTo(-29,24);context.closePath()}
+    else if(face===1)context.arc(0,0,28,0,Math.PI*2);
+    else if(face===2){context.moveTo(-24,-24);context.lineTo(24,24);context.moveTo(24,-24);context.lineTo(-24,24)}
+    else context.rect(-25,-25,50,50);
+    context.stroke();
+  }else{
+    const labels=style==='switch'
+      ? ['X','A','B','Y']
+      : ['Y','B','A','X'];
+    const colors=style==='switch'
+      ? ['#f5f7fa','#f5f7fa','#f5f7fa','#f5f7fa']
+      : ['#ffd84a','#ff6961','#7ed957','#66b9ff'];
+    context.font='bold 68px sans-serif';
+    context.textAlign='center';
+    context.textBaseline='middle';
+    context.fillStyle=colors[face];
+    context.shadowColor=colors[face];
+    context.fillText(labels[face],0,4);
+  }
+  const texture=new THREE.CanvasTexture(canvas);
+  texture.colorSpace=THREE.SRGBColorSpace;
+  return texture;
+}
+
+function clearButtonLabels(){
+  if(!labelGroup)return;
+  root.remove(labelGroup);
+  labelGroup.traverse(child=>{if(child.isSprite){child.material.map?.dispose();child.material.dispose()}});
+  labelGroup=null;
+  buttonLabels=Object.create(null);
+}
+
+function buildButtonLabels(){
+  clearButtonLabels();
+  if(currentStyle==='dualshock'||currentStyle==='dualsense')return;
+  labelGroup=new THREE.Group();
+  for(const name of ['faceTop','faceRight','faceBottom','faceLeft']){
+    const anchor=anchorPoints[name];
+    const texture=symbolTexture(currentStyle,name);
+    if(!anchor||!texture)continue;
+    const sprite=new THREE.Sprite(new THREE.SpriteMaterial({map:texture,transparent:true,
+      depthTest:false,depthWrite:false,toneMapped:false}));
+    sprite.position.copy(anchor);
+    sprite.scale.setScalar(currentStyle==='dualsense' ? .25 : .22);
+    sprite.userData.baseScale=sprite.scale.x;
+    labelGroup.add(sprite);
+    buttonLabels[name]=sprite;
+  }
+  root.add(labelGroup);
+}
+
+function fitModel(object){
+  object.updateMatrixWorld(true);
+  let box=new THREE.Box3().setFromObject(object);
+  const size=box.getSize(new THREE.Vector3());
+  const layout=layouts[currentStyle]||layouts.xbox;
+  const scale=5.2*(layout.displayScale||1)/Math.max(size.x,size.y,size.z,0.001);
+  if(currentStyle==='dualsense')object.scale.set(-scale,scale,scale);
+  else object.scale.setScalar(scale);
+  object.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(object);
+  const center=box.getCenter(new THREE.Vector3());
+  object.position.sub(center);
+  object.position.x+=layout.offsetX||0;
+  object.position.y+=layout.offsetY||0;
+  object.updateMatrixWorld(true);
+  box=new THREE.Box3().setFromObject(object);
+  const fitted=box.getSize(new THREE.Vector3());
+  const verticalFov=THREE.MathUtils.degToRad(camera.fov);
+  const byHeight=fitted.y/(2*Math.tan(verticalFov/2));
+  const byWidth=fitted.x/(2*Math.tan(verticalFov/2)*Math.max(camera.aspect,.25));
+  camera.position.set(0,0,Math.max(byHeight,byWidth)*.94+fitted.z*.30);
+  camera.lookAt(0,0,0);
+}
+
+function showFallback(layout){
+  fallback.src=layout.image;
+  fallback.style.opacity='1';
+  loading.style.display='none';
+}
+
+function loadController(style){
+  const generation=++loadGeneration;
+  const layout=layouts[style]||layouts.xbox;
+  disposeModel();
+  root.rotation.set(0,0,0);
+  targetRotationX=0;
+  targetRotationY=0;
+  fallback.style.opacity='0';
+  loading.style.display='block';
+  if(!layout.model){showFallback(layout);return}
+  loader.load(layout.model,gltf=>{
+    if(generation!==loadGeneration){
+      gltf.scene.traverse(child=>{
+        child.geometry?.dispose();
+        const materials=Array.isArray(child.material)?child.material:[child.material];
+        materials.filter(Boolean).forEach(material=>material.dispose());
+      });
+      return;
+    }
+    model=gltf.scene;
+    if(style==='dualsense'){
+      model.rotation.x=Math.PI/2;
+      model.rotation.y=Math.PI;
+    }else{
+      model.rotation.set(0,0,0);
+    }
+    model.traverse(child=>{if(child.isMesh){
+      child.frustumCulled=false;child.castShadow=false;child.receiveShadow=false;
+      const materials=Array.isArray(child.material)?child.material:[child.material];
+      materials.filter(Boolean).forEach(material=>{
+        material.side=THREE.DoubleSide;
+        if(style==='dualsense'){
+          material.depthWrite=true;
+          material.alphaTest=.08;
+          if(material.name==='1001'){
+            material.transparent=false;
+            material.opacity=1;
+            material.alphaTest=0;
+          }
+          if(material.emissive)material.emissiveIntensity=.42;
+        }
+        material.needsUpdate=true;
+      });
+    }});
+    root.add(model);
+    fitModel(model);
+    if(style==='dualsense')repairDualSenseGeometry();
+    prepareControllerParts();
+    buildAnchors();
+    loading.style.display='none';
+    updateMarker();
+  },undefined,()=>{if(generation===loadGeneration)showFallback(layout)});
+}
+
+function updateMarker(){
+  const layout=layouts[currentStyle]||layouts.xbox;
+  const point=layout.points[highlighted];
+  marker.classList.remove('active');
+  for(const [name,label] of Object.entries(buttonLabels)){
+    label.material.opacity=name===highlighted?1:.86;
+  }
+  const view=controllerViews[currentStyle]?.[highlighted];
+  targetRotationX=view?view[0]:0;
+  targetRotationY=view?view[1]:0;
+  if(!point){if(markerAnchor)markerAnchor.visible=false;return}
+  if(controllerParts[highlighted]?.length){
+    if(markerAnchor)markerAnchor.visible=false;
+    return;
+  }
+  const anchor=anchorPoints[highlighted];
+  if(anchor){
+    ensure3dMarker();
+    markerAnchor.position.copy(anchor);
+    markerAnchor.visible=true;
+    return;
+  }
+  if(markerAnchor)markerAnchor.visible=false;
+  marker.style.left=(point[0]*100)+'%';marker.style.top=(point[1]*100)+'%';
+  marker.classList.add('active');
+}
+
+window.setControllerStyle=style=>{
+  const next=layouts[style]?style:'xbox';
+  if(next===currentStyle&&(model||fallback.style.opacity==='1'))return;
+  currentStyle=next;
+  loadController(next);
+  updateMarker();
+};
+window.highlightControl=(name,on)=>{highlighted=on?(name||''):'';updateMarker()};
+
+renderer.domElement.addEventListener('pointerdown',event=>{dragging=true;px=event.clientX;py=event.clientY;renderer.domElement.setPointerCapture(event.pointerId)});
+renderer.domElement.addEventListener('pointermove',event=>{if(!dragging)return;root.rotation.y=Math.max(-.45,Math.min(.45,root.rotation.y+(event.clientX-px)*.005));root.rotation.x=Math.max(-.28,Math.min(.28,root.rotation.x+(event.clientY-py)*.004));px=event.clientX;py=event.clientY});
+renderer.domElement.addEventListener('pointerup',()=>dragging=false);
+renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+
+function resize(){
+  const width=Math.max(innerWidth,1),height=Math.max(innerHeight,1);
+  renderer.setSize(width,height,false);
+  camera.aspect=width/height;
+  camera.updateProjectionMatrix();
+  if(model){fitModel(model);buildAnchors();updateMarker()}
+}
+addEventListener('resize',resize);
+resize();
+window.setControllerStyle('xbox');
+(function draw(time){
+  requestAnimationFrame(draw);
+  if(!dragging){
+    root.rotation.x+=(targetRotationX-root.rotation.x)*.10;
+    root.rotation.y+=(targetRotationY-root.rotation.y)*.10;
+  }
+  root.position.y=Math.sin(time*.0014)*.035;
+  if(markerAnchor&&markerAnchor.visible){
+    const pulse=1+Math.sin(time*.008)*.12;
+    markerSprite.scale.setScalar(.48*pulse);
+    markerHalo.scale.setScalar(.78*(1+(pulse-1)*1.8));
+    markerHalo.material.opacity=.24+Math.sin(time*.008)*.10;
+  }
+  for(const [name,label] of Object.entries(buttonLabels)){
+    const active=name===highlighted;
+    const pulse=active?1.18+Math.sin(time*.010)*.12:1;
+    label.scale.setScalar(label.userData.baseScale*pulse);
+  }
+  for(const [part,state] of animatedPartStates){
+    const target=state.control===highlighted?1:0;
+    state.amount+=(target-state.amount)*.18;
+    if(state.overlay){
+      part.visible=state.amount>.01;
+      part.material.opacity=state.amount;
+      continue;
+    }
+    part.position.copy(state.basePosition);
+    part.position.y-=.045*state.amount;
+    const materials=Array.isArray(part.material)?part.material:[part.material];
+    materials.filter(Boolean).forEach(material=>{
+      if(material.color&&material.userData.battlyBaseColor){
+        material.color.copy(material.userData.battlyBaseColor).lerp(activePartColor,.96*state.amount);
+      }
+      if(material.emissive&&material.userData.battlyBaseEmissive){
+        material.emissive.copy(material.userData.battlyBaseEmissive).lerp(activePartColor,state.amount);
+        material.emissiveIntensity=material.userData.battlyBaseEmissiveIntensity+3.2*state.amount;
+      }
+    });
+  }
+  renderer.render(scene,camera);
+})(0);
+window.BattlyControllerReady=true;
+</script>
+</body>
+</html>

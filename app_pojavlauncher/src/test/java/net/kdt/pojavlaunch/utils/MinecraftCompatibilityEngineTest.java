@@ -6,6 +6,9 @@ import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.value.DependentLibrary;
+
 public class MinecraftCompatibilityEngineTest {
     @Test
     public void modernMinecraftRejectsLegacyAutomaticRenderer() {
@@ -55,5 +58,39 @@ public class MinecraftCompatibilityEngineTest {
         assertEquals(1, forge.major);
         assertEquals(20, forge.minor);
         assertEquals(1, forge.patch);
+    }
+
+    @Test
+    public void yearVersionsKeepMatchingLwjglJavaAndNativeBundles() {
+        JMinecraftVersionList.Version metadata = new JMinecraftVersionList.Version();
+        DependentLibrary lwjgl = new DependentLibrary();
+        lwjgl.name = "org.lwjgl:lwjgl:3.4.1";
+        metadata.libraries = new DependentLibrary[] { lwjgl };
+
+        MinecraftCompatibilityEngine.VersionFamily family =
+                MinecraftCompatibilityEngine.VersionFamily.parse("26.1.2", null);
+
+        assertEquals("3.4.1",
+                MinecraftCompatibilityEngine.inferLwjglForTesting(metadata, family));
+    }
+
+    @Test
+    public void snapshotSixAndSevenSelectTheDeclaredLwjgl342Bundle() {
+        JMinecraftVersionList.Version metadata = new JMinecraftVersionList.Version();
+        DependentLibrary lwjgl = new DependentLibrary();
+        lwjgl.name = "org.lwjgl:lwjgl:3.4.2";
+        metadata.libraries = new DependentLibrary[] { lwjgl };
+
+        assertEquals("3.4.2", MinecraftCompatibilityEngine.resolveLwjglChannel(
+                "26.3-snapshot-6", metadata));
+        assertEquals("3.4.2", MinecraftCompatibilityEngine.resolveLwjglChannel(
+                "26.3-snapshot-7", metadata));
+    }
+
+    @Test
+    public void inputBridgeKeepsMinecraft262OnGlfwAndNewSnapshotsOnSdl() {
+        assertFalse(MinecraftCompatibilityEngine.requiresSdlInputBridge("3.4.1"));
+        assertTrue(MinecraftCompatibilityEngine.requiresSdlInputBridge("3.4.2"));
+        assertTrue(MinecraftCompatibilityEngine.requiresSdlInputBridge("3.4.3"));
     }
 }

@@ -52,6 +52,20 @@ static const jboolean const_javaw = JNI_FALSE;
 static const jboolean const_cpwildcard = JNI_TRUE;
 static const jint const_ergo_class = 0; // DEFAULT_POLICY
 
+#ifdef __ANDROID__
+// Bionic reserves kernel real-time signals 32 through 37 for Android runtime
+// services (timers, libcore asynchronous close, debuggerd, profiling, etc.).
+// Resetting one of these handlers to SIG_DFL can terminate the whole Android
+// process later when the framework legitimately sends the reserved signal.
+#define ANDROID_RESERVED_SIGNAL_MIN 32
+#define ANDROID_RESERVED_SIGNAL_MAX 37
+
+static int is_android_reserved_signal(int signal) {
+    return signal >= ANDROID_RESERVED_SIGNAL_MIN
+            && signal <= ANDROID_RESERVED_SIGNAL_MAX;
+}
+#endif
+
 typedef jint JLI_Launch_func(int argc, char ** argv, /* main argc, argc */
         int jargc, const char** jargv,          /* java args */
         int appclassc, const char** appclassv,  /* app classpath */
@@ -124,10 +138,17 @@ static void abort_waiter_setup() {
 static jint launchJVM(int margc, char** margv) {
    void* libjli = dlopen("libjli.so", RTLD_LAZY | RTLD_GLOBAL);
 
-   // Unset all signal handlers to create a good slate for JVM signal detection.
+   // Unset application signal handlers to create a good slate for JVM signal
+   // detection, while preserving handlers owned by the Android runtime.
    struct sigaction clean_sa;
    memset(&clean_sa, 0, sizeof (struct sigaction));
+   sigemptyset(&clean_sa.sa_mask);
    for(int sigid = SIGHUP; sigid < NSIG; sigid++) {
+#ifdef __ANDROID__
+       if(is_android_reserved_signal(sigid)) {
+           continue;
+       }
+#endif
        // For some reason Android specifically checks if you set SIGSEGV to SIG_DFL.
        // There's probably a good reason for that but the signal handler here is
        // temporary and will be replaced by the Java VM's signal/crash handler.

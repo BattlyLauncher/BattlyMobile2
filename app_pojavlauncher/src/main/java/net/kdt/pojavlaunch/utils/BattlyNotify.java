@@ -16,8 +16,13 @@ import android.widget.TextView;
 
 import net.kdt.pojavlaunch.Tools;
 
+import java.util.ArrayDeque;
+import java.util.WeakHashMap;
+
 public final class BattlyNotify {
     private static final long DURATION_MS = 5200L;
+    private static final WeakHashMap<Activity, ArrayDeque<NotifyRequest>> QUEUES = new WeakHashMap<>();
+    private static final WeakHashMap<Activity, Boolean> SHOWING = new WeakHashMap<>();
 
     private BattlyNotify() {
     }
@@ -30,7 +35,26 @@ public final class BattlyNotify {
         if (activity == null || activity.isFinishing()) {
             return;
         }
-        Tools.runOnUiThread(() -> addNotifyView(activity, title, message, accentColor));
+        Tools.runOnUiThread(() -> enqueue(activity, new NotifyRequest(title, message, accentColor)));
+    }
+
+    private static void enqueue(Activity activity, NotifyRequest request) {
+        if (activity.isFinishing() || activity.isDestroyed()) return;
+        ArrayDeque<NotifyRequest> queue = QUEUES.computeIfAbsent(activity, ignored -> new ArrayDeque<>());
+        queue.offer(request);
+        if (!Boolean.TRUE.equals(SHOWING.get(activity))) showNext(activity);
+    }
+
+    private static void showNext(Activity activity) {
+        ArrayDeque<NotifyRequest> queue = QUEUES.get(activity);
+        NotifyRequest request = queue == null ? null : queue.poll();
+        if (request == null || activity.isFinishing() || activity.isDestroyed()) {
+            SHOWING.remove(activity);
+            if (queue == null || queue.isEmpty()) QUEUES.remove(activity);
+            return;
+        }
+        SHOWING.put(activity, true);
+        addNotifyView(activity, request.title, request.message, request.accentColor);
     }
 
     private static void addNotifyView(Activity activity, String title, String message, int accentColor) {
@@ -110,6 +134,8 @@ public final class BattlyNotify {
                         if (overlay.getParent() instanceof ViewGroup) {
                             ((ViewGroup) overlay.getParent()).removeView(overlay);
                         }
+                        SHOWING.remove(activity);
+                        showNext(activity);
                     })
                     .start();
         }, DURATION_MS);
@@ -137,5 +163,17 @@ public final class BattlyNotify {
 
     private static int dp(Activity activity, int value) {
         return Math.round(value * activity.getResources().getDisplayMetrics().density);
+    }
+
+    private static final class NotifyRequest {
+        final String title;
+        final String message;
+        final int accentColor;
+
+        NotifyRequest(String title, String message, int accentColor) {
+            this.title = title;
+            this.message = message;
+            this.accentColor = accentColor;
+        }
     }
 }

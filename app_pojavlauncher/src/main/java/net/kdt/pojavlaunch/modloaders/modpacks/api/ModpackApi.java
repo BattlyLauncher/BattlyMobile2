@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
 
 import com.kdt.mcgui.ProgressLayout;
 
@@ -22,12 +23,16 @@ import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchResult;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.Constants;
 import net.kdt.pojavlaunch.utils.BattlyPlusCloud;
+import net.kdt.pojavlaunch.utils.InstanceManager;
+import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.io.IOException;
 import java.io.File;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 
@@ -88,14 +93,23 @@ public interface ModpackApi {
         ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 0,
                 plusQueue ? R.string.battly_plus_install_queue_message : R.string.global_waiting);
         PojavApplication.sExecutorService.execute(() -> {
+            String completedProfileKey = null;
             try {
                 if (!modDetail.isModpack && modDetail.contentType != SearchFilters.TYPE_MODPACK) {
                     installDependencies(context, modDetail, selectedVersion, targetProfile);
                 }
+                Set<String> previousProfiles = isModpack && LauncherProfiles.mainProfileJson != null
+                        ? new HashSet<>(LauncherProfiles.mainProfileJson.profiles.keySet())
+                        : new HashSet<>();
                 ModLoader loaderInfo = installMod(context, modDetail, selectedVersion, targetProfile);
                 if (loaderInfo == null) return;
+                if (isModpack) {
+                    completedProfileKey = findInstalledProfileKey(previousProfiles, loaderInfo, modDetail.title);
+                }
                 Telemetry.logContentInstall(modDetail.contentType, modDetail.title, true, null);
-                loaderInfo.getDownloadTask(context, new NotificationDownloadListener(context, loaderInfo)).run();
+                NotificationDownloadListener listener = new NotificationDownloadListener(context, loaderInfo);
+                loaderInfo.getDownloadTask(context, listener).run();
+                if (!listener.wasSuccessful()) completedProfileKey = null;
                 if (context instanceof net.kdt.pojavlaunch.LauncherActivity) {
                     Tools.runOnUiThread(((net.kdt.pojavlaunch.LauncherActivity) context)
                             ::refreshHomeProfileUi);
@@ -107,7 +121,70 @@ public interface ModpackApi {
             } finally {
                 dismissInstallGate(blocker);
             }
+            if (isModpack && completedProfileKey != null) {
+                showOpenModpackPrompt(context, completedProfileKey, modDetail.title);
+            }
         });
+    }
+
+    default String findInstalledProfileKey(Set<String> previousProfiles,
+                                           ModLoader loaderInfo,
+                                           String title) {
+        if (LauncherProfiles.mainProfileJson == null
+                || LauncherProfiles.mainProfileJson.profiles == null) return null;
+        String fallback = null;
+        for (Map.Entry<String, MinecraftProfile> entry
+                : LauncherProfiles.mainProfileJson.profiles.entrySet()) {
+            MinecraftProfile profile = entry.getValue();
+            if (profile == null) continue;
+            if (!previousProfiles.contains(entry.getKey())) return entry.getKey();
+            if (loaderInfo.getVersionId().equals(profile.lastVersionId)
+                    && title != null && title.equals(profile.name)) fallback = entry.getKey();
+        }
+        return fallback;
+    }
+
+    default void showOpenModpackPrompt(Context context, String profileKey, String title) {
+        if (!(context instanceof net.kdt.pojavlaunch.LauncherActivity)) return;
+        net.kdt.pojavlaunch.LauncherActivity activity =
+                (net.kdt.pojavlaunch.LauncherActivity) context;
+        Tools.runOnUiThread(() -> {
+            if (activity.isFinishing() || activity.isDestroyed()) return;
+            AlertDialog dialog = new AlertDialog.Builder(activity, R.style.BattlyDialog)
+                    .setTitle(activity.getString(R.string.modpack_install_ready_title, title))
+                    .setMessage(R.string.modpack_install_ready_message)
+                    .setNegativeButton(R.string.global_cancel, null)
+                    .setPositiveButton(R.string.modpack_install_open, null)
+                    .create();
+            dialog.show();
+            dialog.getButton(AlertDialog.BUTTON_POSITIVE).setOnClickListener(view -> {
+                try {
+                    String resolvedKey = resolveInstalledProfileKey(profileKey, title);
+                    if (resolvedKey == null) {
+                        throw new IOException(activity.getString(R.string.error_no_version));
+                    }
+                    InstanceManager.select(resolvedKey);
+                    dialog.dismiss();
+                    activity.getSupportFragmentManager().popBackStackImmediate("ROOT", 0);
+                    activity.refreshHomeProfileUi();
+                } catch (Exception error) {
+                    Tools.showError(activity, error);
+                }
+            });
+        });
+    }
+
+    default String resolveInstalledProfileKey(String requestedKey, String title) {
+        LauncherProfiles.load();
+        if (LauncherProfiles.mainProfileJson == null || LauncherProfiles.mainProfileJson.profiles == null) return null;
+        if (LauncherProfiles.mainProfileJson.profiles.containsKey(requestedKey)) return requestedKey;
+        for (Map.Entry<String, MinecraftProfile> entry : LauncherProfiles.mainProfileJson.profiles.entrySet()) {
+            MinecraftProfile profile = entry.getValue();
+            if (profile == null) continue;
+            if (requestedKey != null && requestedKey.equals(profile.battlyInstanceId)) return entry.getKey();
+            if (title != null && title.equals(profile.name) && Tools.isValidString(profile.lastVersionId)) return entry.getKey();
+        }
+        return null;
     }
 
     default void handleDependenciesInstallation(Context context, ModDetail modDetail, int selectedVersion) {

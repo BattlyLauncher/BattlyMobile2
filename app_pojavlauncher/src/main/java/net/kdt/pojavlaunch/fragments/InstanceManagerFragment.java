@@ -27,6 +27,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.customcontrols.gamepad.GamepadMapStore;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.profiles.ProfileIconCache;
 import net.kdt.pojavlaunch.utils.ControllerProfileManager;
 import net.kdt.pojavlaunch.utils.ContentProfileManager;
 import net.kdt.pojavlaunch.utils.CrashAnalysisEngine;
@@ -121,18 +122,35 @@ public class InstanceManagerFragment extends Fragment {
         params.setMargins(0, 0, 0, dp(10));
         card.setLayoutParams(params);
 
+        LinearLayout identity = new LinearLayout(requireContext());
+        identity.setGravity(Gravity.CENTER_VERTICAL);
+        identity.setOrientation(LinearLayout.HORIZONTAL);
+        ImageView profileIcon = new ImageView(requireContext());
+        profileIcon.setScaleType(ImageView.ScaleType.CENTER_CROP);
+        profileIcon.setImageDrawable(ProfileIconCache.fetchIcon(getResources(), record.key, record.profile.icon));
+        profileIcon.setBackgroundResource(R.drawable.bg_battly_profile_icon);
+        profileIcon.setClipToOutline(true);
+        LinearLayout.LayoutParams profileIconParams = new LinearLayout.LayoutParams(dp(48), dp(48));
+        profileIconParams.setMargins(0, 0, dp(12), 0);
+        identity.addView(profileIcon, profileIconParams);
+
+        LinearLayout labels = new LinearLayout(requireContext());
+        labels.setOrientation(LinearLayout.VERTICAL);
         TextView title = text(firstNonEmpty(record.profile.name, record.profile.lastVersionId, "Instance"), 16, true);
-        card.addView(title);
+        labels.addView(title);
         long cachedSize = InstanceManager.getCachedDirectorySize(record.gameDirectory());
         String summary = instanceSummary(record, selected, cachedSize);
         TextView subtitle = text(summary, 12, false);
         subtitle.setTextColor(0xFFC7D4DF);
-        subtitle.setPadding(0, dp(3), 0, dp(10));
-        card.addView(subtitle);
+        subtitle.setPadding(0, dp(3), 0, 0);
+        labels.addView(subtitle);
+        identity.addView(labels, new LinearLayout.LayoutParams(0, LinearLayout.LayoutParams.WRAP_CONTENT, 1));
+        card.addView(identity);
 
         LinearLayout actions = new LinearLayout(requireContext());
         actions.setGravity(Gravity.END | Gravity.CENTER_VERTICAL);
         actions.setOrientation(LinearLayout.HORIZONTAL);
+        actions.setPadding(0, dp(10), 0, 0);
         addAction(actions, R.string.instance_use, () -> {
             InstanceManager.select(record.key);
             GamepadMapStore.invalidate();

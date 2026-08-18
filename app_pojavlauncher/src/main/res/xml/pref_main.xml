@@ -45,6 +45,14 @@
             />
 
         <Preference
+            android:key="maintenance_screen_setting"
+            android:title="@string/maintenance_settings_title"
+            android:summary="@string/maintenance_settings_summary"
+            android:fragment="net.kdt.pojavlaunch.fragments.LauncherMaintenanceFragment"
+            android:icon="@drawable/ic_setting_engine"
+            />
+
+        <Preference
             android:key="misc_screen_setting"
             android:title="@string/preference_misc_title"
             android:summary="@string/preference_misc_description"

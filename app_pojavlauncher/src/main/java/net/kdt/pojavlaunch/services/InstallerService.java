@@ -25,6 +25,7 @@ public class InstallerService extends Service {
     public static final String EXTRA_RUNTIME_NAME = "runtimeName";
     public static final String EXTRA_WORKDIR = "workDir";
     public static final String EXTRA_RESULT_FILE = "resultFile";
+    public static final String EXTRA_STATUS_FILE = "statusFile";
     public static final String EXTRA_COMMANDS = "commands";
 
     @Nullable
@@ -44,8 +45,10 @@ public class InstallerService extends Service {
         String runtimeName = intent.getStringExtra(EXTRA_RUNTIME_NAME);
         String workDirPath = intent.getStringExtra(EXTRA_WORKDIR);
         String resultFilePath = intent.getStringExtra(EXTRA_RESULT_FILE);
+        String statusFilePath = intent.getStringExtra(EXTRA_STATUS_FILE);
 
-        if (commands == null || runtimeName == null || workDirPath == null || resultFilePath == null) {
+        if (commands == null || runtimeName == null || workDirPath == null
+                || resultFilePath == null || statusFilePath == null) {
             stopSelf(startId);
             return START_NOT_STICKY;
         }
@@ -57,6 +60,8 @@ public class InstallerService extends Service {
             File installerLog = new File(Tools.DIR_CACHE, "installer_logs/" + UUID.randomUUID() + ".log");
             try {
                 FileUtils.ensureParentDirectory(installerLog);
+                writeProperties(new File(statusFilePath), -1, "running", null,
+                        installerLog.getAbsolutePath());
                 appendLog(installerLog, "Installer service started");
                 try {
                     Logger.begin(installerLog.getAbsolutePath());
@@ -78,22 +83,8 @@ public class InstallerService extends Service {
             }
 
             try {
-                File resultFile = new File(resultFilePath);
-                FileUtils.ensureParentDirectory(resultFile);
-                Properties properties = new Properties();
-                properties.setProperty("exitCode", Integer.toString(exitCode));
-                properties.setProperty("logFile", installerLog.getAbsolutePath());
-                if (errorMessage != null) {
-                    properties.setProperty("errorMessage", errorMessage);
-                }
-                StringBuilder resultContent = new StringBuilder();
-                for (String propertyName : properties.stringPropertyNames()) {
-                    resultContent.append(propertyName)
-                            .append('=')
-                            .append(properties.getProperty(propertyName))
-                            .append('\n');
-                }
-                Tools.write(resultFile.getAbsolutePath(), resultContent.toString());
+                writeProperties(new File(resultFilePath), exitCode, "finished", errorMessage,
+                        installerLog.getAbsolutePath());
             } catch (IOException ignored) {
             }
 
@@ -101,6 +92,27 @@ public class InstallerService extends Service {
         }, "InstallerService").start();
 
         return START_NOT_STICKY;
+    }
+
+    private static void writeProperties(File file, int exitCode, String state,
+                                        String errorMessage, String logFile) throws IOException {
+        FileUtils.ensureParentDirectory(file);
+        Properties properties = new Properties();
+        properties.setProperty("exitCode", Integer.toString(exitCode));
+        properties.setProperty("state", state);
+        properties.setProperty("logFile", logFile);
+        if (errorMessage != null) properties.setProperty("errorMessage", errorMessage);
+        StringBuilder content = new StringBuilder();
+        for (String name : properties.stringPropertyNames()) {
+            content.append(name).append('=').append(properties.getProperty(name)).append('\n');
+        }
+        File temporary = new File(file.getAbsolutePath() + ".tmp");
+        Tools.write(temporary.getAbsolutePath(), content.toString());
+        if (!temporary.renameTo(file)) {
+            Tools.write(file.getAbsolutePath(), content.toString());
+            //noinspection ResultOfMethodCallIgnored
+            temporary.delete();
+        }
     }
 
     private static void appendLog(File logFile, String message) {

@@ -40,7 +40,7 @@ public final class BattlyProgressTaskView extends LinearLayout {
             mProgress.setProgress(boundedProgress);
             mPercent.setText(boundedProgress + "%");
         } else {
-            mPercent.setText("...");
+            mPercent.setText(R.string.global_waiting);
         }
     }
 }

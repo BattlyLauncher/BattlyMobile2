@@ -55,10 +55,6 @@ public class LeftClickGesture extends ValidatorGesture {
     public void setMotion(float deltaX, float deltaY) {
         mGestureEndX += deltaX;
         mGestureEndY += deltaY;
-        if (!isFingerStill(mGestureStartX, mGestureStartY,
-                mGestureEndX, mGestureEndY, FINGER_STILL_THRESHOLD)) {
-            cancel(false);
-        }
     }
 
     /**

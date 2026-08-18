@@ -97,6 +97,60 @@
         app:layout_constraintTop_toBottomOf="@id/editDisplayValue_editText"
         tools:visibility="visible" />
 
+    <LinearLayout
+        android:id="@+id/editDeviceImageVisualSize_layout"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="4dp"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/editSize_textView"
+        tools:visibility="visible">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <TextView
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/customctrl_device_image_visual_size" />
+
+            <TextView
+                android:id="@+id/editDeviceImageVisualSize_value"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textStyle="bold"
+                tools:text="35%" />
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/editDeviceImageVisualSize_seekbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:max="80"
+            android:progress="25" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:alpha="0.72"
+            android:text="@string/customctrl_device_image_visual_size_hint"
+            android:textSize="12sp" />
+
+        <CheckBox
+            android:id="@+id/editDeviceImagePixelSize_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:minHeight="40dp"
+            android:text="@string/customctrl_device_image_pixel_size" />
+    </LinearLayout>
+
     <EditText
         android:id="@+id/editSize_editTextX"
         android:layout_width="@dimen/_134sdp"
@@ -106,7 +160,7 @@
         android:inputType="numberDecimal"
 
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/editSize_textView" />
+        app:layout_constraintTop_toBottomOf="@+id/editDeviceImageVisualSize_layout" />
 
     <EditText
         android:id="@+id/editSize_editTextY"

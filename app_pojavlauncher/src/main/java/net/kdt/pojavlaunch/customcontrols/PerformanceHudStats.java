@@ -1,6 +1,9 @@
 package net.kdt.pojavlaunch.customcontrols;
 
 import net.kdt.pojavlaunch.utils.JREUtils;
+import net.kdt.pojavlaunch.MinecraftGLSurface;
+
+import org.libsdl.app.SDLActivity;
 
 import java.net.InetSocketAddress;
 import java.net.Socket;
@@ -11,8 +14,6 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class PerformanceHudStats {
-    private static final String PING_HOST = "api.battlylauncher.com";
-    private static final int PING_PORT = 443;
     private static final int PING_TIMEOUT_MS = 1800;
     private static final AtomicInteger ACTIVE_WIDGETS = new AtomicInteger();
     private static final Object EXECUTOR_LOCK = new Object();
@@ -37,6 +38,14 @@ public final class PerformanceHudStats {
     }
 
     public static int getFps() {
+        if (MinecraftGLSurface.isSdlWindowBridgeEnabled()) {
+            try {
+                int sdlFps = SDLActivity.nativeGetRendererFps();
+                if (sdlFps > 0) return sdlFps;
+            } catch (UnsatisfiedLinkError ignored) {
+                // Older SDL binaries fall back to the classic renderer counter.
+            }
+        }
         try {
             return JREUtils.getRendererFps();
         } catch (UnsatisfiedLinkError ignored) {
@@ -79,9 +88,15 @@ public final class PerformanceHudStats {
     }
 
     private static void measurePing() {
+        MinecraftServerSessionTracker.Endpoint endpoint =
+                MinecraftServerSessionTracker.getEndpoint();
+        if (endpoint == null) {
+            pingMs = -1;
+            return;
+        }
         long startedAt = System.nanoTime();
         try (Socket socket = new Socket()) {
-            socket.connect(new InetSocketAddress(PING_HOST, PING_PORT), PING_TIMEOUT_MS);
+            socket.connect(new InetSocketAddress(endpoint.host, endpoint.port), PING_TIMEOUT_MS);
             pingMs = Math.max(1, (int) TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startedAt));
         } catch (Exception ignored) {
             pingMs = -1;

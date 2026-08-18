@@ -8,6 +8,18 @@ import org.junit.Test;
 
 public class ModCompatibilityAnalyzerTest {
     @Test
+    public void identifiesOptifineEmbeddiumRendererConflict() {
+        String log = "OptiFineTransformationService.initialize\n"
+                + "Found mod file embeddium-0.3.31+mc1.20.1.jar\n"
+                + "InjectionError: Critical injection failure in embeddium.mixins.json";
+
+        ModCompatibilityAnalyzer.Analysis result = ModCompatibilityAnalyzer.analyze(log);
+
+        assertTrue(result.detected);
+        assertTrue(result.summary.contains("OptiFine and Embeddium"));
+        assertEquals("Forge", result.loader);
+    }
+    @Test
     public void identifiesMixinModsAndHidesSecondaryAwtFailure() {
         String log = "Loading Minecraft 26.2 with Fabric Loader 0.19.3\n"
                 + "\t- sodium 0.9.1+mc26.1.2\n"

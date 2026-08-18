@@ -67,6 +67,7 @@ public class OptiFineDownloadTask implements Runnable, Tools.DownloaderFeedback,
         DownloadUtils.downloadFileMonitored(downloadUrl, mDestinationFile, new byte[8192], this);
         ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
         OptiFineInstaller.install(activity.getApplicationContext(), mDestinationFile, mOptiFineVersion, mCreateProfile);
+        ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 100, R.string.modloader_installing);
         return true;
     }
 

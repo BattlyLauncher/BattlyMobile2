@@ -144,6 +144,7 @@ public class MinecraftDownloader {
         // work to keep the launcher alive. We will replace this line when we will start downloading stuff.
         ProgressLayout.setProgress(ProgressLayout.DOWNLOAD_MINECRAFT, 0, R.string.newdl_starting);
         SpeedCalculator speedCalculator = new SpeedCalculator();
+        long downloadStartedAt = System.nanoTime();
 
         mTargetJarFile = createGameJarPath(versionName);
         mScheduledDownloadTasks = new ArrayList<>();
@@ -165,8 +166,6 @@ public class MinecraftDownloader {
         }
 
         int threadCount = AdaptiveDownloadPolicy.resolveWorkers(
-                activity,
-                LauncherPreferences.PREF_DOWNLOAD_THREADS_AUTO && activity != null,
                 LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT,
                 mScheduledDownloadTasks.size());
         Logger.appendToLog("Info: Download pool: " + threadCount + " workers for "
@@ -193,6 +192,10 @@ public class MinecraftDownloader {
             } else {
                 ensureJarFileCopy();
                 extractNatives(versionName);
+                long elapsedMs = TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - downloadStartedAt);
+                Logger.appendToLog("Info: Minecraft download completed in " + elapsedMs
+                        + " ms; network=" + mInternetUsageCounter.get() + " bytes, files="
+                        + mProcessedFileCounter.get() + "/" + mTotalFileCount);
             }
         }catch (InterruptedException e) {
             // Interrupted while waiting, which means that the download was cancelled.
@@ -581,7 +584,8 @@ public class MinecraftDownloader {
         }
 
         private void runCatching() throws Exception {
-            if(mDownloadClass == DownloadMirror.DOWNLOAD_CLASS_LIBRARIES && !Tools.isValidString(mTargetSha1)) {
+            if(mDownloadClass == DownloadMirror.DOWNLOAD_CLASS_LIBRARIES
+                    && !Tools.isValidString(mTargetSha1) && mTargetPath.isFile()) {
                 // If we're downloading a library, try to get sha1 since it might be available as a file
                 tryGetLibrarySha1();
             }
@@ -615,7 +619,21 @@ public class MinecraftDownloader {
             }catch (Exception e) {
                 if(!mSkipIfFailed) throw e;
             }
+            if (!Tools.isValidString(mTargetSha1) && mTargetPath.isFile() && isArchive(mTargetPath)
+                    && !DownloadUtils.isValidZipArchive(mTargetPath)) {
+                if (!mTargetPath.delete()) {
+                    Log.w("MinecraftDownloader", "Could not remove invalid archive " + mTargetPath);
+                }
+                if (!mSkipIfFailed) {
+                    throw new IOException("Downloaded library archive is invalid: " + mTargetPath.getName());
+                }
+            }
             mProcessedFileCounter.incrementAndGet();
+        }
+
+        private boolean isArchive(File file) {
+            String name = file.getName().toLowerCase(java.util.Locale.ROOT);
+            return name.endsWith(".jar") || name.endsWith(".zip") || name.endsWith(".aar");
         }
 
         private void finishWithoutDownloading() {

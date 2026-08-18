@@ -8,21 +8,63 @@ import androidx.annotation.Nullable;
 import java.io.*;
 import java.net.*;
 import java.nio.charset.*;
+import java.util.Collections;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.Callable;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipFile;
 
 import net.kdt.pojavlaunch.*;
+import okhttp3.ConnectionPool;
+import okhttp3.Dispatcher;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.commons.io.*;
 
 @SuppressWarnings("IOStreamConstructor")
 public class DownloadUtils {
-    public static final String USER_AGENT = Tools.APP_NAME;
-    private static final int TIME_OUT = 10000;
+    // Keep networking usable from JVM tests and early startup before Tools is initialized.
+    public static final String USER_AGENT = "Battly Mobile";
+    private static final int TIME_OUT = 30000;
+    private static final int MAX_DOWNLOAD_ATTEMPTS = 4;
+    private static final long RETRY_DELAY_MS = 350L;
+    private static final int DOWNLOAD_BUFFER_SIZE = 64 * 1024;
+    private static final OkHttpClient HTTP_CLIENT;
+
+    static {
+        // Prefer IPv4 when both routes exist. IPv6-only networks can still use IPv6.
+        System.setProperty("java.net.preferIPv6Addresses", "false");
+        Dispatcher dispatcher = new Dispatcher();
+        dispatcher.setMaxRequests(AdaptiveDownloadPolicy.MAX_WORKERS);
+        dispatcher.setMaxRequestsPerHost(AdaptiveDownloadPolicy.MAX_WORKERS);
+        HTTP_CLIENT = new OkHttpClient.Builder()
+                .dispatcher(dispatcher)
+                .connectionPool(new ConnectionPool(AdaptiveDownloadPolicy.MAX_WORKERS,
+                        5, TimeUnit.MINUTES))
+                .connectTimeout(TIME_OUT, TimeUnit.MILLISECONDS)
+                .readTimeout(TIME_OUT, TimeUnit.MILLISECONDS)
+                .writeTimeout(TIME_OUT, TimeUnit.MILLISECONDS)
+                .retryOnConnectionFailure(true)
+                .build();
+    }
 
     public static void download(String url, OutputStream os) throws IOException {
         download(new URL(url), os);
     }
 
     public static void download(URL url, OutputStream os) throws IOException {
+        if (isHttp(url)) {
+            Request request = requestBuilder(url.toString()).build();
+            try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+                ResponseBody body = requireSuccessfulBody(response, url.toString());
+                try (InputStream input = body.byteStream()) {
+                    IOUtils.copyLarge(input, os, new byte[DOWNLOAD_BUFFER_SIZE]);
+                }
+            }
+            return;
+        }
         InputStream is = null;
         URLConnection connection = null;
         try {
@@ -53,10 +95,20 @@ public class DownloadUtils {
     }
 
     public static String downloadString(String url) throws IOException {
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        download(url, bos);
-        bos.close();
-        return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+        IOException lastError = null;
+        for (int attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt++) {
+            try (ByteArrayOutputStream bos = new ByteArrayOutputStream()) {
+                download(url, bos);
+                return new String(bos.toByteArray(), StandardCharsets.UTF_8);
+            } catch (IOException exception) {
+                lastError = exception;
+                if (!DownloadRetryPolicy.isRetryable(exception) || attempt == MAX_DOWNLOAD_ATTEMPTS) {
+                    throw exception;
+                }
+                waitBeforeRetry(attempt, url, exception);
+            }
+        }
+        throw lastError == null ? new IOException("Unable to download from " + url) : lastError;
     }
 
     public static void downloadFile(String url, File out) throws IOException {
@@ -65,14 +117,64 @@ public class DownloadUtils {
 
     public static void downloadFileMonitored(String urlInput, File outputFile, @Nullable byte[] buffer,
                                              Tools.DownloaderFeedback monitor) throws IOException {
-        downloadFileMonitored(urlInput, outputFile, buffer, monitor, true);
+        IOException lastError = null;
+        for (int attempt = 1; attempt <= MAX_DOWNLOAD_ATTEMPTS; attempt++) {
+            try {
+                downloadFileMonitoredAttempt(urlInput, outputFile, buffer, monitor, true);
+                return;
+            } catch (IOException exception) {
+                lastError = exception;
+                if (!DownloadRetryPolicy.isRetryable(exception) || attempt == MAX_DOWNLOAD_ATTEMPTS) {
+                    throw exception;
+                }
+                waitBeforeRetry(attempt, urlInput, exception);
+            }
+        }
+        throw lastError == null ? new IOException("Unable to download from " + urlInput) : lastError;
     }
 
-    private static void downloadFileMonitored(String urlInput, File outputFile, @Nullable byte[] buffer,
-                                              Tools.DownloaderFeedback monitor, boolean allowReset) throws IOException {
+    private static void downloadFileMonitoredAttempt(String urlInput, File outputFile,
+                                                     @Nullable byte[] buffer,
+                                                     Tools.DownloaderFeedback monitor,
+                                                     boolean allowReset) throws IOException {
+        URL url = new URL(urlInput);
+        if (!isHttp(url)) {
+            downloadFileMonitoredUrlConnection(url, outputFile, buffer, monitor, allowReset);
+            return;
+        }
         FileUtils.ensureParentDirectory(outputFile);
         long existing = outputFile.isFile() ? outputFile.length() : 0L;
-        URLConnection connection = openConnection(new URL(urlInput));
+        Request.Builder requestBuilder = requestBuilder(urlInput);
+        if (existing > 0) requestBuilder.header("Range", "bytes=" + existing + "-");
+        try (Response response = HTTP_CLIENT.newCall(requestBuilder.build()).execute()) {
+            int code = response.code();
+            if (code == 416 && allowReset) {
+                if (!outputFile.delete()) throw new IOException("Unable to reset partial download");
+                downloadFileMonitoredAttempt(urlInput, outputFile, buffer, monitor, false);
+                return;
+            }
+            ResponseBody body = requireSuccessfulBody(response, urlInput);
+            boolean append = code == HttpURLConnection.HTTP_PARTIAL && existing > 0;
+            long overall = append ? existing : 0L;
+            long responseLength = body.contentLength();
+            long length = responseLength < 0 ? -1L : overall + responseLength;
+            if (buffer == null) buffer = new byte[DOWNLOAD_BUFFER_SIZE];
+            try (InputStream readStr = body.byteStream();
+                 FileOutputStream fos = new FileOutputStream(outputFile, append)) {
+                copyMonitored(readStr, fos, buffer, monitor, overall, length);
+            }
+        } catch (IOException e) {
+            throw new IOException("Unable to download from " + urlInput, e);
+        }
+    }
+
+    private static void downloadFileMonitoredUrlConnection(URL url, File outputFile,
+                                                            @Nullable byte[] buffer,
+                                                            Tools.DownloaderFeedback monitor,
+                                                            boolean allowReset) throws IOException {
+        FileUtils.ensureParentDirectory(outputFile);
+        long existing = outputFile.isFile() ? outputFile.length() : 0L;
+        URLConnection connection = openConnection(url);
         if (existing > 0 && connection instanceof HttpURLConnection) {
             ((HttpURLConnection) connection).setRequestProperty("Range", "bytes=" + existing + "-");
         }
@@ -83,14 +185,14 @@ public class DownloadUtils {
             else if (code == 416 && allowReset) {
                 ((HttpURLConnection) connection).disconnect();
                 if (!outputFile.delete()) throw new IOException("Unable to reset partial download");
-                downloadFileMonitored(urlInput, outputFile, buffer, monitor, false);
+                downloadFileMonitoredUrlConnection(url, outputFile, buffer, monitor, false);
                 return;
             } else if (code < 200 || code >= 300) {
-                throw new IOException("Server returned HTTP " + code + " for " + urlInput);
+                throw new IOException("Server returned HTTP " + code + " for " + url);
             }
         }
-        InputStream readStr = connection.getInputStream();
-        try (FileOutputStream fos = new FileOutputStream(outputFile, append)) {
+        try (InputStream readStr = connection.getInputStream();
+             FileOutputStream fos = new FileOutputStream(outputFile, append)) {
             int current;
             long overall = append ? existing : 0;
             long responseLength = Build.VERSION.SDK_INT >= Build.VERSION_CODES.N
@@ -98,16 +200,10 @@ public class DownloadUtils {
                     : connection.getContentLength();
             long length = responseLength < 0 ? -1 : overall + responseLength;
 
-            if (buffer == null) buffer = new byte[65535];
-
-            while ((current = readStr.read(buffer)) != -1) {
-                overall += current;
-                fos.write(buffer, 0, current);
-                monitor.updateProgress((int) Math.min(Integer.MAX_VALUE, overall),
-                        (int) Math.min(Integer.MAX_VALUE, length));
-            }
+            if (buffer == null) buffer = new byte[DOWNLOAD_BUFFER_SIZE];
+            copyMonitored(readStr, fos, buffer, monitor, overall, length);
         } catch (IOException e) {
-            throw new IOException("Unable to download from " + urlInput, e);
+            throw new IOException("Unable to download from " + url, e);
         } finally {
             if (connection instanceof HttpURLConnection) {
                 ((HttpURLConnection) connection).disconnect();
@@ -232,7 +328,16 @@ public class DownloadUtils {
      * @throws IOException if an I/O error occurs.
      */
     public static long getContentLength(String url) throws IOException {
-        URLConnection connection = openConnection(new URL(url));
+        URL parsedUrl = new URL(url);
+        if (isHttp(parsedUrl)) {
+            Request request = requestBuilder(url).head().build();
+            try (Response response = HTTP_CLIENT.newCall(request).execute()) {
+                if (!response.isSuccessful()) return -1L;
+                ResponseBody body = response.body();
+                return body == null ? -1L : body.contentLength();
+            }
+        }
+        URLConnection connection = openConnection(parsedUrl);
         if (connection instanceof HttpURLConnection) {
             HttpURLConnection httpConnection = (HttpURLConnection) connection;
             httpConnection.setRequestMethod("HEAD");
@@ -257,9 +362,81 @@ public class DownloadUtils {
         connection.setReadTimeout(TIME_OUT);
         connection.setDoInput(true);
         if (connection instanceof HttpURLConnection) {
-            ((HttpURLConnection) connection).setRequestProperty("User-Agent", USER_AGENT);
+            HttpURLConnection httpConnection = (HttpURLConnection) connection;
+            httpConnection.setRequestProperty("User-Agent", USER_AGENT);
+            httpConnection.setRequestProperty("Accept-Encoding", "identity");
         }
         return connection;
+    }
+
+    public static boolean isValidZipArchive(File file) {
+        if (file == null || !file.isFile() || file.length() == 0L) return false;
+        byte[] buffer = new byte[32768];
+        try (ZipFile zipFile = new ZipFile(file)) {
+            if (!zipFile.entries().hasMoreElements()) return false;
+            for (ZipEntry entry : Collections.list(zipFile.entries())) {
+                if (entry.isDirectory()) continue;
+                try (InputStream input = zipFile.getInputStream(entry)) {
+                    while (input.read(buffer) != -1) {
+                        // Reading each entry verifies its CRC and catches truncated archives.
+                    }
+                }
+            }
+            return true;
+        } catch (IOException exception) {
+            return false;
+        }
+    }
+
+    private static Request.Builder requestBuilder(String url) {
+        return new Request.Builder()
+                .url(url)
+                .header("User-Agent", USER_AGENT)
+                .header("Accept-Encoding", "identity");
+    }
+
+    private static ResponseBody requireSuccessfulBody(Response response, String url)
+            throws IOException {
+        if (!response.isSuccessful()) {
+            throw new IOException("Server returned HTTP " + response.code() + " for " + url);
+        }
+        ResponseBody body = response.body();
+        if (body == null) throw new EOFException("Server returned an empty response for " + url);
+        return body;
+    }
+
+    private static boolean isHttp(URL url) {
+        return "http".equalsIgnoreCase(url.getProtocol())
+                || "https".equalsIgnoreCase(url.getProtocol());
+    }
+
+    private static void copyMonitored(InputStream input, OutputStream output, byte[] buffer,
+                                      Tools.DownloaderFeedback monitor, long initial,
+                                      long expectedLength) throws IOException {
+        int count;
+        long overall = initial;
+        while ((count = input.read(buffer)) != -1) {
+            overall += count;
+            output.write(buffer, 0, count);
+            monitor.updateProgress((int) Math.min(Integer.MAX_VALUE, overall),
+                    (int) Math.min(Integer.MAX_VALUE, expectedLength));
+        }
+        if (expectedLength >= 0 && overall < expectedLength) {
+            throw new EOFException("Download ended at " + overall + " of "
+                    + expectedLength + " bytes");
+        }
+    }
+
+    private static void waitBeforeRetry(int attempt, String url, IOException exception)
+            throws IOException {
+        Log.w("DownloadUtils", "Transient download failure (attempt " + attempt + ") for "
+                + url + ": " + exception.getMessage());
+        try {
+            Thread.sleep(RETRY_DELAY_MS * attempt);
+        } catch (InterruptedException interruptedException) {
+            Thread.currentThread().interrupt();
+            throw new IOException("Download retry interrupted", interruptedException);
+        }
     }
 
     public interface ParseCallback<T> {

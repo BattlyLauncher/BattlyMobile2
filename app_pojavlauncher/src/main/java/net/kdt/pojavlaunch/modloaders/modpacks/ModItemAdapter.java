@@ -1,15 +1,18 @@
 package net.kdt.pojavlaunch.modloaders.modpacks;
 
 import android.annotation.SuppressLint;
+import android.app.Activity;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
 import android.graphics.drawable.BitmapDrawable;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewStub;
 import android.widget.AdapterView;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Spinner;
@@ -20,11 +23,14 @@ import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.ads.nativead.NativeAd;
+
 import com.kdt.SimpleArrayAdapter;
 
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.BattlyNativeAdHelper;
 import net.kdt.pojavlaunch.modloaders.modpacks.api.ModpackApi;
 import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.ImageReceiver;
 import net.kdt.pojavlaunch.modloaders.modpacks.imagecache.ModIconCache;
@@ -48,12 +54,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
+import java.lang.ref.WeakReference;
 import java.util.concurrent.Future;
 
 public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> implements TaskCountListener {
     private static final ModItem[] MOD_ITEMS_EMPTY = new ModItem[0];
     private static final int VIEW_TYPE_MOD_ITEM = 0;
     private static final int VIEW_TYPE_LOADING = 1;
+    private static final int VIEW_TYPE_NATIVE_AD = 2;
 
     /* Used when versions haven't loaded yet, default text to reduce layout shifting */
     private final SimpleArrayAdapter<String> mLoadingAdapter = new SimpleArrayAdapter<>(Collections.singletonList("Loading"));
@@ -69,6 +77,14 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private SearchResult mCurrentResult;
     private boolean mLastPage;
     private boolean mTasksRunning;
+    private final List<NativeAd> mNativeAds = new ArrayList<>();
+    private List<Integer> mAdPositions = Collections.emptyList();
+    private long mAdSeed;
+    private int mAdGeneration;
+    private WeakReference<Activity> mAdActivity = new WeakReference<>(null);
+    private String mAdUnitId;
+    private int mLoadedPageCount;
+    private int mRequestedAdBatches;
 
 
     public ModItemAdapter(Resources resources, ModpackApi api, SearchResultCallback callback) {
@@ -83,6 +99,12 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             mTaskInProgress = null;
         }
         this.mSearchFilters = searchFilters;
+        clearNativeAds();
+        mLoadedPageCount = 0;
+        mRequestedAdBatches = 0;
+        notifyDataSetChanged();
+        mAdSeed = (searchFilters.name == null ? 0 : searchFilters.name.hashCode())
+                * 31L + searchFilters.contentType;
         this.mLastPage = false;
         mTaskInProgress = new SelfReferencingFuture(new SearchApiTask(mSearchFilters, null))
                 .startOnExecutor(PojavApplication.sExecutorService);
@@ -102,6 +124,13 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 // Create a new view, which is actually just the progress bar
                 view = layoutInflater.inflate(R.layout.view_loading, viewGroup, false);
                 return new LoadingViewHolder(view);
+            case VIEW_TYPE_NATIVE_AD:
+                FrameLayout container = new FrameLayout(viewGroup.getContext());
+                container.setLayoutParams(new RecyclerView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
+                container.setPadding(0, 0, 0, Math.round(
+                        8 * viewGroup.getResources().getDisplayMetrics().density));
+                return new NativeAdViewHolder(container);
             default:
                 throw new RuntimeException("Unimplemented view type!");
         }
@@ -111,10 +140,13 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         switch (getItemViewType(position)) {
             case VIEW_TYPE_MOD_ITEM:
-                ((ModItemAdapter.ViewHolder)holder).setStateLimited(mModItems[position]);
+                ((ModItemAdapter.ViewHolder)holder).setStateLimited(mModItems[toContentPosition(position)]);
                 break;
             case VIEW_TYPE_LOADING:
                 loadMoreResults();
+                break;
+            case VIEW_TYPE_NATIVE_AD:
+                ((NativeAdViewHolder) holder).bind(mNativeAds.get(mAdPositions.indexOf(position)));
                 break;
             default:
                 throw new RuntimeException("Unimplemented view type!");
@@ -123,8 +155,9 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemCount() {
-        if(mLastPage || mModItems.length == 0) return mModItems.length;
-        return mModItems.length+1;
+        int count = mModItems.length + mAdPositions.size();
+        if(mLastPage || mModItems.length == 0) return count;
+        return count + 1;
     }
 
     private void loadMoreResults() {
@@ -135,8 +168,72 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
     @Override
     public int getItemViewType(int position) {
-        if(position < mModItems.length) return VIEW_TYPE_MOD_ITEM;
+        if (mAdPositions.contains(position)) return VIEW_TYPE_NATIVE_AD;
+        if(position < mModItems.length + mAdPositions.size()) return VIEW_TYPE_MOD_ITEM;
         return VIEW_TYPE_LOADING;
+    }
+
+    public boolean isFullSpanPosition(int position) {
+        return getItemViewType(position) == VIEW_TYPE_LOADING;
+    }
+
+    public void loadNativeAds(Activity activity, String unitId) {
+        mAdActivity = new WeakReference<>(activity);
+        mAdUnitId = unitId;
+        requestAdsForLoadedPages();
+    }
+
+    private void requestAdsForLoadedPages() {
+        Activity activity = mAdActivity.get();
+        if (activity == null || mAdUnitId == null || mAdUnitId.isEmpty()) return;
+        while (mRequestedAdBatches < mLoadedPageCount) {
+            mRequestedAdBatches++;
+            requestNativeAdBatch(activity, mAdUnitId, mAdGeneration);
+        }
+    }
+
+    private void requestNativeAdBatch(Activity activity, String unitId, int generation) {
+        Log.d("BattlyAds", "Requesting Workspace ad batch " + mRequestedAdBatches
+                + " for " + mLoadedPageCount + " loaded page(s)");
+        for (int i = 0; i < 2; i++) {
+            BattlyNativeAdHelper.load(activity, unitId, new BattlyNativeAdHelper.Callback() {
+                @Override
+                public void onLoaded(NativeAd ad) {
+                    if (generation != mAdGeneration) {
+                        ad.destroy();
+                        return;
+                    }
+                    mNativeAds.add(ad);
+                    Log.d("BattlyAds", "Workspace native ad inserted; total=" + mNativeAds.size());
+                    rebuildAdPositions();
+                    notifyDataSetChanged();
+                }
+
+                @Override
+                public void onFailed() {
+                }
+            });
+        }
+    }
+
+    public void clearNativeAds() {
+        mAdGeneration++;
+        for (NativeAd ad : mNativeAds) ad.destroy();
+        mNativeAds.clear();
+        mAdPositions = Collections.emptyList();
+    }
+
+    private void rebuildAdPositions() {
+        mAdPositions = BattlyNativeAdHelper.randomAdPositions(
+                mModItems.length, mNativeAds.size(), mAdSeed);
+    }
+
+    private int toContentPosition(int adapterPosition) {
+        int offset = 0;
+        for (int adPosition : mAdPositions) {
+            if (adPosition < adapterPosition) offset++;
+        }
+        return adapterPosition - offset;
     }
 
     @Override
@@ -300,8 +397,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         public void setStateLimited(ModItem item) {
             mModDetail = null;
             if(mThumbnailBitmap != null) {
-                mIconView.setImageBitmap(null);
-                mThumbnailBitmap.recycle();
+                // ImageView/RenderThread may still hold the drawable in a display list
+                // after this holder is rebound. Recycling here causes
+                // "Canvas: trying to use a recycled bitmap" during dispatchDraw.
+                mIconView.setImageDrawable(null);
+                mThumbnailBitmap = null;
             }
             if(mImageReceiver != null) {
                 mIconCache.cancelImage(mImageReceiver);
@@ -937,6 +1037,21 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
     }
 
+    private static class NativeAdViewHolder extends RecyclerView.ViewHolder {
+        private final FrameLayout mContainer;
+
+        NativeAdViewHolder(FrameLayout container) {
+            super(container);
+            mContainer = container;
+        }
+
+        void bind(NativeAd ad) {
+            mContainer.removeAllViews();
+            mContainer.addView(BattlyNativeAdHelper.createCatalogCardView(
+                    mContainer.getContext(), ad));
+        }
+    }
+
     private class SearchApiTask implements SelfReferencingFuture.FutureInterface {
         private final SearchFilters mSearchFilters;
         private final SearchResult mPreviousResult;
@@ -981,6 +1096,9 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     return;
                 }
                 mModItems = finalModItems;
+                mLoadedPageCount++;
+                rebuildAdPositions();
+                requestAdsForLoadedPages();
                 mLastPage = result != null
                         && result.totalResultCount > 0
                         && mModItems.length >= result.totalResultCount;

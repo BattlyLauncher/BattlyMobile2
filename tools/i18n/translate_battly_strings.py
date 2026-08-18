@@ -28,21 +28,49 @@ CACHE_FILE = ROOT / "build" / "i18n" / "translations.json"
 LOCALES = {
     "af": "af",
     "ar": "ar",
+    "az-rAZ": "az",
+    "ba": "ba",
+    "bn-rBD": "bn",
+    "bn-rIN": "bn",
+    "ca": "ca",
+    "cs": "cs",
+    "da": "da",
     "de": "de",
+    "el": "el",
+    "et-rEE": "et",
+    "fa-rIR": "fa",
+    "fi": "fi",
     "es": "es",
     "fil": "tl",
     "fr": "fr",
+    "hi": "hi",
+    "hu": "hu",
     "in": "id",
     "it": "it",
     "iw": "he",
     "ja": "ja",
+    "kk": "kk",
     "ko": "ko",
+    "la": "la",
+    "lt": "lt",
+    "mn-rMN": "mn",
     "ms": "ms",
+    "nl": "nl",
+    "no": "no",
+    "pl": "pl",
     "pt": "pt",
     "pt-rBR": "pt",
+    "ro": "ro",
     "ru": "ru",
     "sk-rSK": "sk",
+    "sr": "sr",
+    "sr-rCS": "sr",
+    "sv": "sv",
+    "th": "th",
     "tr": "tr",
+    "tt": "tt",
+    "uk": "uk",
+    "vi": "vi",
     "zh-rCN": "zh-CN",
     "zh-rTW": "zh-TW",
 }
@@ -91,7 +119,7 @@ BRAND_PATTERN = re.compile(
     flags=re.IGNORECASE,
 )
 PROTECTED_PATTERN = re.compile(
-    rf"BattlyWorlds|Battly|{TOKEN_PATTERN.pattern}",
+    rf"{BRAND_PATTERN.pattern}|{TOKEN_PATTERN.pattern}",
     flags=re.IGNORECASE,
 )
 STRING_PATTERN_TEMPLATE = r'(<string\s+name="{name}"(?:\s+[^>]*)?>)(.*?)(</string>)'
@@ -131,9 +159,36 @@ def mask_tokens(value: str) -> tuple[str, dict[str, str]]:
 def restore_tokens(value: str, replacements: dict[str, str]) -> str:
     for token_id, original in replacements.items():
         if token_id not in value:
-            raise ValueError(f"Translation removed required token {token_id}")
-        value = value.replace(token_id, original)
+            token_number = token_id[5:8]
+            transliterated = re.search(
+                rf"[^\W\d_]*{re.escape(token_number)}[^\W\d_]*", value,
+                flags=re.UNICODE,
+            )
+            if transliterated is None:
+                transliterated = re.search(
+                    r"[^\W\d_]+\d{3}[^\W\d_]+", value,
+                    flags=re.UNICODE,
+                )
+            if transliterated is None:
+                raise ValueError(f"Translation removed required token {token_id}")
+            value = value[:transliterated.start()] + original + value[transliterated.end():]
+        else:
+            value = value.replace(token_id, original)
     return value.strip()
+
+
+def translate_preserving_tokens(source: str, target: str) -> str:
+    """Translate text around protected values when a provider drops placeholders."""
+    output: list[str] = []
+    cursor = 0
+    for match in PROTECTED_PATTERN.finditer(source):
+        plain = source[cursor:match.start()]
+        output.append(translate_request(plain, target) if re.search(r"[A-Za-z]", plain) else plain)
+        output.append(match.group(0))
+        cursor = match.end()
+    plain = source[cursor:]
+    output.append(translate_request(plain, target) if re.search(r"[A-Za-z]", plain) else plain)
+    return "".join(output).strip()
 
 
 def translate_request(text: str, target: str) -> str:
@@ -182,7 +237,10 @@ def translated_brand_aliases(target: str, cache: dict[str, str]) -> dict[str, st
         output = translate_request(f"\n{SPLITTER}\n".join(missing), target)
         parts = output.split(SPLITTER)
         if len(parts) != len(missing):
-            raise ValueError(f"Could not build protected brand aliases for {target}")
+            # Some minority-language translators rewrite the batch separator.
+            # Brand names are masked in normal strings, so identity aliases are
+            # the safest fallback and avoid corrupting product names.
+            parts = missing
         for brand, translated in zip(missing, parts):
             cache[f"brand:{target}:{brand}"] = translated.strip()
         save_cache(cache)
@@ -204,11 +262,18 @@ def translate_values(values: dict[str, str], target: str, cache: dict[str, str])
     pending: list[tuple[str, str, dict[str, str]]] = []
     aliases = translated_brand_aliases(target, cache)
     for key, source in values.items():
-        cache_key = f"v10:{target}:{key}:{source}"
+        cache_key = f"v11:{target}:{key}:{source}"
         if cache_key in cache:
             translated[key] = cache[cache_key]
             continue
         masked, tokens = mask_tokens(source)
+        residual = masked
+        for token_id in tokens:
+            residual = residual.replace(token_id, "")
+        if not re.search(r"[A-Za-z]", residual):
+            translated[key] = source
+            cache[cache_key] = source
+            continue
         pending.append((key, masked, tokens))
 
     batch: list[tuple[str, str, dict[str, str]]] = []
@@ -222,19 +287,15 @@ def translate_values(values: dict[str, str], target: str, cache: dict[str, str])
         output = translate_request(combined, target)
         parts = output.split(SPLITTER)
         if len(parts) != len(batch):
-            raise ValueError(
-                f"Translator returned {len(parts)} segments for {len(batch)} inputs ({target})"
-            )
+            parts = [translate_request(item[1], target) for item in batch]
         for (key, _masked, tokens), part in zip(batch, parts):
             try:
                 value = restore_tokens(part, tokens)
-            except ValueError as error:
-                raise ValueError(
-                    f"{target}:{key}: {error}; translated segment={part!r}"
-                ) from error
+            except ValueError:
+                value = translate_preserving_tokens(values[key], target)
             value = normalize_brands(value, values[key], aliases)
             translated[key] = value
-            cache[f"v10:{target}:{key}:{values[key]}"] = value
+            cache[f"v11:{target}:{key}:{values[key]}"] = value
         save_cache(cache)
         batch = []
         batch_size = 0

@@ -2,7 +2,7 @@
 
 Esta guía deja el repositorio listo para GitHub sin subir secretos y separa claramente pruebas de producción.
 
-La versión preparada por este documento es Battly Mobile `2.0.7` (`versionCode 10000014`).
+La versión preparada por este documento es Battly Mobile `2.1.1` (`versionCode 10000018`).
 
 ## Variantes
 
@@ -162,12 +162,12 @@ Si falla una librería precompilada, hay que recompilarla con NDK r28+ y:
 -Wl,-z,max-page-size=16384 -Wl,-z,common-page-size=16384
 ```
 
-La configuración de publicación de Battly Mobile 2.0.7 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
+La configuración de publicación de Battly Mobile 2.1.1 mantiene estas garantías y debe validarse con los comandos de la sección anterior antes de crear cada tag:
 
 - `.\gradlew :app_pojavlauncher:assembleGplay :app_pojavlauncher:bundleGplay --console=plain` genera y firma correctamente el APK para GitHub y el AAB para Google Play.
 - El AAB contiene `arm64-v8a` y `armeabi-v7a` en `base/lib` y no empaqueta el runtime Java 8. Los assets LWJGL conservan sus cuatro arquitecturas porque se extraen en tiempo de ejecución.
 - `verify-native-16kb.ps1` valida correctamente todas las librerías de `base/lib` y las librerías LWJGL extraíbles incluidas como assets.
-- El AAB firmado de 2.0.7 pesa aproximadamente 165 MB y está listo para la validación de Google Play.
+- El AAB firmado de 2.1.1 pesa aproximadamente 194 MB y queda validado para Google Play.
 
 Las publicaciones salen de una rama con un commit raíz limpio y nunca deben mezclar el historial importado. La rama local antigua `v3_openjdk` conserva un `app_pojavlauncher/upload.jks` histórico; esa clave debe considerarse comprometida y rotarse en Google Play Console. El branch limpio elimina el fichero y su historial de la referencia pública, manteniendo la rama antigua únicamente como respaldo local.
 
@@ -225,4 +225,4 @@ El control de release usa Android Lint con `abortOnError = true`. Los avisos her
 4. `adb install .\app_pojavlauncher\build\outputs\apk\debug\app_pojavlauncher-debug.apk`
 5. `.\gradlew :app_pojavlauncher:bundleGplay --console=plain`
 6. Verificar 16 KB con el script anterior.
-7. Confirmar que `versionName` es `2.0.7` y `versionCode` es `10000014` en el manifest fusionado o con `apkanalyzer`.
+7. Confirmar que `versionName` es `2.1.1` y `versionCode` es `10000018` en el manifest fusionado o con `apkanalyzer`.

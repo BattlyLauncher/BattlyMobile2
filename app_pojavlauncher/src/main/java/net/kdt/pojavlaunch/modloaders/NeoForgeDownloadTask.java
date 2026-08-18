@@ -41,15 +41,18 @@ public class NeoForgeDownloadTask implements Runnable, Tools.DownloaderFeedback 
 
     @Override
     public void run() {
-        if(determineDownloadUrl()) {
-            downloadNeoForge();
+        try {
+            if(determineDownloadUrl()) {
+                downloadNeoForge();
+            }
+        } finally {
+            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
         }
-        ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
     }
 
     @Override
     public void updateProgress(int curr, int max) {
-        int progress100 = (int)(((float)curr / (float)max)*100f);
+        int progress100 = max > 0 ? (int)(((float)curr / (float)max)*100f) : 0;
         ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, progress100, R.string.forge_dl_progress, mLoaderVersion);
     }
 
@@ -59,10 +62,13 @@ public class NeoForgeDownloadTask implements Runnable, Tools.DownloaderFeedback 
             File destinationFile = downloadVerifiedInstaller();
             ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
             NeoForgeInstaller.install(mContext, destinationFile, mLoaderVersion, mCreateProfile);
+            ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 100, R.string.modloader_installing);
             mListener.onDownloadFinished(null);
         }catch (FileNotFoundException e) {
             mListener.onDataNotAvailable();
         } catch (IOException e) {
+            mListener.onDownloadError(e);
+        } catch (RuntimeException e) {
             mListener.onDownloadError(e);
         }
     }

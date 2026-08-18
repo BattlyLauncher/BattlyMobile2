@@ -6,6 +6,7 @@ import android.app.*;
 import android.content.*;
 import android.content.res.*;
 import android.os.*;
+import android.webkit.WebView;
 
 import android.util.*;
 import java.io.*;
@@ -26,6 +27,7 @@ public class PojavApplication extends Application {
 	public static final String CRASH_REPORT_TAG = "PojavCrashReport";
 	public static final ExecutorService sExecutorService = new ThreadPoolExecutor(4, 4, 500, TimeUnit.MILLISECONDS,  new LinkedBlockingQueue<>());
 	private static PojavApplication sInstance;
+	private boolean webViewDirectoryConfigured;
 
 	public static Context getAppContext() {
 		return sInstance;
@@ -33,6 +35,8 @@ public class PojavApplication extends Application {
 	
 	@Override
 	public void onCreate() {
+		super.onCreate();
+		if (!webViewDirectoryConfigured) configureWebViewDataDirectory(this);
 		sInstance = this;
 		ContextExecutor.setApplication(this);
 		Telemetry.initialize(this);
@@ -62,7 +66,6 @@ public class PojavApplication extends Application {
 		});
 		
 		try {
-			super.onCreate();
 			if(Tools.checkStorageRoot(this)){
 				// Implicitly initializes early constants and storage constants.
 				// Required to run the main activity properly.
@@ -81,6 +84,9 @@ public class PojavApplication extends Application {
 			// required to draw the first frame, so keep it off every Activity's startup.
 			if (Tools.checkStorageRoot(this)) {
 				sExecutorService.execute(BattlyControlLayouts::migrateDefaultPerformanceWidget);
+				if (getPackageName().equals(currentProcessName(this))) {
+					BattlyComponentUpdater.scheduleBackgroundCheck(this);
+				}
 			}
 			//Force x86 lib directory for Asus x86 based zenfones
 			if(Architecture.isx86Device() && Architecture.is32BitsDevice()){
@@ -97,6 +103,44 @@ public class PojavApplication extends Application {
 		}
 	}
 
+	private void configureWebViewDataDirectory(Context context) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.P) return;
+		String suffix = webViewSuffixForProcess(context.getPackageName(), currentProcessName(context));
+		if (suffix == null) return;
+		try {
+			WebView.setDataDirectorySuffix(suffix);
+			webViewDirectoryConfigured = true;
+			Log.i("BattlyWebView", "Using isolated WebView directory: " + suffix);
+		} catch (IllegalStateException exception) {
+			Log.e("BattlyWebView", "WebView was initialized before process isolation", exception);
+		}
+	}
+
+	private static String currentProcessName(Context context) {
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+			return Application.getProcessName();
+		}
+		ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+		if (manager != null) {
+			List<ActivityManager.RunningAppProcessInfo> processes = manager.getRunningAppProcesses();
+			if (processes != null) {
+				int pid = android.os.Process.myPid();
+				for (ActivityManager.RunningAppProcessInfo process : processes) {
+					if (process.pid == pid) return process.processName;
+				}
+			}
+		}
+		return context.getPackageName();
+	}
+
+	static String webViewSuffixForProcess(String packageName, String processName) {
+		if (processName == null || processName.equals(packageName)) return null;
+		int separator = processName.indexOf(':');
+		String raw = separator >= 0 ? processName.substring(separator + 1) : processName;
+		String suffix = raw.replaceAll("[^A-Za-z0-9_.-]", "_");
+		return suffix.isEmpty() ? "secondary" : suffix;
+	}
+
 	@Override
 	public void onTerminate() {
 		super.onTerminate();
@@ -106,6 +150,7 @@ public class PojavApplication extends Application {
 	@Override
     protected void attachBaseContext(Context base) {
         super.attachBaseContext(base);
+		configureWebViewDataDirectory(base);
     }
 
     @Override

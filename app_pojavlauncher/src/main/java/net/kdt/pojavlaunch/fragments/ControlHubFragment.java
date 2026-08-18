@@ -149,7 +149,7 @@ public class ControlHubFragment extends Fragment {
         params.setMargins(0, dp(12), 0, 0);
         parent.addView(card, params);
 
-        card.addView(icon(R.drawable.ic_battly_keyboard_line, 48, 11, 0x2037E9C5));
+        card.addView(icon(R.drawable.ic_battly_gamepad_line, 48, 11, 0x2037E9C5));
 
         LinearLayout texts = new LinearLayout(requireContext());
         texts.setOrientation(LinearLayout.VERTICAL);

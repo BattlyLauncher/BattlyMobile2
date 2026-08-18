@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <style name="BattlyLogCompactChip">
+        <item name="android:layout_width">82dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:background">@drawable/bg_battly_form_field</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingLeft">8dp</item>
+        <item name="android:paddingRight">8dp</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="BattlyLogCompactFilter">
+        <item name="android:layout_width">68dp</item>
+        <item name="android:layout_height">30dp</item>
+        <item name="android:background">@drawable/bg_battly_button_secondary</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textColor">#D9E5EB</item>
+        <item name="android:textSize">9sp</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+</resources>

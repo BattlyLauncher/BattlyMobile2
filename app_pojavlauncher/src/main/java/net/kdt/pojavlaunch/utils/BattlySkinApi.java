@@ -43,6 +43,7 @@ public final class BattlySkinApi {
         SkinLibrary library = new SkinLibrary();
         library.username = auth.username;
         library.establishedSkinId = response.optString("established", "");
+        library.slim = response.optBoolean("slim", false);
         JSONArray skins = response.optJSONArray("skins");
         if (skins != null) {
             for (int i = 0; i < skins.length(); i++) {
@@ -336,6 +337,7 @@ public final class BattlySkinApi {
     public static class SkinLibrary {
         public String username;
         public String establishedSkinId;
+        public boolean slim;
         public final List<SkinEntry> skins = new ArrayList<>();
     }
 

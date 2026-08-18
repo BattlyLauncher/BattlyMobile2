@@ -29,6 +29,7 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
+import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -81,7 +82,9 @@ public class ModpackInstaller {
         applySourceMetadata(profile, modDetail, selectedVersion);
         writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
 
-        LauncherProfiles.mainProfileJson.profiles.put(modpackName, profile);
+        String profileKey = UUID.randomUUID().toString();
+        profile.battlyInstanceId = profileKey;
+        LauncherProfiles.mainProfileJson.profiles.put(profileKey, profile);
         LauncherProfiles.write();
         ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 96,
                 R.string.modpack_import_finalizing);
@@ -173,7 +176,9 @@ public class ModpackInstaller {
             profile.sourceVersionName = profile.sourceVersionId;
             profile.sourceHash = hash;
             writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
-            LauncherProfiles.mainProfileJson.profiles.put(modpackName, profile);
+            String profileKey = UUID.randomUUID().toString();
+            profile.battlyInstanceId = profileKey;
+            LauncherProfiles.mainProfileJson.profiles.put(profileKey, profile);
             LauncherProfiles.write();
             ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 96,
                     R.string.modpack_import_finalizing);

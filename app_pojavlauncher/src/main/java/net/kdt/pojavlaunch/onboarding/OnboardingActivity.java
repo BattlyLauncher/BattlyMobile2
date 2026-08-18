@@ -28,7 +28,7 @@ import java.util.List;
 
 public class OnboardingActivity extends AppCompatActivity {
     public static final String EXTRA_WHATS_NEW = "battly_whats_new";
-    public static final String PREF_WHATS_NEW_SEEN = "battly_whats_new_seen_2_0_1_management_v1";
+    public static final String PREF_WHATS_NEW_SEEN = "battly_whats_new_seen_2_1_0_v1";
 
     private ViewPager2 viewPager;
     private OnboardingAdapter adapter;
@@ -115,14 +115,14 @@ public class OnboardingActivity extends AppCompatActivity {
         if (whatsNewMode) {
             slides.add(new OnboardingSlide(R.string.battly_whats_new_title,
                     R.string.battly_whats_new_desc, R.drawable.logo));
-            slides.add(new OnboardingSlide(R.string.battly_whats_new_instances_title,
-                    R.string.battly_whats_new_instances_desc, R.drawable.minecraft_chest));
-            slides.add(new OnboardingSlide(R.string.battly_whats_new_worlds_title,
-                    R.string.battly_whats_new_worlds_desc, R.drawable.minecraft_filled_map));
-            slides.add(new OnboardingSlide(R.string.battly_whats_new_compatibility_title,
-                    R.string.battly_whats_new_compatibility_desc, R.drawable.minecraft_book));
             slides.add(new OnboardingSlide(R.string.battly_whats_new_controllers_title,
                     R.string.battly_whats_new_controllers_desc, R.drawable.ic_battly_gamepad_line));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_instances_title,
+                    R.string.battly_whats_new_instances_desc, R.drawable.minecraft_chest));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_compatibility_title,
+                    R.string.battly_whats_new_compatibility_desc, R.drawable.minecraft_book));
+            slides.add(new OnboardingSlide(R.string.battly_whats_new_worlds_title,
+                    R.string.battly_whats_new_worlds_desc, R.drawable.minecraft_filled_map));
             slides.add(new OnboardingSlide(R.string.battly_whats_new_recovery_title,
                     R.string.battly_whats_new_recovery_desc, R.drawable.minecraft_diamond_pickaxe));
             return;

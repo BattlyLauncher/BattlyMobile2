@@ -4,14 +4,35 @@ import static org.lwjgl.glfw.CallbackBridge.sGamepadAxisBuffer;
 import static org.lwjgl.glfw.CallbackBridge.sGamepadButtonBuffer;
 
 import android.view.KeyEvent;
+import android.view.InputDevice;
 import android.view.MotionEvent;
+
+import net.kdt.pojavlaunch.customcontrols.gamepad.ControllerTypeResolver;
 
 import fr.spse.gamepad_remapper.GamepadHandler;
 
 public class DirectGamepad implements GamepadHandler {
+    private final ControllerTypeResolver.Style mControllerStyle;
+    private final int mRightHorizontalAxis;
+    private final int mRightVerticalAxis;
+
+    public DirectGamepad() {
+        this(null, ControllerTypeResolver.Style.AUTO);
+    }
+
+    public DirectGamepad(InputDevice inputDevice, ControllerTypeResolver.Style requestedStyle) {
+        mControllerStyle = ControllerTypeResolver.resolve(requestedStyle, inputDevice);
+        int[] axes = ControllerTypeResolver.resolveRightStickAxes(inputDevice);
+        mRightHorizontalAxis = axes[0];
+        mRightVerticalAxis = axes[1];
+    }
+
     @Override
     public void handleGamepadInput(int keycode, float value) {
+        keycode = ControllerTypeResolver.normalizeKeyCode(mControllerStyle, keycode);
         int gKeycode = -1, gAxis = -1;
+        if (keycode == mRightHorizontalAxis) gAxis = GamepadKeycodes.GLFW_GAMEPAD_AXIS_RIGHT_X;
+        else if (keycode == mRightVerticalAxis) gAxis = GamepadKeycodes.GLFW_GAMEPAD_AXIS_RIGHT_Y;
         switch (keycode) {
             case KeyEvent.KEYCODE_BUTTON_A: gKeycode = GamepadKeycodes.GLFW_GAMEPAD_BUTTON_A; break;
             case KeyEvent.KEYCODE_BUTTON_B: gKeycode = GamepadKeycodes.GLFW_GAMEPAD_BUTTON_B; break;
@@ -45,8 +66,6 @@ public class DirectGamepad implements GamepadHandler {
                 return;
             case MotionEvent.AXIS_X: gAxis = GamepadKeycodes.GLFW_GAMEPAD_AXIS_LEFT_X; break;
             case MotionEvent.AXIS_Y: gAxis = GamepadKeycodes.GLFW_GAMEPAD_AXIS_LEFT_Y; break;
-            case MotionEvent.AXIS_Z: gAxis = GamepadKeycodes.GLFW_GAMEPAD_AXIS_RIGHT_X; break;
-            case MotionEvent.AXIS_RZ: gAxis = GamepadKeycodes.GLFW_GAMEPAD_AXIS_RIGHT_Y; break;
             case MotionEvent.AXIS_HAT_X:
                 sGamepadButtonBuffer.put(
                         GamepadKeycodes.GLFW_GAMEPAD_BUTTON_DPAD_LEFT,

@@ -16,11 +16,12 @@
             android:entryValues="@array/mg_renderer_values_angle"
             app2:useSimpleSummaryProvider="true"/>
         <androidx.preference.ListPreference
-            android:title="@string/mg_renderer_multidraw"
-            android:key="mg_renderer_setting_multidraw"
-            android:defaultValue="0"
-            android:entries="@array/mg_renderer_names_multidraw"
-            android:entryValues="@array/mg_renderer_values_multidraw"
+            android:title="@string/mg_renderer_multidraw_order"
+            android:summary="@string/mg_renderer_multidraw_order_summary"
+            android:key="mg_renderer_multidraw_order"
+            android:defaultValue=""
+            android:entries="@array/mg_renderer_names_multidraw_order"
+            android:entryValues="@array/mg_renderer_values_multidraw_order"
             app2:useSimpleSummaryProvider="true"/>
         <androidx.preference.ListPreference
             android:title="@string/mg_renderer_title_fsr"
@@ -42,11 +43,51 @@
             android:key="mg_renderer_setting_timerQueryExt"
             android:defaultValue="false" />
         <PreferenceCategory android:title="@string/preference_ANGLE_only">
-            <SwitchPreference
+            <androidx.preference.ListPreference
                 android:title="@string/mg_renderer_title_angleDepthClearFixMode"
                 android:summary="@string/mg_renderer_summary_angleDepthClearFixMode"
-                android:key="mg_renderer_setting_angleDepthClearFixMode"
-                android:defaultValue="false" />
+                android:key="mg_renderer_setting_angleDepthClearFixModeV2"
+                android:defaultValue="0"
+                android:entries="@array/mg_renderer_names_depth_clear"
+                android:entryValues="@array/mg_renderer_values_depth_clear"
+                app2:useSimpleSummaryProvider="true" />
+        </PreferenceCategory>
+        <PreferenceCategory android:title="@string/mg_renderer_multidraw_per_function">
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_multidraw_arrays"
+                android:key="mg_renderer_multidraw_arrays"
+                android:defaultValue=""
+                android:entries="@array/mg_renderer_names_md_arrays"
+                android:entryValues="@array/mg_renderer_values_md_arrays"
+                app2:useSimpleSummaryProvider="true" />
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_multidraw_elements"
+                android:key="mg_renderer_multidraw_elements"
+                android:defaultValue=""
+                android:entries="@array/mg_renderer_names_md_elements"
+                android:entryValues="@array/mg_renderer_values_md_elements"
+                app2:useSimpleSummaryProvider="true" />
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_multidraw_base_vertex"
+                android:key="mg_renderer_multidraw_elements_base_vertex"
+                android:defaultValue=""
+                android:entries="@array/mg_renderer_names_md_base_vertex"
+                android:entryValues="@array/mg_renderer_values_md_base_vertex"
+                app2:useSimpleSummaryProvider="true" />
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_multidraw_arrays_indirect"
+                android:key="mg_renderer_multidraw_arrays_indirect"
+                android:defaultValue=""
+                android:entries="@array/mg_renderer_names_md_indirect"
+                android:entryValues="@array/mg_renderer_values_md_indirect"
+                app2:useSimpleSummaryProvider="true" />
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_multidraw_elements_indirect"
+                android:key="mg_renderer_multidraw_elements_indirect"
+                android:defaultValue=""
+                android:entries="@array/mg_renderer_names_md_indirect"
+                android:entryValues="@array/mg_renderer_values_md_indirect"
+                app2:useSimpleSummaryProvider="true" />
         </PreferenceCategory>
         <PreferenceCategory android:title="@string/preference_experimental_title">
             <SwitchPreference
@@ -64,11 +105,21 @@
                 android:summary="@string/mg_renderer_summary_dsaExt"
                 android:key="mg_renderer_dsaExt"
                 android:defaultValue="false" />
-            <SwitchPreference
-                android:title="@string/mg_renderer_title_multidrawCompute"
-                android:summary="@string/mg_renderer_summary_multidrawCompute"
-                android:key="mg_renderer_multidrawCompute"
-                android:defaultValue="false" />
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_custom_gl_version"
+                android:key="mg_renderer_custom_gl_version"
+                android:defaultValue="0"
+                android:entries="@array/mg_renderer_names_gl_version"
+                android:entryValues="@array/mg_renderer_values_gl_version"
+                app2:useSimpleSummaryProvider="true" />
+            <androidx.preference.ListPreference
+                android:title="@string/mg_renderer_hide_environment"
+                android:summary="@string/mg_renderer_hide_environment_summary"
+                android:key="mg_renderer_hide_environment"
+                android:defaultValue="0"
+                android:entries="@array/mg_renderer_names_hide_environment"
+                android:entryValues="@array/mg_renderer_values_hide_environment"
+                app2:useSimpleSummaryProvider="true" />
         </PreferenceCategory>
     </PreferenceCategory>
 </PreferenceScreen>

@@ -44,6 +44,7 @@ public class MicrosoftBackgroundLogin {
 
     private final boolean mIsRefresh;
     private final String mAuthCode;
+    private final MinecraftAccount mExistingAccount;
     private static final Map<Long, Integer> XSTS_ERRORS;
     static {
         XSTS_ERRORS = new ArrayMap<>();
@@ -63,8 +64,18 @@ public class MicrosoftBackgroundLogin {
     public long expiresAt;
 
     public MicrosoftBackgroundLogin(boolean isRefresh, String authCode){
+        this(isRefresh, authCode, null);
+    }
+
+    public MicrosoftBackgroundLogin(@NonNull MinecraftAccount account) {
+        this(true, account.msaRefreshToken, account);
+    }
+
+    private MicrosoftBackgroundLogin(boolean isRefresh, String authCode,
+                                     @Nullable MinecraftAccount existingAccount) {
         mIsRefresh = isRefresh;
         mAuthCode = authCode;
+        mExistingAccount = existingAccount;
     }
 
     /** Performs a full login, calling back listeners appropriately  */
@@ -85,7 +96,8 @@ public class MicrosoftBackgroundLogin {
                 fetchOwnedItems(mcToken);
                 checkMcProfile(mcToken);
 
-                MinecraftAccount acc = MinecraftAccount.load(mcName);
+                MinecraftAccount acc = mExistingAccount;
+                if(acc == null) acc = MinecraftAccount.load(mcName);
                 if(acc == null) acc = new MinecraftAccount();
                 acc.xuid = xsts[0];
                 acc.clientToken = "0"; /* FIXME */
@@ -140,6 +152,7 @@ public class MicrosoftBackgroundLogin {
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
             msRefreshToken = jo.getString("refresh_token");
+            persistRotatedRefreshToken();
             conn.disconnect();
             Log.i("MicrosoftLogin", "Microsoft access token acquired");
             return jo.getString("access_token");
@@ -239,8 +252,9 @@ public class MicrosoftBackgroundLogin {
         }
 
         if(conn.getResponseCode() >= 200 && conn.getResponseCode() < 300) {
-            expiresAt = System.currentTimeMillis() + 86400000;
             JSONObject jo = new JSONObject(Tools.read(conn.getInputStream()));
+            expiresAt = MicrosoftSessionTiming.calculateExpiryTime(
+                    System.currentTimeMillis(), jo.optLong("expires_in", 86400L));
             conn.disconnect();
             Log.i("MicrosoftLogin", "Minecraft services token acquired");
             mcToken = jo.getString("access_token");
@@ -249,6 +263,15 @@ public class MicrosoftBackgroundLogin {
         }else{
             throw getResponseThrowable(conn);
         }
+    }
+
+    private void persistRotatedRefreshToken() throws IOException {
+        if (!mIsRefresh || mExistingAccount == null || !Tools.isValidString(msRefreshToken)) {
+            return;
+        }
+        mExistingAccount.msaRefreshToken = msRefreshToken;
+        mExistingAccount.save();
+        Log.i("MicrosoftLogin", "Rotated Microsoft refresh token persisted");
     }
 
     private void fetchOwnedItems(String mcAccessToken) throws IOException {

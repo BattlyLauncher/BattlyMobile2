@@ -36,6 +36,8 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipFile;
+import java.util.jar.Attributes;
+import java.util.jar.Manifest;
 
 public class ModloaderInstallUtils {
     private static final String DEFAULT_LIBRARY_REPOSITORY = "https://libraries.minecraft.net/";
@@ -90,7 +92,7 @@ public class ModloaderInstallUtils {
         if (downloads.isEmpty()) return;
 
         int workers = AdaptiveDownloadPolicy.resolveWorkers(
-                context, true, AdaptiveDownloadPolicy.MIN_WORKERS, downloads.size());
+                LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT, downloads.size());
         Logger.appendToLog("Forge installer: prefetching " + downloads.size()
                 + " libraries with " + workers + " workers");
         ExecutorService executor = Executors.newFixedThreadPool(workers);
@@ -290,31 +292,36 @@ public class ModloaderInstallUtils {
                 return -1;
             }
 
-            String manifestString = Tools.read(zipFile.getInputStream(manifest));
-            String mainClass = Tools.extractUntilCharacter(manifestString, "Main-Class:", '\n');
+            String mainClass;
+            try (InputStream manifestStream = zipFile.getInputStream(manifest)) {
+                mainClass = new Manifest(manifestStream).getMainAttributes()
+                        .getValue(Attributes.Name.MAIN_CLASS);
+            }
             if (mainClass == null) {
                 return -1;
             }
 
-            String classPath = mainClass.trim().replace('.', '/') + ".class";
-            ZipEntry classEntry = zipFile.getEntry(classPath);
-            if (classEntry == null) {
-                return -1;
-            }
+            return getJavaVersion(zipFile, mainClass.trim().replace('.', '/') + ".class");
+        }
+    }
 
-            try (InputStream classStream = zipFile.getInputStream(classEntry)) {
-                byte[] classHeader = new byte[8];
-                if (classStream.read(classHeader) < 8) {
-                    return -1;
-                }
-                ByteBuffer byteBuffer = ByteBuffer.wrap(classHeader);
-                if (byteBuffer.getInt() != 0xCAFEBABE) {
-                    return -1;
-                }
-                byteBuffer.getShort();
-                short majorVersion = byteBuffer.getShort();
-                return majorVersion < 46 ? 2 : majorVersion - 44;
-            }
+    public static int getJavaVersion(File jarFile, String classPath) throws IOException {
+        try (ZipFile zipFile = new ZipFile(jarFile)) {
+            return getJavaVersion(zipFile, classPath);
+        }
+    }
+
+    private static int getJavaVersion(ZipFile zipFile, String classPath) throws IOException {
+        ZipEntry classEntry = zipFile.getEntry(classPath);
+        if (classEntry == null) return -1;
+        try (InputStream classStream = zipFile.getInputStream(classEntry)) {
+            byte[] classHeader = new byte[8];
+            if (classStream.read(classHeader) < 8) return -1;
+            ByteBuffer byteBuffer = ByteBuffer.wrap(classHeader);
+            if (byteBuffer.getInt() != 0xCAFEBABE) return -1;
+            byteBuffer.getShort();
+            int majorVersion = Short.toUnsignedInt(byteBuffer.getShort());
+            return majorVersion < 46 ? 2 : majorVersion - 44;
         }
     }
 
@@ -345,6 +352,13 @@ public class ModloaderInstallUtils {
         if (javaVersion < 0) {
             javaVersion = fallbackVersion;
         }
+        return MultiRTUtils.getNearestJreName(javaVersion);
+    }
+
+    public static String selectRuntimeForJar(File jarFile, String classPath,
+                                             int fallbackVersion) throws IOException {
+        int javaVersion = getJavaVersion(jarFile, classPath);
+        if (javaVersion < 0) javaVersion = fallbackVersion;
         return MultiRTUtils.getNearestJreName(javaVersion);
     }
 

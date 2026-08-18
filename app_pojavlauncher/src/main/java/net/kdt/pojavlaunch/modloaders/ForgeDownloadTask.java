@@ -8,6 +8,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
+import net.kdt.pojavlaunch.Logger;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -48,30 +49,52 @@ public class ForgeDownloadTask implements Runnable, Tools.DownloaderFeedback {
     }
     @Override
     public void run() {
-        if(determineDownloadUrl()) {
-            downloadForge();
+        try {
+            if(determineDownloadUrl()) {
+                downloadForge();
+            }
+        } finally {
+            ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
         }
-        ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
     }
 
     @Override
     public void updateProgress(int curr, int max) {
-        int progress100 = (int)(((float)curr / (float)max)*100f);
+        int progress100 = max > 0 ? (int)(((float)curr / (float)max)*100f) : 0;
         ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, progress100, R.string.forge_dl_progress, mFullVersion);
     }
 
     private void downloadForge() {
         ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 0, R.string.forge_dl_progress, mFullVersion);
         try {
-            File destinationFile = new File(Tools.DIR_CACHE, "forge-installer.jar");
-            byte[] buffer = new byte[8192];
-            DownloadUtils.downloadFileMonitored(mDownloadUrl, destinationFile, buffer, this);
+            String safeVersion = mFullVersion.replaceAll("[^A-Za-z0-9._-]", "_");
+            File destinationFile = new File(Tools.DIR_CACHE,
+                    "forge-" + safeVersion + "-installer.jar");
+            boolean cached = false;
+            if (destinationFile.isFile()) {
+                try {
+                    ModloaderInstallUtils.validateInstallerJar(destinationFile);
+                    cached = true;
+                    Logger.appendToLog("Forge installer: reusing cached installer " + mFullVersion);
+                } catch (IOException invalidCache) {
+                    //noinspection ResultOfMethodCallIgnored
+                    destinationFile.delete();
+                }
+            }
+            if (!cached) {
+                byte[] buffer = new byte[64 * 1024];
+                DownloadUtils.downloadFileMonitored(mDownloadUrl, destinationFile, buffer, this);
+                ModloaderInstallUtils.validateInstallerJar(destinationFile);
+            }
             ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 95, R.string.modloader_installing);
             ForgeInstaller.install(mContext, destinationFile, mCreateProfile);
+            ProgressKeeper.submitProgress(ProgressLayout.INSTALL_MODPACK, 100, R.string.modloader_installing);
             mListener.onDownloadFinished(null);
         }catch (FileNotFoundException e) {
             mListener.onDataNotAvailable();
         } catch (IOException e) {
+            mListener.onDownloadError(e);
+        } catch (RuntimeException e) {
             mListener.onDownloadError(e);
         }
     }

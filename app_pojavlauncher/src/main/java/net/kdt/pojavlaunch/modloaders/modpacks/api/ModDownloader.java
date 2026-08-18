@@ -5,7 +5,6 @@ import androidx.annotation.Nullable;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
-import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.utils.AdaptiveDownloadPolicy;
 
 import java.io.File;
@@ -16,16 +15,13 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 
 public class ModDownloader {
     private static final ThreadLocal<byte[]> sThreadLocalBuffer = new ThreadLocal<>();
     private final ThreadPoolExecutor mDownloadPool;
     private final AtomicBoolean mTerminator = new AtomicBoolean(false);
-    private final AtomicInteger mSubmittedTasks = new AtomicInteger(0);
     private final AtomicLong mDownloadSize = new AtomicLong(0);
-    private final int mMaxWorkers;
     private final Object mExceptionSyncPoint = new Object();
     private final File mDestinationDirectory;
     private final boolean mUseFileCount;
@@ -38,12 +34,9 @@ public class ModDownloader {
 
     public ModDownloader(File destinationDirectory, boolean useFileCount) {
         int workers = AdaptiveDownloadPolicy.resolveWorkers(
-                PojavApplication.getAppContext(),
-                LauncherPreferences.PREF_DOWNLOAD_THREADS_AUTO,
                 LauncherPreferences.PREF_DOWNLOAD_THREAD_COUNT);
-        this.mMaxWorkers = workers;
         this.mDownloadPool = new ThreadPoolExecutor(
-                AdaptiveDownloadPolicy.MIN_WORKERS, workers, 100, TimeUnit.MILLISECONDS,
+                workers, workers, 100, TimeUnit.MILLISECONDS,
                 new LinkedBlockingQueue<>());
         this.mDownloadPool.setRejectedExecutionHandler(new ThreadPoolExecutor.DiscardPolicy());
         this.mDestinationDirectory = destinationDirectory;
@@ -53,24 +46,13 @@ public class ModDownloader {
     public void submitDownload(int fileSize, String relativePath, @Nullable String downloadHash, String... url) {
         if(mUseFileCount) mTotalSize += 1;
         else mTotalSize += fileSize;
-        growPoolForWorkload();
         mDownloadPool.execute(new DownloadTask(url, new File(mDestinationDirectory, relativePath), downloadHash));
     }
 
     public void submitDownload(FileInfoProvider infoProvider) {
         if(!mUseFileCount) throw new RuntimeException("This method can only be used in a file-counting ModDownloader");
         mTotalSize += 1;
-        growPoolForWorkload();
         mDownloadPool.execute(new FileInfoQueryTask(infoProvider));
-    }
-
-    private void growPoolForWorkload() {
-        int taskCount = mSubmittedTasks.incrementAndGet();
-        int targetWorkers = Math.min(mMaxWorkers,
-                Math.max(AdaptiveDownloadPolicy.MIN_WORKERS, taskCount));
-        if (targetWorkers > mDownloadPool.getCorePoolSize()) {
-            mDownloadPool.setCorePoolSize(targetWorkers);
-        }
     }
 
     public void awaitFinish(Tools.DownloaderFeedback feedback) throws IOException {

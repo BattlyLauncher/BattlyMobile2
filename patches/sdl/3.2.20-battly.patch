@@ -1,12 +1,301 @@
-diff --git a/android-project/app/src/main/AndroidManifest.xml b/android-project/app/src/main/AndroidManifest.xml
-index f3a7cd5ce..4c262b35e 100644
---- a/android-project/app/src/main/AndroidManifest.xml
-+++ b/android-project/app/src/main/AndroidManifest.xml
-@@ -43,7 +43,6 @@
-     -->
+diff --git a/src/core/android/SDL_android.c b/src/core/android/SDL_android.c
+index 59ea5574b..5fb9e2420 100644
+--- a/src/core/android/SDL_android.c
++++ b/src/core/android/SDL_android.c
+@@ -31,6 +31,9 @@
+ #include "../../video/android/SDL_androidpen.h"
+ #include "../../video/android/SDL_androidvideo.h"
+ #include "../../video/android/SDL_androidwindow.h"
++#if defined(SDL_VIDEO_OPENGL_EGL)
++#include "../../video/android/SDL_androidgl.h"
++#endif
+ #include "../../joystick/android/SDL_sysjoystick_c.h"
+ #include "../../haptic/android/SDL_syshaptic_c.h"
+ #include "../../hidapi/android/hid.h"
+@@ -63,6 +66,9 @@
+ JNIEXPORT jstring JNICALL SDL_JAVA_INTERFACE(nativeGetVersion)(
+     JNIEnv *env, jclass cls);
  
-     <!-- Allow downloading to the external storage on Android 5.1 and older -->
--    <!-- <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" android:maxSdkVersion="22" /> -->
++JNIEXPORT jint JNICALL SDL_JAVA_INTERFACE(nativeGetRendererFps)(
++    JNIEnv *env, jclass cls);
++
+ JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeSetupJNI)(
+     JNIEnv *env, jclass cls);
  
-     <!-- Allow access to Bluetooth devices -->
-     <!-- Currently this is just for Steam Controller support and requires setting SDL_HINT_JOYSTICK_HIDAPI_STEAM -->
+@@ -215,6 +221,7 @@ JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(onNativeFileDialog)(
+ 
+ static JNINativeMethod SDLActivity_tab[] = {
+     { "nativeGetVersion", "()Ljava/lang/String;", SDL_JAVA_INTERFACE(nativeGetVersion) },
++    { "nativeGetRendererFps", "()I", SDL_JAVA_INTERFACE(nativeGetRendererFps) },
+     { "nativeSetupJNI", "()V", SDL_JAVA_INTERFACE(nativeSetupJNI) },
+     { "nativeInitMainThread", "()V", SDL_JAVA_INTERFACE(nativeInitMainThread) },
+     { "nativeCleanupMainThread", "()V", SDL_JAVA_INTERFACE(nativeCleanupMainThread) },
+@@ -615,6 +622,15 @@ JNIEXPORT jstring JNICALL SDL_JAVA_INTERFACE(nativeGetVersion)(JNIEnv *env, jcla
+     return (*env)->NewStringUTF(env, version);
+ }
+ 
++JNIEXPORT jint JNICALL SDL_JAVA_INTERFACE(nativeGetRendererFps)(JNIEnv *env, jclass cls)
++{
++#if defined(SDL_VIDEO_OPENGL_EGL)
++    return Android_GLES_GetRendererFPS();
++#else
++    return 0;
++#endif
++}
++
+ // Activity initialization -- called before SDL_main() to initialize JNI bindings
+ JNIEXPORT void JNICALL SDL_JAVA_INTERFACE(nativeSetupJNI)(JNIEnv *env, jclass cls)
+ {
+diff --git a/src/video/android/SDL_androidgl.c b/src/video/android/SDL_androidgl.c
+index fb98d03a6..6b6c25321 100644
+--- a/src/video/android/SDL_androidgl.c
++++ b/src/video/android/SDL_androidgl.c
+@@ -36,8 +36,35 @@
+ 
+ #include <dlfcn.h>
+ 
++static Uint64 battly_fps_window_start_ns;
++static int battly_fps_window_frames;
++static int battly_renderer_fps;
++
++int Android_GLES_GetRendererFPS(void)
++{
++    return battly_renderer_fps;
++}
++
++static void Android_GLES_RecordFrame(void)
++{
++    const Uint64 now = SDL_GetTicksNS();
++    if (battly_fps_window_start_ns == 0) {
++        battly_fps_window_start_ns = now;
++    }
++    battly_fps_window_frames++;
++    const Uint64 elapsed = now - battly_fps_window_start_ns;
++    if (elapsed >= SDL_NS_PER_SECOND) {
++        battly_renderer_fps = (int)(((Uint64)battly_fps_window_frames * SDL_NS_PER_SECOND) / elapsed);
++        battly_fps_window_frames = 0;
++        battly_fps_window_start_ns = now;
++    }
++}
++
+ bool Android_GLES_MakeCurrent(SDL_VideoDevice *_this, SDL_Window *window, SDL_GLContext context)
+ {
++    if (window && Android_Window != window) {
++        Android_MakeWindowCurrent(_this, window);
++    }
+     if (window && context) {
+         return SDL_EGL_MakeCurrent(_this, window->internal->egl_surface, context);
+     } else {
+@@ -73,7 +100,16 @@ bool Android_GLES_SwapWindow(SDL_VideoDevice *_this, SDL_Window *window)
+ 
+     /*_this->egl_data->eglWaitNative(EGL_CORE_NATIVE_ENGINE);
+     _this->egl_data->eglWaitGL();*/
++    if (window->internal->surface_changed) {
++        SDL_GLContext current_context = SDL_GL_GetCurrentContext();
++        SDL_EGL_MakeCurrent(_this, window->internal->egl_surface, (EGLContext)current_context);
++        window->internal->surface_changed = false;
++    }
++
+     result = SDL_EGL_SwapBuffers(_this, window->internal->egl_surface);
++    if (result) {
++        Android_GLES_RecordFrame();
++    }
+ 
+     Android_UnlockActivityMutex();
+ 
+diff --git a/src/video/android/SDL_androidgl.h b/src/video/android/SDL_androidgl.h
+index d287fca17..e5bd10477 100644
+--- a/src/video/android/SDL_androidgl.h
++++ b/src/video/android/SDL_androidgl.h
+@@ -26,6 +26,7 @@
+ extern SDL_GLContext Android_GLES_CreateContext(SDL_VideoDevice *_this, SDL_Window *window);
+ extern bool Android_GLES_MakeCurrent(SDL_VideoDevice *_this, SDL_Window *window, SDL_GLContext context);
+ extern bool Android_GLES_SwapWindow(SDL_VideoDevice *_this, SDL_Window *window);
++extern int Android_GLES_GetRendererFPS(void);
+ extern bool Android_GLES_LoadLibrary(SDL_VideoDevice *_this, const char *path);
+ 
+ #endif // SDL_androidgl_h_
+diff --git a/src/video/android/SDL_androidwindow.c b/src/video/android/SDL_androidwindow.c
+index 4652b5f6b..377e5840d 100644
+--- a/src/video/android/SDL_androidwindow.c
++++ b/src/video/android/SDL_androidwindow.c
+@@ -36,9 +36,37 @@
+ // Currently only one window
+ SDL_Window *Android_Window = NULL;
+ 
+-bool Android_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_PropertiesID create_props)
++static bool Android_CreateOffscreenWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_PropertiesID create_props)
+ {
+     SDL_WindowData *data;
++
++    window->x = 0;
++    window->y = 0;
++    window->w = Android_SurfaceWidth;
++    window->h = Android_SurfaceHeight;
++
++    data = (SDL_WindowData *)SDL_calloc(1, sizeof(*data));
++    if (!data) {
++        return false;
++    }
++
++#ifdef SDL_VIDEO_OPENGL_EGL
++    if (window->flags & SDL_WINDOW_OPENGL) {
++        data->egl_surface = SDL_EGL_CreateOffscreenSurface(_this, window->w, window->h);
++        if (data->egl_surface == EGL_NO_SURFACE) {
++            SDL_free(data);
++            return false;
++        }
++    }
++    SDL_SetPointerProperty(SDL_GetWindowProperties(window), SDL_PROP_WINDOW_ANDROID_SURFACE_POINTER, data->egl_surface);
++#endif
++
++    window->internal = data;
++    return true;
++}
++
++bool Android_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_PropertiesID create_props)
++{
+     bool result = true;
+ 
+     if (!Android_WaitActiveAndLockActivity()) {
+@@ -46,10 +74,13 @@ bool Android_CreateWindow(SDL_VideoDevice *_this, SDL_Window *window, SDL_Proper
+     }
+ 
+     if (Android_Window) {
+-        result = SDL_SetError("Android only supports one window");
++        SDL_Log("Creating an offscreen Android window for a secondary SDL window");
++        result = Android_CreateOffscreenWindow(_this, window, create_props);
+         goto endfunction;
+     }
+ 
++    SDL_WindowData *data;
++
+     // Set orientation
+     Android_JNI_SetOrientation(window->w, window->h, window->flags & SDL_WINDOW_RESIZABLE, SDL_GetHint(SDL_HINT_ORIENTATIONS));
+ 
+@@ -107,6 +138,9 @@ endfunction:
+ 
+ void Android_SetWindowTitle(SDL_VideoDevice *_this, SDL_Window *window)
+ {
++    if (window != Android_Window) {
++        return;
++    }
+     Android_JNI_SetActivityTitle(window->title);
+ }
+ 
+@@ -165,15 +199,86 @@ endfunction:
+ 
+ void Android_MinimizeWindow(SDL_VideoDevice *_this, SDL_Window *window)
+ {
++    if (window != Android_Window) {
++        return;
++    }
+     Android_JNI_MinimizeWindow();
+ }
+ 
+ void Android_SetWindowResizable(SDL_VideoDevice *_this, SDL_Window *window, bool resizable)
+ {
++    if (window != Android_Window) {
++        return;
++    }
+     // Set orientation
+     Android_JNI_SetOrientation(window->w, window->h, window->flags & SDL_WINDOW_RESIZABLE, SDL_GetHint(SDL_HINT_ORIENTATIONS));
+ }
+ 
++void Android_MakeWindowCurrent(SDL_VideoDevice *_this, SDL_Window *window)
++{
++    SDL_WindowData *data;
++    SDL_WindowData *old_data;
++    ANativeWindow *native_window;
++
++    if (!window || window == Android_Window || !window->internal || !Android_Window || !Android_Window->internal) {
++        return;
++    }
++
++    data = window->internal;
++    old_data = Android_Window->internal;
++    native_window = Android_JNI_GetNativeWindow();
++    if (!native_window) {
++        SDL_Log("Failed to fetch ANativeWindow while switching SDL windows");
++        return;
++    }
++
++    data->native_window = native_window;
++    old_data->native_window = NULL;
++
++#ifdef SDL_VIDEO_OPENGL_EGL
++    _this->egl_data->eglMakeCurrent(_this->egl_data->egl_display,
++                                    EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
++    if (old_data->egl_surface != EGL_NO_SURFACE) {
++        SDL_EGL_DestroySurface(_this, old_data->egl_surface);
++    }
++    if (data->egl_surface != EGL_NO_SURFACE) {
++        SDL_EGL_DestroySurface(_this, data->egl_surface);
++    }
++
++    if (Android_Window->flags & SDL_WINDOW_OPENGL) {
++        old_data->egl_surface = SDL_EGL_CreateOffscreenSurface(_this,
++                                                               Android_SurfaceWidth,
++                                                               Android_SurfaceHeight);
++        old_data->surface_changed = true;
++    }
++    if (window->flags & SDL_WINDOW_OPENGL) {
++        data->egl_surface = SDL_EGL_CreateSurface(_this, window, (NativeWindowType)data->native_window);
++        if (data->egl_surface == EGL_NO_SURFACE) {
++            SDL_Log("Failed to create EGLSurface on the active SDL window");
++        }
++        data->surface_changed = true;
++    }
++#endif
++
++    Android_Window = window;
++}
++
++static void Android_DestroyOffscreenWindow(SDL_VideoDevice *_this, SDL_Window *window)
++{
++    if (!window->internal) {
++        return;
++    }
++
++    SDL_WindowData *data = window->internal;
++#ifdef SDL_VIDEO_OPENGL_EGL
++    if (data->egl_surface != EGL_NO_SURFACE) {
++        SDL_EGL_DestroySurface(_this, data->egl_surface);
++    }
++#endif
++    SDL_free(window->internal);
++    window->internal = NULL;
++}
++
+ void Android_DestroyWindow(SDL_VideoDevice *_this, SDL_Window *window)
+ {
+     Android_LockActivityMutex();
+@@ -196,6 +301,8 @@ void Android_DestroyWindow(SDL_VideoDevice *_this, SDL_Window *window)
+             SDL_free(window->internal);
+             window->internal = NULL;
+         }
++    } else {
++        Android_DestroyOffscreenWindow(_this, window);
+     }
+ 
+     Android_UnlockActivityMutex();
+diff --git a/src/video/android/SDL_androidwindow.h b/src/video/android/SDL_androidwindow.h
+index cc24da96e..08dcfcd5a 100644
+--- a/src/video/android/SDL_androidwindow.h
++++ b/src/video/android/SDL_androidwindow.h
+@@ -31,6 +31,7 @@ extern void Android_SetWindowTitle(SDL_VideoDevice *_this, SDL_Window *window);
+ extern SDL_FullscreenResult Android_SetWindowFullscreen(SDL_VideoDevice *_this, SDL_Window *window, SDL_VideoDisplay *display, SDL_FullscreenOp fullscreen);
+ extern void Android_MinimizeWindow(SDL_VideoDevice *_this, SDL_Window *window);
+ extern void Android_SetWindowResizable(SDL_VideoDevice *_this, SDL_Window *window, bool resizable);
++extern void Android_MakeWindowCurrent(SDL_VideoDevice *_this, SDL_Window *window);
+ 
+ extern void Android_DestroyWindow(SDL_VideoDevice *_this, SDL_Window *window);
+ extern SDL_Window *Android_Window;
+@@ -42,6 +43,7 @@ struct SDL_WindowData
+     EGLContext egl_context; // We use this to preserve the context when losing focus
+     int has_swap_interval;  // Save/Restore the swap interval / vsync
+     int swap_interval;
++    bool surface_changed;
+ #endif
+     bool backup_done;
+     ANativeWindow *native_window;
