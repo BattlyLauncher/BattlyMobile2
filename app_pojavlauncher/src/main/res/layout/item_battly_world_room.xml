@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_margin="5dp"
+    android:background="@drawable/bg_battly_form_section"
+    android:gravity="center_vertical"
+    android:minHeight="92dp"
+    android:orientation="horizontal"
+    android:padding="14dp">
+
+    <ImageView
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:contentDescription="@null"
+        android:scaleType="centerInside"
+        android:src="@drawable/logo" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/battlyworlds_room_title"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:fontFamily="@font/noto_sans_bold"
+            android:maxLines="1"
+            android:textColor="#FFFFFFFF"
+            android:textSize="16sp" />
+
+        <TextView
+            android:id="@+id/battlyworlds_room_meta"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            android:ellipsize="end"
+            android:maxLines="1"
+            android:textColor="#C6D6E3"
+            android:textSize="12sp" />
+
+        <TextView
+            android:id="@+id/battlyworlds_room_code"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:textColor="#8ADBC6"
+            android:textSize="11sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+    <ImageButton
+        android:id="@+id/battlyworlds_room_join"
+        android:layout_width="44dp"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_battly_button_primary"
+        android:contentDescription="@string/battlyworlds_join"
+        android:padding="12dp"
+        android:src="@drawable/ic_social_join"
+        android:tint="#FF10212B" />
+</LinearLayout>

@@ -60,6 +60,12 @@
             android:value="@string/admob_app_id" />
 
         <activity
+            android:name=".utils.BattlyRewardedInterstitialActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:theme="@style/BattlyFullscreenDialog" />
+
+        <activity
             android:name=".TestStorageActivity"
             android:exported="true"
             android:label="@string/app_short_name"

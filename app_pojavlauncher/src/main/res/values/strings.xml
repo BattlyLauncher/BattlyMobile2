@@ -2,7 +2,7 @@
 <resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
     <!-- App name part -->
     <string name="app_name">Battly Launcher</string>
-    <string name="launcher_mobile_badge">Mobile 2.1.1</string>
+    <string name="launcher_mobile_badge">Mobile 2.2.0</string>
     <string name="launcher_mobile_badge_dynamic">Mobile %1$s</string>
     <string name="credits_version_dynamic">Version %1$s</string>
     <string name="launcher_versions_button">Versions</string>
@@ -41,7 +41,7 @@
     <string name="launcher_version_unknown">Unknown</string>
     <string name="launcher_version_fallback">Version 1.21.9</string>
     <string name="launcher_download_modpack">Import modpack</string>
-    <string name="launcher_credits_title">Battly Launcher 2.1.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.0</string>
     <string name="launcher_news_title">Latest Battly news</string>
     <string name="launcher_news_battly">Battly news</string>
     <string name="launcher_news_minecraft">Minecraft news</string>
@@ -236,7 +236,7 @@
         &bull; OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j and more under their original licenses.<br/><br/>
         This app is not affiliated with Minecraft, Mojang or Microsoft.
     ]]></string>
-    <string name="credits_version">Version 2.1.1</string>
+    <string name="credits_version">Version 2.2.0</string>
     <string name="credits_based_on">Based on PojavLauncher and Boardwalk</string>
     <string name="credits_section_title">Credits</string>
     <string name="credits_primary_development">Main development</string>
@@ -721,6 +721,16 @@
     <string name="mod_dependency_install_button">Install dependencies</string>
     <string name="mod_detail_label_compat">Compatibility</string>
     <string name="mod_detail_label_version">Version to install</string>
+    <string name="mod_detail_step_loader">1. Choose the loader</string>
+    <string name="mod_detail_step_minecraft">2. Choose the Minecraft version</string>
+    <string name="mod_detail_step_content_version">3. Choose the content version</string>
+    <string name="mod_detail_choose_loader">Choose a loader</string>
+    <string name="mod_detail_choose_minecraft">Choose a Minecraft version</string>
+    <string name="mod_detail_choose_content_version">Choose a version</string>
+    <string name="mod_detail_search_minecraft">Search Minecraft versions…</string>
+    <string name="mod_detail_search_content_version">Search available versions…</string>
+    <string name="mod_detail_recommended">Recommended</string>
+    <string name="mod_detail_any_loader">Any loader</string>
     <string name="mod_detail_all_versions">All versions (%1$d)</string>
     <string name="mod_detail_minecraft_versions_count">%1$d Minecraft versions · %2$s</string>
     <string name="mod_detail_label_deps">Dependencies</string>
@@ -869,7 +879,7 @@
     <string name="onboarding_show_again">Show welcome again</string>
     <string name="onboarding_transition_title">Welcome to Battly</string>
     <string name="onboarding_transition_desc">Preparing your launcher...</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.1.1</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.0</string>
     <string name="battly_whats_new_desc">A major update for controllers, downloads, instances, performance and stability.</string>
     <string name="battly_whats_new_instances_title">Your instances, protected</string>
     <string name="battly_whats_new_instances_desc">Manage worlds, mods and installed content, create local backups, safely update modpacks and open them as soon as installation finishes.</string>
@@ -881,8 +891,8 @@
     <string name="battly_whats_new_controllers_desc">Set up PlayStation, Xbox and Nintendo Switch controllers with a guided assistant, animated 3D previews, stick calibration and per-instance mappings.</string>
     <string name="battly_whats_new_recovery_title">More stable, easier to fix</string>
     <string name="battly_whats_new_recovery_desc">The maintenance center detects damaged files and incompatible mods. FPS, real server ping, touch controls, ESC, crash recovery and translations have also improved.</string>
-    <string name="battly_whats_new_action_start">Explore 2.1.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.1.1 is ready</string>
+    <string name="battly_whats_new_action_start">Explore 2.2.0</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.0 is ready</string>
     <string name="battly_whats_new_transition_desc">Your profiles are intact and ready to play.</string>
     <!-- Vanilla installer strings -->
     <string name="vanilla_install_version_label">Minecraft version</string>
@@ -1056,6 +1066,31 @@
     <!-- BattlyWorlds -->
     <string name="global_copy">Copy</string>
     <string name="battlyworlds_title">BattlyWorlds</string>
+    <string name="battly_hub_title">Your Battly space</string>
+    <string name="battly_hub_subtitle">Choose what you want to manage.</string>
+    <string name="battly_hub_worlds_description">Host private rooms or join public Minecraft worlds.</string>
+    <string name="battly_hub_skins_description">Upload, preview and apply your Battly skins.</string>
+    <string name="battlyworlds_public_title">Public BattlyWorlds rooms</string>
+    <string name="battlyworlds_public_subtitle">Discover active worlds or join a private room with its code.</string>
+    <string name="battlyworlds_public_refresh">Refresh rooms</string>
+    <string name="battlyworlds_public_join_hint">Rooms are private by default. A host can publish one while playing.</string>
+    <string name="battlyworlds_join_code">Join with code</string>
+    <string name="battlyworlds_public_loading">Looking for active rooms…</string>
+    <string name="battlyworlds_public_empty">No public rooms are active right now.</string>
+    <string name="battlyworlds_public_available">Active rooms</string>
+    <string name="battlyworlds_public_error">Rooms could not be loaded. %1$s</string>
+    <string name="battlyworlds_public_room_fallback">%1$s’s world</string>
+    <string name="battlyworlds_public_room_meta">Minecraft %1$s · Hosted by %2$s</string>
+    <string name="battlyworlds_public_room_code">Code %1$s</string>
+    <string name="battlyworlds_private_room">Private room · only people with the code can join</string>
+    <string name="battlyworlds_public_room">Public room · visible in BattlyWorlds</string>
+    <string name="battlyworlds_room_private_short">Private</string>
+    <string name="battlyworlds_room_public_short">Public</string>
+    <string name="battlyworlds_public_enabled">This room is now public.</string>
+    <string name="battlyworlds_private_enabled">This room is now private.</string>
+    <string name="battlyworlds_public_login_required">Sign in with Battly to publish a room.</string>
+    <string name="battlyworlds_login_required">Sign in with a Battly account to use BattlyWorlds.</string>
+    <string name="battlyworlds_trailer_enter">Explore BattlyWorlds</string>
     <string name="battlyworlds_temporarily_disabled_title">BattlyWorlds temporarily disabled</string>
     <string name="battlyworlds_temporarily_disabled_short">BattlyWorlds is temporarily disabled.</string>
     <string name="battlyworlds_temporarily_disabled_message">BattlyWorlds is disabled while we resolve Google Play VPNService access. The feature will return once the review issue is cleared.</string>
@@ -1071,6 +1106,16 @@
     <string name="battlyworlds_invite_login_required">Sign in with Battly to invite friends directly.</string>
     <string name="battlyworlds_invite_no_friends">No Battly friends available.</string>
     <string name="battlyworlds_invite_sent">Invite sent to %1$s.</string>
+    <string name="battlyworlds_rewarded_invite_title">Invite one more friend</string>
+    <string name="battlyworlds_rewarded_invite_message">You have reached the 5 free invites. Watch a rewarded ad to invite this friend. You can unlock %1$d more invites this way.</string>
+    <string name="battlyworlds_rewarded_watch_ad">Watch ad</string>
+    <string name="battlyworlds_rewarded_not_completed">The ad was not completed, so no extra invite was used.</string>
+    <string name="battlyworlds_rewarded_ad_unavailable_title">Ad unavailable</string>
+    <string name="battlyworlds_rewarded_ad_unavailable_message">The rewarded ad could not be loaded. Check your connection and try again.\n\nDetails: %1$s</string>
+    <string name="battlyworlds_rewarded_invite_sent">Extra invite unlocked and sent to %1$s.</string>
+    <string name="battlyworlds_rewarded_limit_title">Extra invite limit reached</string>
+    <string name="battlyworlds_rewarded_limit_exhausted">You have already unlocked the 5 additional invites available with ads. Battly+ includes up to 50 friend invites per room.</string>
+    <string name="battlyworlds_plus_subscribe">Get Battly+</string>
     <string name="battlyworlds_search_friend">Search friend</string>
     <string name="battlyworlds_search_action">Search</string>
     <string name="battlyworlds_search_friend_hint">Battly username</string>
@@ -1135,6 +1180,10 @@
     <string name="battlyworlds_tip_simple">Host a room or join with a code. Battly handles the virtual LAN in the background.</string>
     <string name="battlyworlds_free_summary">Free room · %1$d direct invites · %2$d h code duration</string>
     <string name="battlyworlds_plus_summary">BattlyWorlds Plus · priority nodes · %1$d direct invites · %2$d h persistent room</string>
+    <string name="battlyworlds_plus_summary_unlimited">BattlyWorlds Plus · priority nodes · up to 50 direct invites · %1$d h persistent room</string>
+    <string name="battly_new_badge">New</string>
+    <string name="battly_disclosure_arrow" translatable="false">›</string>
+    <string name="battlyworlds_plus_upsell">Get Battly+ for up to 50 friend invites, 12-hour rooms and priority access</string>
     <string name="battlyworlds_friend_online">Online</string>
     <string name="battlyworlds_friend_offline">Offline</string>
     <string name="battlyworlds_logs_search_hint">Search logs</string>
@@ -1597,4 +1646,43 @@
     <string name="maintenance_warning_components">Components: %1$s</string>
     <string name="maintenance_warning_java">Java %1$d: %2$s</string>
     <string name="maintenance_warning_auth">Authentication: %1$s</string>
+    <string name="battlyworlds_settings_title">Battly Worlds</string>
+    <string name="battlyworlds_settings_summary">Room, invitation, connection and diagnostic settings</string>
+    <string name="battlyworlds_settings_room_category">Room</string>
+    <string name="battlyworlds_settings_invites_category">Invitations</string>
+    <string name="battlyworlds_settings_connection_category">Connection and diagnostics</string>
+    <string name="battlyworlds_default_visibility_title">Default room</string>
+    <string name="battlyworlds_default_visibility_summary">Choose whether new rooms start private or public</string>
+    <string name="battlyworlds_visibility_private">Private</string>
+    <string name="battlyworlds_visibility_public">Public</string>
+    <string name="battlyworlds_public_listing_title">Allow public listing</string>
+    <string name="battlyworlds_public_listing_summary">Allow your room to appear in the Battly Worlds public list</string>
+    <string name="battlyworlds_default_duration_title">Default duration</string>
+    <string name="battlyworlds_default_duration_summary">Limited by your Battly account</string>
+    <string name="battlyworlds_duration_hours">%1$d hours</string>
+    <string name="battlyworlds_duration_summary">%1$d hours selected · account limit: %2$d hours</string>
+    <string name="battlyworlds_auto_lan_title">Detect LAN worlds automatically</string>
+    <string name="battlyworlds_auto_lan_summary">Suggest hosting with Battly Worlds after opening a world to LAN</string>
+    <string name="battlyworlds_close_on_exit_title">Close room when leaving Minecraft</string>
+    <string name="battlyworlds_close_on_exit_summary">Disconnect Terracotta and expire the active room when the game closes</string>
+    <string name="battlyworlds_invitations_title">Invitations</string>
+    <string name="battlyworlds_invitations_summary">Receive direct invitations from Battly friends</string>
+    <string name="battlyworlds_connection_alerts_title">Connection alerts</string>
+    <string name="battlyworlds_connection_alerts_summary">Show notifications when the virtual LAN connection changes</string>
+    <string name="battlyworlds_notification_status_title">Android notification status</string>
+    <string name="battlyworlds_notifications_enabled">Notifications are enabled</string>
+    <string name="battlyworlds_notifications_blocked">Notifications are blocked. Tap to enable them in Android.</string>
+    <string name="battlyworlds_connection_status_title">Connection status</string>
+    <string name="battlyworlds_connection_status_summary">Node: %1$s\nTerracotta: %2$s\n%3$s</string>
+    <string name="battlyworlds_node_not_selected">Not selected yet</string>
+    <string name="battlyworlds_test_connection_title">Test connection</string>
+    <string name="battlyworlds_test_connection_summary">Measure latency to an available Battly Worlds node</string>
+    <string name="battlyworlds_connection_testing">Testing Battly Worlds connection…</string>
+    <string name="battlyworlds_connection_test_ok">Node: %1$s\nLatency: %2$d ms\n%3$s</string>
+    <string name="battlyworlds_connection_test_failed">Could not reach %1$s\n%2$s</string>
+    <string name="battlyworlds_diagnostics_title">Battly Worlds diagnostics</string>
+    <string name="battlyworlds_diagnostics_summary">Open, search and share Terracotta logs</string>
+    <string name="battlyworlds_diagnostics_empty">No Battly Worlds logs are available yet.</string>
+    <string name="battlyworlds_logs_share">Share logs</string>
+    <string name="battlyworlds_public_listing_disabled">Public rooms are disabled in Battly Worlds settings</string>
 </resources>

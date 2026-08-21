@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory android:title="@string/battlyworlds_settings_room_category">
+        <ListPreference
+            android:key="battlyworlds_default_visibility"
+            android:title="@string/battlyworlds_default_visibility_title"
+            android:summary="@string/battlyworlds_default_visibility_summary"
+            android:defaultValue="private"
+            android:entries="@array/battlyworlds_visibility_entries"
+            android:entryValues="@array/battlyworlds_visibility_values" />
+        <SwitchPreference
+            android:key="battlyworlds_allow_public_listing"
+            android:title="@string/battlyworlds_public_listing_title"
+            android:summary="@string/battlyworlds_public_listing_summary"
+            android:defaultValue="true" />
+        <ListPreference
+            android:key="battlyworlds_default_duration"
+            android:title="@string/battlyworlds_default_duration_title"
+            android:summary="@string/battlyworlds_default_duration_summary"
+            android:defaultValue="6" />
+        <SwitchPreference
+            android:key="battlyworlds_auto_lan_detection"
+            android:title="@string/battlyworlds_auto_lan_title"
+            android:summary="@string/battlyworlds_auto_lan_summary"
+            android:defaultValue="true" />
+        <SwitchPreference
+            android:key="battlyworlds_close_on_game_exit"
+            android:title="@string/battlyworlds_close_on_exit_title"
+            android:summary="@string/battlyworlds_close_on_exit_summary"
+            android:defaultValue="true" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/battlyworlds_settings_invites_category">
+        <SwitchPreference
+            android:key="battlyworlds_invitations"
+            android:title="@string/battlyworlds_invitations_title"
+            android:summary="@string/battlyworlds_invitations_summary"
+            android:defaultValue="true" />
+        <SwitchPreference
+            android:key="battlyworlds_connection_alerts"
+            android:title="@string/battlyworlds_connection_alerts_title"
+            android:summary="@string/battlyworlds_connection_alerts_summary"
+            android:defaultValue="true" />
+        <Preference
+            android:key="battlyworlds_notification_status"
+            android:title="@string/battlyworlds_notification_status_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/battlyworlds_settings_connection_category">
+        <Preference
+            android:key="battlyworlds_connection_status"
+            android:title="@string/battlyworlds_connection_status_title"
+            android:selectable="false" />
+        <Preference
+            android:key="battlyworlds_test_connection"
+            android:title="@string/battlyworlds_test_connection_title"
+            android:summary="@string/battlyworlds_test_connection_summary" />
+        <Preference
+            android:key="battlyworlds_open_diagnostics"
+            android:title="@string/battlyworlds_diagnostics_title"
+            android:summary="@string/battlyworlds_diagnostics_summary" />
+    </PreferenceCategory>
+</PreferenceScreen>

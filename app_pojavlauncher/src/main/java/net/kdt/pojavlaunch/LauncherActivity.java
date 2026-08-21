@@ -668,6 +668,7 @@ public class LauncherActivity extends BaseActivity {
         inspectReturnedGameSession();
         applyLauncherBackground();
         BattlyWorldsInvites.heartbeat(this);
+        BattlyWorldsInvites.startInvitePolling(this);
         BattlySocialManager.heartbeatLauncher(this);
         if (mInstallTracker != null) {
             mInstallTracker.attach();
@@ -678,6 +679,7 @@ public class LauncherActivity extends BaseActivity {
 
     @Override
     protected void onPause() {
+        BattlyWorldsInvites.stopInvitePolling();
         super.onPause();
         ContextExecutor.clearActivity();
         if (mInstallTracker != null) {
@@ -1126,6 +1128,9 @@ public class LauncherActivity extends BaseActivity {
         }
         if (fragment instanceof BattlyPlusFragment) {
             return getString(R.string.battly_plus_title);
+        }
+        if (fragment instanceof BattlyWorldsFragment) {
+            return getString(R.string.battlyworlds_title);
         }
         if (fragment instanceof BattlyIconSettingsFragment) {
             return getString(R.string.battly_plus_app_icon_title);

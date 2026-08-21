@@ -8,8 +8,10 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.BuildConfig;
 
 public final class BattlyWorldsFeature {
-    /** Build-time kill-switch; also controls the VPN permission and service manifest entries. */
+    /** Build-time kill-switch for the BattlyWorlds UI and Terracotta runtime. */
     public static final boolean ENABLED = BuildConfig.BATTLY_WORLDS_ENABLED;
+    /** Legacy TUN transport. Production uses Terracotta Scaffolding without a VPN. */
+    public static final boolean VPN_ENABLED = BuildConfig.BATTLY_WORLDS_VPN_ENABLED;
 
     private BattlyWorldsFeature() {
     }

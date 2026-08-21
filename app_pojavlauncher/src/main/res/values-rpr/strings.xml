@@ -238,7 +238,7 @@
     <string name="battly_social_title">Battly Social</string>
     <string name="battly_social_user">Utilizator Battly</string>
     <string name="battly_social_working">Se actualizează Battly Social…</string>
-    <string name="battly_whats_new_action_start">Explore 2.1.1</string>
+    <string name="battly_whats_new_action_start">Explore 2.2.0</string>
     <string name="battly_whats_new_compatibility_desc">HTTP/2, connection reuse, resumable downloads and automatic retries. Battly uses 64 simultaneous downloads by default and lets you choose up to 100.</string>
     <string name="battly_whats_new_compatibility_title">Downloads built for speed</string>
     <string name="battly_whats_new_controllers_desc">Set up PlayStation, Xbox and Nintendo Switch controllers with a guided assistant, animated 3D previews, stick calibration and per-instance mappings.</string>
@@ -248,9 +248,9 @@
     <string name="battly_whats_new_instances_title">Your instances, protected</string>
     <string name="battly_whats_new_recovery_desc">The maintenance center detects damaged files and incompatible mods. FPS, real server ping, touch controls, ESC, crash recovery and translations have also improved.</string>
     <string name="battly_whats_new_recovery_title">More stable, easier to fix</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.1.1</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.0</string>
     <string name="battly_whats_new_transition_desc">Your profiles are intact and ready to play.</string>
-    <string name="battly_whats_new_transition_title">Battly 2.1.1 is ready</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.0 is ready</string>
     <string name="battly_whats_new_worlds_desc">Battly selects Java, LWJGL and the renderer for each version. MobileGlues 2.0.0 adds new graphics options and broader compatibility.</string>
     <string name="battly_whats_new_worlds_title">Smarter graphics and compatibility</string>
     <string name="bind_process_bottom">Jos</string>
@@ -277,7 +277,7 @@
     <string name="crash_no_findings">Nu a fost găsit niciun tipar de prăbușire cunoscut în ultimele jurnale.</string>
     <string name="crash_recovery_applied">Acțiunea de recuperare a fost finalizată</string>
     <string name="crash_recovery_manual">Această problemă necesită o modificare manuală. Deschide jurnalul pentru detalii.</string>
-    <string name="credits_version">Versiunea 2.1.1</string>
+    <string name="credits_version">Versiunea 2.2.0</string>
     <string name="ctrl_like_btn">Îmi place</string>
     <string name="ctrl_liked_added">Adăugat la controalele apreciate.</string>
     <string name="ctrl_liked_btn">Apreciat</string>
@@ -338,8 +338,8 @@
     <string name="java_runtime_download_progress">Descărcarea Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Instalarea Java 8</string>
     <string name="java_runtime_download_waiting">Pregătirea descărcării Java 8...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.1.1</string>
-    <string name="launcher_mobile_badge">Mobil 2.1.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.0</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.0</string>
     <string name="launcher_status_battly">Cont Battly</string>
     <string name="launcher_status_battly_plus">Cont Battly+</string>
     <string name="library_analyze_mods">Analizează</string>

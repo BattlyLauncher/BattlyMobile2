@@ -120,7 +120,7 @@ public class BattlyPlusFragment extends Fragment {
                 R.string.battly_plus_feature_backgrounds_title,
                 R.string.battly_plus_feature_backgrounds_desc,
                 plus, v -> openBackgroundSettings(), true);
-        addPerkCard(row, R.drawable.bworlds,
+        addPerkCard(row, R.drawable.logo,
                 R.string.battly_plus_feature_worlds_title,
                 R.string.battly_plus_feature_worlds_desc,
                 plus, null, false);

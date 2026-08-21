@@ -2,20 +2,26 @@ package net.kdt.pojavlaunch.modloaders.modpacks;
 
 import android.annotation.SuppressLint;
 import android.app.Activity;
+import android.content.Context;
 import android.content.res.Resources;
 import android.graphics.Bitmap;
+import android.graphics.Typeface;
 import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.ColorDrawable;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewStub;
-import android.widget.AdapterView;
+import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.FrameLayout;
+import android.widget.GridView;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Spinner;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
@@ -24,8 +30,6 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import com.google.android.gms.ads.nativead.NativeAd;
-
-import com.kdt.SimpleArrayAdapter;
 
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
@@ -46,10 +50,7 @@ import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -63,8 +64,10 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private static final int VIEW_TYPE_LOADING = 1;
     private static final int VIEW_TYPE_NATIVE_AD = 2;
 
-    /* Used when versions haven't loaded yet, default text to reduce layout shifting */
-    private final SimpleArrayAdapter<String> mLoadingAdapter = new SimpleArrayAdapter<>(Collections.singletonList("Loading"));
+    private interface ChoiceListener {
+        void onChoice(int position);
+    }
+
     /* This my seem horribly inefficient but it is in fact the most efficient way without effectively writing a weak collection from scratch */
     private final Set<ViewHolder> mViewHolderSet = Collections.newSetFromMap(new WeakHashMap<>());
     private final ModIconCache mIconCache = new ModIconCache();
@@ -260,21 +263,21 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final TextView mTitle, mDescription, mMeta;
         private final ImageView mIconView, mSourceView;
         private View mExtendedLayout;
-        private Spinner mExtendedSpinner;
+        private TextView mExtendedLoaderSelector;
+        private TextView mExtendedMinecraftSelector;
+        private TextView mExtendedVersionSelector;
         private Button mExtendedButton;
         private Button mExtendedDependenciesButton;
         private TextView mExtendedErrorTextView;
-        private TextView mExtendedInfoTextView;
         private TextView mExtendedDependencyTextView;
         private Future<?> mExtensionFuture;
         private Bitmap mThumbnailBitmap;
         private ImageReceiver mImageReceiver;
         private boolean mInstallEnabled;
-        private CompatibilityOption mSelectedCompatibility;
-
-        /* Used to display available versions of the mod(pack) */
-        private final SimpleArrayAdapter<String> mVersionAdapter = new SimpleArrayAdapter<>(null);
-        private final ArrayList<Integer> mVersionIndexMap = new ArrayList<>();
+        private String mSelectedLoader;
+        private String mSelectedMinecraftVersion;
+        private int mSelectedVersionIndex = -1;
+        private final ArrayList<Integer> mAvailableVersionIndices = new ArrayList<>();
 
         public ViewHolder(View view) {
             super(view);
@@ -295,10 +298,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     mExtendedLayout.setTag(dialog);
 
                     mExtendedButton = dialog.findViewById(R.id.dialog_mod_install_button);
-                    mExtendedSpinner = dialog.findViewById(R.id.dialog_mod_version_spinner);
+                    mExtendedLoaderSelector = dialog.findViewById(R.id.dialog_mod_loader_selector);
+                    mExtendedMinecraftSelector = dialog.findViewById(R.id.dialog_mod_minecraft_selector);
+                    mExtendedVersionSelector = dialog.findViewById(R.id.dialog_mod_version_selector);
                     mExtendedErrorTextView = dialog.findViewById(R.id.dialog_mod_error);
                     mExtendedDependenciesButton = dialog.findViewById(R.id.dialog_mod_deps_button);
-                    mExtendedInfoTextView = dialog.findViewById(R.id.dialog_mod_info);
                     mExtendedDependencyTextView = dialog.findViewById(R.id.dialog_mod_dependency);
 
                     // Setup dialog basic info
@@ -331,18 +335,9 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                             installSelectedVersion(selectedVersion, true);
                         }
                     });
-                    mExtendedInfoTextView.setOnClickListener(v14 -> showCompatibilityChooser());
-                    mExtendedSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-                        @Override
-                        public void onItemSelected(AdapterView<?> parent, View view2, int position, long id) {
-                            updateExtendedVersionState();
-                        }
-
-                        @Override
-                        public void onNothingSelected(AdapterView<?> parent) {
-                        }
-                    });
-                    mExtendedSpinner.setAdapter(mLoadingAdapter);
+                    mExtendedLoaderSelector.setOnClickListener(v14 -> showLoaderChooser());
+                    mExtendedMinecraftSelector.setOnClickListener(v15 -> showMinecraftVersionChooser());
+                    mExtendedVersionSelector.setOnClickListener(v16 -> showContentVersionChooser());
                 }
 
                 if(!isExtended()) {
@@ -414,8 +409,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mExtensionFuture.cancel(true);
                 mExtensionFuture = null;
             }
-            mSelectedCompatibility = null;
-            mVersionIndexMap.clear();
+            resetVersionSelection();
 
             mModItem = item;
             if (mExtendedButton != null) {
@@ -446,21 +440,12 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if(detailedItem != null) {
                 setInstallEnabled(true);
                 mExtendedErrorTextView.setVisibility(View.GONE);
-                // Do not silently hide files behind the first detected Minecraft/loader
-                // combination. Resource packs and shaders commonly publish one file for
-                // several game versions, so the complete release history is the safest
-                // and least surprising initial view.
-                mSelectedCompatibility = null;
-                mExtendedSpinner.setAdapter(mVersionAdapter);
-                bindVersionsForCompatibility();
+                initializeVersionSelection();
             } else {
                 closeDetailedView();
                 setInstallEnabled(false);
                 mExtendedErrorTextView.setVisibility(View.VISIBLE);
-                mExtendedSpinner.setAdapter(null);
-                mVersionAdapter.setObjects(null);
-                mSelectedCompatibility = null;
-                mVersionIndexMap.clear();
+                resetVersionSelection();
                 if (mExtendedDependenciesButton != null) {
                     mExtendedDependenciesButton.setEnabled(false);
                 }
@@ -481,12 +466,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         private void setDetailedStateDefault() {
             setInstallEnabled(false);
-            mExtendedSpinner.setAdapter(mLoadingAdapter);
             mExtendedErrorTextView.setVisibility(View.GONE);
             mExtendedButton.setText(getInstallString(mModItem.contentType));
-            if (mExtendedInfoTextView != null) {
-                mExtendedInfoTextView.setText(R.string.mod_version_loading);
-            }
+            if (mExtendedLoaderSelector != null) mExtendedLoaderSelector.setText(R.string.mod_version_loading);
+            if (mExtendedMinecraftSelector != null) mExtendedMinecraftSelector.setText(R.string.mod_version_loading);
+            if (mExtendedVersionSelector != null) mExtendedVersionSelector.setText(R.string.mod_version_loading);
             if (mExtendedDependencyTextView != null) {
                 mExtendedDependencyTextView.setVisibility(View.VISIBLE);
                 mExtendedDependencyTextView.setText(R.string.mod_dependency_loading);
@@ -494,8 +478,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (mExtendedDependenciesButton != null) {
                 mExtendedDependenciesButton.setEnabled(false);
             }
-            mSelectedCompatibility = null;
-            mVersionIndexMap.clear();
+            resetVersionSelection();
             openDetailedView();
         }
 
@@ -528,7 +511,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 mExtendedButton.setEnabled(mInstallEnabled && !mTasksRunning);
             if (mExtendedDependenciesButton != null) {
                 boolean hasDependencies = false;
-                if (mModDetail != null && mExtendedSpinner != null) {
+                if (mModDetail != null && mSelectedVersionIndex >= 0) {
                     hasDependencies = getRequiredDependencyCount(getSelectedDetailVersionIndex()) > 0;
                 }
                 mExtendedDependenciesButton.setEnabled(hasDependencies && !mTasksRunning);
@@ -537,19 +520,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
         private void updateExtendedVersionState() {
             int selectedPosition = getSelectedDetailVersionIndex();
-            if (mModDetail == null || mExtendedSpinner == null || selectedPosition < 0) {
+            if (mModDetail == null || selectedPosition < 0) {
                 return;
-            }
-            if (mExtendedInfoTextView != null) {
-                if (mSelectedCompatibility == null) {
-                    mExtendedInfoTextView.setText(itemView.getContext().getString(
-                            R.string.mod_detail_minecraft_versions_count,
-                            countMinecraftVersions(mModDetail),
-                            buildLoaderSummary(collectLoaders(mModDetail))
-                    ));
-                } else {
-                    mExtendedInfoTextView.setText(mSelectedCompatibility.toString());
-                }
             }
 
             int dependencyCount = getRequiredDependencyCount(selectedPosition);
@@ -563,51 +535,61 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         }
 
         private int getSelectedDetailVersionIndex() {
-            if (mExtendedSpinner == null) {
-                return -1;
-            }
-            int selectedPosition = mExtendedSpinner.getSelectedItemPosition();
-            if (selectedPosition < 0) {
-                return -1;
-            }
-            if (selectedPosition < mVersionIndexMap.size()) {
-                return mVersionIndexMap.get(selectedPosition);
-            }
-            return selectedPosition;
+            return mSelectedVersionIndex;
         }
 
-        private void bindVersionsForCompatibility() {
-            if (mModDetail == null || mModDetail.versionNames == null) {
-                mVersionAdapter.setObjects(null);
-                mVersionIndexMap.clear();
-                updateInstallButtonState();
-                return;
-            }
+        private void initializeVersionSelection() {
+            List<String> loaders = WorkspaceVersionSelection.collectLoaders(mModDetail);
+            mSelectedLoader = loaders.isEmpty() ? null : loaders.get(0);
+            mExtendedLoaderSelector.setText(loaders.isEmpty()
+                    ? itemView.getContext().getString(R.string.mod_detail_any_loader)
+                    : toLoaderLabel(mSelectedLoader));
+            bindMinecraftVersions();
+        }
 
-            ArrayList<String> versionNames = new ArrayList<>();
-            mVersionIndexMap.clear();
-            for (int i = 0; i < mModDetail.versionNames.length; i++) {
-                if (matchesCompatibility(i, mSelectedCompatibility)) {
-                    versionNames.add(mModDetail.versionNames[i]);
-                    mVersionIndexMap.add(i);
-                }
+        private void bindMinecraftVersions() {
+            List<String> versions = WorkspaceVersionSelection.collectMinecraftVersions(mModDetail, mSelectedLoader);
+            if (versions.isEmpty()) {
+                mSelectedMinecraftVersion = null;
+                mExtendedMinecraftSelector.setText(R.string.mod_detail_choose_minecraft);
+                mExtendedMinecraftSelector.setEnabled(false);
+            } else {
+                if (!versions.contains(mSelectedMinecraftVersion)) mSelectedMinecraftVersion = versions.get(0);
+                mExtendedMinecraftSelector.setText(mSelectedMinecraftVersion);
+                mExtendedMinecraftSelector.setEnabled(true);
             }
+            bindContentVersions();
+        }
 
-            if (versionNames.isEmpty()) {
-                versionNames.addAll(Arrays.asList(mModDetail.versionNames));
-                for (int i = 0; i < mModDetail.versionNames.length; i++) {
-                    mVersionIndexMap.add(i);
-                }
-            }
-
-            mVersionAdapter.setObjects(versionNames);
-            if (mExtendedSpinner.getAdapter() != mVersionAdapter) {
-                mExtendedSpinner.setAdapter(mVersionAdapter);
-            }
-            if (!versionNames.isEmpty()) {
-                mExtendedSpinner.setSelection(0);
+        private void bindContentVersions() {
+            mAvailableVersionIndices.clear();
+            mAvailableVersionIndices.addAll(WorkspaceVersionSelection.collectReleaseIndices(
+                    mModDetail, mSelectedLoader, mSelectedMinecraftVersion));
+            mSelectedVersionIndex = mAvailableVersionIndices.isEmpty() ? -1 : mAvailableVersionIndices.get(0);
+            if (mSelectedVersionIndex < 0) {
+                mExtendedVersionSelector.setText(R.string.mod_detail_choose_content_version);
+                mExtendedVersionSelector.setEnabled(false);
+                setInstallEnabled(false);
+            } else {
+                mExtendedVersionSelector.setText(getVersionDisplayLabel(mSelectedVersionIndex, true));
+                mExtendedVersionSelector.setEnabled(true);
+                setInstallEnabled(true);
             }
             updateExtendedVersionState();
+        }
+
+        private String getVersionDisplayLabel(int detailIndex, boolean recommended) {
+            String label = mModDetail.versionNames[detailIndex];
+            return recommended
+                    ? label + " · " + itemView.getContext().getString(R.string.mod_detail_recommended)
+                    : label;
+        }
+
+        private void resetVersionSelection() {
+            mSelectedLoader = null;
+            mSelectedMinecraftVersion = null;
+            mSelectedVersionIndex = -1;
+            mAvailableVersionIndices.clear();
         }
 
         private void installSelectedVersion(int selectedVersion, boolean dependenciesOnly) {
@@ -719,159 +701,162 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return entry.getKey();
         }
 
-        private void showCompatibilityChooser() {
-            if (mModDetail == null) {
-                return;
+        private void showLoaderChooser() {
+            if (mModDetail == null) return;
+            List<String> loaders = WorkspaceVersionSelection.collectLoaders(mModDetail);
+            if (loaders.isEmpty()) return;
+            String[] labels = new String[loaders.size()];
+            int checked = 0;
+            for (int i = 0; i < loaders.size(); i++) {
+                labels[i] = toLoaderLabel(loaders.get(i));
+                if (loaders.get(i).equalsIgnoreCase(mSelectedLoader)) checked = i;
             }
-            List<CompatibilityOption> options = buildCompatibilityOptions(mModDetail);
-            if (options.isEmpty()) {
-                return;
-            }
-
-            String[] labels = new String[options.size() + 1];
-            labels[0] = itemView.getContext().getString(
-                    R.string.mod_detail_all_versions,
-                    mModDetail.versionNames == null ? 0 : mModDetail.versionNames.length
-            );
-            int checkedIndex = 0;
-            for (int i = 0; i < options.size(); i++) {
-                CompatibilityOption option = options.get(i);
-                labels[i + 1] = option.toString();
-                if (option.sameAs(mSelectedCompatibility)) {
-                    checkedIndex = i + 1;
-                }
-            }
-
             new AlertDialog.Builder(itemView.getContext(), R.style.BattlyDialog)
-                    .setTitle(R.string.mod_detail_label_compat)
-                    .setSingleChoiceItems(labels, checkedIndex, (dialog, which) -> {
-                        mSelectedCompatibility = which == 0 ? null : options.get(which - 1);
-                        bindVersionsForCompatibility();
+                    .setTitle(R.string.mod_detail_step_loader)
+                    .setSingleChoiceItems(labels, checked, (dialog, which) -> {
+                        mSelectedLoader = loaders.get(which);
+                        mExtendedLoaderSelector.setText(labels[which]);
+                        mSelectedMinecraftVersion = null;
+                        bindMinecraftVersions();
                         dialog.dismiss();
                     })
                     .show();
         }
 
-        private List<CompatibilityOption> buildCompatibilityOptions(ModDetail detail) {
-            LinkedHashMap<String, CompatibilityOption> options = new LinkedHashMap<>();
-            if (detail == null || detail.versionNames == null) {
-                return new ArrayList<>();
-            }
+        private void showMinecraftVersionChooser() {
+            List<String> versions = WorkspaceVersionSelection.collectMinecraftVersions(mModDetail, mSelectedLoader);
+            showSearchableChooser(R.string.mod_detail_step_minecraft,
+                    R.string.mod_detail_search_minecraft, versions,
+                    versions.indexOf(mSelectedMinecraftVersion), position -> {
+                        mSelectedMinecraftVersion = versions.get(position);
+                        mExtendedMinecraftSelector.setText(mSelectedMinecraftVersion);
+                        bindContentVersions();
+                    });
+        }
 
-            for (int i = 0; i < detail.versionNames.length; i++) {
-                String[] gameVersions = detail.getGameVersions(i);
-                String[] loaders = detail.versionLoaders == null || i >= detail.versionLoaders.length
-                        ? null : detail.versionLoaders[i];
-                if (gameVersions.length == 0) gameVersions = new String[]{null};
-
-                for (String mcVersion : gameVersions) {
-                    boolean addedLoader = false;
-                    if (loaders != null) {
-                        for (String loader : loaders) {
-                            if (!Tools.isValidString(loader)) {
-                                continue;
-                            }
-                            addCompatibilityOption(options, mcVersion, loader);
-                            addedLoader = true;
-                        }
-                    }
-                    if (!addedLoader) {
-                        addCompatibilityOption(options, mcVersion, null);
-                    }
-                }
+        private void showContentVersionChooser() {
+            if (mModDetail == null || mAvailableVersionIndices.isEmpty()) return;
+            ArrayList<String> labels = new ArrayList<>();
+            int selectedPosition = 0;
+            for (int i = 0; i < mAvailableVersionIndices.size(); i++) {
+                int detailIndex = mAvailableVersionIndices.get(i);
+                labels.add(getVersionDisplayLabel(detailIndex, i == 0));
+                if (detailIndex == mSelectedVersionIndex) selectedPosition = i;
             }
-            ArrayList<CompatibilityOption> result = new ArrayList<>(options.values());
-            Collections.sort(result, (left, right) -> {
-                int versionResult = compareVersionDescending(left.mcVersion, right.mcVersion);
-                if (versionResult != 0) return versionResult;
-                return String.valueOf(left.loader).compareToIgnoreCase(String.valueOf(right.loader));
+            showSearchableChooser(R.string.mod_detail_step_content_version,
+                    R.string.mod_detail_search_content_version, labels, selectedPosition, position -> {
+                        mSelectedVersionIndex = mAvailableVersionIndices.get(position);
+                        mExtendedVersionSelector.setText(labels.get(position));
+                        updateExtendedVersionState();
+                    });
+        }
+
+        private void showSearchableChooser(int titleRes, int hintRes, List<String> labels,
+                                           int selectedPosition, ChoiceListener listener) {
+            if (labels == null || labels.isEmpty()) return;
+            Context context = itemView.getContext();
+            LinearLayout root = new LinearLayout(context);
+            root.setOrientation(LinearLayout.VERTICAL);
+            int padding = dp(context, 16);
+            root.setPadding(padding, dp(context, 6), padding, dp(context, 8));
+
+            EditText search = new EditText(context);
+            search.setSingleLine(true);
+            search.setHint(hintRes);
+            search.setTextColor(0xFFFFFFFF);
+            search.setHintTextColor(0x889FB8C5);
+            search.setTextSize(14);
+            search.setPadding(dp(context, 14), 0, dp(context, 14), 0);
+            search.setBackgroundResource(R.drawable.bg_battly_form_panel);
+            root.addView(search, new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(context, 46)));
+
+            GridView grid = new GridView(context);
+            grid.setNumColumns(2);
+            grid.setHorizontalSpacing(dp(context, 8));
+            grid.setVerticalSpacing(dp(context, 6));
+            grid.setStretchMode(GridView.STRETCH_COLUMN_WIDTH);
+            grid.setSelector(new ColorDrawable(0x00000000));
+            grid.setFastScrollEnabled(labels.size() > 20);
+            grid.setClipToPadding(false);
+            grid.setPadding(0, 0, dp(context, 2), 0);
+            ChoiceAdapter adapter = new ChoiceAdapter(context, labels, selectedPosition);
+            grid.setAdapter(adapter);
+            boolean landscape = context.getResources().getConfiguration().orientation
+                    == android.content.res.Configuration.ORIENTATION_LANDSCAPE;
+            LinearLayout.LayoutParams gridParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MATCH_PARENT, dp(context, landscape ? 150 : 260));
+            gridParams.setMargins(0, dp(context, 10), 0, 0);
+            root.addView(grid, gridParams);
+
+            AlertDialog dialog = new AlertDialog.Builder(context, R.style.BattlyDialog)
+                    .setTitle(titleRes)
+                    .setView(root)
+                    .create();
+            grid.setOnItemClickListener((parent, view, position, id) -> {
+                int sourcePosition = adapter.getSourcePosition(position);
+                if (sourcePosition < 0) return;
+                listener.onChoice(sourcePosition);
+                dialog.dismiss();
             });
-            return result;
-        }
-
-        private void addCompatibilityOption(LinkedHashMap<String, CompatibilityOption> options,
-                                            String mcVersion,
-                                            String loader) {
-            String normalizedMc = Tools.isValidString(mcVersion) ? mcVersion : null;
-            String normalizedLoader = Tools.isValidString(loader)
-                    ? loader.toLowerCase(java.util.Locale.ROOT)
-                    : null;
-            String key = String.valueOf(normalizedMc) + "|" + String.valueOf(normalizedLoader);
-            if (!options.containsKey(key)) {
-                options.put(key, new CompatibilityOption(normalizedMc, normalizedLoader));
-            }
-        }
-
-        private boolean matchesCompatibility(int versionIndex, CompatibilityOption option) {
-            if (option == null) {
-                return true;
-            }
-            if (option.mcVersion != null
-                    && !mModDetail.supportsMinecraftVersion(versionIndex, option.mcVersion)) {
-                return false;
-            }
-
-            String[] loaders = mModDetail.versionLoaders == null || versionIndex >= mModDetail.versionLoaders.length
-                    ? null : mModDetail.versionLoaders[versionIndex];
-            if (option.loader == null) {
-                return loaders == null || loaders.length == 0;
-            }
-            if (loaders == null) {
-                return false;
-            }
-            for (String loader : loaders) {
-                if (Tools.isValidString(loader) && option.loader.equalsIgnoreCase(loader)) {
-                    return true;
+            search.addTextChangedListener(new TextWatcher() {
+                @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) { }
+                @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                    adapter.filter(s == null ? "" : s.toString());
                 }
-            }
-            return false;
+                @Override public void afterTextChanged(Editable s) { }
+            });
+            dialog.show();
         }
 
-        private int countMinecraftVersions(ModDetail detail) {
-            LinkedHashSet<String> versions = new LinkedHashSet<>();
-            if (detail != null && detail.versionNames != null) {
-                for (int i = 0; i < detail.versionNames.length; i++) {
-                    for (String version : detail.getGameVersions(i)) {
-                        if (Tools.isValidString(version)) versions.add(version);
-                    }
-                }
-            }
-            return versions.size();
+        private int dp(Context context, int value) {
+            return Math.round(value * context.getResources().getDisplayMetrics().density);
         }
 
-        private String[] collectLoaders(ModDetail detail) {
-            LinkedHashSet<String> loaders = new LinkedHashSet<>();
-            if (detail != null && detail.versionLoaders != null) {
-                for (String[] versionLoaders : detail.versionLoaders) {
-                    if (versionLoaders == null) continue;
-                    for (String loader : versionLoaders) {
-                        if (Tools.isValidString(loader)) loaders.add(loader);
-                    }
-                }
-            }
-            return loaders.toArray(new String[0]);
-        }
+        private class ChoiceAdapter extends BaseAdapter {
+            private final Context context;
+            private final List<String> labels;
+            private final int selectedPosition;
+            private List<Integer> visiblePositions;
 
-        private int compareVersionDescending(String left, String right) {
-            if (left == null) return right == null ? 0 : 1;
-            if (right == null) return -1;
-            String[] leftParts = left.split("[^0-9]+");
-            String[] rightParts = right.split("[^0-9]+");
-            int max = Math.max(leftParts.length, rightParts.length);
-            for (int i = 0; i < max; i++) {
-                int leftValue = parseVersionPart(leftParts, i);
-                int rightValue = parseVersionPart(rightParts, i);
-                if (leftValue != rightValue) return Integer.compare(rightValue, leftValue);
+            ChoiceAdapter(Context context, List<String> labels, int selectedPosition) {
+                this.context = context;
+                this.labels = labels;
+                this.selectedPosition = selectedPosition;
+                this.visiblePositions = WorkspaceVersionSelection.filterPositions(labels, "");
             }
-            return right.compareToIgnoreCase(left);
-        }
 
-        private int parseVersionPart(String[] parts, int index) {
-            if (index >= parts.length || parts[index].isEmpty()) return 0;
-            try {
-                return Integer.parseInt(parts[index]);
-            } catch (NumberFormatException ignored) {
-                return 0;
+            void filter(String query) {
+                visiblePositions = WorkspaceVersionSelection.filterPositions(labels, query);
+                notifyDataSetChanged();
+            }
+
+            int getSourcePosition(int position) {
+                return position >= 0 && position < visiblePositions.size()
+                        ? visiblePositions.get(position) : -1;
+            }
+
+            @Override public int getCount() { return visiblePositions.size(); }
+            @Override public String getItem(int position) { return labels.get(getSourcePosition(position)); }
+            @Override public long getItemId(int position) { return getSourcePosition(position); }
+
+            @Override
+            public View getView(int position, View convertView, ViewGroup parent) {
+                TextView row = convertView instanceof TextView ? (TextView) convertView : new TextView(context);
+                int sourcePosition = getSourcePosition(position);
+                row.setText(labels.get(sourcePosition));
+                row.setTextColor(sourcePosition == selectedPosition ? 0xFF8DEEDC : 0xFFFFFFFF);
+                row.setTextSize(14);
+                row.setTypeface(Typeface.DEFAULT, sourcePosition == selectedPosition
+                        ? Typeface.BOLD : Typeface.NORMAL);
+                row.setGravity(android.view.Gravity.CENTER_VERTICAL);
+                row.setMaxLines(2);
+                row.setEllipsize(android.text.TextUtils.TruncateAt.END);
+                row.setPadding(dp(context, 14), 0, dp(context, 14), 0);
+                row.setBackgroundResource(R.drawable.bg_battly_form_field);
+                row.setLayoutParams(new GridView.LayoutParams(
+                        ViewGroup.LayoutParams.MATCH_PARENT, dp(context, 46)));
+                return row;
             }
         }
 
@@ -999,33 +984,6 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             }
         }
 
-        private class CompatibilityOption {
-            private final String mcVersion;
-            private final String loader;
-
-            private CompatibilityOption(String mcVersion, String loader) {
-                this.mcVersion = mcVersion;
-                this.loader = loader;
-            }
-
-            private boolean sameAs(CompatibilityOption other) {
-                if (other == null) {
-                    return false;
-                }
-                return java.util.Objects.equals(mcVersion, other.mcVersion)
-                        && java.util.Objects.equals(loader, other.loader);
-            }
-
-            @NonNull
-            @Override
-            public String toString() {
-                return itemView.getContext().getString(
-                        R.string.mod_version_summary,
-                        Tools.isValidString(mcVersion) ? mcVersion : itemView.getContext().getString(R.string.launcher_version_unknown),
-                        toLoaderLabel(loader)
-                );
-            }
-        }
     }
 
     /**

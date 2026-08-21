@@ -11,6 +11,8 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 
 import java.net.URI;
+import java.net.InetSocketAddress;
+import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -28,6 +30,20 @@ public final class BattlyWorldsNodeList {
     );
 
     private static volatile List<String> sCachedNodes;
+
+    public static final class ProbeResult {
+        public final String node;
+        public final long latencyMs;
+        public final boolean reachable;
+        public final String message;
+
+        ProbeResult(String node, long latencyMs, boolean reachable, String message) {
+            this.node = node == null ? "" : node;
+            this.latencyMs = latencyMs;
+            this.reachable = reachable;
+            this.message = message == null ? "" : message;
+        }
+    }
 
     public static List<String> fetch() {
         return fetch(null);
@@ -81,6 +97,30 @@ public final class BattlyWorldsNodeList {
             sCachedNodes = FALLBACK_NODES;
             return FALLBACK_NODES;
         }
+    }
+
+    public static ProbeResult probe(Context context) {
+        List<String> nodes = fetch(context);
+        String lastError = "No compatible node available";
+        for (String node : nodes) {
+            try {
+                URI uri = URI.create(node);
+                if ("udp".equals(uri.getScheme()) || "wg".equals(uri.getScheme())
+                        || "quic".equals(uri.getScheme())) {
+                    continue;
+                }
+                long started = System.nanoTime();
+                try (Socket socket = new Socket()) {
+                    socket.connect(new InetSocketAddress(uri.getHost(), uri.getPort()), 4500);
+                }
+                long latency = Math.max(1L, (System.nanoTime() - started) / 1_000_000L);
+                return new ProbeResult(node, latency, true, "");
+            } catch (Throwable throwable) {
+                lastError = throwable.getMessage();
+            }
+        }
+        String node = nodes.isEmpty() ? "" : nodes.get(0);
+        return new ProbeResult(node, -1L, false, lastError);
     }
 
     private static boolean isValidNodeUrl(String url) {

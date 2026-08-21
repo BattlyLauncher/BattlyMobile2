@@ -6,15 +6,22 @@ import android.content.ClipData;
 import android.content.ClipboardManager;
 import android.content.Context;
 import android.content.Intent;
+import android.content.res.ColorStateList;
 import android.graphics.Typeface;
+import android.graphics.drawable.Drawable;
 import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.text.Editable;
 import android.text.InputType;
+import android.text.SpannableStringBuilder;
 import android.text.TextWatcher;
+import android.text.style.ForegroundColorSpan;
+import android.text.style.StyleSpan;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.CheckBox;
 import android.widget.EditText;
@@ -25,6 +32,9 @@ import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.core.widget.TextViewCompat;
+import androidx.appcompat.widget.SwitchCompat;
+
 import com.google.gson.JsonObject;
 import com.bumptech.glide.Glide;
 
@@ -33,7 +43,10 @@ import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.PojavProfile;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.BattlyRewardedInterstitialHelper;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
+
+import static net.kdt.pojavlaunch.prefs.LauncherPreferences.PREF_IGNORE_NOTCH;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -47,6 +60,8 @@ public final class BattlyWorldsDialog {
     private static final int TEXT_MAIN = 0xFFFFFFFF;
     private static final int TEXT_MUTED = 0xFFC6D6E3;
     private static final int ACCENT = 0xFF8ADBC6;
+    private static final String PLUS_URL = "https://battlylauncher.com/plus"
+            + "?utm_source=battly_worlds_mobile&utm_medium=app&utm_campaign=plus_invites_50";
 
     private final Activity mActivity;
     private final boolean mAutoHost;
@@ -57,12 +72,17 @@ public final class BattlyWorldsDialog {
     private final TextView mPlanSummary;
     private final TextView mInviteButton;
     private final TextView mShareButton;
+    private final TextView mHostButton;
     private final ImageButton mCopyButton;
+    private final SwitchCompat mPublicRoomToggle;
     private JsonObject mCurrentState;
     private String mHostRealCode = "";
     private String mHostShortCode = "";
     private boolean mAutoHostConsumed;
     private boolean mShortCodeLoading;
+    private boolean mRoomPublic;
+    private boolean mUpdatingVisibility;
+    private boolean mBusy;
 
     private final BattlyWorldsManager.StateListener mStateListener = state -> {
         mCurrentState = state;
@@ -87,13 +107,13 @@ public final class BattlyWorldsDialog {
 
         TextView title = new TextView(activity);
         title.setText(R.string.battlyworlds_title);
-        title.setTextSize(24);
+        title.setTextSize(22);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         title.setTextColor(TEXT_MAIN);
         header.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         ImageButton logs = iconButton(R.drawable.ic_battly_logs_line);
-        TextView stop = iconButton("X");
+        ImageButton stop = iconButton(R.drawable.ic_close_white);
         mCopyButton = iconButton(R.drawable.ic_battly_copy_line);
         logs.setContentDescription(activity.getString(R.string.battlyworlds_logs));
         stop.setContentDescription(activity.getString(R.string.global_cancel));
@@ -101,6 +121,37 @@ public final class BattlyWorldsDialog {
         logs.setOnClickListener(v -> showLogs());
         stop.setOnClickListener(v -> closeOnly());
         mCopyButton.setOnClickListener(v -> copyCurrentResult());
+
+        LinearLayout visibilityControl = new LinearLayout(activity);
+        visibilityControl.setGravity(Gravity.CENTER_VERTICAL);
+        visibilityControl.setPadding(dp(18), 0, dp(4), 0);
+        visibilityControl.setBackground(round(0x263C4E58, dp(12), 0x448ADBC6, 1));
+        LinearLayout.LayoutParams visibilityParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WRAP_CONTENT, dp(36));
+        visibilityParams.setMargins(dp(8), 0, 0, 0);
+
+        mPublicRoomToggle = new SwitchCompat(activity);
+        mPublicRoomToggle.setText(R.string.battlyworlds_room_private_short);
+        mPublicRoomToggle.setTextColor(TEXT_MAIN);
+        mPublicRoomToggle.setTextSize(11);
+        mPublicRoomToggle.setTypeface(Typeface.DEFAULT_BOLD);
+        mPublicRoomToggle.setShowText(false);
+        mPublicRoomToggle.setButtonTintList(ColorStateList.valueOf(ACCENT));
+        mPublicRoomToggle.setThumbTintList(ColorStateList.valueOf(ACCENT));
+        mPublicRoomToggle.setTrackTintList(new ColorStateList(
+                new int[][]{new int[]{android.R.attr.state_checked}, new int[]{}},
+                new int[]{0x668ADBC6, 0x44556670}));
+        mPublicRoomToggle.setEnabled(false);
+        mPublicRoomToggle.setOnCheckedChangeListener((button, checked) -> {
+            if (mUpdatingVisibility) return;
+            updateRoomVisibility(checked);
+        });
+        visibilityControl.addView(mPublicRoomToggle);
+        visibilityControl.setOnClickListener(v -> {
+            if (mPublicRoomToggle.isEnabled()) mPublicRoomToggle.toggle();
+        });
+
+        header.addView(visibilityControl, visibilityParams);
         header.addView(logs);
         header.addView(mCopyButton);
         header.addView(stop);
@@ -117,38 +168,46 @@ public final class BattlyWorldsDialog {
         mPlanSummary.setTextColor(ACCENT);
         mPlanSummary.setTypeface(Typeface.DEFAULT_BOLD);
         mPlanSummary.setTextSize(12);
+        mPlanSummary.setGravity(Gravity.CENTER_VERTICAL);
         mPlanSummary.setPadding(dp(12), dp(8), dp(12), dp(8));
         mPlanSummary.setBackground(round(0x223D5A60, dp(14), 0x338ADBC6, 1));
+        Drawable planLogo = activity.getDrawable(R.drawable.logo);
+        Drawable planChevron = activity.getDrawable(R.drawable.ic_battly_chevron);
+        if (planLogo != null) planLogo.setBounds(0, 0, dp(22), dp(22));
+        if (planChevron != null) planChevron.setBounds(0, 0, dp(15), dp(15));
+        mPlanSummary.setCompoundDrawablesRelative(planLogo, null, planChevron, null);
+        mPlanSummary.setCompoundDrawablePadding(dp(8));
+        mPlanSummary.setOnClickListener(v -> openPlusSubscription());
         LinearLayout.LayoutParams planParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
-        planParams.setMargins(0, 0, 0, dp(12));
+        planParams.setMargins(0, 0, 0, dp(10));
         root.addView(mPlanSummary, planParams);
 
         LinearLayout stateCard = new LinearLayout(activity);
         stateCard.setOrientation(LinearLayout.HORIZONTAL);
         stateCard.setGravity(Gravity.CENTER_VERTICAL);
-        stateCard.setPadding(dp(14), dp(12), dp(14), dp(12));
+        stateCard.setPadding(dp(12), dp(8), dp(12), dp(8));
         stateCard.setBackground(round(PANEL_SOFT, dp(18), 0x22495D68, 1));
 
         ImageView icon = new ImageView(activity);
-        icon.setImageResource(R.drawable.bworlds);
+        icon.setImageResource(R.drawable.logo);
         icon.setScaleType(ImageView.ScaleType.CENTER_INSIDE);
         icon.setClipToOutline(false);
-        icon.setPadding(dp(8), dp(8), dp(8), dp(8));
-        icon.setBackground(round(0x334ED7C0, dp(18), 0, 0));
-        stateCard.addView(icon, new LinearLayout.LayoutParams(dp(50), dp(50)));
+        stateCard.addView(icon, new LinearLayout.LayoutParams(dp(42), dp(42)));
 
         LinearLayout stateTexts = new LinearLayout(activity);
         stateTexts.setOrientation(LinearLayout.VERTICAL);
         stateTexts.setPadding(dp(12), 0, 0, 0);
         mStatus = new TextView(activity);
         mStatus.setTextColor(TEXT_MAIN);
-        mStatus.setTextSize(17);
+        mStatus.setTextSize(16);
         mStatus.setTypeface(Typeface.DEFAULT_BOLD);
         mResult = new TextView(activity);
         mResult.setTextColor(TEXT_MUTED);
-        mResult.setTextSize(13);
+        mResult.setTextSize(12);
+        mResult.setSingleLine(true);
+        mResult.setEllipsize(android.text.TextUtils.TruncateAt.END);
         mResult.setTextIsSelectable(true);
         stateTexts.addView(mStatus);
         stateTexts.addView(mResult);
@@ -163,23 +222,27 @@ public final class BattlyWorldsDialog {
 
         LinearLayout actions = new LinearLayout(activity);
         actions.setOrientation(LinearLayout.HORIZONTAL);
-        actions.setGravity(Gravity.END);
-        actions.setPadding(0, dp(10), 0, 0);
+        actions.setGravity(Gravity.CENTER);
+        actions.setPadding(0, dp(8), 0, 0);
 
-        mInviteButton = primaryAction(activity.getString(R.string.battlyworlds_invite_friend));
-        mShareButton = secondaryAction(activity.getString(R.string.battlyworlds_share));
-        TextView join = secondaryAction(activity.getString(R.string.battlyworlds_join));
-        TextView host = primaryAction(activity.getString(R.string.battlyworlds_host));
+        mInviteButton = primaryAction(activity.getString(R.string.battlyworlds_invite_friend),
+                R.drawable.ic_social_add);
+        mShareButton = secondaryAction(activity.getString(R.string.battlyworlds_share),
+                android.R.drawable.ic_menu_share);
+        TextView join = secondaryAction(activity.getString(R.string.battlyworlds_join),
+                R.drawable.ic_social_join);
+        mHostButton = primaryAction(activity.getString(R.string.battlyworlds_host),
+                R.drawable.ic_battly_worlds_line);
 
         mInviteButton.setOnClickListener(v -> askInviteFriend());
         mShareButton.setOnClickListener(v -> shareCurrentInvite());
         join.setOnClickListener(v -> askJoinCode());
-        host.setOnClickListener(v -> startHost());
+        mHostButton.setOnClickListener(v -> startHost());
 
-        actions.addView(mInviteButton);
-        actions.addView(mShareButton);
-        actions.addView(join);
-        actions.addView(host);
+        actions.addView(mInviteButton, weightedActionParams(0));
+        actions.addView(mShareButton, weightedActionParams(7));
+        actions.addView(join, weightedActionParams(7));
+        actions.addView(mHostButton, weightedActionParams(7));
         root.addView(actions);
 
         mDialog = new AlertDialog.Builder(activity, R.style.BattlyDialog)
@@ -189,6 +252,10 @@ public final class BattlyWorldsDialog {
     }
 
     public void show() {
+        if (!BattlyWorldsInvites.isBattlyLoggedIn(mActivity)) {
+            Toast.makeText(mActivity, R.string.battlyworlds_login_required, Toast.LENGTH_LONG).show();
+            return;
+        }
         try {
             BattlyWorldsManager.initialize(mActivity);
             BattlyWorldsManager.attachActivity(mActivity);
@@ -200,6 +267,12 @@ public final class BattlyWorldsDialog {
             BattlyWorldsManager.addStateListener(mStateListener);
             refreshState();
             mDialog.show();
+            Window window = mDialog.getWindow();
+            if (window != null) {
+                int available = mActivity.getResources().getDisplayMetrics().widthPixels - dp(32);
+                window.setLayout(Math.min(available, dp(700)), ViewGroup.LayoutParams.WRAP_CONTENT);
+                centerDialogWindow(window);
+            }
             if (mAutoHost && !mAutoHostConsumed) {
                 mAutoHostConsumed = true;
                 Tools.MAIN_HANDLER.postDelayed(this::startHost, 250);
@@ -210,6 +283,7 @@ public final class BattlyWorldsDialog {
     }
 
     private void startHost() {
+        if (mBusy || BattlyWorldsManager.getHostCode(mCurrentState) != null) return;
         setBusy(true);
         new Thread(() -> {
             try {
@@ -343,7 +417,8 @@ public final class BattlyWorldsDialog {
         scroll.addView(list);
         root.addView(scroll, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, dp(260)));
 
-        TextView searchBattly = secondaryAction(mActivity.getString(R.string.battlyworlds_search_action));
+        TextView searchBattly = secondaryAction(
+                mActivity.getString(R.string.battlyworlds_search_action), R.drawable.ic_social_add);
         searchBattly.setGravity(Gravity.CENTER);
         root.addView(searchBattly, new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.WRAP_CONTENT));
 
@@ -511,6 +586,11 @@ public final class BattlyWorldsDialog {
                             mActivity.getString(R.string.battlyworlds_invite_sent, friend.username),
                             Toast.LENGTH_SHORT).show();
                 });
+            } catch (BattlyWorldsInvites.InviteLimitException limit) {
+                Tools.MAIN_HANDLER.post(() -> {
+                    setBusy(false);
+                    showInviteLimitDialog(friend, roomCode, limit);
+                });
             } catch (Throwable throwable) {
                 Tools.MAIN_HANDLER.post(() -> {
                     setBusy(false);
@@ -518,6 +598,88 @@ public final class BattlyWorldsDialog {
                 });
             }
         }, "BattlyWorlds Send Invite").start();
+    }
+
+    private void showInviteLimitDialog(BattlyWorldsInvites.Friend friend, String roomCode,
+                                       BattlyWorldsInvites.InviteLimitException limit) {
+        if (!limit.canUnlockWithAd || limit.rewardedInvitesRemaining <= 0) {
+            new AlertDialog.Builder(mActivity, R.style.BattlyDialog)
+                    .setTitle(R.string.battlyworlds_rewarded_limit_title)
+                    .setMessage(R.string.battlyworlds_rewarded_limit_exhausted)
+                    .setNegativeButton(R.string.global_cancel, null)
+                    .setPositiveButton(R.string.battlyworlds_plus_subscribe, (dialog, which) ->
+                            openPlusSubscription())
+                    .show();
+            return;
+        }
+
+        new AlertDialog.Builder(mActivity, R.style.BattlyDialog)
+                .setTitle(R.string.battlyworlds_rewarded_invite_title)
+                .setMessage(mActivity.getString(
+                        R.string.battlyworlds_rewarded_invite_message,
+                        limit.rewardedInvitesRemaining))
+                .setNegativeButton(R.string.global_cancel, null)
+                .setNeutralButton(R.string.battlyworlds_plus_subscribe, (dialog, which) ->
+                        openPlusSubscription())
+                .setPositiveButton(R.string.battlyworlds_rewarded_watch_ad, (dialog, which) ->
+                        showRewardedInviteAd(friend, roomCode))
+                .show();
+    }
+
+    private void showRewardedInviteAd(BattlyWorldsInvites.Friend friend, String roomCode) {
+        setBusy(true);
+        BattlyRewardedInterstitialHelper.loadAndShow(
+                mActivity,
+                mActivity.getString(R.string.battly_worlds_rewarded_interstitial_ad_unit_id),
+                new BattlyRewardedInterstitialHelper.Callback() {
+                    @Override
+                    public void onRewardEarned() {
+                        unlockAndRetryInvite(friend, roomCode);
+                    }
+
+                    @Override
+                    public void onDismissedWithoutReward() {
+                        setBusy(false);
+                        Toast.makeText(mActivity,
+                                R.string.battlyworlds_rewarded_not_completed,
+                                Toast.LENGTH_SHORT).show();
+                    }
+
+                    @Override
+                    public void onFailed(String message) {
+                        setBusy(false);
+                        new AlertDialog.Builder(mActivity, R.style.BattlyDialog)
+                                .setTitle(R.string.battlyworlds_rewarded_ad_unavailable_title)
+                                .setMessage(mActivity.getString(
+                                        R.string.battlyworlds_rewarded_ad_unavailable_message,
+                                        message))
+                                .setPositiveButton(android.R.string.ok, null)
+                                .show();
+                    }
+                }
+        );
+    }
+
+    private void unlockAndRetryInvite(BattlyWorldsInvites.Friend friend, String roomCode) {
+        new Thread(() -> {
+            try {
+                BattlyWorldsInvites.unlockRewardedInvite(mActivity, roomCode);
+                BattlyWorldsInvites.sendInvite(mActivity, friend.username, roomCode,
+                        BattlyWorldsInvites.getHostVersion());
+                Tools.MAIN_HANDLER.post(() -> {
+                    setBusy(false);
+                    Toast.makeText(mActivity,
+                            mActivity.getString(R.string.battlyworlds_rewarded_invite_sent,
+                                    friend.username),
+                            Toast.LENGTH_SHORT).show();
+                });
+            } catch (Throwable throwable) {
+                Tools.MAIN_HANDLER.post(() -> {
+                    setBusy(false);
+                    Tools.showError(mActivity, throwable);
+                });
+            }
+        }, "BattlyWorlds Rewarded Invite").start();
     }
 
     private void refreshState() {
@@ -531,19 +693,25 @@ public final class BattlyWorldsDialog {
             if (displayCode == null) {
                 mResult.setText(R.string.battlyworlds_preparing_code);
             } else {
-                mResult.setText(mActivity.getString(R.string.battlyworlds_host_code_simple, displayCode));
+                mResult.setText(buildHostSummary(displayCode));
             }
-            mHint.setText(R.string.battlyworlds_host_hint_simple);
+            mHint.setVisibility(View.GONE);
             setRoomActionsEnabled(displayCode != null);
+            mPublicRoomToggle.setEnabled(displayCode != null);
         } else if (guestUrl != null) {
+            mHint.setVisibility(View.VISIBLE);
             mResult.setText(R.string.battlyworlds_guest_connected_simple);
             mHint.setText(R.string.battlyworlds_guest_hint_simple);
             setRoomActionsEnabled(false);
+            setPublicToggleState(false, false);
         } else {
+            mHint.setVisibility(View.VISIBLE);
             mResult.setText(BattlyWorldsManager.describeState(mActivity, mCurrentState));
             mHint.setText(R.string.battlyworlds_tip_simple);
             setRoomActionsEnabled(false);
+            setPublicToggleState(false, false);
         }
+        setHostEnabled(!mBusy && hostCode == null && guestUrl == null);
     }
 
     private void refreshPlanSummary() {
@@ -554,10 +722,26 @@ public final class BattlyWorldsDialog {
                     entitlements.maxInvites,
                     entitlements.roomDurationHours));
         } else {
-            mPlanSummary.setText(mActivity.getString(
+            String summary = mActivity.getString(
                     R.string.battlyworlds_free_summary,
                     entitlements.maxInvites,
-                    entitlements.roomDurationHours));
+                    entitlements.roomDurationHours);
+            String upsell = mActivity.getString(R.string.battlyworlds_plus_upsell);
+            SpannableStringBuilder combined = new SpannableStringBuilder(summary)
+                    .append('\n')
+                    .append(upsell);
+            int upsellStart = summary.length() + 1;
+            combined.setSpan(new ForegroundColorSpan(0xFFFFD95A), upsellStart,
+                    combined.length(), 0);
+            mPlanSummary.setText(combined);
+        }
+    }
+
+    private void openPlusSubscription() {
+        try {
+            mActivity.startActivity(new Intent(Intent.ACTION_VIEW, Uri.parse(PLUS_URL)));
+        } catch (Throwable throwable) {
+            Tools.showError(mActivity, throwable);
         }
     }
 
@@ -578,6 +762,10 @@ public final class BattlyWorldsDialog {
                     mShortCodeLoading = false;
                     if (sourceCode.equals(mHostRealCode)) {
                         mHostShortCode = shortCode;
+                        boolean publicAllowed = BattlyWorldsPreferences.isPublicListingAllowed(mActivity);
+                        boolean makePublic = publicAllowed && BattlyWorldsPreferences.isDefaultPublic(mActivity);
+                        setPublicToggleState(false, publicAllowed);
+                        if (makePublic) updateRoomVisibility(true);
                         refreshState();
                     }
                 });
@@ -603,6 +791,54 @@ public final class BattlyWorldsDialog {
         mShareButton.setAlpha(enabled ? 1f : 0.45f);
         mCopyButton.setEnabled(enabled);
         mCopyButton.setAlpha(enabled ? 1f : 0.45f);
+    }
+
+    private void updateRoomVisibility(boolean makePublic) {
+        if (makePublic && !BattlyWorldsPreferences.isPublicListingAllowed(mActivity)) {
+            setPublicToggleState(false, false);
+            Toast.makeText(mActivity, R.string.battlyworlds_public_listing_disabled, Toast.LENGTH_SHORT).show();
+            return;
+        }
+        String code = getPublicHostCode();
+        if (code == null) {
+            setPublicToggleState(false, false);
+            return;
+        }
+        mPublicRoomToggle.setEnabled(false);
+        String title = mActivity.getString(R.string.battlyworlds_public_room_fallback, getPlayerName());
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                BattlyWorldsInvites.setRoomPublic(mActivity, code, makePublic, title);
+                if (makePublic) {
+                    BattlyWorldsInvites.startPublicRoomHeartbeat(mActivity, code);
+                } else {
+                    BattlyWorldsInvites.stopPublicRoomHeartbeat();
+                }
+                Tools.MAIN_HANDLER.post(() -> {
+                    mRoomPublic = makePublic;
+                    setPublicToggleState(makePublic, true);
+                    Toast.makeText(mActivity, makePublic
+                            ? R.string.battlyworlds_public_enabled
+                            : R.string.battlyworlds_private_enabled, Toast.LENGTH_SHORT).show();
+                });
+            } catch (Throwable throwable) {
+                Tools.MAIN_HANDLER.post(() -> {
+                    setPublicToggleState(mRoomPublic, true);
+                    Tools.showError(mActivity, throwable);
+                });
+            }
+        });
+    }
+
+    private void setPublicToggleState(boolean isPublic, boolean enabled) {
+        mUpdatingVisibility = true;
+        mRoomPublic = isPublic;
+        mPublicRoomToggle.setChecked(isPublic);
+        mPublicRoomToggle.setText(isPublic
+                ? R.string.battlyworlds_room_public_short
+                : R.string.battlyworlds_room_private_short);
+        mPublicRoomToggle.setEnabled(enabled);
+        mUpdatingVisibility = false;
     }
 
     private String simpleStateTitle(String hostCode, String guestUrl) {
@@ -761,30 +997,42 @@ public final class BattlyWorldsDialog {
         return mActivity.getString(R.string.battlyworlds_player_anonymous);
     }
 
-    private TextView primaryAction(String label) {
-        TextView button = action(label);
+    private TextView primaryAction(String label, int iconRes) {
+        TextView button = action(label, iconRes);
         button.setTextColor(0xFF0B171B);
         button.setBackground(round(ACCENT, dp(16), 0, 0));
+        TextViewCompat.setCompoundDrawableTintList(button,
+                ColorStateList.valueOf(0xFF0B171B));
         return button;
     }
 
-    private TextView secondaryAction(String label) {
-        TextView button = action(label);
+    private TextView secondaryAction(String label, int iconRes) {
+        TextView button = action(label, iconRes);
         button.setTextColor(ACCENT);
         button.setBackground(round(0x223D5A60, dp(16), 0x338ADBC6, 1));
+        TextViewCompat.setCompoundDrawableTintList(button,
+                ColorStateList.valueOf(ACCENT));
         return button;
     }
 
-    private TextView action(String label) {
+    private TextView action(String label, int iconRes) {
         TextView button = new TextView(mActivity);
         button.setText(label);
+        button.setTextSize(11);
+        button.setSingleLine(true);
         button.setGravity(Gravity.CENTER);
         button.setTypeface(Typeface.DEFAULT_BOLD);
-        button.setPadding(dp(14), dp(9), dp(14), dp(9));
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
-        params.setMargins(dp(8), 0, 0, 0);
-        button.setLayoutParams(params);
+        button.setPadding(dp(18), dp(8), dp(2), dp(8));
+        button.setMinHeight(dp(44));
+        button.setCompoundDrawablesRelativeWithIntrinsicBounds(iconRes, 0, 0, 0);
+        button.setCompoundDrawablePadding(dp(7));
         return button;
+    }
+
+    private LinearLayout.LayoutParams weightedActionParams(int startMargin) {
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(0, dp(44), 1f);
+        params.setMargins(dp(startMargin), 0, 0, 0);
+        return params;
     }
 
     private TextView iconButton(String label) {
@@ -815,11 +1063,46 @@ public final class BattlyWorldsDialog {
     }
 
     private void setBusy(boolean busy) {
+        mBusy = busy;
         if (busy) {
             mStatus.setText(R.string.battlyworlds_state_loading_nodes);
+            setHostEnabled(false);
         } else {
             refreshState();
         }
+    }
+
+    private CharSequence buildHostSummary(String displayCode) {
+        String codeText = mActivity.getString(R.string.battlyworlds_host_code_simple, displayCode);
+        String hintText = mActivity.getString(R.string.battlyworlds_host_hint_simple);
+        SpannableStringBuilder text = new SpannableStringBuilder(codeText)
+                .append("  ·  ")
+                .append(hintText);
+        int codeStart = codeText.indexOf(displayCode);
+        if (codeStart >= 0) {
+            text.setSpan(new StyleSpan(Typeface.BOLD), codeStart,
+                    codeStart + displayCode.length(), 0);
+        }
+        return text;
+    }
+
+    private void setHostEnabled(boolean enabled) {
+        mHostButton.setEnabled(enabled);
+        mHostButton.setAlpha(enabled ? 1f : 0.45f);
+    }
+
+    private void centerDialogWindow(Window window) {
+        WindowManager.LayoutParams attributes = window.getAttributes();
+        attributes.gravity = Gravity.CENTER;
+        attributes.x = 0;
+        attributes.y = 0;
+        if (PREF_IGNORE_NOTCH && android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.P) {
+            attributes.layoutInDisplayCutoutMode = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R
+                    ? WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_ALWAYS
+                    : WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+        }
+        window.setAttributes(attributes);
+        window.setGravity(Gravity.CENTER);
     }
 
     private void sortFriends(List<BattlyWorldsInvites.Friend> friends) {

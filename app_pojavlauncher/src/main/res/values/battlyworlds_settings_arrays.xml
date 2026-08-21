@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="battlyworlds_visibility_entries">
+        <item>@string/battlyworlds_visibility_private</item>
+        <item>@string/battlyworlds_visibility_public</item>
+    </string-array>
+    <string-array name="battlyworlds_visibility_values" translatable="false">
+        <item>private</item>
+        <item>public</item>
+    </string-array>
+</resources>

@@ -62,9 +62,17 @@ tasks.register("patchMergedLwjglModules") {
             }
 
             File stagingDir = layout.buildDirectory.dir("patched-lwjgl/${version}").get().asFile
+            File inputJar = layout.buildDirectory.file("patched-lwjgl/${version}-input.jar").get().asFile
+            File outputJar = layout.buildDirectory.file("patched-lwjgl/${version}-output.jar").get().asFile
             delete stagingDir
+            inputJar.parentFile.mkdirs()
+            java.nio.file.Files.copy(
+                    mergedJar.toPath(),
+                    inputJar.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
             copy {
-                from(zipTree(mergedJar))
+                // Read a disposable copy so Windows does not keep the destination JAR mapped.
+                from(zipTree(inputJar))
                 into stagingDir
             }
 
@@ -82,7 +90,13 @@ tasks.register("patchMergedLwjglModules") {
                 }
                 into stagingDir
             }
-            ant.zip(destfile: mergedJar, basedir: stagingDir)
+            delete outputJar
+            ant.zip(destfile: outputJar, basedir: stagingDir)
+            java.nio.file.Files.move(
+                    outputJar.toPath(),
+                    mergedJar.toPath(),
+                    java.nio.file.StandardCopyOption.REPLACE_EXISTING)
+            delete inputJar
         }
     }
 }

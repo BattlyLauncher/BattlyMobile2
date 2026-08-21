@@ -20,6 +20,13 @@
             />
 
         <Preference
+            android:key="battlyworlds_settings_screen"
+            android:title="@string/battlyworlds_settings_title"
+            android:summary="@string/battlyworlds_settings_summary"
+            android:fragment="net.kdt.pojavlaunch.prefs.screens.LauncherPreferenceBattlyWorldsFragment"
+            android:icon="@drawable/logo" />
+
+        <Preference
             android:key="video_screen_setting"
             android:title="@string/preference_video_title"
             android:summary="@string/preference_video_description"

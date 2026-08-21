@@ -65,6 +65,7 @@ import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsFeature;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsManager;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsPreferences;
 import net.kdt.pojavlaunch.customcontrols.ControlButtonMenuListener;
 import net.kdt.pojavlaunch.customcontrols.ControlData;
 import net.kdt.pojavlaunch.customcontrols.ControlDeviceImageManager;
@@ -92,6 +93,7 @@ import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.TouchControllerUtils;
 import net.kdt.pojavlaunch.utils.BattlyClientCompat;
 import net.kdt.pojavlaunch.utils.BattlyNativeAdHelper;
+import net.kdt.pojavlaunch.utils.BattlyWorldsTrailerDialog;
 import net.kdt.pojavlaunch.utils.VanillaPostShaderCompat;
 
 import org.libsdl.app.SDLActivity;
@@ -160,7 +162,9 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         @Override
         public void run() {
             checkLanInvitePrompt();
-            Tools.MAIN_HANDLER.postDelayed(this, 10000);
+            if (BattlyWorldsPreferences.isAutoLanDetectionEnabled(MainActivity.this)) {
+                Tools.MAIN_HANDLER.postDelayed(this, 10000);
+            }
         }
     };
 
@@ -231,7 +235,9 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 registerReceiver(mBattlyWorldsInviteReceiver, BattlyWorldsInvites.inviteIntentFilter());
             }
             BattlyWorldsInvites.joinPendingIfAny(this);
-            Tools.MAIN_HANDLER.postDelayed(mLanInviteChecker, 10000);
+            if (BattlyWorldsPreferences.isAutoLanDetectionEnabled(this)) {
+                Tools.MAIN_HANDLER.postDelayed(mLanInviteChecker, 10000);
+            }
         }
         //Now, attach to the service. The game will only start when this happens, to make sure that we know the right state.
         bindService(gameServiceIntent, this, 0);
@@ -596,6 +602,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void onResume() {
         super.onResume();
+        BattlyWorldsInvites.startInvitePolling(this);
         Tools.updateWindowSize(this);
         if (minecraftGLView != null) {
             minecraftGLView.post(() -> minecraftGLView.refreshSize(true));
@@ -612,6 +619,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     protected void onPause() {
+        BattlyWorldsInvites.stopInvitePolling();
         mGyroControl.disable();
         if (CallbackBridge.isGrabbing()){
             sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
@@ -643,6 +651,20 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         super.onDestroy();
         Tools.MAIN_HANDLER.removeCallbacks(mLanInviteChecker);
         if (BattlyWorldsFeature.ENABLED) {
+            if (isFinishing() && !isChangingConfigurations()
+                    && BattlyWorldsPreferences.shouldCloseOnGameExit(this)) {
+                String activeRoomCode = BattlyWorldsPreferences.getActiveRoomCode(this);
+                BattlyWorldsManager.setWaiting(this, true);
+                if (!activeRoomCode.isEmpty()) {
+                    PojavApplication.sExecutorService.execute(() -> {
+                        try {
+                            BattlyWorldsInvites.closeRoom(getApplicationContext(), activeRoomCode);
+                        } catch (Throwable throwable) {
+                            android.util.Log.w("BattlyWorlds", "Unable to close active room", throwable);
+                        }
+                    });
+                }
+            }
             BattlyWorldsInvites.setGameActive(this, false);
             if (mBattlyWorldsInviteReceiver != null) {
                 try {
@@ -708,7 +730,9 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 Tools.showError(this, error);
             }
         }
-        if (BattlyWorldsFeature.ENABLED && requestCode == BattlyWorldsManager.REQUEST_VPN_PERMISSION) {
+        if (BattlyWorldsFeature.ENABLED
+                && BattlyWorldsFeature.VPN_ENABLED
+                && requestCode == BattlyWorldsManager.REQUEST_VPN_PERMISSION) {
             BattlyWorldsManager.onVpnPermissionResult(this, resultCode);
         }
     }
@@ -885,7 +909,12 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             BattlyWorldsFeature.showDisabledDialog(this);
             return;
         }
-        new BattlyWorldsDialog(this, autoHost).show();
+        if (!BattlyWorldsInvites.isBattlyLoggedIn(this)) {
+            Toast.makeText(this, R.string.battlyworlds_login_required, Toast.LENGTH_LONG).show();
+            return;
+        }
+        BattlyWorldsTrailerDialog.showIfNeeded(this,
+                () -> new BattlyWorldsDialog(this, autoHost).show());
     }
 
     private ArrayAdapter<String> createGameActionAdapter() {
@@ -904,7 +933,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 R.drawable.ic_battly_keyboard_line,
                 R.drawable.ic_battly_settings_line,
                 R.drawable.ic_battly_gamepad_line,
-                R.drawable.bworlds
+                R.drawable.logo
         };
         return new ArrayAdapter<String>(this, 0, titles) {
             @NonNull
@@ -976,7 +1005,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     private void checkLanInvitePrompt() {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsPreferences.isAutoLanDetectionEnabled(this)) {
             return;
         }
         if (mLanInvitePromptHidden
@@ -1028,7 +1057,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         panel.setElevation(dp(8));
 
         ImageView icon = new ImageView(this);
-        icon.setImageResource(R.drawable.bworlds);
+        icon.setImageResource(R.drawable.logo);
         icon.setPadding(dp(4), dp(4), dp(4), dp(4));
         GradientDrawable iconBackground = new GradientDrawable();
         iconBackground.setColor(0x333C4E58);

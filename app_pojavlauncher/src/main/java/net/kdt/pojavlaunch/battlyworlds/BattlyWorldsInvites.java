@@ -14,7 +14,9 @@ import android.graphics.Color;
 import android.graphics.Typeface;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Build;
+import android.os.SystemClock;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
@@ -35,7 +37,9 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import net.burningtnt.terracotta.TerracottaAndroidAPI;
 import net.kdt.pojavlaunch.LauncherActivity;
+import net.kdt.pojavlaunch.BuildConfig;
 import net.kdt.pojavlaunch.MainActivity;
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.PojavProfile;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -45,7 +49,6 @@ import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.tasks.AsyncMinecraftDownloader;
 import net.kdt.pojavlaunch.tasks.AsyncVersionList;
-import net.kdt.pojavlaunch.utils.BattlyPlusManager;
 import net.kdt.pojavlaunch.utils.NotificationUtils;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
@@ -62,8 +65,12 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.ConcurrentHashMap;
 
 public final class BattlyWorldsInvites {
     public static final String TYPE = "battlyworlds_invite";
@@ -75,9 +82,69 @@ public final class BattlyWorldsInvites {
     private static final String PREF_PENDING_CODE = "pending_code";
     private static final String PREF_PENDING_FROM = "pending_from";
     private static final String PREF_PENDING_VERSION = "pending_version";
+    private static final String PREF_SEEN_INVITES = "seen_invites";
     private static final String INVITE_CHANNEL_ID = "battlyworlds_invites_high";
+    // FCM delivers invites immediately. Polling is only a foreground fallback.
+    private static final long INVITE_POLL_INTERVAL_MS = 5 * 60_000L;
     private static volatile long sLastHeartbeat;
+    private static volatile long sLastInvitePoll;
     private static volatile Entitlements sEntitlements = Entitlements.free();
+    private static volatile Context sInvitePollContext;
+    private static volatile boolean sInvitePollScheduled;
+    private static volatile Context sPublicRoomContext;
+    private static volatile String sPublicRoomCode = "";
+    private static final long PUBLIC_ROOM_HEARTBEAT_INTERVAL_MS = 30_000L;
+    private static final long USAGE_EVENT_DEBOUNCE_MS = 10_000L;
+    private static final Map<String, Long> LAST_USAGE_EVENTS = new ConcurrentHashMap<>();
+    private static final Runnable PUBLIC_ROOM_HEARTBEAT = new Runnable() {
+        @Override
+        public void run() {
+            Context context = sPublicRoomContext;
+            String code = sPublicRoomCode;
+            if (context == null || !looksLikeShortCode(code)) return;
+            PojavApplication.sExecutorService.execute(() -> {
+                try {
+                    heartbeatPublicRoom(context, code);
+                } catch (Throwable throwable) {
+                    Log.w("BattlyWorlds", "Public room heartbeat failed", throwable);
+                } finally {
+                    if (code.equals(sPublicRoomCode)) {
+                        Tools.MAIN_HANDLER.postDelayed(PUBLIC_ROOM_HEARTBEAT,
+                                PUBLIC_ROOM_HEARTBEAT_INTERVAL_MS);
+                    }
+                }
+            });
+        }
+    };
+    private static final AtomicBoolean INVITE_POLL_IN_FLIGHT = new AtomicBoolean();
+    private static final Runnable INVITE_POLL = new Runnable() {
+        @Override
+        public void run() {
+            Context context = sInvitePollContext;
+            if (context == null || !BattlyWorldsFeature.ENABLED) {
+                sInvitePollScheduled = false;
+                return;
+            }
+            long now = System.currentTimeMillis();
+            long elapsed = now - sLastInvitePoll;
+            if ((sLastInvitePoll == 0L || elapsed >= INVITE_POLL_INTERVAL_MS)
+                    && INVITE_POLL_IN_FLIGHT.compareAndSet(false, true)) {
+                sLastInvitePoll = now;
+                new Thread(() -> {
+                    try {
+                        pollPendingInvites(context);
+                    } finally {
+                        INVITE_POLL_IN_FLIGHT.set(false);
+                    }
+                }, "BattlyWorlds Invite Poll").start();
+            }
+            long delay = sLastInvitePoll == 0L
+                    ? INVITE_POLL_INTERVAL_MS
+                    : Math.max(1_000L, INVITE_POLL_INTERVAL_MS
+                    - (System.currentTimeMillis() - sLastInvitePoll));
+            Tools.MAIN_HANDLER.postDelayed(this, delay);
+        }
+    };
 
     public static final String EXTRA_TYPE = "type";
     public static final String EXTRA_CODE = "code";
@@ -103,28 +170,48 @@ public final class BattlyWorldsInvites {
         }
     }
 
+    public static final class InviteLimitException extends Exception {
+        public final int inviteCount;
+        public final int maxInvites;
+        public final int rewardedInvitesRemaining;
+        public final boolean canUnlockWithAd;
+
+        InviteLimitException(String message, int inviteCount, int maxInvites,
+                             int rewardedInvitesRemaining, boolean canUnlockWithAd) {
+            super(message);
+            this.inviteCount = inviteCount;
+            this.maxInvites = maxInvites;
+            this.rewardedInvitesRemaining = rewardedInvitesRemaining;
+            this.canUnlockWithAd = canUnlockWithAd;
+        }
+    }
+
     public static class Entitlements {
         public final boolean plus;
         public final String tier;
         public final String priority;
         public final boolean persistentRooms;
+        public final boolean unlimitedInvites;
         public final int maxInvites;
         public final int maxGuests;
         public final int roomDurationHours;
 
         Entitlements(boolean plus, String tier, String priority, boolean persistentRooms,
+                     boolean unlimitedInvites,
                      int maxInvites, int maxGuests, int roomDurationHours) {
             this.plus = plus;
             this.tier = safe(tier).isEmpty() ? "free" : tier;
             this.priority = safe(priority).isEmpty() ? "standard" : priority;
             this.persistentRooms = persistentRooms;
-            this.maxInvites = maxInvites <= 0 ? 3 : maxInvites;
+            this.unlimitedInvites = unlimitedInvites;
+            this.maxInvites = this.unlimitedInvites ? 0
+                    : (maxInvites <= 0 ? (plus ? 50 : 5) : maxInvites);
             this.maxGuests = maxGuests <= 0 ? 3 : maxGuests;
             this.roomDurationHours = roomDurationHours <= 0 ? 6 : roomDurationHours;
         }
 
         public static Entitlements free() {
-            return new Entitlements(false, "free", "standard", false, 3, 3, 6);
+            return new Entitlements(false, "free", "standard", false, false, 5, 3, 6);
         }
     }
 
@@ -222,6 +309,25 @@ public final class BattlyWorldsInvites {
         registerDeviceToken(context);
     }
 
+    public static synchronized void startInvitePolling(Context context) {
+        if (!BattlyWorldsFeature.ENABLED || context == null
+                || !BattlyWorldsPreferences.areInvitationsEnabled(context)) {
+            return;
+        }
+        sInvitePollContext = context.getApplicationContext();
+        if (sInvitePollScheduled) {
+            return;
+        }
+        sInvitePollScheduled = true;
+        Tools.MAIN_HANDLER.post(INVITE_POLL);
+    }
+
+    public static synchronized void stopInvitePolling() {
+        sInvitePollContext = null;
+        sInvitePollScheduled = false;
+        Tools.MAIN_HANDLER.removeCallbacks(INVITE_POLL);
+    }
+
     public static Entitlements getCachedEntitlements() {
         return sEntitlements == null ? Entitlements.free() : sEntitlements;
     }
@@ -255,11 +361,15 @@ public final class BattlyWorldsInvites {
     }
 
     public static void dispatchRemoteInvite(Context context, Map<String, String> data) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsPreferences.areInvitationsEnabled(context)) {
             return;
         }
         Invite invite = fromMap(data);
         if (!invite.isValid()) {
+            return;
+        }
+        if (!markInviteSeen(context, invite.inviteId)) {
+            acknowledgeInvite(context, invite.inviteId);
             return;
         }
         Intent broadcast = toIntent(new Intent(ACTION_INVITE_RECEIVED), invite);
@@ -268,12 +378,83 @@ public final class BattlyWorldsInvites {
         if (!prefs(context).getBoolean(PREF_GAME_ACTIVE, false)) {
             postInviteNotification(context, invite);
         }
+        acknowledgeInvite(context, invite.inviteId);
+    }
+
+    private static void pollPendingInvites(Context context) {
+        String token = getBattlyToken(context);
+        if (token.isEmpty()) {
+            return;
+        }
+        try {
+            JsonObject response = getAuthorizedJson(
+                    API_BASE + "/api/v2/battlyworlds/invites/pending", token);
+            if (response == null || !response.has("invites") || !response.get("invites").isJsonArray()) {
+                return;
+            }
+            for (JsonElement element : response.getAsJsonArray("invites")) {
+                if (!element.isJsonObject()) {
+                    continue;
+                }
+                JsonObject object = element.getAsJsonObject();
+                Map<String, String> data = new java.util.HashMap<>();
+                data.put(EXTRA_TYPE, TYPE);
+                data.put(EXTRA_CODE, stringValue(object, EXTRA_CODE));
+                data.put(EXTRA_FROM, stringValue(object, "fromUsername"));
+                data.put(EXTRA_VERSION, stringValue(object, EXTRA_VERSION));
+                data.put(EXTRA_INVITE_ID, stringValue(object, EXTRA_INVITE_ID));
+                dispatchRemoteInvite(context, data);
+            }
+        } catch (Throwable throwable) {
+            Log.w("BattlyWorldsInvites", "Unable to poll pending invites", throwable);
+        }
+    }
+
+    private static void acknowledgeInvite(Context context, String inviteId) {
+        if (safe(inviteId).isEmpty()) {
+            return;
+        }
+        String token = getBattlyToken(context);
+        if (token.isEmpty()) {
+            return;
+        }
+        new Thread(() -> {
+            try {
+                postJson(API_BASE + "/api/v2/battlyworlds/invites/"
+                        + URLEncoder.encode(inviteId, "UTF-8") + "/received", token, new JSONObject());
+            } catch (Throwable throwable) {
+                Log.w("BattlyWorldsInvites", "Unable to acknowledge invite", throwable);
+            }
+        }, "BattlyWorlds Invite Ack").start();
+    }
+
+    private static synchronized boolean markInviteSeen(Context context, String inviteId) {
+        String id = safe(inviteId);
+        if (id.isEmpty()) {
+            return true;
+        }
+        SharedPreferences preferences = prefs(context);
+        Set<String> seen = new LinkedHashSet<>(preferences.getStringSet(
+                PREF_SEEN_INVITES, java.util.Collections.emptySet()));
+        if (!seen.add(id)) {
+            return false;
+        }
+        while (seen.size() > 40) {
+            seen.remove(seen.iterator().next());
+        }
+        preferences.edit().putStringSet(PREF_SEEN_INVITES, seen).apply();
+        return true;
+    }
+
+    private static String stringValue(JsonObject object, String key) {
+        return object.has(key) && !object.get(key).isJsonNull() ? object.get(key).getAsString() : "";
     }
 
     public static BroadcastReceiver createGameInviteReceiver(MainActivity activity) {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
+                if (!BattlyWorldsPreferences.areInvitationsEnabled(context)) return;
                 Invite invite = fromIntent(intent);
                 if (invite.isValid()) {
                     showInGameInvite(activity, invite);
@@ -287,6 +468,7 @@ public final class BattlyWorldsInvites {
     }
 
     public static boolean handleLauncherIntent(LauncherActivity activity, Intent intent) {
+        if (!BattlyWorldsPreferences.areInvitationsEnabled(activity)) return false;
         Invite invite = fromIntent(intent);
         if (!invite.isValid()) {
             return false;
@@ -422,24 +604,170 @@ public final class BattlyWorldsInvites {
         String message = response.has("message") ? response.get("message").getAsString()
                 : response.has("error") ? response.get("error").getAsString()
                 : "Unable to send invite";
+        if ("BATTLYWORLDS_INVITE_LIMIT".equals(jsonString(response, "code"))) {
+            throw new InviteLimitException(
+                    message,
+                    jsonInt(response, "inviteCount", 5),
+                    jsonInt(response, "maxInvites", 5),
+                    jsonInt(response, "rewardedInvitesRemaining", 0),
+                    jsonBoolean(response, "canUnlockWithAd", false)
+            );
+        }
         throw new IllegalStateException(message);
     }
 
+    public static void unlockRewardedInvite(Context context, String roomCode) throws Exception {
+        String code = safe(roomCode).toUpperCase(java.util.Locale.ROOT);
+        if (!looksLikeShortCode(code)) {
+            throw new IllegalArgumentException("Invalid Battly Worlds room code");
+        }
+        JsonObject response = postJson(
+                API_BASE + "/api/v2/battlyworlds/rooms/"
+                        + URLEncoder.encode(code, StandardCharsets.UTF_8.name())
+                        + "/rewarded-invite",
+                requireBattlyToken(context),
+                new JSONObject()
+        );
+        if (jsonInt(response, "status", 500) != 200) {
+            throw new IllegalStateException(jsonError(response, "Unable to unlock rewarded invite"));
+        }
+    }
+
+    public static void trackUsage(Context context, String event, String source) {
+        if (context == null) return;
+        String eventKey = safe(event) + ":" + safe(source);
+        long now = SystemClock.elapsedRealtime();
+        Long previous = LAST_USAGE_EVENTS.put(eventKey, now);
+        if (previous != null && now - previous < USAGE_EVENT_DEBOUNCE_MS) return;
+        Context appContext = context.getApplicationContext();
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                String token = getBattlyToken(appContext);
+                if (token.isEmpty()) return;
+                JSONObject body = new JSONObject();
+                body.put("event", safe(event));
+                body.put("source", safe(source));
+                body.put("minecraftVersion", getCurrentVersion());
+                body.put("platform", "android");
+                body.put("clientVersion", BuildConfig.VERSION_NAME);
+                postJson(API_BASE + "/api/v2/battlyworlds/stats/event", token, body);
+            } catch (Throwable throwable) {
+                Log.d("BattlyWorlds", "Usage event was not recorded: " + throwable.getMessage());
+            }
+        });
+    }
+
     public static String createShortRoomCode(Context context, String fullCode, String version) throws Exception {
+        String token = requireBattlyToken(context);
+        Entitlements entitlements = refreshEntitlements(context);
         JSONObject body = new JSONObject();
         body.put("fullCode", safe(fullCode));
         body.put("version", safe(version));
         body.put("hostPlayer", getPlayerName(context));
         body.put("persistent", true);
-        JsonObject response = postJson(API_BASE + "/api/v2/battlyworlds/rooms", getBattlyToken(context), body);
+        body.put("durationHours", BattlyWorldsPreferences.getDefaultDurationHours(context,
+                entitlements.roomDurationHours));
+        JsonObject response = postJson(API_BASE + "/api/v2/battlyworlds/rooms", token, body);
         updateEntitlements(response);
         if (response.has("status") && response.get("status").getAsInt() == 200 && response.has("shortCode")) {
-            return response.get("shortCode").getAsString();
+            String code = response.get("shortCode").getAsString();
+            BattlyWorldsPreferences.setActiveRoomCode(context, code);
+            return code;
         }
         String message = response.has("message") ? response.get("message").getAsString()
                 : response.has("error") ? response.get("error").getAsString()
                 : "Unable to create room code";
         throw new IllegalStateException(message);
+    }
+
+    public static void closeRoom(Context context, String code) throws Exception {
+        String normalized = safe(code).toUpperCase();
+        if (normalized.isEmpty()) return;
+        JsonObject response = postJson(API_BASE + "/api/v2/battlyworlds/rooms/"
+                + URLEncoder.encode(normalized, StandardCharsets.UTF_8.name()) + "/close",
+                requireBattlyToken(context), new JSONObject());
+        if (!response.has("status") || response.get("status").getAsInt() != 200) {
+            throw new IllegalStateException(jsonError(response, "Unable to close room"));
+        }
+        stopPublicRoomHeartbeat();
+        BattlyWorldsPreferences.clearActiveRoomCode(context);
+    }
+
+    public static List<PublicRoom> getPublicRooms(Context context) throws Exception {
+        JsonObject response = getAuthorizedJson(
+                API_BASE + "/api/v2/battlyworlds/rooms/public?page=1&pageSize=50",
+                requireBattlyToken(context));
+        List<PublicRoom> rooms = new ArrayList<>();
+        if (response == null || !response.has("status") || response.get("status").getAsInt() != 200) {
+            throw new IllegalStateException(jsonError(response, "Unable to load public rooms"));
+        }
+        if (!response.has("rooms") || !response.get("rooms").isJsonArray()) {
+            throw new IllegalStateException("Invalid public rooms response");
+        }
+        response.getAsJsonArray("rooms").forEach(element -> {
+            if (!element.isJsonObject()) return;
+            JsonObject room = element.getAsJsonObject();
+            String code = jsonString(room, "code");
+            if (!looksLikeShortCode(code)) return;
+            rooms.add(new PublicRoom(
+                    code,
+                    jsonString(room, "title"),
+                    first(jsonString(room, "hostUsername"), jsonString(room, "hostPlayer")),
+                    jsonString(room, "version"),
+                    room.has("premium") && room.get("premium").getAsBoolean(),
+                    room.has("maxGuests") ? room.get("maxGuests").getAsInt() : 3
+            ));
+        });
+        return rooms;
+    }
+
+    public static void setRoomPublic(Context context, String code, boolean isPublic, String title) throws Exception {
+        String token = getBattlyToken(context);
+        if (token.isEmpty()) throw new IllegalStateException(context.getString(R.string.battlyworlds_public_login_required));
+        JSONObject body = new JSONObject();
+        body.put("isPublic", isPublic);
+        body.put("title", safe(title));
+        JsonObject response = requestJson(
+                "PATCH",
+                API_BASE + "/api/v2/battlyworlds/rooms/"
+                        + URLEncoder.encode(code, StandardCharsets.UTF_8.name()) + "/visibility",
+                token,
+                body);
+        if (!response.has("status") || response.get("status").getAsInt() != 200) {
+            throw new IllegalStateException(jsonError(response, "Unable to update room visibility"));
+        }
+    }
+
+    public static void heartbeatPublicRoom(Context context, String code) throws Exception {
+        String token = getBattlyToken(context);
+        if (token.isEmpty() || !looksLikeShortCode(code)) return;
+        JsonObject response = postJson(
+                API_BASE + "/api/v2/battlyworlds/rooms/"
+                        + URLEncoder.encode(code, StandardCharsets.UTF_8.name()) + "/heartbeat",
+                token,
+                new JSONObject());
+        if (!response.has("status") || response.get("status").getAsInt() != 200) {
+            throw new IllegalStateException(jsonError(response, "Unable to keep public room active"));
+        }
+    }
+
+    public static void startPublicRoomHeartbeat(Context context, String code) {
+        stopPublicRoomHeartbeat();
+        if (context == null || !looksLikeShortCode(code)) return;
+        sPublicRoomContext = context.getApplicationContext();
+        sPublicRoomCode = code.toUpperCase();
+        Tools.MAIN_HANDLER.post(PUBLIC_ROOM_HEARTBEAT);
+    }
+
+    public static void stopPublicRoomHeartbeat() {
+        sPublicRoomCode = "";
+        sPublicRoomContext = null;
+        Tools.MAIN_HANDLER.removeCallbacks(PUBLIC_ROOM_HEARTBEAT);
+    }
+
+    public static void joinPublicRoom(LauncherActivity activity, PublicRoom room) {
+        if (activity == null || room == null) return;
+        prepareVersionAndLaunch(activity, new Invite(room.code, room.hostUsername, room.version, ""));
     }
 
     private static void updateEntitlements(JsonObject response) {
@@ -452,7 +780,8 @@ public final class BattlyWorldsInvites {
                 entitlements.has("tier") ? entitlements.get("tier").getAsString() : "free",
                 entitlements.has("priority") ? entitlements.get("priority").getAsString() : "standard",
                 entitlements.has("persistentRooms") && entitlements.get("persistentRooms").getAsBoolean(),
-                entitlements.has("maxInvites") ? entitlements.get("maxInvites").getAsInt() : 3,
+                entitlements.has("unlimitedInvites") && entitlements.get("unlimitedInvites").getAsBoolean(),
+                entitlements.has("maxInvites") ? entitlements.get("maxInvites").getAsInt() : 5,
                 entitlements.has("maxGuests") ? entitlements.get("maxGuests").getAsInt() : 3,
                 entitlements.has("roomDurationHours") ? entitlements.get("roomDurationHours").getAsInt() : 6
         );
@@ -463,8 +792,9 @@ public final class BattlyWorldsInvites {
         if (!looksLikeShortCode(cleanCode)) {
             return code;
         }
-        JsonObject response = getJson(API_BASE + "/api/v2/battlyworlds/rooms/"
-                + URLEncoder.encode(cleanCode, StandardCharsets.UTF_8.name()));
+        JsonObject response = getAuthorizedJson(API_BASE + "/api/v2/battlyworlds/rooms/"
+                + URLEncoder.encode(cleanCode, StandardCharsets.UTF_8.name()),
+                requireBattlyToken(context));
         if (response.has("status") && response.get("status").getAsInt() == 200 && response.has("fullCode")) {
             return response.get("fullCode").getAsString();
         }
@@ -601,7 +931,7 @@ public final class BattlyWorldsInvites {
             panel.setElevation(dp(activity, 8));
 
             ImageView icon = new ImageView(activity);
-            icon.setImageResource(R.drawable.bworlds);
+            icon.setImageResource(R.drawable.logo);
             icon.setPadding(dp(activity, 4), dp(activity, 4), dp(activity, 4), dp(activity, 4));
             GradientDrawable iconBackground = new GradientDrawable();
             iconBackground.setColor(0x333C4E58);
@@ -698,6 +1028,7 @@ public final class BattlyWorldsInvites {
     }
 
     private static void postInviteNotification(Context context, Invite invite) {
+        if (!BattlyWorldsPreferences.areInvitationsEnabled(context)) return;
         buildInviteNotificationChannel(context);
         Intent intent = toIntent(new Intent(context, LauncherActivity.class), invite);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
@@ -789,8 +1120,12 @@ public final class BattlyWorldsInvites {
     }
 
     private static JsonObject postJson(String endpoint, String token, JSONObject body) throws Exception {
+        return requestJson("POST", endpoint, token, body);
+    }
+
+    private static JsonObject requestJson(String method, String endpoint, String token, JSONObject body) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
-        connection.setRequestMethod("POST");
+        connection.setRequestMethod(method);
         connection.setRequestProperty("Content-Type", "application/json; charset=UTF-8");
         if (!token.isEmpty()) {
             connection.setRequestProperty("Authorization", "Bearer " + token);
@@ -812,16 +1147,64 @@ public final class BattlyWorldsInvites {
         }
     }
 
-    private static JsonObject getJson(String endpoint) throws Exception {
+    private static String jsonString(JsonObject object, String key) {
+        return object != null && object.has(key) && !object.get(key).isJsonNull()
+                ? safe(object.get(key).getAsString()) : "";
+    }
+
+    private static int jsonInt(JsonObject object, String key, int fallback) {
+        try {
+            return object != null && object.has(key) && !object.get(key).isJsonNull()
+                    ? object.get(key).getAsInt() : fallback;
+        } catch (RuntimeException ignored) {
+            return fallback;
+        }
+    }
+
+    private static boolean jsonBoolean(JsonObject object, String key, boolean fallback) {
+        try {
+            return object != null && object.has(key) && !object.get(key).isJsonNull()
+                    ? object.get(key).getAsBoolean() : fallback;
+        } catch (RuntimeException ignored) {
+            return fallback;
+        }
+    }
+
+    private static String jsonError(JsonObject response, String fallback) {
+        if (response != null && response.has("message")) return response.get("message").getAsString();
+        if (response != null && response.has("error")) return response.get("error").getAsString();
+        return fallback;
+    }
+
+    public static final class PublicRoom {
+        public final String code;
+        public final String title;
+        public final String hostUsername;
+        public final String version;
+        public final boolean premium;
+        public final int maxGuests;
+
+        public PublicRoom(String code, String title, String hostUsername, String version,
+                          boolean premium, int maxGuests) {
+            this.code = code;
+            this.title = title;
+            this.hostUsername = hostUsername;
+            this.version = version;
+            this.premium = premium;
+            this.maxGuests = maxGuests;
+        }
+    }
+
+    private static JsonObject getAuthorizedJson(String endpoint, String token) throws Exception {
         HttpURLConnection connection = (HttpURLConnection) new URL(endpoint).openConnection();
         connection.setRequestMethod("GET");
+        connection.setRequestProperty("Authorization", "Bearer " + token);
         connection.setConnectTimeout(12000);
         connection.setReadTimeout(12000);
         try (InputStream inputStream = connection.getResponseCode() >= 400
                 ? connection.getErrorStream()
                 : connection.getInputStream()) {
-            String response = readFully(inputStream);
-            return Tools.GLOBAL_GSON.fromJson(response, JsonObject.class);
+            return Tools.GLOBAL_GSON.fromJson(readFully(inputStream), JsonObject.class);
         } finally {
             connection.disconnect();
         }
@@ -841,7 +1224,24 @@ public final class BattlyWorldsInvites {
     }
 
     private static String getBattlyToken(Context context) {
-        return BattlyPlusManager.getToken(context);
+        if (context == null) return "";
+        MinecraftAccount account = PojavProfile.getCurrentProfileContent(
+                context.getApplicationContext(), null);
+        if (account == null || !account.isBattly() || !Tools.isValidString(account.accessToken)) {
+            return "";
+        }
+        String token = account.accessToken.trim();
+        return "0".equals(token) || token.length() < 32 ? "" : token;
+    }
+
+    private static String requireBattlyToken(Context context) {
+        String token = getBattlyToken(context);
+        if (token.isEmpty()) {
+            throw new IllegalStateException(context == null
+                    ? "Battly account required"
+                    : context.getString(R.string.battlyworlds_login_required));
+        }
+        return token;
     }
 
     private static String getCurrentVersion() {

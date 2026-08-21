@@ -31,6 +31,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * <h1>State Definition</h1>
  *
  * <p>For Android platform, developers must invoke {@link #initialize} with a {@link VpnServiceCallback} to initialize the rust backend.
+ * Terracotta 0.4.2 uses Scaffolding in no-TUN mode, so the callback is retained only for compatibility and is not expected to run.
  * Then, {@link #getState()}, {@link #setWaiting()}, {@link #setGuesting}, {@link #setScanning} are available to hook states from Terracotta.</p>
  *
  * <p>All methods here are thread-safe and can be invoked concurrently from multiple threads.</p>
@@ -237,14 +238,14 @@ public final class TerracottaAndroidAPI {
      *
      * @param room       the room code, which may be used if it's valid.
      * @param player     the player's name. A default value will be taken if it's null.
-     * @param extraNodes extra public server nodes for EasyTier.
+     * @param extraNodes additional EasyTier relays supplied by Battly.
      * @throws IllegalStateException if Terracotta Android hasn't been initialized.
      * @implNote Usually, this method doesn't take a long time to fetch states.
      * However, when initializing the EasyTier, state fetching may block for ~1 seconds.
      */
     public static void setScanning(@Nullable String room, @Nullable String player, @Nullable List<String> extraNodes) {
         assertStarted();
-        setScanning0(room, player, extraNodes == null ? null : String.join("\0", extraNodes));
+        setScanning0(room, player, encodeNodes(extraNodes));
     }
 
     /**
@@ -252,7 +253,7 @@ public final class TerracottaAndroidAPI {
      *
      * @param room       the room code. False will be returned if it's invalid.
      * @param player     the player's name. A default value will be taken if it's null.
-     * @param extraNodes extra public server nodes for EasyTier.
+     * @param extraNodes additional EasyTier relays supplied by Battly.
      * @return True if room code is valid, false otherwise.
      * @throws IllegalStateException if Terracotta Android hasn't been initialized.
      * @throws NullPointerException  if room is null.
@@ -263,7 +264,7 @@ public final class TerracottaAndroidAPI {
         Objects.requireNonNull(room, "room");
 
         assertStarted();
-        return setGuesting0(room, player, extraNodes == null ? null : String.join("\0", extraNodes));
+        return setGuesting0(room, player, encodeNodes(extraNodes));
     }
 
     /**
@@ -477,4 +478,21 @@ public final class TerracottaAndroidAPI {
     private static native void finishExportLogs0(long pointer);
 
     private static native void panic0();
+
+    private static String encodeNodes(@Nullable List<String> extraNodes) {
+        if (extraNodes == null || extraNodes.isEmpty()) {
+            return "";
+        }
+        StringBuilder encoded = new StringBuilder();
+        for (String node : extraNodes) {
+            if (node == null || node.trim().isEmpty()) {
+                continue;
+            }
+            if (encoded.length() > 0) {
+                encoded.append('\0');
+            }
+            encoded.append(node.trim());
+        }
+        return encoded.toString();
+    }
 }

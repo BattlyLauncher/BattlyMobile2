@@ -375,7 +375,14 @@ def update_locale(
             "</resources>",
             "\n" + "\n".join(additions) + "\n</resources>",
         )
-    path.write_text(source, encoding="utf-8", newline="\n")
+    for attempt in range(5):
+        try:
+            path.write_text(source, encoding="utf-8", newline="\n")
+            break
+        except OSError:
+            if attempt == 4:
+                raise
+            time.sleep(0.25 * (attempt + 1))
     print(f"{qualifier}: translated {len(translations)} strings")
 
 

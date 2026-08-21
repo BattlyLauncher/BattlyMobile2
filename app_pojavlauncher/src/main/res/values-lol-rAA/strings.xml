@@ -347,7 +347,7 @@ if yu wanna use teh offishul download source, press "switch to offishul site" n 
     <string name="battly_social_title">Battly Social</string>
     <string name="battly_social_user">Battly user</string>
     <string name="battly_social_working">Updating Battly Social…</string>
-    <string name="battly_whats_new_action_start">Explore 2.1.1</string>
+    <string name="battly_whats_new_action_start">Explore 2.2.0</string>
     <string name="battly_whats_new_compatibility_desc">HTTP/2, connection reuse, resumable downloads and automatic retries. Battly uses 64 simultaneous downloads by default and lets you choose up to 100.</string>
     <string name="battly_whats_new_compatibility_title">Downloads built for speed</string>
     <string name="battly_whats_new_controllers_desc">Set up PlayStation, Xbox and Nintendo Switch controllers with a guided assistant, animated 3D previews, stick calibration and per-instance mappings.</string>
@@ -357,9 +357,9 @@ if yu wanna use teh offishul download source, press "switch to offishul site" n 
     <string name="battly_whats_new_instances_title">Your instances, protected</string>
     <string name="battly_whats_new_recovery_desc">The maintenance center detects damaged files and incompatible mods. FPS, real server ping, touch controls, ESC, crash recovery and translations have also improved.</string>
     <string name="battly_whats_new_recovery_title">More stable, easier to fix</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.1.1</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.0</string>
     <string name="battly_whats_new_transition_desc">Your profiles are intact and ready to play.</string>
-    <string name="battly_whats_new_transition_title">Battly 2.1.1 is ready</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.0 is ready</string>
     <string name="battly_whats_new_worlds_desc">Battly selects Java, LWJGL and the renderer for each version. MobileGlues 2.0.0 adds new graphics options and broader compatibility.</string>
     <string name="battly_whats_new_worlds_title">Smarter graphics and compatibility</string>
     <string name="bind_process_bottom">Bottom</string>
@@ -386,7 +386,7 @@ if yu wanna use teh offishul download source, press "switch to offishul site" n 
     <string name="crash_no_findings">No known crash pattern was found in the latest logs.</string>
     <string name="crash_recovery_applied">Recovery action completed</string>
     <string name="crash_recovery_manual">This issue needs a manual change. Open the log for details.</string>
-    <string name="credits_version">Version 2.1.1</string>
+    <string name="credits_version">Version 2.2.0</string>
     <string name="ctrl_like_btn">Like</string>
     <string name="ctrl_liked_added">Added to liked controls.</string>
     <string name="ctrl_liked_btn">Liked</string>
@@ -447,8 +447,8 @@ if yu wanna use teh offishul download source, press "switch to offishul site" n 
     <string name="java_runtime_download_progress">Downloading Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Installing Java 8</string>
     <string name="java_runtime_download_waiting">Preparing Java 8 download...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.1.1</string>
-    <string name="launcher_mobile_badge">Mobile 2.1.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.0</string>
+    <string name="launcher_mobile_badge">Mobile 2.2.0</string>
     <string name="launcher_status_battly">Battly account</string>
     <string name="launcher_status_battly_plus">Battly+ account</string>
     <string name="library_analyze_mods">Analyze</string>

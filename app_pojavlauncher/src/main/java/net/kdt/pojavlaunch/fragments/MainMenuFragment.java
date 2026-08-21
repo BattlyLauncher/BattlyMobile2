@@ -43,6 +43,9 @@ import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.LocaleUtils;
+import net.kdt.pojavlaunch.utils.BattlyHomeHubDialog;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsDiscovery;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
@@ -70,6 +73,8 @@ public class MainMenuFragment extends Fragment {
     private ProgressBar mPlayButtonProgress;
     private TextView mSelectedVersionLabel;
     private ImageButton mSkinButton;
+    private View mBattlyHubButtonContainer;
+    private View mBattlyWorldsNewBadge;
     private RecyclerView mNewsPager;
     private NewsCardAdapter mNewsCardAdapter;
     private boolean mLaunchStarting;
@@ -89,6 +94,8 @@ public class MainMenuFragment extends Fragment {
         ImageButton mLibraryButton = requireActivity().findViewById(R.id.library_button);
         ImageButton mSocialButton = requireActivity().findViewById(R.id.social_button);
         mSkinButton = requireActivity().findViewById(R.id.skin_button);
+        mBattlyHubButtonContainer = requireActivity().findViewById(R.id.battly_hub_button_container);
+        mBattlyWorldsNewBadge = requireActivity().findViewById(R.id.battly_worlds_new_badge);
         View mDownloadButton = view.findViewById(R.id.install_jar_button);
         ImageButton mEditProfileButton = view.findViewById(R.id.edit_profile_button);
         mPlayButton = view.findViewById(R.id.play_button);
@@ -109,8 +116,10 @@ public class MainMenuFragment extends Fragment {
                 LibraryCenterFragment.TAG, null));
         mSocialButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), BattlySocialFragment.class,
                 BattlySocialFragment.TAG, null));
-        mSkinButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), BattlySkinManagerFragment.class,
-                BattlySkinManagerFragment.TAG, null));
+        mSkinButton.setOnClickListener(v -> {
+            BattlyWorldsInvites.trackUsage(requireContext(), "home_hub_opened", "home");
+            BattlyHomeHubDialog.show(requireActivity(), this::refreshBattlyWorldsBadge);
+        });
         mDownloadButton.setOnClickListener(v -> openDownloadCenter());
         mEditProfileButton.setOnClickListener(v -> mVersionSpinner.performClick());
         mEditProfileButton.setOnLongClickListener(v -> {
@@ -387,6 +396,8 @@ public class MainMenuFragment extends Fragment {
         mPlayButtonProgress = null;
         mSelectedVersionLabel = null;
         mSkinButton = null;
+        mBattlyHubButtonContainer = null;
+        mBattlyWorldsNewBadge = null;
         mNewsPager = null;
         mNewsCardAdapter = null;
     }
@@ -402,7 +413,17 @@ public class MainMenuFragment extends Fragment {
     private void updateBattlySkinButton() {
         if (mSkinButton == null || !isAdded()) return;
         MinecraftAccount account = PojavProfile.getCurrentProfileContent(requireContext(), null);
-        mSkinButton.setVisibility(account != null && account.isBattly() ? View.VISIBLE : View.GONE);
+        boolean visible = account != null && account.isBattly();
+        if (mBattlyHubButtonContainer != null) {
+            mBattlyHubButtonContainer.setVisibility(visible ? View.VISIBLE : View.GONE);
+        }
+        mSkinButton.setVisibility(visible ? View.VISIBLE : View.GONE);
+        refreshBattlyWorldsBadge();
+    }
+
+    private void refreshBattlyWorldsBadge() {
+        if (!isAdded() || mBattlyWorldsNewBadge == null) return;
+        BattlyWorldsDiscovery.updateBadge(mBattlyWorldsNewBadge);
     }
 
     private void runInstallerWithConfirmation(boolean isCustomArgs) {

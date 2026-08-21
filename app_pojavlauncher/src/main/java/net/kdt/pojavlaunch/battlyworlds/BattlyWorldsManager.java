@@ -1,6 +1,8 @@
 package net.kdt.pojavlaunch.battlyworlds;
 
 import android.app.Activity;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.Intent;
 import android.net.VpnService;
@@ -8,6 +10,8 @@ import android.util.Log;
 import android.widget.Toast;
 
 import androidx.annotation.Nullable;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.gson.JsonObject;
@@ -42,11 +46,19 @@ public final class BattlyWorldsManager {
     private static volatile boolean sPolling;
     private static volatile JsonObject sLastState;
     private static volatile Mode sMode;
+    private static volatile List<String> sLastNodes;
+    private static volatile String sLastNotifiedState = "";
     private static TerracottaAndroidAPI.Metadata sMetadata;
+    private static final String CONNECTION_CHANNEL_ID = "battlyworlds_connection";
+    private static final int CONNECTION_NOTIFICATION_ID = 7202;
 
     public static synchronized void initialize(Activity activity) {
         if (!BattlyWorldsFeature.ENABLED) {
             BattlyWorldsFeature.showDisabledMessage(activity);
+            return;
+        }
+        if (!BattlyWorldsInvites.isBattlyLoggedIn(activity)) {
+            Toast.makeText(activity, R.string.battlyworlds_login_required, Toast.LENGTH_LONG).show();
             return;
         }
         sActivity = new WeakReference<>(activity);
@@ -55,6 +67,11 @@ public final class BattlyWorldsManager {
         }
 
         sMetadata = TerracottaAndroidAPI.initialize(activity.getApplicationContext(), () -> {
+            if (!BattlyWorldsFeature.VPN_ENABLED) {
+                Log.e(TAG, "Terracotta requested a TUN interface while BattlyWorlds is in no-TUN mode");
+                rejectPendingVpn();
+                return;
+            }
             Activity current = sActivity.get();
             if (current == null || current.isFinishing()) {
                 rejectPendingVpn();
@@ -84,20 +101,24 @@ public final class BattlyWorldsManager {
     }
 
     public static void startHost(String player, List<String> nodes) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        Activity activity = sActivity.get();
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsInvites.isBattlyLoggedIn(activity)) {
             return;
         }
         ensureInitialized();
         sMode = Mode.HOST;
+        sLastNodes = nodes;
         TerracottaAndroidAPI.setScanning(null, player, nodes);
     }
 
     public static boolean join(String code, String player, List<String> nodes) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        Activity activity = sActivity.get();
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsInvites.isBattlyLoggedIn(activity)) {
             return false;
         }
         ensureInitialized();
         sMode = Mode.GUEST;
+        sLastNodes = nodes;
         return TerracottaAndroidAPI.setGuesting(code, player, nodes);
     }
 
@@ -117,11 +138,14 @@ public final class BattlyWorldsManager {
             stopVpnService(context);
         }
         sMode = null;
+        sLastNodes = null;
+        sLastNotifiedState = "";
         TerracottaAndroidAPI.setWaiting();
+        NotificationManagerCompat.from(context).cancel(CONNECTION_NOTIFICATION_ID);
     }
 
     public static void onVpnPermissionResult(Activity activity, int resultCode) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsFeature.VPN_ENABLED) {
             rejectPendingVpn();
             return;
         }
@@ -135,7 +159,7 @@ public final class BattlyWorldsManager {
     }
 
     public static void updateVpnNotification(Context context, String stateText) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsFeature.VPN_ENABLED) {
             return;
         }
         Intent intent = new Intent(context, BattlyWorldsVpnService.class);
@@ -146,6 +170,16 @@ public final class BattlyWorldsManager {
 
     public static Mode getMode() {
         return sMode;
+    }
+
+    @Nullable
+    public static JsonObject getLastState() {
+        return sLastState;
+    }
+
+    public static String getLastNode() {
+        List<String> nodes = sLastNodes;
+        return nodes == null || nodes.isEmpty() ? "" : nodes.get(0);
     }
 
     public static String getMetadataText(Context context) {
@@ -275,7 +309,7 @@ public final class BattlyWorldsManager {
     }
 
     private static void requestVpnService(Activity activity) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsFeature.VPN_ENABLED) {
             rejectPendingVpn();
             return;
         }
@@ -288,7 +322,7 @@ public final class BattlyWorldsManager {
     }
 
     private static void startVpnService(Context context) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsFeature.VPN_ENABLED) {
             return;
         }
         Intent intent = new Intent(context, BattlyWorldsVpnService.class);
@@ -297,7 +331,7 @@ public final class BattlyWorldsManager {
     }
 
     private static void stopVpnService(Context context) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || !BattlyWorldsFeature.VPN_ENABLED) {
             return;
         }
         if (!BattlyWorldsVpnService.isRunning()) {
@@ -357,15 +391,43 @@ public final class BattlyWorldsManager {
     private static void notifyStateChanged(JsonObject state) {
         Activity activity = sActivity.get();
         Context context = activity == null ? null : activity.getApplicationContext();
-        if (context != null && sMode != null && state != null && state.has("state")
+        if (BattlyWorldsFeature.VPN_ENABLED && context != null && sMode != null && state != null && state.has("state")
                 && !"waiting".equals(state.get("state").getAsString())) {
             updateVpnNotification(context, describeState(context, state));
         }
+        if (context != null) notifyConnectionChange(context, state);
         Tools.MAIN_HANDLER.post(() -> {
             for (StateListener listener : sListeners) {
                 listener.onStateChanged(state);
             }
         });
+    }
+
+    private static void notifyConnectionChange(Context context, JsonObject state) {
+        if (!BattlyWorldsPreferences.areConnectionAlertsEnabled(context) || sMode == null
+                || state == null || !state.has("state")) return;
+        String stateName = state.get("state").getAsString();
+        if (stateName.equals(sLastNotifiedState) || "waiting".equals(stateName)) return;
+        sLastNotifiedState = stateName;
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+            NotificationManager manager = context.getSystemService(NotificationManager.class);
+            if (manager != null) {
+                manager.createNotificationChannel(new NotificationChannel(CONNECTION_CHANNEL_ID,
+                        context.getString(R.string.battlyworlds_connection_alerts_title),
+                        NotificationManager.IMPORTANCE_LOW));
+            }
+        }
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(context, CONNECTION_CHANNEL_ID)
+                .setSmallIcon(R.drawable.notif_icon)
+                .setContentTitle(context.getString(R.string.battlyworlds_title))
+                .setContentText(describeState(context, state))
+                .setPriority(NotificationCompat.PRIORITY_LOW)
+                .setOnlyAlertOnce(true)
+                .setAutoCancel(true);
+        try {
+            NotificationManagerCompat.from(context).notify(CONNECTION_NOTIFICATION_ID, builder.build());
+        } catch (SecurityException ignored) {
+        }
     }
 
     private BattlyWorldsManager() {

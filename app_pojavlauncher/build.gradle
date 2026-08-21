@@ -104,6 +104,10 @@ def battlyGoogleReleaseClientId = System.getenv("BATTLY_GOOGLE_RELEASE_CLIENT_ID
         ?: "490291541450-r17e3frigvot7b8a2lhu32k2dp8eqq28.apps.googleusercontent.com"
 def battlyWorldsEnabled = providers.gradleProperty("battlyWorldsEnabled")
         .map { value -> value.toBoolean() }
+        .orElse(true)
+        .get()
+def battlyWorldsVpnEnabled = providers.gradleProperty("battlyWorldsVpnEnabled")
+        .map { value -> value.toBoolean() }
         .orElse(false)
         .get()
 def battlyWorldsManifestSource = file("src/main/AndroidManifest.xml")
@@ -111,10 +115,11 @@ def battlyWorldsGeneratedManifest = file("${buildDir}/generated/battlyworlds/And
 def generateBattlyWorldsManifest = tasks.register("generateBattlyWorldsManifest") {
     inputs.file battlyWorldsManifestSource
     inputs.property "battlyWorldsEnabled", battlyWorldsEnabled
+    inputs.property "battlyWorldsVpnEnabled", battlyWorldsVpnEnabled
     outputs.file battlyWorldsGeneratedManifest
     doLast {
         String manifestText = battlyWorldsManifestSource.getText("UTF-8")
-        if (!battlyWorldsEnabled) {
+        if (!battlyWorldsEnabled || !battlyWorldsVpnEnabled) {
             manifestText = manifestText
                     .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_PERMISSION_START -->.*?<!-- BATTLYWORLDS_PERMISSION_END -->/, "")
                     .replaceAll(/(?s)\s*<!-- BATTLYWORLDS_SERVICE_START -->.*?<!-- BATTLYWORLDS_SERVICE_END -->/, "")
@@ -164,10 +169,11 @@ android {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 10000018
-        versionName "2.1.1"
+        versionCode 10000019
+        versionName "2.2.0"
         multiDexEnabled true //important
         buildConfigField "boolean", "BATTLY_WORLDS_ENABLED", battlyWorldsEnabled.toString()
+        buildConfigField "boolean", "BATTLY_WORLDS_VPN_ENABLED", battlyWorldsVpnEnabled.toString()
         resValue 'string', 'curseforge_api_key', getCFApiKey()
         externalNativeBuild {
             ndkBuild {
@@ -194,6 +200,7 @@ android {
             resValue 'string', 'battly_starting_native_ad_unit_id', 'ca-app-pub-3940256099942544/2247696110'
             resValue 'string', 'battly_workspace_native_ad_unit_id', 'ca-app-pub-3940256099942544/2247696110'
             resValue 'string', 'battly_controls_native_ad_unit_id', 'ca-app-pub-3940256099942544/2247696110'
+            resValue 'string', 'battly_worlds_rewarded_interstitial_ad_unit_id', 'ca-app-pub-3940256099942544/5354046379'
             ndk {
                 abiFilters(*battlyDebugAbis)
             }
@@ -228,6 +235,7 @@ android {
             resValue 'string', 'battly_starting_native_ad_unit_id', 'ca-app-pub-2325315275982779/5047978353'
             resValue 'string', 'battly_workspace_native_ad_unit_id', 'ca-app-pub-2325315275982779/8101517106'
             resValue 'string', 'battly_controls_native_ad_unit_id', 'ca-app-pub-2325315275982779/5047978353'
+            resValue 'string', 'battly_worlds_rewarded_interstitial_ad_unit_id', 'ca-app-pub-2325315275982779/1926553621'
         }
         gplay {
             initWith release

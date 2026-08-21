@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:paddingHorizontal="24dp"
+    android:paddingTop="14dp"
+    android:paddingBottom="18dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_battly_launcher_play"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:padding="15dp">
+
+        <ImageView
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:contentDescription="@null"
+            android:scaleType="centerInside"
+            android:src="@drawable/logo" />
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="14dp"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/noto_sans_bold"
+                android:text="@string/battlyworlds_public_title"
+                android:textColor="#FFFFFFFF"
+                android:textSize="20sp" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/battlyworlds_public_subtitle"
+                android:textColor="#D4E1E8"
+                android:textSize="12sp" />
+        </LinearLayout>
+
+        <ImageButton
+            android:id="@+id/battlyworlds_public_refresh"
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_battly_launcher_chip"
+            android:contentDescription="@string/battlyworlds_public_refresh"
+            android:padding="11dp"
+            android:src="@drawable/ic_refresh"
+            android:tint="#FFFFFFFF" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/battlyworlds_public_plus_upsell"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="9dp"
+        android:background="@drawable/bg_battly_launcher_chip"
+        android:drawablePadding="9dp"
+        android:fontFamily="@font/noto_sans_bold"
+        android:gravity="center_vertical"
+        android:minHeight="42dp"
+        android:paddingHorizontal="13dp"
+        android:paddingVertical="8dp"
+        android:text="@string/battlyworlds_plus_upsell"
+        android:textColor="#FFFFD95A"
+        android:textSize="12sp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:gravity="center_vertical"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/battlyworlds_public_join_hint"
+            android:textColor="#C7D4DF"
+            android:textSize="12sp" />
+
+        <Button
+            android:id="@+id/battlyworlds_join_code"
+            android:layout_width="wrap_content"
+            android:layout_height="42dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:minWidth="0dp"
+            android:paddingHorizontal="18dp"
+            android:text="@string/battlyworlds_join_code"
+            android:textColor="#FFFFFFFF" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/battlyworlds_public_status"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/battlyworlds_public_loading"
+        android:textColor="#C7D4DF"
+        android:textSize="12sp" />
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/battlyworlds_public_list"
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="7dp"
+        android:layout_weight="1"
+        android:clipToPadding="false"
+        android:paddingBottom="12dp"
+        android:scrollbars="none" />
+</LinearLayout>
