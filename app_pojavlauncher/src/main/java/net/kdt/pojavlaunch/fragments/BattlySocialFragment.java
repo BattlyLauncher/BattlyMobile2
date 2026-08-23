@@ -28,9 +28,11 @@ import androidx.recyclerview.widget.RecyclerView;
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.LauncherActivity;
 import net.kdt.pojavlaunch.battlysocial.BattlySocialApi;
 import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
-import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsFeature;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsPreferences;
 import net.kdt.pojavlaunch.utils.BattlySkinApi;
 
 import java.util.ArrayList;
@@ -97,6 +99,7 @@ public class BattlySocialFragment extends Fragment {
         searchSubmit.setOnClickListener(v -> runSearch());
         searchInput.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                Tools.hideKeyboard(v);
                 runSearch();
                 return true;
             }
@@ -382,6 +385,14 @@ public class BattlySocialFragment extends Fragment {
     }
 
     private void inviteFriend(BattlySocialApi.Friend friend) {
+        String roomCode = BattlyWorldsPreferences.getActiveRoomCode(requireContext());
+        if (BattlyWorldsInvites.looksLikeShortCode(roomCode)) {
+            executeAction(
+                    context -> BattlyWorldsInvites.sendInvite(
+                            context, friend.username, roomCode, BattlyWorldsInvites.getHostVersion()),
+                    getString(R.string.battly_social_invite_sent));
+            return;
+        }
         if (overview != null && overview.myServer != null) {
             executeAction(
                     context -> BattlySocialApi.sendServerInvite(
@@ -389,12 +400,23 @@ public class BattlySocialFragment extends Fragment {
                     getString(R.string.battly_social_invite_sent));
             return;
         }
-        BattlyWorldsFeature.showDisabledDialog(requireContext());
+        statusView.setText(R.string.battlyworlds_invite_no_room);
     }
 
     private void acceptInvite(BattlySocialApi.Invite invite) {
         if ("battlyworlds".equals(invite.kind)) {
-            BattlyWorldsFeature.showDisabledDialog(requireContext());
+            if (!BattlyWorldsInvites.looksLikeShortCode(invite.roomCode)) {
+                statusView.setText(R.string.battlyworlds_invalid_code);
+                return;
+            }
+            statusView.setText(R.string.battly_social_join_preparing);
+            BattlyWorldsInvites.acceptLauncherInvite(
+                    (LauncherActivity) requireActivity(), invite.roomCode,
+                    invite.fromUsername, invite.version, invite.inviteId,
+                    () -> executeAction(
+                            context -> BattlySocialApi.updateInvite(
+                                    context, invite.inviteId, "accepted"),
+                            getString(R.string.battly_social_join_preparing)));
             return;
         }
         if (invite.server == null) return;
@@ -419,6 +441,10 @@ public class BattlySocialFragment extends Fragment {
 
     private String friendDetail(BattlySocialApi.Friend friend) {
         if ("offline".equals(friend.state)) return getString(R.string.battly_social_offline);
+        if (friend.battlyWorlds) {
+            return getString(R.string.battly_social_playing_worlds,
+                    TextUtils.isEmpty(friend.version) ? "-" : friend.version);
+        }
         if (friend.server != null) {
             return getString(R.string.battly_social_playing_server,
                     TextUtils.isEmpty(friend.server.name) ? friend.server.address : friend.server.name,

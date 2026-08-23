@@ -11,6 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,6 +29,7 @@ import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsDiscovery;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsAvatarLoader;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -142,7 +144,7 @@ public final class BattlyWorldsFragment extends Fragment {
                     dialog.dismiss();
                     BattlyWorldsInvites.trackUsage(requireContext(), "join_code_submitted", "manual_code");
                     BattlyWorldsInvites.joinPublicRoom((LauncherActivity) requireActivity(),
-                            new BattlyWorldsInvites.PublicRoom(code, "", "", "", false, 3));
+                            new BattlyWorldsInvites.PublicRoom(code, "", "", "", false, 3, 1));
                 }));
         Tools.styleDialog(dialog);
         dialog.show();
@@ -173,6 +175,8 @@ public final class BattlyWorldsFragment extends Fragment {
                     room.version.isEmpty() ? "Minecraft" : room.version,
                     room.hostUsername.isEmpty() ? getString(R.string.battlyworlds_player_anonymous) : room.hostUsername));
             holder.code.setText(getString(R.string.battlyworlds_public_room_code, room.code));
+            holder.players.setText(String.valueOf(Math.max(1, room.playerCount)));
+            BattlyWorldsAvatarLoader.load(holder.avatar, room.hostUsername);
             holder.itemView.setOnClickListener(v -> join(room));
             holder.join.setOnClickListener(v -> join(room));
         }
@@ -187,6 +191,8 @@ public final class BattlyWorldsFragment extends Fragment {
         final TextView title;
         final TextView meta;
         final TextView code;
+        final TextView players;
+        final ImageView avatar;
         final ImageButton join;
 
         RoomHolder(@NonNull View itemView) {
@@ -194,6 +200,8 @@ public final class BattlyWorldsFragment extends Fragment {
             title = itemView.findViewById(R.id.battlyworlds_room_title);
             meta = itemView.findViewById(R.id.battlyworlds_room_meta);
             code = itemView.findViewById(R.id.battlyworlds_room_code);
+            players = itemView.findViewById(R.id.battlyworlds_room_players);
+            avatar = itemView.findViewById(R.id.battlyworlds_room_avatar);
             join = itemView.findViewById(R.id.battlyworlds_room_join);
         }
     }

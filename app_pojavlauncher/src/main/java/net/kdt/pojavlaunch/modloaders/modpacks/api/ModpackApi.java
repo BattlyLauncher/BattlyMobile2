@@ -15,6 +15,8 @@ import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.analytics.Telemetry;
+import net.kdt.pojavlaunch.extra.ExtraConstants;
+import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDetail;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModDependency;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.ModItem;
@@ -110,6 +112,7 @@ public interface ModpackApi {
                 NotificationDownloadListener listener = new NotificationDownloadListener(context, loaderInfo);
                 loaderInfo.getDownloadTask(context, listener).run();
                 if (!listener.wasSuccessful()) completedProfileKey = null;
+                ProgressLayout.clearProgress(ProgressLayout.INSTALL_MODPACK);
                 if (context instanceof net.kdt.pojavlaunch.LauncherActivity) {
                     Tools.runOnUiThread(((net.kdt.pojavlaunch.LauncherActivity) context)
                             ::refreshHomeProfileUi);
@@ -165,8 +168,10 @@ public interface ModpackApi {
                     }
                     InstanceManager.select(resolvedKey);
                     dialog.dismiss();
-                    activity.getSupportFragmentManager().popBackStackImmediate("ROOT", 0);
+                    Tools.backToMainMenu(activity);
                     activity.refreshHomeProfileUi();
+                    Tools.MAIN_HANDLER.post(() ->
+                            ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
                 } catch (Exception error) {
                     Tools.showError(activity, error);
                 }

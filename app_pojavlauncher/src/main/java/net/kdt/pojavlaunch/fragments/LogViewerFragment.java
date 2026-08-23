@@ -19,6 +19,7 @@ import android.text.TextWatcher;
 import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.ArrayAdapter;
 import android.widget.EditText;
 import android.widget.Spinner;
@@ -151,6 +152,13 @@ public class LogViewerFragment extends Fragment {
             @Override
             public void afterTextChanged(Editable editable) {
             }
+        });
+        searchView.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_SEARCH && actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            net.kdt.pojavlaunch.Tools.hideKeyboard(v);
+            return true;
         });
 
         view.findViewById(R.id.log_viewer_refresh).setOnClickListener(v -> refreshLogs(true));

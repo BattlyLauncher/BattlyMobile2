@@ -32,6 +32,7 @@ import net.kdt.pojavlaunch.customcontrols.buttons.ControlDeviceImage;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlInterface;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlJoystick;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlPerformanceWidget;
+import net.kdt.pojavlaunch.customcontrols.buttons.ControlVoiceToggleButton;
 import net.kdt.pojavlaunch.customcontrols.buttons.ControlSubButton;
 import net.kdt.pojavlaunch.customcontrols.handleview.ActionRow;
 import net.kdt.pojavlaunch.customcontrols.handleview.ControlHandleView;
@@ -138,6 +139,8 @@ public class ControlLayout extends FrameLayout {
 	private void addControlView(ControlData controlButton) {
 		final ControlInterface control = controlButton.isDeviceImageWidget()
 				? new ControlDeviceImage(this, controlButton)
+				: controlButton.isVoiceWidget()
+				? new ControlVoiceToggleButton(this, controlButton)
 				: controlButton.isPerformanceWidget()
 				? new ControlPerformanceWidget(this, controlButton)
 				: new ControlButton(this, controlButton);

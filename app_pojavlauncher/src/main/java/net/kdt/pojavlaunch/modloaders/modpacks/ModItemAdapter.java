@@ -15,6 +15,7 @@ import android.view.View;
 import android.util.Log;
 import android.view.ViewGroup;
 import android.view.ViewStub;
+import android.view.inputmethod.EditorInfo;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
@@ -805,6 +806,13 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     adapter.filter(s == null ? "" : s.toString());
                 }
                 @Override public void afterTextChanged(Editable s) { }
+            });
+            search.setOnEditorActionListener((v, actionId, event) -> {
+                if (actionId != EditorInfo.IME_ACTION_SEARCH && actionId != EditorInfo.IME_ACTION_DONE) {
+                    return false;
+                }
+                Tools.hideKeyboard(v);
+                return true;
             });
             dialog.show();
         }

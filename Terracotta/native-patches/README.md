@@ -6,4 +6,5 @@ The bundled `libterracotta.so` files are built from
 directory applied before the Android builds.
 
 `0001-battly-no-tun-relays.patch` keeps Terracotta Scaffolding entirely in
-no-TUN mode and lets the Android client provide Battly relay nodes.
+no-TUN mode, lets the Android client provide Battly relay nodes, and replaces
+Terracotta's hard-coded Chinese LAN lobby MOTD with a BattlyWorlds label.

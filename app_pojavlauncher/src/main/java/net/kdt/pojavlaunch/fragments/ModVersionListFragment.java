@@ -7,6 +7,7 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ExpandableListAdapter;
 import android.widget.ImageButton;
@@ -72,6 +73,13 @@ public abstract class ModVersionListFragment<T> extends Fragment implements Runn
                 updateAdapter(s == null ? "" : s.toString());
             }
             @Override public void afterTextChanged(Editable s) {}
+        });
+        searchField.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_SEARCH && actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            Tools.hideKeyboard(v);
+            return true;
         });
         new Thread(this).start();
     }

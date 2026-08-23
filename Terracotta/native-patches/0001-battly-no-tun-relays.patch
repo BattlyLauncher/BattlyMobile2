@@ -37,6 +37,14 @@ diff --git a/src/lib.rs b/src/lib.rs
 index c05a357..dce38cd 100644
 --- a/src/lib.rs
 +++ b/src/lib.rs
+@@ -57,6 +57,6 @@ pub mod controller;
+ mod easytier;
+ mod scaffolding;
+-pub const MOTD: &'static str = "§6§l双击进入陶瓦联机大厅（请保持陶瓦运行）";
++pub const MOTD: &'static str = "§a§lBattlyWorlds - pulsa para entrar";
+ 
+ mod mc;
+ mod ports;
 @@ -138,8 +138,8 @@ extern "system" fn JNI_OnLoad(vm: JavaVM, _: *mut c_void) -> jint {
              of!["start0", "(Ljava/lang/String;I)I", jni_start],
              of!["getState0", "()Ljava/lang/String;", jni_get_state],

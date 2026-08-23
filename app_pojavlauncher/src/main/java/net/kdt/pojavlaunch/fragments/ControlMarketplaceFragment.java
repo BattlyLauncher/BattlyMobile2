@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
@@ -136,6 +137,16 @@ public class ControlMarketplaceFragment extends Fragment {
         mSearchBtn.setOnClickListener(v -> {
             mCurrentPage = 1;
             loadControls();
+            Tools.hideKeyboard(mSearchInput);
+        });
+        mSearchInput.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_SEARCH && actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            mCurrentPage = 1;
+            loadControls();
+            Tools.hideKeyboard(v);
+            return true;
         });
 
         mUploadBtn.setOnClickListener(v -> showUploadDialog());

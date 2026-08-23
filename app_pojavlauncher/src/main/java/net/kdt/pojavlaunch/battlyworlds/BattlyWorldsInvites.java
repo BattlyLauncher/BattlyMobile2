@@ -82,6 +82,7 @@ public final class BattlyWorldsInvites {
     private static final String PREF_PENDING_CODE = "pending_code";
     private static final String PREF_PENDING_FROM = "pending_from";
     private static final String PREF_PENDING_VERSION = "pending_version";
+    private static final String PREF_PENDING_LAUNCH_VERSION = "pending_launch_version";
     private static final String PREF_SEEN_INVITES = "seen_invites";
     private static final String INVITE_CHANNEL_ID = "battlyworlds_invites_high";
     // FCM delivers invites immediately. Polling is only a foreground fallback.
@@ -237,6 +238,10 @@ public final class BattlyWorldsInvites {
         prefs(context).edit().putBoolean(PREF_GAME_ACTIVE, active).commit();
     }
 
+    public static boolean isGameActive(Context context) {
+        return context != null && prefs(context).getBoolean(PREF_GAME_ACTIVE, false);
+    }
+
     public static boolean isBattlyLoggedIn(Context context) {
         return !getBattlyToken(context).isEmpty();
     }
@@ -315,6 +320,7 @@ public final class BattlyWorldsInvites {
             return;
         }
         sInvitePollContext = context.getApplicationContext();
+        BattlyWorldsInviteRealtimeClient.start(context);
         if (sInvitePollScheduled) {
             return;
         }
@@ -326,6 +332,7 @@ public final class BattlyWorldsInvites {
         sInvitePollContext = null;
         sInvitePollScheduled = false;
         Tools.MAIN_HANDLER.removeCallbacks(INVITE_POLL);
+        BattlyWorldsInviteRealtimeClient.stopAfterTransition();
     }
 
     public static Entitlements getCachedEntitlements() {
@@ -459,6 +466,17 @@ public final class BattlyWorldsInvites {
                 if (invite.isValid()) {
                     showInGameInvite(activity, invite);
                 }
+            }
+        };
+    }
+
+    public static BroadcastReceiver createLauncherInviteReceiver(LauncherActivity activity) {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                if (!BattlyWorldsPreferences.areInvitationsEnabled(context)) return;
+                Invite invite = fromIntent(intent);
+                if (invite.isValid()) showLauncherInvite(activity, invite);
             }
         };
     }
@@ -715,7 +733,8 @@ public final class BattlyWorldsInvites {
                     first(jsonString(room, "hostUsername"), jsonString(room, "hostPlayer")),
                     jsonString(room, "version"),
                     room.has("premium") && room.get("premium").getAsBoolean(),
-                    room.has("maxGuests") ? room.get("maxGuests").getAsInt() : 3
+                    jsonInt(room, "maxGuests", 3),
+                    jsonInt(room, "playerCount", jsonInt(room, "playersCount", 1))
             ));
         });
         return rooms;
@@ -767,7 +786,42 @@ public final class BattlyWorldsInvites {
 
     public static void joinPublicRoom(LauncherActivity activity, PublicRoom room) {
         if (activity == null || room == null) return;
-        prepareVersionAndLaunch(activity, new Invite(room.code, room.hostUsername, room.version, ""));
+        validateRoomAndLaunch(activity,
+                new Invite(room.code, room.hostUsername, room.version, ""), null);
+    }
+
+    public static void acceptLauncherInvite(LauncherActivity activity, String code, String from,
+                                            String version, String inviteId) {
+        acceptLauncherInvite(activity, code, from, version, inviteId, null);
+    }
+
+    public static void acceptLauncherInvite(LauncherActivity activity, String code, String from,
+                                            String version, String inviteId,
+                                            Runnable onRoomValidated) {
+        if (activity == null || !looksLikeShortCode(code)) return;
+        validateRoomAndLaunch(activity, new Invite(code, from, version, inviteId), onRoomValidated);
+    }
+
+    private static void validateRoomAndLaunch(LauncherActivity activity, Invite invite,
+                                              Runnable onRoomValidated) {
+        Toast.makeText(activity, R.string.battly_social_join_preparing, Toast.LENGTH_LONG).show();
+        Context appContext = activity.getApplicationContext();
+        PojavApplication.sExecutorService.execute(() -> {
+            try {
+                resolveRoomCode(appContext, invite.code);
+                Tools.MAIN_HANDLER.post(() -> {
+                    if (activity.isFinishing() || activity.isDestroyed()) return;
+                    if (onRoomValidated != null) onRoomValidated.run();
+                    prepareVersionAndLaunch(activity, invite);
+                });
+            } catch (Throwable throwable) {
+                Tools.MAIN_HANDLER.post(() -> {
+                    if (!activity.isFinishing() && !activity.isDestroyed()) {
+                        Tools.showError(activity, throwable);
+                    }
+                });
+            }
+        });
     }
 
     private static void updateEntitlements(JsonObject response) {
@@ -822,6 +876,31 @@ public final class BattlyWorldsInvites {
     }
 
     private static void showInGameInvite(MainActivity activity, Invite invite) {
+        String currentVersion = activity.getIntent().getStringExtra(MainActivity.INTENT_MINECRAFT_VERSION);
+        if (currentVersion == null || currentVersion.trim().isEmpty()) {
+            MinecraftProfile profile = LauncherProfiles.getCurrentProfile();
+            currentVersion = profile == null ? "" : safe(profile.lastVersionId);
+        }
+        if (!invite.version.isEmpty()
+                && !BattlyWorldsVersionResolver.canonical(invite.version)
+                .equals(BattlyWorldsVersionResolver.canonical(currentVersion))) {
+            String activeVersion = currentVersion;
+            activity.runOnUiThread(() -> new AlertDialog.Builder(activity, R.style.BattlyDialog)
+                    .setTitle(activity.getString(R.string.battlyworlds_invite_version_warning_title))
+                    .setMessage(activity.getString(R.string.battlyworlds_invite_version_warning,
+                            invite.version, activeVersion.isEmpty() ? "-" : activeVersion))
+                    .setNegativeButton(android.R.string.cancel, null)
+                    .setPositiveButton(R.string.battlyworlds_invite_open_launcher, (dialog, which) -> {
+                        savePendingInvite(activity, invite);
+                        LauncherActivity.openAfterGameExit(activity, 0,
+                                activity.getString(R.string.battlyworlds_invite_switching_version));
+                        activity.finish();
+                        Tools.MAIN_HANDLER.postDelayed(
+                                () -> android.os.Process.killProcess(android.os.Process.myPid()), 450L);
+                    })
+                    .show());
+            return;
+        }
         activity.runOnUiThread(() -> new AlertDialog.Builder(activity, R.style.BattlyDialog)
                 .setTitle(activity.getString(R.string.battlyworlds_invite_title))
                 .setMessage(activity.getString(R.string.battlyworlds_invite_ingame_message,
@@ -837,11 +916,27 @@ public final class BattlyWorldsInvites {
             LauncherProfiles.load();
             String selectedProfile = LauncherPreferences.DEFAULT_PREF
                     .getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
-            MinecraftProfile profile = LauncherProfiles.mainProfileJson.profiles.get(selectedProfile);
-            if (profile != null) {
-                profile.lastVersionId = invite.version;
-                LauncherProfiles.write();
+            String matchingProfile = LauncherProfiles.mainProfileJson == null ? null
+                    : BattlyWorldsVersionResolver.findProfileKey(
+                            LauncherProfiles.mainProfileJson.profiles, selectedProfile, invite.version);
+            if (matchingProfile != null) {
+                LauncherPreferences.DEFAULT_PREF.edit()
+                        .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, matchingProfile)
+                        .remove(PREF_PENDING_LAUNCH_VERSION)
+                        .apply();
+                Log.i("BattlyWorldsInvites", "Using installed profile for hosted version: "
+                        + matchingProfile + " (" + invite.version + ")");
+            } else {
+                String localVersion = BattlyWorldsVersionResolver.findInstalledVersionId(
+                        new java.io.File(Tools.DIR_HOME_VERSION), invite.version);
+                LauncherPreferences.DEFAULT_PREF.edit()
+                        .putString(PREF_PENDING_LAUNCH_VERSION, localVersion)
+                        .apply();
+                Log.i("BattlyWorldsInvites", "Using one-shot hosted version: " + localVersion
+                        + " (requested " + invite.version + ")");
             }
+        } else {
+            LauncherPreferences.DEFAULT_PREF.edit().remove(PREF_PENDING_LAUNCH_VERSION).apply();
         }
         Toast.makeText(activity, R.string.battlyworlds_invite_launching, Toast.LENGTH_LONG).show();
         new AsyncVersionList().getVersionList(versions -> {
@@ -850,6 +945,15 @@ public final class BattlyWorldsInvites {
             }
             Tools.MAIN_HANDLER.post(() -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
         }, false);
+    }
+
+    /** Returns a one-shot hosted version without persisting it into the active instance. */
+    public static String consumePendingLaunchVersion() {
+        SharedPreferences preferences = LauncherPreferences.DEFAULT_PREF;
+        if (preferences == null) return "";
+        String version = preferences.getString(PREF_PENDING_LAUNCH_VERSION, "");
+        preferences.edit().remove(PREF_PENDING_LAUNCH_VERSION).apply();
+        return safe(version);
     }
 
     private static void startGuest(Activity activity, Invite invite) {
@@ -877,9 +981,15 @@ public final class BattlyWorldsInvites {
                             if (popup != null) {
                                 popup.setMessage(activity.getString(R.string.battlyworlds_invalid_code));
                             }
-                        } else if (popup != null) {
-                            popup.attachStateListener();
-                            popup.setMessage(activity.getString(R.string.battlyworlds_join_status_preparing));
+                        } else {
+                            if (looksLikeShortCode(invite.code)) {
+                                BattlyWorldsPreferences.setActiveRoomCode(activity, invite.code);
+                                BattlyWorldsManager.connectRealtime(activity, invite.code);
+                            }
+                            if (popup != null) {
+                                popup.attachStateListener();
+                                popup.setMessage(activity.getString(R.string.battlyworlds_join_status_preparing));
+                            }
                         }
                     } catch (Throwable throwable) {
                         if (popup != null) {
@@ -1183,15 +1293,17 @@ public final class BattlyWorldsInvites {
         public final String version;
         public final boolean premium;
         public final int maxGuests;
+        public final int playerCount;
 
         public PublicRoom(String code, String title, String hostUsername, String version,
-                          boolean premium, int maxGuests) {
+                          boolean premium, int maxGuests, int playerCount) {
             this.code = code;
             this.title = title;
             this.hostUsername = hostUsername;
             this.version = version;
             this.premium = premium;
             this.maxGuests = maxGuests;
+            this.playerCount = Math.max(1, playerCount);
         }
     }
 
@@ -1223,7 +1335,7 @@ public final class BattlyWorldsInvites {
         return builder.toString();
     }
 
-    private static String getBattlyToken(Context context) {
+    static String getBattlyToken(Context context) {
         if (context == null) return "";
         MinecraftAccount account = PojavProfile.getCurrentProfileContent(
                 context.getApplicationContext(), null);
@@ -1232,6 +1344,10 @@ public final class BattlyWorldsInvites {
         }
         String token = account.accessToken.trim();
         return "0".equals(token) || token.length() < 32 ? "" : token;
+    }
+
+    static String getBattlyUsername(Context context) {
+        return getPlayerName(context);
     }
 
     private static String requireBattlyToken(Context context) {

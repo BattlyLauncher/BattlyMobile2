@@ -37,6 +37,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.Map;
 import java.util.List;
 import java.util.Locale;
 import java.util.regex.Matcher;
@@ -52,6 +53,9 @@ public class LibraryCenterFragment extends Fragment {
     private static final Pattern TOML_VERSION = Pattern.compile("version\\s*=\\s*\"([^\"]+)\"");
     private static final Pattern TOML_ICON = Pattern.compile("logoFile\\s*=\\s*\"([^\"]+)\"");
     private LinearLayout mInstalledContentContainer;
+    private Button mInstanceSelector;
+    private MinecraftProfile mSelectedProfile;
+    private String mSelectedProfileKey;
     private int mInstalledContentRequestId;
 
     public LibraryCenterFragment() {
@@ -61,6 +65,9 @@ public class LibraryCenterFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         mInstalledContentContainer = view.findViewById(R.id.library_installed_content_container);
+        mInstanceSelector = view.findViewById(R.id.library_instance_selector);
+        selectInitialProfile();
+        mInstanceSelector.setOnClickListener(v -> showInstanceSelector());
         view.findViewById(R.id.download_panel_import_modpack)
                 .setOnClickListener(v -> ((LauncherActivity) requireActivity()).modpackImportLauncher.launch(null));
         view.findViewById(R.id.download_panel_browse_modpacks).setOnClickListener(v -> openSearch(SearchFilters.TYPE_MODPACK));
@@ -98,7 +105,8 @@ public class LibraryCenterFragment extends Fragment {
 
     private void bindInstalledContent() {
         mInstalledContentContainer.removeAllViews();
-        File gameDir = Tools.getGameDirPath(LauncherProfiles.getCurrentProfile());
+        if (mSelectedProfile == null) selectInitialProfile();
+        File gameDir = Tools.getGameDirPath(mSelectedProfile);
         int requestId = ++mInstalledContentRequestId;
         PojavApplication.sExecutorService.execute(() -> {
             List<InstalledSection> sections = new ArrayList<>();
@@ -347,6 +355,63 @@ public class LibraryCenterFragment extends Fragment {
                 imageView.setImageBitmap(bitmap);
             });
         });
+    }
+
+    private void selectInitialProfile() {
+        LauncherProfiles.load();
+        MinecraftProfile current = LauncherProfiles.getCurrentProfile();
+        mSelectedProfile = current;
+        mSelectedProfileKey = "";
+        for (Map.Entry<String, MinecraftProfile> entry : LauncherProfiles.mainProfileJson.profiles.entrySet()) {
+            if (entry.getValue() == current) {
+                mSelectedProfileKey = entry.getKey();
+                break;
+            }
+        }
+        updateInstanceSelectorLabel();
+    }
+
+    private void showInstanceSelector() {
+        LauncherProfiles.load();
+        List<Map.Entry<String, MinecraftProfile>> profiles = new ArrayList<>(
+                LauncherProfiles.mainProfileJson.profiles.entrySet());
+        profiles.sort(Comparator.comparing(entry -> profileLabel(entry.getValue()).toLowerCase(Locale.ROOT)));
+        String[] labels = new String[profiles.size()];
+        int selected = -1;
+        for (int i = 0; i < profiles.size(); i++) {
+            Map.Entry<String, MinecraftProfile> entry = profiles.get(i);
+            labels[i] = profileLabel(entry.getValue());
+            if (entry.getKey().equals(mSelectedProfileKey)) selected = i;
+        }
+        AlertDialog dialog = Tools.createStyledDialogBuilder(requireContext())
+                .setTitle(R.string.library_instance_selector_title)
+                .setSingleChoiceItems(labels, selected, (d, which) -> {
+                    Map.Entry<String, MinecraftProfile> entry = profiles.get(which);
+                    mSelectedProfileKey = entry.getKey();
+                    mSelectedProfile = entry.getValue();
+                    updateInstanceSelectorLabel();
+                    bindInstalledContent();
+                    d.dismiss();
+                })
+                .setNegativeButton(android.R.string.cancel, null)
+                .create();
+        Tools.styleDialog(dialog);
+        dialog.show();
+    }
+
+    private void updateInstanceSelectorLabel() {
+        if (mInstanceSelector == null || mSelectedProfile == null) return;
+        mInstanceSelector.setText(getString(
+                R.string.library_instance_selector_value, profileLabel(mSelectedProfile)));
+    }
+
+    private String profileLabel(MinecraftProfile profile) {
+        String name = profile == null || !Tools.isValidString(profile.name)
+                ? getString(R.string.global_default)
+                : profile.name;
+        String version = profile == null || !Tools.isValidString(profile.lastVersionId)
+                ? "-" : profile.lastVersionId;
+        return name + " · " + version;
     }
 
     private Button actionButton(int textRes, int iconRes, View.OnClickListener listener) {

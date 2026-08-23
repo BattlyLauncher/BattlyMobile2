@@ -315,6 +315,10 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
+        <receiver
+            android:name=".battlyworlds.BattlyWorldsVoiceActionReceiver"
+            android:exported="false"
+            android:process=":game" />
     </application>
     <queries>
         <package android:name="net.kdt.pojavlaunch.ffmpeg"/>

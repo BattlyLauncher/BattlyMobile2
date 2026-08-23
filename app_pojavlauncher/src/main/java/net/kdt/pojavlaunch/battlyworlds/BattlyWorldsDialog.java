@@ -72,9 +72,12 @@ public final class BattlyWorldsDialog {
     private final TextView mPlanSummary;
     private final TextView mInviteButton;
     private final TextView mShareButton;
+    private final TextView mJoinButton;
     private final TextView mHostButton;
+    private final TextView mDisconnectButton;
     private final ImageButton mCopyButton;
     private final SwitchCompat mPublicRoomToggle;
+    private final LinearLayout mVisibilityControl;
     private JsonObject mCurrentState;
     private String mHostRealCode = "";
     private String mHostShortCode = "";
@@ -113,19 +116,22 @@ public final class BattlyWorldsDialog {
         header.addView(title, new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WRAP_CONTENT, 1f));
 
         ImageButton logs = iconButton(R.drawable.ic_battly_logs_line);
+        ImageButton voice = iconButton(R.drawable.ic_battly_mic);
         ImageButton stop = iconButton(R.drawable.ic_close_white);
         mCopyButton = iconButton(R.drawable.ic_battly_copy_line);
         logs.setContentDescription(activity.getString(R.string.battlyworlds_logs));
+        voice.setContentDescription(activity.getString(R.string.battlyworlds_voice_title));
         stop.setContentDescription(activity.getString(R.string.global_cancel));
         mCopyButton.setContentDescription(activity.getString(R.string.global_copy));
         logs.setOnClickListener(v -> showLogs());
+        voice.setOnClickListener(v -> new BattlyWorldsVoiceDialog(mActivity).show());
         stop.setOnClickListener(v -> closeOnly());
         mCopyButton.setOnClickListener(v -> copyCurrentResult());
 
-        LinearLayout visibilityControl = new LinearLayout(activity);
-        visibilityControl.setGravity(Gravity.CENTER_VERTICAL);
-        visibilityControl.setPadding(dp(18), 0, dp(4), 0);
-        visibilityControl.setBackground(round(0x263C4E58, dp(12), 0x448ADBC6, 1));
+        mVisibilityControl = new LinearLayout(activity);
+        mVisibilityControl.setGravity(Gravity.CENTER_VERTICAL);
+        mVisibilityControl.setPadding(dp(18), 0, dp(4), 0);
+        mVisibilityControl.setBackground(round(0x263C4E58, dp(12), 0x448ADBC6, 1));
         LinearLayout.LayoutParams visibilityParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.WRAP_CONTENT, dp(36));
         visibilityParams.setMargins(dp(8), 0, 0, 0);
@@ -146,12 +152,13 @@ public final class BattlyWorldsDialog {
             if (mUpdatingVisibility) return;
             updateRoomVisibility(checked);
         });
-        visibilityControl.addView(mPublicRoomToggle);
-        visibilityControl.setOnClickListener(v -> {
+        mVisibilityControl.addView(mPublicRoomToggle);
+        mVisibilityControl.setOnClickListener(v -> {
             if (mPublicRoomToggle.isEnabled()) mPublicRoomToggle.toggle();
         });
 
-        header.addView(visibilityControl, visibilityParams);
+        header.addView(mVisibilityControl, visibilityParams);
+        header.addView(voice);
         header.addView(logs);
         header.addView(mCopyButton);
         header.addView(stop);
@@ -229,20 +236,25 @@ public final class BattlyWorldsDialog {
                 R.drawable.ic_social_add);
         mShareButton = secondaryAction(activity.getString(R.string.battlyworlds_share),
                 android.R.drawable.ic_menu_share);
-        TextView join = secondaryAction(activity.getString(R.string.battlyworlds_join),
+        mJoinButton = secondaryAction(activity.getString(R.string.battlyworlds_join),
                 R.drawable.ic_social_join);
         mHostButton = primaryAction(activity.getString(R.string.battlyworlds_host),
                 R.drawable.ic_battly_worlds_line);
+        mDisconnectButton = primaryAction(activity.getString(R.string.battlyworlds_disconnect),
+                R.drawable.ic_close_white);
+        mDisconnectButton.setVisibility(View.GONE);
 
         mInviteButton.setOnClickListener(v -> askInviteFriend());
         mShareButton.setOnClickListener(v -> shareCurrentInvite());
-        join.setOnClickListener(v -> askJoinCode());
+        mJoinButton.setOnClickListener(v -> askJoinCode());
         mHostButton.setOnClickListener(v -> startHost());
+        mDisconnectButton.setOnClickListener(v -> disconnectRoom());
 
         actions.addView(mInviteButton, weightedActionParams(0));
         actions.addView(mShareButton, weightedActionParams(7));
-        actions.addView(join, weightedActionParams(7));
+        actions.addView(mJoinButton, weightedActionParams(7));
         actions.addView(mHostButton, weightedActionParams(7));
+        actions.addView(mDisconnectButton, weightedActionParams(7));
         root.addView(actions);
 
         mDialog = new AlertDialog.Builder(activity, R.style.BattlyDialog)
@@ -312,6 +324,18 @@ public final class BattlyWorldsDialog {
         mDialog.dismiss();
     }
 
+    private void disconnectRoom() {
+        if (mBusy) return;
+        setBusy(true);
+        BattlyWorldsInvites.stopPublicRoomHeartbeat();
+        BattlyWorldsManager.setWaiting(mActivity, true);
+        mCurrentState = null;
+        mHostRealCode = "";
+        mHostShortCode = "";
+        mRoomPublic = false;
+        setBusy(false);
+    }
+
     private void askJoinCode() {
         EditText input = new EditText(mActivity);
         input.setSingleLine(true);
@@ -346,6 +370,8 @@ public final class BattlyWorldsDialog {
         setBusy(true);
         new Thread(() -> {
             try {
+                final String shortCode = BattlyWorldsInvites.looksLikeShortCode(code)
+                        ? code.trim().toUpperCase(java.util.Locale.ROOT) : "";
                 String resolvedCode = BattlyWorldsInvites.resolveRoomCode(mActivity, code);
                 BattlyWorldsInvites.refreshEntitlements(mActivity);
                 List<String> nodes = BattlyWorldsNodeList.fetch(mActivity);
@@ -355,6 +381,8 @@ public final class BattlyWorldsDialog {
                         boolean accepted = BattlyWorldsManager.join(resolvedCode, getPlayerName(), nodes);
                         if (!accepted) {
                             Toast.makeText(mActivity, R.string.battlyworlds_invalid_code, Toast.LENGTH_SHORT).show();
+                        } else if (!shortCode.isEmpty()) {
+                            BattlyWorldsManager.connectRealtime(mActivity, shortCode);
                         }
                     } catch (Throwable throwable) {
                         Tools.showError(mActivity, throwable);
@@ -686,6 +714,9 @@ public final class BattlyWorldsDialog {
         refreshPlanSummary();
         String hostCode = BattlyWorldsManager.getHostCode(mCurrentState);
         String guestUrl = BattlyWorldsManager.getGuestUrl(mCurrentState);
+        BattlyWorldsManager.Mode mode = BattlyWorldsManager.getMode();
+        boolean hosting = mode == BattlyWorldsManager.Mode.HOST;
+        boolean guest = mode == BattlyWorldsManager.Mode.GUEST;
         mStatus.setText(simpleStateTitle(hostCode, guestUrl));
         if (hostCode != null) {
             ensureShortHostCode(hostCode);
@@ -698,20 +729,28 @@ public final class BattlyWorldsDialog {
             mHint.setVisibility(View.GONE);
             setRoomActionsEnabled(displayCode != null);
             mPublicRoomToggle.setEnabled(displayCode != null);
+            mVisibilityControl.setVisibility(View.VISIBLE);
         } else if (guestUrl != null) {
             mHint.setVisibility(View.VISIBLE);
             mResult.setText(R.string.battlyworlds_guest_connected_simple);
             mHint.setText(R.string.battlyworlds_guest_hint_simple);
             setRoomActionsEnabled(false);
             setPublicToggleState(false, false);
+            mVisibilityControl.setVisibility(View.GONE);
         } else {
             mHint.setVisibility(View.VISIBLE);
             mResult.setText(BattlyWorldsManager.describeState(mActivity, mCurrentState));
             mHint.setText(R.string.battlyworlds_tip_simple);
             setRoomActionsEnabled(false);
             setPublicToggleState(false, false);
+            mVisibilityControl.setVisibility(guest ? View.GONE : View.VISIBLE);
         }
-        setHostEnabled(!mBusy && hostCode == null && guestUrl == null);
+        mJoinButton.setVisibility(guest ? View.GONE : View.VISIBLE);
+        mHostButton.setVisibility(guest ? View.GONE : View.VISIBLE);
+        mDisconnectButton.setVisibility(guest ? View.VISIBLE : View.GONE);
+        mDisconnectButton.setEnabled(guest && !mBusy);
+        mDisconnectButton.setAlpha(guest && !mBusy ? 1f : 0.45f);
+        setHostEnabled(!mBusy && !hosting && !guest && hostCode == null && guestUrl == null);
     }
 
     private void refreshPlanSummary() {
@@ -762,6 +801,7 @@ public final class BattlyWorldsDialog {
                     mShortCodeLoading = false;
                     if (sourceCode.equals(mHostRealCode)) {
                         mHostShortCode = shortCode;
+                        BattlyWorldsManager.connectRealtime(mActivity, shortCode);
                         boolean publicAllowed = BattlyWorldsPreferences.isPublicListingAllowed(mActivity);
                         boolean makePublic = publicAllowed && BattlyWorldsPreferences.isDefaultPublic(mActivity);
                         setPublicToggleState(false, publicAllowed);

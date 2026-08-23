@@ -14,6 +14,9 @@ import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.tasks.AsyncVersionList;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsManager;
+import net.kdt.pojavlaunch.customcontrols.MinecraftServerSessionTracker;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
@@ -25,13 +28,29 @@ public final class BattlySocialManager {
     private static final String KEY_SERVER_PORT = "pending_server_port";
     private static final String KEY_SERVER_NAME = "pending_server_name";
     private static final String KEY_SERVER_VERSION = "pending_server_version";
+    private static final String KEY_ACTIVE_SERVER_HOST = "active_server_host";
+    private static final String KEY_ACTIVE_SERVER_PORT = "active_server_port";
+    private static final String KEY_ACTIVE_SERVER_NAME = "active_server_name";
+    private static final long GAME_HEARTBEAT_INTERVAL_MS = 20000L;
     private static long sLastLauncherHeartbeat;
+    private static Context sGameContext;
+    private static String sGameVersion = "";
+    private static final Runnable GAME_HEARTBEAT = new Runnable() {
+        @Override
+        public void run() {
+            Context context = sGameContext;
+            if (context == null) return;
+            sendGameHeartbeat(context, sGameVersion);
+            Tools.MAIN_HANDLER.postDelayed(this, GAME_HEARTBEAT_INTERVAL_MS);
+        }
+    };
 
     private BattlySocialManager() {
     }
 
     public static void heartbeatLauncher(Context context) {
         if (context == null || System.currentTimeMillis() - sLastLauncherHeartbeat < 30000L) return;
+        if (BattlyWorldsInvites.isGameActive(context)) return;
         sLastLauncherHeartbeat = System.currentTimeMillis();
         PojavApplication.sExecutorService.execute(() -> {
             try {
@@ -44,14 +63,34 @@ public final class BattlySocialManager {
 
     public static void heartbeatGame(Context context, String version) {
         if (context == null) return;
-        BattlySocialApi.Server pendingServer = peekPendingServer(context);
+        sGameContext = context.getApplicationContext();
+        sGameVersion = version == null ? "" : version;
+        Tools.MAIN_HANDLER.removeCallbacks(GAME_HEARTBEAT);
+        Tools.MAIN_HANDLER.post(GAME_HEARTBEAT);
+    }
+
+    public static void stopGameHeartbeat(Context context) {
+        Tools.MAIN_HANDLER.removeCallbacks(GAME_HEARTBEAT);
+        sGameContext = null;
+        sGameVersion = "";
+        LauncherPreferences.DEFAULT_PREF.edit()
+                .remove(KEY_ACTIVE_SERVER_HOST)
+                .remove(KEY_ACTIVE_SERVER_PORT)
+                .remove(KEY_ACTIVE_SERVER_NAME)
+                .apply();
+    }
+
+    private static void sendGameHeartbeat(Context context, String version) {
+        BattlySocialApi.Server server = currentServer(context);
+        boolean battlyWorlds = BattlyWorldsManager.isRoomActive();
         PojavApplication.sExecutorService.execute(() -> {
             try {
                 BattlySocialApi.updatePresence(
                         context.getApplicationContext(),
                         "playing",
                         version == null ? "" : version,
-                        pendingServer);
+                        server,
+                        battlyWorlds);
             } catch (Throwable ignored) {
             }
         });
@@ -141,6 +180,11 @@ public final class BattlySocialManager {
                         .put("name", prefs.getString(KEY_SERVER_NAME, host))
                         .put("joinable", true);
                 server = new BattlySocialApi.Server(json);
+                prefs.edit()
+                        .putString(KEY_ACTIVE_SERVER_HOST, host)
+                        .putInt(KEY_ACTIVE_SERVER_PORT, server.port)
+                        .putString(KEY_ACTIVE_SERVER_NAME, server.name)
+                        .apply();
             } catch (org.json.JSONException ignored) {
             }
         }
@@ -151,5 +195,29 @@ public final class BattlySocialManager {
                 .remove(KEY_SERVER_VERSION)
                 .apply();
         return server;
+    }
+
+    private static BattlySocialApi.Server currentServer(Context context) {
+        MinecraftServerSessionTracker.Endpoint endpoint = MinecraftServerSessionTracker.getEndpoint();
+        if (endpoint != null && Tools.isValidString(endpoint.host)) {
+            return server(endpoint.host, endpoint.port, endpoint.host);
+        }
+        SharedPreferences prefs = LauncherPreferences.DEFAULT_PREF;
+        String host = prefs.getString(KEY_ACTIVE_SERVER_HOST, "");
+        if (!Tools.isValidString(host)) return peekPendingServer(context);
+        return server(host, prefs.getInt(KEY_ACTIVE_SERVER_PORT, 25565),
+                prefs.getString(KEY_ACTIVE_SERVER_NAME, host));
+    }
+
+    private static BattlySocialApi.Server server(String host, int port, String name) {
+        try {
+            return new BattlySocialApi.Server(new org.json.JSONObject()
+                    .put("host", host)
+                    .put("port", port)
+                    .put("name", name)
+                    .put("joinable", true));
+        } catch (org.json.JSONException ignored) {
+            return null;
+        }
     }
 }

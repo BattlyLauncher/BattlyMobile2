@@ -25,4 +25,12 @@ public class BattlyWorldsPreferencesTest {
     public void durationOptionsIncludeAccountSpecificMaximum() {
         assertArrayEquals(new int[]{1, 3, 6, 10}, BattlyWorldsPreferences.durationOptions(10));
     }
+
+    @Test
+    public void voiceVolumeIsLimitedToUnityGain() {
+        assertEquals(0, BattlyWorldsPreferences.clampVoiceUserVolume(-1));
+        assertEquals(75, BattlyWorldsPreferences.clampVoiceUserVolume(75));
+        assertEquals(100, BattlyWorldsPreferences.clampVoiceUserVolume(100));
+        assertEquals(100, BattlyWorldsPreferences.clampVoiceUserVolume(150));
+    }
 }

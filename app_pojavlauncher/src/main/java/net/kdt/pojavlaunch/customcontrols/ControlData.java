@@ -25,6 +25,8 @@ import java.util.Map;
 public class ControlData {
     public static final String WIDGET_PERFORMANCE = "performance";
     public static final String WIDGET_DEVICE_IMAGE = "device_image";
+    public static final String WIDGET_VOICE_MICROPHONE = "voice_microphone";
+    public static final String WIDGET_VOICE_AUDIO = "voice_audio";
 
     public static final int SPECIALBTN_KEYBOARD = -1;
     public static final int SPECIALBTN_TOGGLECTRL = -2;
@@ -225,6 +227,48 @@ public class ControlData {
 
     public boolean isDeviceImageWidget() {
         return WIDGET_DEVICE_IMAGE.equals(widgetType);
+    }
+
+    public static ControlData createVoiceMicrophoneWidget() {
+        return createVoiceWidget("MIC", WIDGET_VOICE_MICROPHONE,
+                "${margin} * 2", "${margin} * 2 + px(36) / 100.0 * ${preferred_scale}");
+    }
+
+    public static ControlData createVoiceAudioWidget() {
+        return createVoiceWidget("AUDIO", WIDGET_VOICE_AUDIO,
+                "${margin} * 3 + ${width}", "${margin} * 2 + px(36) / 100.0 * ${preferred_scale}");
+    }
+
+    private static ControlData createVoiceWidget(String name, String type, String x, String y) {
+        ControlData data = new ControlData(
+                name,
+                new int[]{},
+                x,
+                y,
+                72,
+                34,
+                false,
+                0.92f,
+                0xB31A2633,
+                0x994FE0C1,
+                1,
+                38,
+                true,
+                true,
+                false,
+                false
+        );
+        data.widgetType = type;
+        return data;
+    }
+
+    public boolean isVoiceWidget() {
+        return WIDGET_VOICE_MICROPHONE.equals(widgetType)
+                || WIDGET_VOICE_AUDIO.equals(widgetType);
+    }
+
+    public boolean isVoiceMicrophoneWidget() {
+        return WIDGET_VOICE_MICROPHONE.equals(widgetType);
     }
 
     public static ControlData[] getSpecialButtons() {

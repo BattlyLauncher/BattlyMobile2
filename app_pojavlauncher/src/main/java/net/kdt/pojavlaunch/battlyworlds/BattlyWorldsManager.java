@@ -88,6 +88,51 @@ public final class BattlyWorldsManager {
         sActivity = new WeakReference<>(activity);
     }
 
+    @Nullable
+    static Activity getAttachedActivity() {
+        return sActivity.get();
+    }
+
+    public static void connectRealtime(Activity activity, String shortCode) {
+        attachActivity(activity);
+        BattlyWorldsRealtimeClient.connect(activity, shortCode);
+        BattlyWorldsVoiceManager.autoJoin(activity);
+    }
+
+    public static void disconnectRealtime() {
+        BattlyWorldsVoiceManager.leave();
+        BattlyWorldsRealtimeClient.disconnect();
+    }
+
+    public static boolean isRoomActive() {
+        return sMode != null;
+    }
+
+    public static boolean isHosting() {
+        return sMode == Mode.HOST;
+    }
+
+    public static boolean handlesMicrophonePermission(int requestCode) {
+        return requestCode == BattlyWorldsVoiceManager.MICROPHONE_PERMISSION_REQUEST;
+    }
+
+    public static void onMicrophonePermissionResult(Activity activity, boolean granted) {
+        BattlyWorldsVoiceManager.onMicrophonePermissionResult(activity, granted);
+    }
+
+    public static void applyVoicePreferences(Context context) {
+        BattlyWorldsVoiceManager.setMuted(BattlyWorldsPreferences.isVoiceMuted(context));
+        BattlyWorldsVoiceManager.setDeafened(BattlyWorldsPreferences.isVoiceDeafened(context));
+        Activity activity = getAttachedActivity();
+        if (activity != null) BattlyWorldsVoiceOverlay.refreshAppearance(activity);
+    }
+
+    public static void resetVoiceOverlay(Context context) {
+        BattlyWorldsPreferences.resetVoiceOverlayPosition(context);
+        Activity activity = getAttachedActivity();
+        if (activity != null) BattlyWorldsVoiceOverlay.refreshAppearance(activity);
+    }
+
     public static void addStateListener(StateListener listener) {
         sListeners.add(listener);
         JsonObject state = sLastState;
@@ -108,6 +153,7 @@ public final class BattlyWorldsManager {
         ensureInitialized();
         sMode = Mode.HOST;
         sLastNodes = nodes;
+        BattlyWorldsPresenceOverlay.setConnectionInProgress(activity, true);
         TerracottaAndroidAPI.setScanning(null, player, nodes);
     }
 
@@ -119,6 +165,7 @@ public final class BattlyWorldsManager {
         ensureInitialized();
         sMode = Mode.GUEST;
         sLastNodes = nodes;
+        BattlyWorldsPresenceOverlay.setConnectionInProgress(activity, true);
         return TerracottaAndroidAPI.setGuesting(code, player, nodes);
     }
 
@@ -140,7 +187,9 @@ public final class BattlyWorldsManager {
         sMode = null;
         sLastNodes = null;
         sLastNotifiedState = "";
+        BattlyWorldsPresenceOverlay.setConnectionInProgress(sActivity.get(), false);
         TerracottaAndroidAPI.setWaiting();
+        disconnectRealtime();
         NotificationManagerCompat.from(context).cancel(CONNECTION_NOTIFICATION_ID);
     }
 
@@ -390,6 +439,14 @@ public final class BattlyWorldsManager {
 
     private static void notifyStateChanged(JsonObject state) {
         Activity activity = sActivity.get();
+        if (activity != null && state != null && state.has("state")) {
+            String stateName = state.get("state").getAsString();
+            boolean connecting = "host-scanning".equals(stateName)
+                    || "host-starting".equals(stateName)
+                    || "guest-connecting".equals(stateName)
+                    || "guest-starting".equals(stateName);
+            BattlyWorldsPresenceOverlay.setConnectionInProgress(activity, connecting);
+        }
         Context context = activity == null ? null : activity.getApplicationContext();
         if (BattlyWorldsFeature.VPN_ENABLED && context != null && sMode != null && state != null && state.has("state")
                 && !"waiting".equals(state.get("state").getAsString())) {

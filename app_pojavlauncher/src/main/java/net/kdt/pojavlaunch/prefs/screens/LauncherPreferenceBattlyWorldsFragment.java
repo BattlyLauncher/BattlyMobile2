@@ -48,6 +48,10 @@ public class LauncherPreferenceBattlyWorldsFragment extends LauncherPreferenceFr
             BattlyWorldsDiagnostics.show(requireActivity());
             return true;
         });
+        requirePreference("battlyworlds_voice_overlay_reset").setOnPreferenceClickListener(preference -> {
+            BattlyWorldsManager.resetVoiceOverlay(requireContext());
+            return true;
+        });
         mNotificationStatus.setOnPreferenceClickListener(preference -> {
             openNotificationSettings();
             return true;
@@ -83,6 +87,12 @@ public class LauncherPreferenceBattlyWorldsFragment extends LauncherPreferenceFr
             } else {
                 BattlyWorldsInvites.stopInvitePolling();
             }
+        }
+        if (BattlyWorldsPreferences.KEY_VOICE_MUTED.equals(key)
+                || BattlyWorldsPreferences.KEY_VOICE_DEAFENED.equals(key)
+                || BattlyWorldsPreferences.KEY_VOICE_OVERLAY_ENABLED.equals(key)
+                || BattlyWorldsPreferences.KEY_VOICE_OVERLAY_OPACITY.equals(key)) {
+            BattlyWorldsManager.applyVoicePreferences(requireContext());
         }
     }
 

@@ -124,18 +124,24 @@ public class CustomControlsActivity extends BaseActivity implements EditorExitab
                 mControlLayout.addControlButton(ControlData.createPerformanceWidget());
                 break;
             case 4:
-                addDeviceImage();
+                mControlLayout.addControlButton(ControlData.createVoiceMicrophoneWidget());
                 break;
             case 5:
-                mControlLayout.openLoadDialog();
+                mControlLayout.addControlButton(ControlData.createVoiceAudioWidget());
                 break;
             case 6:
-                mControlLayout.openSaveDialog(this);
+                addDeviceImage();
                 break;
             case 7:
-                mControlLayout.openSetDefaultDialog();
+                mControlLayout.openLoadDialog();
                 break;
             case 8:
+                mControlLayout.openSaveDialog(this);
+                break;
+            case 9:
+                mControlLayout.openSetDefaultDialog();
+                break;
+            case 10:
                 exportCurrentControl();
                 break;
             default:

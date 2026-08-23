@@ -169,8 +169,8 @@ android {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 10000019
-        versionName "2.2.0"
+        versionCode 10000020
+        versionName "2.2.1"
         multiDexEnabled true //important
         buildConfigField "boolean", "BATTLY_WORLDS_ENABLED", battlyWorldsEnabled.toString()
         buildConfigField "boolean", "BATTLY_WORLDS_VPN_ENABLED", battlyWorldsVpnEnabled.toString()
@@ -423,6 +423,10 @@ dependencies {
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
     implementation 'commons-codec:commons-codec:1.15'
     implementation 'com.squareup.okhttp3:okhttp:5.4.0'
+    implementation('io.socket:socket.io-client:2.1.1') {
+        exclude group: 'org.json', module: 'json'
+    }
+    implementation 'io.github.webrtc-sdk:android:144.7559.12'
     implementation 'org.ow2.asm:asm:9.6'
     // implementation 'com.wu-man:android-bsf-api:3.1.3'
     implementation 'androidx.preference:preference:1.2.0'

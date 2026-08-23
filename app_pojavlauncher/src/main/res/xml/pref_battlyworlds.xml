@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
-<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
     <PreferenceCategory android:title="@string/battlyworlds_settings_room_category">
         <ListPreference
             android:key="battlyworlds_default_visibility"
@@ -44,6 +45,46 @@
         <Preference
             android:key="battlyworlds_notification_status"
             android:title="@string/battlyworlds_notification_status_title" />
+    </PreferenceCategory>
+
+    <PreferenceCategory android:title="@string/battlyworlds_settings_audio_category">
+        <SwitchPreference
+            android:key="battlyworlds_voice_auto_join"
+            android:title="@string/battlyworlds_voice_auto_join_title"
+            android:summary="@string/battlyworlds_voice_auto_join_summary"
+            android:defaultValue="true" />
+        <SwitchPreference
+            android:key="battlyworlds_voice_muted"
+            android:title="@string/battlyworlds_voice_start_muted_title"
+            android:summary="@string/battlyworlds_voice_start_muted_summary"
+            android:defaultValue="false" />
+        <SwitchPreference
+            android:key="battlyworlds_voice_deafened"
+            android:title="@string/battlyworlds_voice_deafened_title"
+            android:summary="@string/battlyworlds_voice_deafened_summary"
+            android:defaultValue="false" />
+        <SwitchPreference
+            android:key="battlyworlds_voice_sounds"
+            android:title="@string/battlyworlds_voice_sounds_title"
+            android:summary="@string/battlyworlds_voice_sounds_summary"
+            android:defaultValue="true" />
+        <SwitchPreference
+            android:key="battlyworlds_voice_overlay_enabled"
+            android:title="@string/battlyworlds_voice_overlay_enabled_title"
+            android:summary="@string/battlyworlds_voice_overlay_enabled_summary"
+            android:defaultValue="true" />
+        <net.kdt.pojavlaunch.prefs.CustomSeekBarPreference
+            android:key="battlyworlds_voice_overlay_opacity"
+            android:title="@string/battlyworlds_voice_overlay_opacity_title"
+            android:summary="@string/battlyworlds_voice_overlay_opacity_summary"
+            android:defaultValue="92"
+            app:min="25"
+            android:max="100"
+            app:showSeekBarValue="true" />
+        <Preference
+            android:key="battlyworlds_voice_overlay_reset"
+            android:title="@string/battlyworlds_voice_overlay_reset_title"
+            android:summary="@string/battlyworlds_voice_overlay_reset_summary" />
     </PreferenceCategory>
 
     <PreferenceCategory android:title="@string/battlyworlds_settings_connection_category">

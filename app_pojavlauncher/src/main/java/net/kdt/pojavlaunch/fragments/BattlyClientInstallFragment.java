@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -89,6 +90,13 @@ public class BattlyClientInstallFragment extends Fragment {
                 bindList(s == null ? "" : s.toString());
             }
             @Override public void afterTextChanged(android.text.Editable s) {}
+        });
+        mSearch.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_SEARCH && actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            Tools.hideKeyboard(v);
+            return true;
         });
         loadClients();
     }

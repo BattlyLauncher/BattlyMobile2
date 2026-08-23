@@ -43,6 +43,7 @@ import android.view.InputDevice;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -126,6 +127,15 @@ import java.util.regex.Pattern;
 
 @SuppressWarnings("IOStreamConstructor")
 public final class Tools {
+    public static void hideKeyboard(@Nullable View view) {
+        if (view == null) return;
+        InputMethodManager manager = (InputMethodManager) view.getContext()
+                .getSystemService(Context.INPUT_METHOD_SERVICE);
+        if (manager != null) {
+            manager.hideSoftInputFromWindow(view.getWindowToken(), 0);
+        }
+        view.clearFocus();
+    }
     public  static final float BYTE_TO_MB = 1024 * 1024;
     public static final Handler MAIN_HANDLER = new Handler(Looper.getMainLooper());
     public static String APP_NAME = "Battly Launcher";

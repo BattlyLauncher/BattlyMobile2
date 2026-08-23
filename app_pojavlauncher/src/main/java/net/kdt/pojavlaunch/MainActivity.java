@@ -208,11 +208,13 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 case 1: mControlLayout.addDrawer(new ControlDrawerData()); break;
                 case 2: mControlLayout.addJoystickButton(new ControlJoystickData()); break;
                 case 3: mControlLayout.addControlButton(ControlData.createPerformanceWidget()); break;
-                case 4: addDeviceImage(); break;
-                case 5: mControlLayout.openLoadDialog(); break;
-                case 6: mControlLayout.openSaveDialog(this); break;
-                case 7: mControlLayout.openSetDefaultDialog(); break;
-                case 8: mControlLayout.openExitDialog(this); break;
+                case 4: mControlLayout.addControlButton(ControlData.createVoiceMicrophoneWidget()); break;
+                case 5: mControlLayout.addControlButton(ControlData.createVoiceAudioWidget()); break;
+                case 6: addDeviceImage(); break;
+                case 7: mControlLayout.openLoadDialog(); break;
+                case 8: mControlLayout.openSaveDialog(this); break;
+                case 9: mControlLayout.openSetDefaultDialog(); break;
+                case 10: mControlLayout.openExitDialog(this); break;
             }
         };
 
@@ -648,10 +650,15 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     protected void onDestroy() {
         Tools.MAIN_HANDLER.removeCallbacks(mFinishGameStartingOverlay);
         destroyGameStartingAd();
-        super.onDestroy();
+        BattlySocialManager.stopGameHeartbeat(this);
         Tools.MAIN_HANDLER.removeCallbacks(mLanInviteChecker);
         if (BattlyWorldsFeature.ENABLED) {
+            boolean wasHosting = BattlyWorldsManager.isHosting();
+            if (isFinishing() && !isChangingConfigurations()) {
+                BattlyWorldsManager.disconnectRealtime();
+            }
             if (isFinishing() && !isChangingConfigurations()
+                    && wasHosting
                     && BattlyWorldsPreferences.shouldCloseOnGameExit(this)) {
                 String activeRoomCode = BattlyWorldsPreferences.getActiveRoomCode(this);
                 BattlyWorldsManager.setWaiting(this, true);
@@ -664,8 +671,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                         }
                     });
                 }
+            } else if (isFinishing() && !isChangingConfigurations() && !wasHosting) {
+                BattlyWorldsPreferences.clearActiveRoomCode(this);
             }
             BattlyWorldsInvites.setGameActive(this, false);
+            BattlySocialManager.heartbeatLauncher(this);
             if (mBattlyWorldsInviteReceiver != null) {
                 try {
                     unregisterReceiver(mBattlyWorldsInviteReceiver);
@@ -677,6 +687,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         CallbackBridge.removeGrabListener(touchpad);
         CallbackBridge.removeGrabListener(minecraftGLView);
         ContextExecutor.clearActivity();
+        super.onDestroy();
     }
 
     @Override
@@ -700,6 +711,17 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         super.onPostResume();
         if(minecraftGLView != null)  // Useful when backing out of the app
             Tools.MAIN_HANDLER.postDelayed(() -> minecraftGLView.refreshSize(), 500);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (BattlyWorldsManager.handlesMicrophonePermission(requestCode)) {
+            boolean granted = grantResults.length > 0
+                    && grantResults[0] == android.content.pm.PackageManager.PERMISSION_GRANTED;
+            BattlyWorldsManager.onMicrophonePermissionResult(this, granted);
+        }
     }
 
     @Override
@@ -1329,6 +1351,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
+        if (isInEditor && mControlLayout != null) {
+            mControlLayout.askToExit(this);
+            return;
+        }
+        sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
     }
 }

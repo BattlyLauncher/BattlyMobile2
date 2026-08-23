@@ -104,8 +104,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
 
         mSearchEditText.setOnEditorActionListener((v, actionId, event) -> {
             searchMods(mSearchEditText.getText().toString());
-            mSearchEditText.clearFocus();
-            return false;
+            Tools.hideKeyboard(mSearchEditText);
+            return true;
         });
 
         setupFilters(view);

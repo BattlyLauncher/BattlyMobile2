@@ -178,6 +178,7 @@ public class LauncherActivity extends BaseActivity {
     private boolean mActivityDestroyed;
     private boolean mLauncherStartupInitialized;
     private boolean mGameExitInfoShown;
+    private BroadcastReceiver mBattlyWorldsInviteReceiver;
     private Runnable mAfterWhatsNew;
     private final ActivityResultLauncher<Intent> mWhatsNewLauncher = registerForActivityResult(
             new ActivityResultContracts.StartActivityForResult(), result -> {
@@ -259,7 +260,10 @@ public class LauncherActivity extends BaseActivity {
                     () -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
             return false;
         }
-        String normalizedVersionId = AsyncMinecraftDownloader.normalizeVersionId(prof.lastVersionId);
+        String hostedVersionOverride = BattlyWorldsInvites.consumePendingLaunchVersion();
+        String requestedVersionId = Tools.isValidString(hostedVersionOverride)
+                ? hostedVersionOverride : prof.lastVersionId;
+        String normalizedVersionId = AsyncMinecraftDownloader.normalizeVersionId(requestedVersionId);
         JMinecraftVersionList.Version mcVersion = AsyncMinecraftDownloader.getListedVersion(normalizedVersionId);
         Telemetry.logLaunchRequested(selectedProfile, normalizedVersionId);
 
@@ -358,6 +362,7 @@ public class LauncherActivity extends BaseActivity {
         getWindow().setBackgroundDrawable(null);
         bindViews();
         registerBattlyInAppReceiver();
+        registerBattlyWorldsInviteReceiver();
 
         BattlyUpdateVideoDialog.showIfNeeded(this, this::continueLauncherStartupAfterTrailer);
     }
@@ -715,7 +720,21 @@ public class LauncherActivity extends BaseActivity {
             }
             mBattlyInAppReceiver = null;
         }
+        if (mBattlyWorldsInviteReceiver != null) {
+            try {
+                unregisterReceiver(mBattlyWorldsInviteReceiver);
+            } catch (IllegalArgumentException ignored) {
+            }
+            mBattlyWorldsInviteReceiver = null;
+        }
         stopAnimatedBackground();
+    }
+
+    private void registerBattlyWorldsInviteReceiver() {
+        if (mBattlyWorldsInviteReceiver != null) return;
+        mBattlyWorldsInviteReceiver = BattlyWorldsInvites.createLauncherInviteReceiver(this);
+        ContextCompat.registerReceiver(this, mBattlyWorldsInviteReceiver,
+                BattlyWorldsInvites.inviteIntentFilter(), ContextCompat.RECEIVER_NOT_EXPORTED);
     }
 
     private void registerBattlyInAppReceiver() {

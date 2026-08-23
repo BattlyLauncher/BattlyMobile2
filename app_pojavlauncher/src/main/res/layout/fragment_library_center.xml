@@ -246,6 +246,18 @@
             android:textColor="#C7D4DF"
             android:textSize="12sp" />
 
+        <Button
+            android:id="@+id/library_instance_selector"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="10dp"
+            android:background="@drawable/bg_battly_button_secondary"
+            android:gravity="center_vertical|start"
+            android:paddingHorizontal="16dp"
+            android:text="@string/library_instance_selector_title"
+            android:textColor="#FF8DEEDC"
+            android:textAllCaps="false" />
+
         <LinearLayout
             android:id="@+id/library_installed_content_container"
             android:layout_width="match_parent"

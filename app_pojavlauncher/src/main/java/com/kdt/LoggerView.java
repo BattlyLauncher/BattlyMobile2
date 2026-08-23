@@ -13,6 +13,7 @@ import android.text.style.BackgroundColorSpan;
 import android.text.style.ForegroundColorSpan;
 import android.util.AttributeSet;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.TextView;
@@ -24,6 +25,7 @@ import androidx.constraintlayout.widget.ConstraintLayout;
 
 import net.kdt.pojavlaunch.Logger;
 import net.kdt.pojavlaunch.R;
+import net.kdt.pojavlaunch.Tools;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -140,6 +142,13 @@ public class LoggerView extends ConstraintLayout {
             @Override
             public void afterTextChanged(Editable editable) {
             }
+        });
+        mSearchView.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId != EditorInfo.IME_ACTION_SEARCH && actionId != EditorInfo.IME_ACTION_DONE) {
+                return false;
+            }
+            Tools.hideKeyboard(v);
+            return true;
         });
 
         mLogListener = text -> {

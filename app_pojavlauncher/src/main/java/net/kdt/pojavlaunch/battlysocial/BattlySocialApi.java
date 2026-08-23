@@ -44,6 +44,7 @@ public final class BattlySocialApi {
         public final String username;
         public final String state;
         public final String activityLabel;
+        public final boolean battlyWorlds;
         public final String version;
         public final Server server;
         public final boolean premium;
@@ -54,6 +55,8 @@ public final class BattlySocialApi {
             state = json.optString("state", "offline");
             JSONObject activity = json.optJSONObject("activity");
             activityLabel = activity == null ? "" : activity.optString("label", "");
+            battlyWorlds = activity != null && (activity.optBoolean("battlyWorlds", false)
+                    || "battlyworlds".equals(activity.optString("type", "")));
             version = activity == null ? "" : activity.optString("version", "");
             server = activity == null || activity.optJSONObject("server") == null
                     ? null
@@ -226,9 +229,25 @@ public final class BattlySocialApi {
 
     public static void updatePresence(Context context, String state, String version, Server server)
             throws IOException, JSONException {
+        updatePresence(context, state, version, server, false);
+    }
+
+    public static void updatePresence(Context context, String state, String version, Server server,
+                                      boolean battlyWorlds)
+            throws IOException, JSONException {
+        request(context, "POST", "/api/v2/social/presence",
+                buildPresencePayload(state, version, server, battlyWorlds));
+    }
+
+    static JSONObject buildPresencePayload(String state, String version, Server server,
+                                           boolean battlyWorlds) throws JSONException {
         JSONObject activity = new JSONObject()
                 .put("version", version == null ? "" : version)
-                .put("label", "playing".equals(state) ? "Minecraft " + version : "Battly Mobile");
+                .put("type", battlyWorlds ? "battlyworlds" : "minecraft")
+                .put("battlyWorlds", battlyWorlds)
+                .put("label", "playing".equals(state)
+                        ? (battlyWorlds ? "Battly Worlds · Minecraft " : "Minecraft ") + version
+                        : "Battly Mobile");
         JSONObject payload = new JSONObject()
                 .put("state", state)
                 .put("activity", activity)
@@ -239,12 +258,14 @@ public final class BattlySocialApi {
                         .put("sharePresence", true)
                         .put("shareServer", true));
         if (server != null) {
-            payload.put("server", new JSONObject()
+            JSONObject serverJson = new JSONObject()
                     .put("host", server.host)
                     .put("port", server.port)
-                    .put("name", server.name));
+                    .put("name", server.name);
+            payload.put("server", serverJson);
+            activity.put("server", serverJson);
         }
-        request(context, "POST", "/api/v2/social/presence", payload);
+        return payload;
     }
 
     public static void registerDeviceToken(Context context, String token) throws IOException, JSONException {
