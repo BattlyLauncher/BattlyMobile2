@@ -384,7 +384,7 @@
     <string name="crash_no_findings">Naujausiuose žurnaluose nerasta jokio žinomo strigčių modelio.</string>
     <string name="crash_recovery_applied">Atkūrimo veiksmas baigtas</string>
     <string name="crash_recovery_manual">Šią problemą reikia pakeisti rankiniu būdu. Norėdami gauti daugiau informacijos, atidarykite žurnalą.</string>
-    <string name="credits_version">2.2.1 versija</string>
+    <string name="credits_version">2.2.3 versija</string>
     <string name="ctrl_like_btn">Patinka</string>
     <string name="ctrl_liked_added">Pridėta prie patikusių valdiklių.</string>
     <string name="ctrl_liked_btn">Patiko</string>
@@ -445,8 +445,8 @@
     <string name="java_runtime_download_progress">Atsisiunčiamas Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Java 8 diegimas</string>
     <string name="java_runtime_download_waiting">Ruošiamas Java 8 atsisiuntimas...</string>
-    <string name="launcher_credits_title">Battly paleidimo priemonė 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobilusis 2.2.1</string>
+    <string name="launcher_credits_title">Battly paleidimo priemonė 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobilusis 2.2.3</string>
     <string name="launcher_status_battly">Battly sąskaitą</string>
     <string name="launcher_status_battly_plus">Battly+ paskyra</string>
     <string name="library_analyze_mods">Analizuoti</string>
@@ -689,7 +689,7 @@
     <string name="battlyworlds_friend_request_message">Siųsti prašymą draugauti %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Draugo prašymas išsiųstas %1$s.</string>
     <string name="battlyworlds_friend_request_title">Siųsti prašymą draugauti</string>
-    <string name="battlyworlds_guest_connected_simple">Atidarykite kelių žaidėjų režimą ir prisijunkite prie Terracotta fojė. Jis gali būti rodomas su kinišku tekstu.</string>
+    <string name="battlyworlds_guest_connected_simple">Atidarykite kelių žaidėjų režimą ir prisijunkite prie BattlyWorlds fojė.</string>
     <string name="battlyworlds_guest_hint_simple">Jei serveris nepasirodo, palaukite kelias sekundes ir atnaujinkite kelių žaidėjų režimą.</string>
     <string name="battlyworlds_guest_url">Atsarginis adresas: %1$s</string>
     <string name="battlyworlds_host">Šeimininkas</string>
@@ -714,7 +714,7 @@
     <string name="battlyworlds_join">Prisijunk</string>
     <string name="battlyworlds_join_hint">Kvietimo kodas</string>
     <string name="battlyworlds_join_status_preparing">Ruošiamas privatus LAN ryšys...</string>
-    <string name="battlyworlds_join_status_ready">Prisijungta. Kelių žaidėjų režimu atidarykite LAN serverį, pavadintą Terracotta Lobby. Jis gali būti rodomas su kinišku tekstu.</string>
+    <string name="battlyworlds_join_status_ready">Prisijungta. Kelių žaidėjų režimu prisijunkite prie BattlyWorlds fojė LAN serverio.</string>
     <string name="battlyworlds_join_status_title">Prisijungimas prie BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Pakviesti</string>
     <string name="battlyworlds_lan_prompt_message">Naudokite BattlyWorlds, kad pakviestumėte draugų nesidalindami savo tinklu.</string>
@@ -787,7 +787,7 @@
     <string name="credits_based_on">Remiantis „PojavLauncher“ ir „Boardwalk“.</string>
     <string name="credits_game_engine">Žaidimo variklis</string>
     <string name="credits_inspiration">Įkvėpimas</string>
-    <string name="credits_license_text">GNU GPLv3 ir trečiųjų šalių komponentai, įtraukti į projektą. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ir daugiau pagal jų originalias licencijas.</string>
+    <string name="credits_license_text">GNU GPLv3 and third-party components included in the project. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j and more under their original licenses.</string>
     <string name="credits_license_title">Licencija</string>
     <string name="credits_pojav_founder">PojavLauncher įkūrėjas</string>
     <string name="credits_primary_development">Pagrindinė plėtra</string>
@@ -923,7 +923,7 @@
     <string name="installer_internal_fallback">Nepalaikoma diegimo programa, atidaranti senąją Java vartotojo sąsają</string>
     <string name="installer_internal_running">Analizuojama diegimo programa…</string>
     <string name="installer_internal_success">%1$s sumontuotas tiesiai Battly viduje</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly paleidimo priemonė 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly paleidimo priemonė 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Paleidimo priemonė, pagrįsta „PojavLauncher“ ir „Boardwalk“.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Kreditai&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -932,7 +932,7 @@
         • Lentų takas&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Licencija ir trečiosios šalys&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 ir trečiųjų šalių komponentai, įtraukti į projektą.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ir daugiau pagal originalias licencijas.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ir daugiau pagal originalias licencijas.&lt;br/&gt;&lt;br/&gt;
         Ši programa nesusijusi su Minecraft, Mojang ar Microsoft.</string>
     <string name="launcher_download">Atsisiųsti</string>
     <string name="launcher_download_modpack">Importuoti modpack</string>
@@ -1061,7 +1061,7 @@
     <string name="onboarding_welcome_desc">Žaiskite, įdiekite versijas, tvarkykite profilius ir tinkinkite Minecraft iš savo telefono.</string>
     <string name="onboarding_welcome_title">Sveiki atvykę į Battly Mobile</string>
     <string name="preference_disable_autojre_select">Išjungti automatinį JRE pasirinkimą</string>
-    <string name="preference_download_threads_description">Valdo, kiek žaidimo failų Battly atsisiunčia vienu metu. Geruose tinkluose didesnės vertės yra greitesnės.</string>
+    <string name="preference_download_threads_description">Battly uses 64 simultaneous downloads by default. Padidinkite jį iki 100 greito ryšio metu.</string>
     <string name="preference_download_threads_title">Atsisiuntimai vienu metu</string>
     <string name="preference_renderer_auto">Automatinis</string>
     <string name="preference_renderer_title">Atvaizduotojas</string>
@@ -1275,21 +1275,6 @@
 
     <string name="battly_new_badge">Nauja</string>
 
-    <string name="battly_whats_new_transition_desc">Jūsų profiliai yra nepažeisti ir paruošti žaisti.</string>
-    <string name="battly_whats_new_action_start">Naršyti 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Android grįžimo mygtukas dabar grįžta į Minecraft, o ne jį uždaro, o paieškos atmeta klaviatūrą, kai ją patvirtinate.</string>
-    <string name="battly_whats_new_compatibility_title">Navigacija, kuri jums nepatinka</string>
-    <string name="battly_whats_new_controllers_desc">Konfigūruokite automatinį sujungimą, mikrofono ir garso būseną, garsiakalbių perdangos matomumą, skaidrumą ir padėtį iš Battly Worlds nustatymų.</string>
-    <string name="battly_whats_new_controllers_title">Jūsų valdomas balso pokalbis</string>
-    <string name="battly_whats_new_desc">Tikslus Battly pasaulių, socialinių tinklų, balso pokalbių ir kasdienės navigacijos atnaujinimas.</string>
-    <string name="battly_whats_new_instances_desc">Pasirinkite egzempliorių prieš peržiūrėdami jo įdiegtas modifikacijas, išteklių paketus, šešėliuotojus ir duomenų paketus. Dabar kiekviena biblioteka yra aiškiai atskirta.</string>
-    <string name="battly_whats_new_instances_title">Turinys sutvarkytas pagal egzempliorius</string>
-    <string name="battly_whats_new_recovery_desc">Battly paaiškina, kodėl prieš klausiant reikalinga prieiga prie mikrofono, išsaugomos balso parinktys ir tobulėja prisijungimas, Battly pasauliai ir kelių žaidėjų buvimas.</string>
-    <string name="battly_whats_new_recovery_title">Aiškesni leidimai ir buvimas</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 paruoštas</string>
-    <string name="battly_whats_new_worlds_desc">Pakvieskite draugų tiesiai iš „Battly Social“, patikimai gaukite veiklą kambaryje ir nuolat atnaujinkite savo būseną žaisdami „Battly Worlds“ arba kelių žaidėjų serveryje.</string>
-    <string name="battly_whats_new_worlds_title">Battly Pasauliai, geriau sujungti</string>
     <string name="customctrl_voice_microphone_add">Pridėti balso mikrofono mygtuką</string>
     <string name="customctrl_voice_audio_add">Pridėti balso garso mygtuką</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1363,4 +1348,30 @@
     <string name="battly_social_playing_worlds">Žaisti Battly pasauliuose · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Balso pokalbio prisijungimo garsai</string>
     <string name="battlyworlds_voice_sounds_summary">Leisti garsą, kai jūs arba kitas žaidėjas prisijungia prie balso pokalbio arba iš jo išeina.</string>
+<string name="download_action_browse_worlds_title">Naršyti pasaulius</string>
+    <string name="download_action_browse_worlds_subtitle">Atsisiųskite žaidžiamus pasaulius į pasirinktą egzempliorių.</string>
+    <string name="search_world_title">Naršyti pasaulius</string>
+    <string name="search_world_subtitle">Atraskite ir įdiekite CurseForge pasaulius į pasirinktą egzempliorių.</string>
+    <string name="hint_search_world">Ieškokite pasaulių</string>
+    <string name="search_world_no_result">Pasaulių nerasta</string>
+    <string name="search_world_error">Nepavyko rasti pasaulių</string>
+    <string name="search_world_download_error">Nepavyko atsisiųsti pasaulio metaduomenų</string>
+    <string name="world_install_button">Įdiegti pasaulį</string>
+    <string name="world_install_success">Į šį egzempliorių įdiegtas %1$s</string>
+
+    <string name="battly_whats_new_action_start">Naršyti 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Veiksmas Atidaryti modpack dabar pasirenka naują egzempliorių ir tinkamai uždaro kiekvieną diegimo ir turinio langą.</string>
+    <string name="battly_whats_new_compatibility_title">Tiesiogiai atidarykite įdiegtus modifikacijų paketus</string>
+    <string name="battly_whats_new_controllers_desc">Battly kliento diegimo programa dabar naudoja tinkamą slenkamą sąrašą, įskaitant kompaktiškus ekranus.</string>
+    <string name="battly_whats_new_controllers_title">Klientų sąrašo slinkimas ištaisytas</string>
+    <string name="battly_whats_new_desc">Nauji atskiri egzemplioriai, atsisiunčiami pasauliai ir svarbūs Battly Workspace pataisymai.</string>
+    <string name="battly_whats_new_instances_desc">Nauji „Vanilla“, „loader“, „Client“ ir „Modpack“ egzemplioriai išsaugo savo pasaulius, modifikacijas, nustatymus ir išteklių paketus nepriklausomame aplanke.</string>
+    <string name="battly_whats_new_instances_title">Atskiras aplankas kiekvienam naujam egzemplioriui</string>
+    <string name="battly_whats_new_recovery_desc">Naujų egzempliorių izoliacija, saugesnė nustatymų saugykla ir ilgos seanso diagnostika sumažina konfigūracijos atstatymą ir palengvina problemų nustatymą.</string>
+    <string name="battly_whats_new_recovery_title">Pagerintas stabilumas</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Esami atvejai lieka ten, kur yra. Aplanko išskyrimas taikomas tik egzemplioriams, sukurtiems nuo šios versijos.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 paruoštas</string>
+    <string name="battly_whats_new_worlds_desc">Naršykite ir įdiekite Minecraft pasaulius iš CurseForge tiesiai į pasirinktą egzempliorių.</string>
+    <string name="battly_whats_new_worlds_title">Atsisiųskite pasaulius iš Workspace</string>
 </resources>

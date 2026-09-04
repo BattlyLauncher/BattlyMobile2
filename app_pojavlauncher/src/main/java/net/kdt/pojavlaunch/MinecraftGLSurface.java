@@ -46,6 +46,7 @@ import net.kdt.pojavlaunch.customcontrols.mouse.InGUIEventProcessor;
 import net.kdt.pojavlaunch.customcontrols.mouse.InGameEventProcessor;
 import net.kdt.pojavlaunch.customcontrols.mouse.TouchEventProcessor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.FramePacingPolicy;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.TouchControllerUtils;
@@ -153,7 +154,8 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
     public void start(boolean isAlreadyRunning, AbstractTouchpad touchpad){
         if(Tools.isAndroid8OrHigher()) setUpPointerCapture(touchpad);
         mInGUIProcessor.setAbstractTouchpad(touchpad);
-        useSurfaceView = LauncherPreferences.PREF_USE_ALTERNATE_SURFACE && !rendererNeedsTextureView();
+        useSurfaceView = FramePacingPolicy.useSurfaceView(
+                LauncherPreferences.PREF_USE_ALTERNATE_SURFACE);
         Log.i(TAG, "Minecraft surface backend: " + (useSurfaceView ? "SurfaceView" : "TextureView")
                 + ", renderer=" + LOCAL_RENDERER);
         if(useSurfaceView){
@@ -240,15 +242,6 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         }
 
 
-    }
-
-    private static boolean rendererNeedsTextureView() {
-        String renderer = LOCAL_RENDERER == null ? "" : LOCAL_RENDERER.toLowerCase(java.util.Locale.ROOT);
-        return renderer.contains("zink")
-                || renderer.contains("mobileglues")
-                || renderer.contains("freedreno")
-                || renderer.contains("vulkan")
-                || renderer.contains("opengles3");
     }
 
     /**
@@ -553,11 +546,14 @@ public class MinecraftGLSurface extends View implements GrabListener, DirectGame
         refreshSize(true);
         // Ensures we run at correct refresh rate (should also NOT change the resolution being used)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-            float maxHz = 120f; // Set to 120 by default just to be safe
-            for (float altHz : getDisplay().getMode().getAlternativeRefreshRates()) {
-                maxHz = Math.max(maxHz, altHz);
-            }
-            surface.setFrameRate(maxHz, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT, Surface.CHANGE_FRAME_RATE_ONLY_IF_SEAMLESS);
+            android.view.Display display = getDisplay();
+            android.view.Display.Mode mode = display == null ? null : display.getMode();
+            float currentHz = mode == null ? 0f : mode.getRefreshRate();
+            float[] alternatives = mode == null ? null : mode.getAlternativeRefreshRates();
+            float targetHz = FramePacingPolicy.selectSurfaceFrameRate(currentHz, alternatives);
+            surface.setFrameRate(targetHz, Surface.FRAME_RATE_COMPATIBILITY_DEFAULT,
+                    Surface.CHANGE_FRAME_RATE_ONLY_IF_SEAMLESS);
+            Log.i(TAG, "Surface frame-rate target: " + targetHz + " Hz");
         }
 
         //Load Minecraft options:

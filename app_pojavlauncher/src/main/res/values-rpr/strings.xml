@@ -262,7 +262,7 @@
     <string name="crash_no_findings">Nu a fost găsit niciun tipar de prăbușire cunoscut în ultimele jurnale.</string>
     <string name="crash_recovery_applied">Acțiunea de recuperare a fost finalizată</string>
     <string name="crash_recovery_manual">Această problemă necesită o modificare manuală. Deschide jurnalul pentru detalii.</string>
-    <string name="credits_version">Versiunea 2.2.1</string>
+    <string name="credits_version">Versiunea 2.2.3</string>
     <string name="ctrl_like_btn">Îmi place</string>
     <string name="ctrl_liked_added">Adăugat la controalele apreciate.</string>
     <string name="ctrl_liked_btn">Apreciat</string>
@@ -323,8 +323,8 @@
     <string name="java_runtime_download_progress">Descărcarea Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Instalarea Java 8</string>
     <string name="java_runtime_download_waiting">Pregătirea descărcării Java 8...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_status_battly">Cont Battly</string>
     <string name="launcher_status_battly_plus">Cont Battly+</string>
     <string name="library_analyze_mods">Analizează</string>

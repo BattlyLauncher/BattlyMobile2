@@ -626,7 +626,7 @@
     <string name="battlyworlds_friend_request_message">%1$s에 친구 요청을 보내시겠습니까?</string>
     <string name="battlyworlds_friend_request_sent">%1$s로 친구 요청이 전송되었습니다.</string>
     <string name="battlyworlds_friend_request_title">친구 요청 보내기</string>
-    <string name="battlyworlds_guest_connected_simple">멀티플레이어를 열고 Terracotta 로비에 참여하세요. 중국어 텍스트와 함께 나타날 수 있습니다.</string>
+    <string name="battlyworlds_guest_connected_simple">멀티플레이어를 열고 BattlyWorlds 로비에 참여하세요.</string>
     <string name="battlyworlds_guest_hint_simple">서버가 나타나지 않으면 몇 초 정도 기다린 후 멀티플레이어를 새로 고치세요.</string>
     <string name="battlyworlds_guest_url">백업 주소: %1$s</string>
     <string name="battlyworlds_host">호스트</string>
@@ -652,7 +652,7 @@
     <string name="battlyworlds_join">가입</string>
     <string name="battlyworlds_join_hint">초대 코드</string>
     <string name="battlyworlds_join_status_preparing">비공개 LAN 연결 준비 중...</string>
-    <string name="battlyworlds_join_status_ready">연결되었습니다. 멀티플레이어에서 Terracotta 로비라는 LAN 서버를 엽니다. 중국어 텍스트와 함께 나타날 수 있습니다.</string>
+    <string name="battlyworlds_join_status_ready">연결되었습니다. 멀티플레이어에서 BattlyWorlds 로비 LAN 서버에 참여하세요.</string>
     <string name="battlyworlds_join_status_title">BattlyWorlds에 합류</string>
     <string name="battlyworlds_lan_prompt_action">초대</string>
     <string name="battlyworlds_lan_prompt_message">네트워크를 공유하지 않고 친구를 초대하려면 BattlyWorlds를 사용하세요.</string>
@@ -746,13 +746,13 @@
     <string name="credits_based_on">PojavLauncher 및 Boardwalk 기반</string>
     <string name="credits_game_engine">게임 엔진</string>
     <string name="credits_inspiration">영감</string>
-    <string name="credits_license_text">프로젝트에 GNU GPLv3 및 타사 구성 요소가 포함되어 있습니다. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j 등은 원래 라이센스에 따라 제공됩니다.</string>
+    <string name="credits_license_text">프로젝트에 GNU GPLv3 및 타사 구성 요소가 포함되어 있습니다. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j 등은 원래 라이센스에 따라 제공됩니다.</string>
     <string name="credits_license_title">라이센스</string>
     <string name="credits_pojav_founder">PojavLauncher 설립자</string>
     <string name="credits_primary_development">주요 개발</string>
     <string name="credits_section_title">크레딧</string>
     <string name="credits_unaffiliated">이 앱은 Minecraft, Mojang 또는 Microsoft와 관련이 없습니다.</string>
-    <string name="credits_version">버전 2.2.1</string>
+    <string name="credits_version">버전 2.2.3</string>
     <string name="ctrl_applied_success">컨트롤 "%1$s"이(가) 성공적으로 적용되었습니다.</string>
     <string name="ctrl_apply_btn">제어 적용</string>
     <string name="ctrl_apply_msg">"%1$s"을 다운로드하여 컨트롤 레이아웃으로 적용하시겠습니까?</string>
@@ -938,8 +938,8 @@
     <string name="instance_storage_calculating">저장용량 계산 중…</string>
     <string name="instance_use">사용</string>
     <string name="java_runtime_download_message">Battly는 앱 내부로 배송하는 대신 첫 번째 설정 후 Java 8을 다운로드합니다. 이렇게 하면 앱 크기가 줄어들고 이전 Minecraft 버전이 준비됩니다.</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly 실행기 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
-        PojavLauncher와 Boardwalk를 기반으로 한 런처입니다.&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly 실행기 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+        PojavLauncher 및 Boardwalk를 기반으로 한 실행기입니다.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;크레딧&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
         • PojavLauncher팀&lt;br/&gt;
@@ -947,13 +947,13 @@
         • 보드워크&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;라이센스 및 제3자&lt;/b&gt;&lt;br/&gt;
         • 프로젝트에 포함된 GNU GPLv3 및 타사 구성요소.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j 등은 원래 라이센스에 따라 제공됩니다.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j 등은 원래 라이선스에 따라 제공됩니다.&lt;br/&gt;&lt;br/&gt;
         이 앱은 Minecraft, Mojang 또는 Microsoft와 관련이 없습니다.</string>
-    <string name="launcher_credits_title">Battly 실행기 2.2.1</string>
+    <string name="launcher_credits_title">Battly 실행기 2.2.3</string>
     <string name="launcher_download">다운로드</string>
     <string name="launcher_download_modpack">모드팩 가져오기</string>
     <string name="launcher_execute">플레이</string>
-    <string name="launcher_mobile_badge">모바일 2.2.1</string>
+    <string name="launcher_mobile_badge">모바일 2.2.3</string>
     <string name="launcher_nav_back">돌아가기</string>
     <string name="launcher_nav_home">집으로 돌아가기</string>
     <string name="launcher_nav_workspace">Battly 작업 공간</string>
@@ -1102,7 +1102,7 @@
     <string name="preference_disable_autojre_select">자동 JRE 선택 비활성화</string>
     <string name="preference_download_threads_auto_description">Battly는 CPU, 메모리 및 네트워크 유형에 따라 동시 다운로드를 조정합니다. 수동 값을 사용하려면 비활성화하십시오.</string>
     <string name="preference_download_threads_auto_title">자동 다운로드 병렬성</string>
-    <string name="preference_download_threads_description">Battly가 동시에 다운로드하는 게임 파일 수를 제어합니다. 좋은 네트워크에서는 값이 높을수록 더 빠릅니다.</string>
+    <string name="preference_download_threads_description">Battly는 기본적으로 64개의 동시 다운로드를 사용합니다. 빠른 연결에서는 최대 100까지 늘릴 수 있습니다.</string>
     <string name="preference_download_threads_title">동시 다운로드</string>
     <string name="preference_renderer_auto">자동</string>
     <string name="preference_renderer_title">렌더러</string>
@@ -1419,21 +1419,6 @@
 
     <string name="battly_new_badge">새로운</string>
 
-    <string name="battly_whats_new_transition_desc">귀하의 프로필은 그대로 유지되었으며 플레이할 준비가 되었습니다.</string>
-    <string name="battly_whats_new_action_start">2.2.1 살펴보기</string>
-    <string name="battly_whats_new_compatibility_desc">Android 뒤로 버튼은 이제 닫는 대신 Minecraft로 돌아가고, 검색을 확인하면 키보드가 닫힙니다.</string>
-    <string name="battly_whats_new_compatibility_title">방해가 되지 않는 내비게이션</string>
-    <string name="battly_whats_new_controllers_desc">Battly Worlds 설정에서 자동 참여, 마이크 및 오디오 상태, 스피커 오버레이 가시성, 투명도 및 위치를 구성합니다.</string>
-    <string name="battly_whats_new_controllers_title">당신의 통제하에 음성 채팅</string>
-    <string name="battly_whats_new_desc">Battly 월드, 소셜, 음성 채팅 및 일상 내비게이션에 대한 집중 업데이트입니다.</string>
-    <string name="battly_whats_new_instances_desc">설치된 모드, 리소스 팩, 셰이더 및 데이터팩을 검토하기 전에 인스턴스를 선택하세요. 이제 각 라이브러리는 명확하게 분리되어 있습니다.</string>
-    <string name="battly_whats_new_instances_title">인스턴스별로 정리된 콘텐츠</string>
-    <string name="battly_whats_new_recovery_desc">Battly는 질문하기 전에 마이크 액세스가 필요한 이유를 설명하고, 음성 기본 설정을 저장하고, 온라인, Battly 월드 및 멀티플레이어 상태를 개선합니다.</string>
-    <string name="battly_whats_new_recovery_title">더 명확한 권한 및 존재</string>
-    <string name="battly_whats_new_title">Battly 모바일 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1이 준비되었습니다</string>
-    <string name="battly_whats_new_worlds_desc">Battly 소셜에서 직접 친구를 초대하고, 룸 활동을 안정적으로 수신하며, Battly 월드 또는 멀티플레이어 서버에서 플레이하는 동안 상태를 최신 상태로 유지하세요.</string>
-    <string name="battly_whats_new_worlds_title">Battly 세계, 더 나은 연결</string>
     <string name="customctrl_voice_microphone_add">음성 마이크 버튼 추가</string>
     <string name="customctrl_voice_audio_add">음성 오디오 추가 버튼</string>
     <string name="customctrl_voice_microphone_on">마이크</string>
@@ -1507,4 +1492,30 @@
     <string name="battly_social_playing_worlds">Battly 월드에서 플레이하기 · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">음성 채팅 연결 소리</string>
     <string name="battlyworlds_voice_sounds_summary">나 또는 다른 플레이어가 음성 채팅에 참여하거나 나갈 때 소리를 재생합니다.</string>
+<string name="download_action_browse_worlds_title">세계 탐색</string>
+    <string name="download_action_browse_worlds_subtitle">선택한 인스턴스에 플레이 가능한 월드를 다운로드하세요.</string>
+    <string name="search_world_title">세계 찾아보기</string>
+    <string name="search_world_subtitle">CurseForge 세계를 찾아서 선택한 인스턴스에 설치하세요.</string>
+    <string name="hint_search_world">세계 검색</string>
+    <string name="search_world_no_result">세계를 찾을 수 없습니다.</string>
+    <string name="search_world_error">세계를 찾지 못했습니다.</string>
+    <string name="search_world_download_error">월드 메타데이터를 다운로드하지 못했습니다.</string>
+    <string name="world_install_button">설치세계</string>
+    <string name="world_install_success">이 인스턴스에 설치된 %1$s</string>
+
+    <string name="battly_whats_new_action_start">2.2.3 탐색</string>
+    <string name="battly_whats_new_compatibility_desc">이제 Modpack 열기 작업은 새 인스턴스를 선택하고 모든 설치 및 콘텐츠 창을 올바르게 닫습니다.</string>
+    <string name="battly_whats_new_compatibility_title">설치된 모드팩을 직접 열기</string>
+    <string name="battly_whats_new_controllers_desc">Battly 클라이언트 설치 프로그램은 이제 소형 화면을 포함하여 적절한 스크롤 가능 목록을 사용합니다.</string>
+    <string name="battly_whats_new_controllers_title">클라이언트 목록 스크롤이 수정되었습니다.</string>
+    <string name="battly_whats_new_desc">Battly Workspace에 대한 새로운 격리된 인스턴스, 다운로드 가능한 월드 및 중요한 수정 사항입니다.</string>
+    <string name="battly_whats_new_instances_desc">새로운 바닐라, 로더, 클라이언트 및 모드팩 인스턴스는 월드, 모드, 설정 및 리소스 팩을 독립 폴더에 보관합니다.</string>
+    <string name="battly_whats_new_instances_title">모든 새 인스턴스에 대한 별도의 폴더</string>
+    <string name="battly_whats_new_recovery_desc">새로운 인스턴스 격리, 더욱 안전한 설정 저장 및 장기 세션 진단을 통해 구성 재설정을 줄이고 문제를 더 쉽게 식별할 수 있습니다.</string>
+    <string name="battly_whats_new_recovery_title">안정성 향상</string>
+    <string name="battly_whats_new_title">Battly 모바일 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">기존 인스턴스는 현재 위치에 유지됩니다. 폴더 격리는 이 버전부터 생성된 인스턴스에만 적용됩니다.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3이 준비되었습니다</string>
+    <string name="battly_whats_new_worlds_desc">CurseForge에서 Minecraft 월드를 찾아 선택한 인스턴스에 직접 설치하세요.</string>
+    <string name="battly_whats_new_worlds_title">Workspace에서 세계 다운로드</string>
 </resources>

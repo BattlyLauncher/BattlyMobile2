@@ -58,6 +58,12 @@
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="@string/admob_app_id" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_INITIALIZATION"
+            android:value="true" />
+        <meta-data
+            android:name="com.google.android.gms.ads.flag.OPTIMIZE_AD_LOADING"
+            android:value="true" />
 
         <activity
             android:name=".utils.BattlyRewardedInterstitialActivity"
@@ -290,6 +296,10 @@
         <service
             android:name=".services.InstallerService"
             android:process=":installer" />
+        <service
+            android:name=".utils.MobileGluesBenchmarkService"
+            android:exported="false"
+            android:process=":mg_benchmark" />
         <service
             android:name=".services.GameService"
             android:process=":game"

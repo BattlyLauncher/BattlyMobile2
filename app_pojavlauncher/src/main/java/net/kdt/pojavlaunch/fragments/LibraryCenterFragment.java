@@ -75,6 +75,7 @@ public class LibraryCenterFragment extends Fragment {
         view.findViewById(R.id.download_panel_browse_resourcepacks).setOnClickListener(v -> openSearch(SearchFilters.TYPE_RESOURCEPACK));
         view.findViewById(R.id.download_panel_browse_shaders).setOnClickListener(v -> openSearch(SearchFilters.TYPE_SHADER));
         view.findViewById(R.id.download_panel_browse_datapacks).setOnClickListener(v -> openSearch(SearchFilters.TYPE_DATAPACK));
+        view.findViewById(R.id.download_panel_browse_worlds).setOnClickListener(v -> openSearch(SearchFilters.TYPE_WORLD));
         view.findViewById(R.id.download_panel_battly_skins).setOnClickListener(v ->
                 Tools.swapFragment(requireActivity(), BattlySkinManagerFragment.class, BattlySkinManagerFragment.TAG, null));
         view.findViewById(R.id.download_panel_instances).setOnClickListener(v ->
@@ -114,6 +115,7 @@ public class LibraryCenterFragment extends Fragment {
             sections.add(scanInstalledSection(R.string.library_installed_resourcepacks, new File(gameDir, "resourcepacks")));
             sections.add(scanInstalledSection(R.string.library_installed_shaders, new File(gameDir, "shaderpacks")));
             sections.add(scanInstalledSection(R.string.library_installed_datapacks, new File(gameDir, "datapacks")));
+            sections.add(scanInstalledSection(R.string.world_manager_title, new File(gameDir, "saves")));
             Tools.runOnUiThread(() -> {
                 if (!isAdded() || mInstalledContentContainer == null || requestId != mInstalledContentRequestId) {
                     return;
@@ -330,9 +332,11 @@ public class LibraryCenterFragment extends Fragment {
         actions.setPadding(0, dp(8), 0, 0);
         actions.addView(actionButton(R.string.library_content_open, android.R.drawable.ic_menu_view,
                 v -> Tools.openPath(requireContext(), info.file, false)));
-        actions.addView(actionButton(info.enabled ? R.string.library_content_disable : R.string.library_content_enable,
-                info.enabled ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
-                v -> toggleContent(info)));
+        if (info.supportsToggle) {
+            actions.addView(actionButton(info.enabled ? R.string.library_content_disable : R.string.library_content_enable,
+                    info.enabled ? android.R.drawable.ic_media_pause : android.R.drawable.ic_media_play,
+                    v -> toggleContent(info)));
+        }
         actions.addView(actionButton(R.string.library_content_move, android.R.drawable.ic_menu_send,
                 v -> showMoveContentDialog(info)));
         actions.addView(actionButton(R.string.library_content_delete, android.R.drawable.ic_menu_delete,
@@ -445,13 +449,15 @@ public class LibraryCenterFragment extends Fragment {
         info.size = formatSize(getSize(file));
         info.file = file;
         info.sectionTitleRes = titleRes;
+        info.supportsToggle = titleRes != R.string.world_manager_title;
         info.enabled = !file.getName().toLowerCase(Locale.ROOT).endsWith(".disabledmod");
         if (titleRes == R.string.library_installed_resourcepacks) {
             info.enabled = isResourcePackEnabled(file);
         }
         info.badge = titleRes == R.string.library_installed_mods ? "MOD"
                 : titleRes == R.string.library_installed_resourcepacks ? "PACK"
-                : titleRes == R.string.library_installed_shaders ? "SHADER" : "DATA";
+                : titleRes == R.string.library_installed_shaders ? "SHADER"
+                : titleRes == R.string.world_manager_title ? "WORLD" : "DATA";
 
         String lowerName = file.getName().toLowerCase(Locale.ROOT);
         if (titleRes == R.string.library_installed_mods && lowerName.endsWith(".jar")) {
@@ -471,6 +477,9 @@ public class LibraryCenterFragment extends Fragment {
         }
         if (titleRes == R.string.library_installed_shaders) {
             info.iconPath = "pack.png";
+        }
+        if (titleRes == R.string.world_manager_title) {
+            info.iconPath = "icon.png";
         }
         return info;
     }
@@ -759,6 +768,7 @@ public class LibraryCenterFragment extends Fragment {
         if (sectionTitleRes == R.string.library_installed_mods) return new File(gameDir, "mods");
         if (sectionTitleRes == R.string.library_installed_resourcepacks) return new File(gameDir, "resourcepacks");
         if (sectionTitleRes == R.string.library_installed_shaders) return new File(gameDir, "shaderpacks");
+        if (sectionTitleRes == R.string.world_manager_title) return new File(gameDir, "saves");
         return new File(gameDir, "datapacks");
     }
 
@@ -821,6 +831,7 @@ public class LibraryCenterFragment extends Fragment {
         File file;
         int sectionTitleRes;
         boolean enabled;
+        boolean supportsToggle;
 
         String metaLine() {
             StringBuilder builder = new StringBuilder();
@@ -828,7 +839,7 @@ public class LibraryCenterFragment extends Fragment {
             if (Tools.isValidString(loader)) append(builder, loader);
             if (Tools.isValidString(minecraft)) append(builder, "MC " + minecraft);
             append(builder, size);
-            append(builder, enabled ? "Activo" : "Desactivado");
+            if (supportsToggle) append(builder, enabled ? "Activo" : "Desactivado");
             return builder.toString();
         }
 

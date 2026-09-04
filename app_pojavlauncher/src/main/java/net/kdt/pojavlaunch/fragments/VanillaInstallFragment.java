@@ -63,7 +63,7 @@ public class VanillaInstallFragment extends Fragment {
             profile.lastVersionId = mSelectedVersion;
 
             String key = LauncherProfiles.getFreeProfileKey();
-            LauncherProfiles.mainProfileJson.profiles.put(key, profile);
+            LauncherProfiles.putNewProfile(key, profile);
             LauncherProfiles.write();
             ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, key);
 

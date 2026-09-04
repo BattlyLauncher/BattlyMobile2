@@ -86,6 +86,14 @@ public interface ModpackApi {
                                     ModDetail modDetail,
                                     int selectedVersion,
                                     MinecraftProfile targetProfile) {
+        handleInstallation(context, modDetail, selectedVersion, targetProfile, null);
+    }
+
+    default void handleInstallation(Context context,
+                                    ModDetail modDetail,
+                                    int selectedVersion,
+                                    MinecraftProfile targetProfile,
+                                    @Nullable Runnable onOpenInstalledModpack) {
         // Doing this here since when starting installation, the progress does not start immediately
         // which may lead to two concurrent installations (very bad)
         boolean plusQueue = BattlyPlusCloud.canUsePremiumQueue(context);
@@ -125,7 +133,8 @@ public interface ModpackApi {
                 dismissInstallGate(blocker);
             }
             if (isModpack && completedProfileKey != null) {
-                showOpenModpackPrompt(context, completedProfileKey, modDetail.title);
+                showOpenModpackPrompt(context, completedProfileKey, modDetail.title,
+                        onOpenInstalledModpack);
             }
         });
     }
@@ -147,7 +156,8 @@ public interface ModpackApi {
         return fallback;
     }
 
-    default void showOpenModpackPrompt(Context context, String profileKey, String title) {
+    default void showOpenModpackPrompt(Context context, String profileKey, String title,
+                                       @Nullable Runnable onOpenInstalledModpack) {
         if (!(context instanceof net.kdt.pojavlaunch.LauncherActivity)) return;
         net.kdt.pojavlaunch.LauncherActivity activity =
                 (net.kdt.pojavlaunch.LauncherActivity) context;
@@ -168,6 +178,7 @@ public interface ModpackApi {
                     }
                     InstanceManager.select(resolvedKey);
                     dialog.dismiss();
+                    if (onOpenInstalledModpack != null) onOpenInstalledModpack.run();
                     Tools.backToMainMenu(activity);
                     activity.refreshHomeProfileUi();
                     Tools.MAIN_HANDLER.post(() ->

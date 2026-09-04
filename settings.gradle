@@ -23,3 +23,5 @@ include ':lwjgl2_methods_injector'
 include ':forge_installer'
 include ':MobileGlues'
 include ':Terracotta'
+include ':ltw'
+project(':ltw').projectDir = file('LTW/ltw')

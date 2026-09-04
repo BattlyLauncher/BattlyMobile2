@@ -12,6 +12,7 @@ public class SearchFilters {
     public static final int TYPE_RESOURCEPACK = 2;
     public static final int TYPE_SHADER = 3;
     public static final int TYPE_DATAPACK = 4;
+    public static final int TYPE_WORLD = 5;
     public static final String LOADER_ANY = "";
 
     public int contentType = TYPE_MODPACK;
@@ -39,5 +40,9 @@ public class SearchFilters {
 
     public boolean isDatapack() {
         return contentType == TYPE_DATAPACK;
+    }
+
+    public boolean isWorld() {
+        return contentType == TYPE_WORLD;
     }
 }

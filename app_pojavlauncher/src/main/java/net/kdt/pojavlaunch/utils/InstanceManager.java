@@ -89,7 +89,7 @@ public final class InstanceManager {
                 "custom_instances/" + sanitize(copy.name) + "-" + key.substring(0, 8));
         if (sourceDir.isDirectory()) copyTree(sourceDir, destination, CopyMode.INSTANCE);
         invalidateDirectorySize(destination);
-        copy.gameDir = destination.getAbsolutePath();
+        copy.gameDir = relativeInstancePath(destination);
         LauncherProfiles.mainProfileJson.profiles.put(key, copy);
         LauncherProfiles.write();
         return key;
@@ -200,7 +200,7 @@ public final class InstanceManager {
             copyTree(staging, destination, CopyMode.ALL);
             org.apache.commons.io.FileUtils.deleteDirectory(staging);
         }
-        profile.gameDir = destination.getAbsolutePath();
+        profile.gameDir = relativeInstancePath(destination);
         invalidateDirectorySize(destination);
         LauncherProfiles.mainProfileJson.profiles.put(key, profile);
         LauncherProfiles.write();
@@ -318,6 +318,14 @@ public final class InstanceManager {
         File root = new File(Tools.DIR_GAME_HOME, "custom_instances");
         String rootPath = root.getCanonicalPath() + File.separator;
         return file.getCanonicalPath().startsWith(rootPath);
+    }
+
+    private static String relativeInstancePath(File directory) throws IOException {
+        File root = new File(Tools.DIR_GAME_HOME).getCanonicalFile();
+        File target = directory.getCanonicalFile();
+        String rootPath = root.getPath() + File.separator;
+        if (!target.getPath().startsWith(rootPath)) return target.getPath();
+        return "./" + target.getPath().substring(rootPath.length()).replace(File.separatorChar, '/');
     }
 
     private static String uniqueName(String requested, List<InstanceRecord> existing) {

@@ -182,6 +182,15 @@ public class JREUtils {
 
     public static void setJavaEnvironment(Activity activity, String jreHome) throws Throwable {
         Map<String, String> envMap = new ArrayMap<>();
+        GLInfoUtils.GLInfo graphicsInfo = GLInfoUtils.getGlInfo();
+        File graphicsCache = new File(Tools.DIR_CACHE,
+                "graphics/" + AdaptiveGraphicsPolicy.cacheSegment(LOCAL_RENDERER)
+                        + "/" + AdaptiveGraphicsPolicy.cacheSegment(
+                        graphicsInfo.vendor + "-" + graphicsInfo.renderer));
+        if (!graphicsCache.isDirectory() && !graphicsCache.mkdirs()) {
+            Log.w("JREUtils", "Unable to create graphics cache " + graphicsCache);
+            graphicsCache = Tools.DIR_CACHE;
+        }
         envMap.put("POJAV_NATIVEDIR", NATIVE_LIB_DIR);
         envMap.put("JAVA_HOME", jreHome);
         envMap.put("HOME", Tools.DIR_GAME_HOME);
@@ -200,8 +209,6 @@ public class JREUtils {
 
         if(PREF_DUMP_SHADERS && !"opengles2".equals(LOCAL_RENDERER))
             envMap.put("LIBGL_VGPU_DUMP", "1");
-        if(PREF_VSYNC_IN_ZINK)
-            envMap.put("POJAV_VSYNC_IN_ZINK", "1");
         if(Tools.deviceHasHangingLinker())
             envMap.put("POJAV_EMUI_ITERATOR_MITIGATE", "1");
 
@@ -211,11 +218,14 @@ public class JREUtils {
 
         envMap.put("FORCE_VSYNC", String.valueOf(LauncherPreferences.PREF_FORCE_VSYNC));
 
-        envMap.put("MESA_GLSL_CACHE_DIR", Tools.DIR_CACHE.getAbsolutePath());
+        // Mesa's current variable is MESA_SHADER_CACHE_DIR; keep the legacy alias for
+        // older bundled drivers. Per-renderer/GPU directories prevent invalid cache reuse.
+        envMap.put("MESA_SHADER_CACHE_DIR", graphicsCache.getAbsolutePath());
+        envMap.put("MESA_GLSL_CACHE_DIR", graphicsCache.getAbsolutePath());
+        envMap.put("MESA_SHADER_CACHE_MAX_SIZE", "256M");
         envMap.put("force_glsl_extensions_warn", "true");
         envMap.put("allow_higher_compat_version", "true");
         envMap.put("allow_glsl_extension_directive_midshader", "true");
-        envMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
         envMap.put("VTEST_SOCKET_NAME", new File(Tools.DIR_CACHE, ".virgl_test").getAbsolutePath());
         if (Tools.iLwjglVersion >= 341) {
             // Minecraft 26.3+ uses LWJGL's SDL3 window backend. SDL receives Android
@@ -240,7 +250,12 @@ public class JREUtils {
             envMap.put("BATTLY_RENDERER", runtimeRenderer);
             if(runtimeRenderer.equals("opengles3_ltw")) {
                 envMap.put("LIBGL_ES", "3");
-                envMap.put("POJAVEXEC_EGL","libltw.so"); // Use ANGLE EGL
+                envMap.put("POJAVEXEC_EGL", "libltw.so");
+                // Recent LWJGL versions create their window through SDL3. LTW exports
+                // both the OpenGL and EGL entry points, so SDL must resolve both from it.
+                envMap.put("SDL_OPENGL_LIBRARY", "libltw.so");
+                envMap.put("SDL_EGL_LIBRARY", "libltw.so");
+                envMap.put("BATTLY_SDL_FORCE_GLES", "1");
             }
             if(runtimeRenderer.equals("opengles2") || runtimeRenderer.equals("opengles2_5")) {
                 envMap.put("LIBGL_ES", "2");
@@ -269,20 +284,27 @@ public class JREUtils {
                 if (Tools.shouldUseUBWC()) envMap.put("FD_DEV_FEATURES", "enable_tp_ubwc_flag_hint=1");
             }
             if (runtimeRenderer.toLowerCase().contains("zink")){
+                envMap.put("GALLIUM_DRIVER", "zink");
+                envMap.put("MESA_LOADER_DRIVER_OVERRIDE", "zink");
+                if (PREF_VSYNC_IN_ZINK) envMap.put("POJAV_VSYNC_IN_ZINK", "1");
                 // This is sketch but it fixes a lot of things, if it causes problems we can just undo it.
                 envMap.put("MESA_GL_VERSION_OVERRIDE","4.6COMPAT");
                 envMap.put("MESA_GLSL_VERSION_OVERRIDE","460");
+                envMap.put("MESA_DISK_CACHE_SINGLE_FILE", "true");
             }
             if (runtimeRenderer.toLowerCase().contains("freedreno")){
+                envMap.put("GALLIUM_DRIVER", "zink");
+                if (PREF_VSYNC_IN_ZINK) envMap.put("POJAV_VSYNC_IN_ZINK", "1");
                 envMap.put("MESA_GL_VERSION_OVERRIDE","4.6COMPAT");
                 envMap.put("MESA_GLSL_VERSION_OVERRIDE","460");
+                envMap.put("MESA_DISK_CACHE_SINGLE_FILE", "true");
             }
         }
         if(LauncherPreferences.PREF_BIG_CORE_AFFINITY) envMap.put("POJAV_BIG_CORE_AFFINITY", "1");
         envMap.put("AWTSTUB_WIDTH", Integer.toString(CallbackBridge.windowWidth > 0 ? CallbackBridge.windowWidth : CallbackBridge.physicalWidth));
         envMap.put("AWTSTUB_HEIGHT", Integer.toString(CallbackBridge.windowHeight > 0 ? CallbackBridge.windowHeight : CallbackBridge.physicalHeight));
 
-        GLInfoUtils.GLInfo info = GLInfoUtils.getGlInfo();
+        GLInfoUtils.GLInfo info = graphicsInfo;
         if(!envMap.containsKey("LIBGL_ES") && LOCAL_RENDERER != null) {
             int glesMajor = info.glesMajorVersion;
             Log.i("glesDetect","GLES version detected: "+glesMajor);
@@ -421,8 +443,9 @@ public class JREUtils {
 
         final int exitCode = VMLauncher.launchJVM(userArgs.toArray(new String[0]));
         Logger.appendToLog("Java Exit code: " + exitCode);
-        Telemetry.logGameExit(exitCode);
-        net.kdt.pojavlaunch.LauncherActivity.openAfterGameExit(activity, exitCode, null);
+        boolean unexpected = net.kdt.pojavlaunch.LauncherActivity.openAfterGameExit(
+                activity, exitCode, null);
+        Telemetry.logGameExit(exitCode, unexpected);
         activity.finish();
         new Handler(Looper.getMainLooper()).postDelayed(
                 () -> android.os.Process.killProcess(android.os.Process.myPid()),

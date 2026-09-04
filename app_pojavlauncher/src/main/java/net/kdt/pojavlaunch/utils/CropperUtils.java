@@ -3,7 +3,6 @@ package net.kdt.pojavlaunch.utils;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.graphics.BitmapRegionDecoder;
 import android.net.Uri;
 import android.util.Log;
@@ -17,6 +16,8 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+
+import com.bumptech.glide.Glide;
 
 import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
@@ -65,7 +66,8 @@ public class CropperUtils {
         PojavApplication.sExecutorService.execute(()->{
             CropperBehaviour cropperBehaviour = null;
             try {
-                 cropperBehaviour = createBehaviour(cropImageView, contentResolver, selectedUri);
+                 cropperBehaviour = createBehaviour(cropImageView, context.getApplicationContext(),
+                         contentResolver, selectedUri);
             }catch (Exception e) {
                 cropperListener.onFailed(e);
             }
@@ -101,6 +103,7 @@ public class CropperUtils {
 
 
     private static CropperBehaviour createBehaviour(CropperView cropImageView,
+                                      Context context,
                                       ContentResolver contentResolver,
                                       Uri selectedUri) throws Exception {
         try (InputStream inputStream = contentResolver.openInputStream(selectedUri)) {
@@ -112,19 +115,19 @@ public class CropperUtils {
                 return cropBehaviour;
             }catch (IOException e) {
                 // Catch IOE here to detect the case when BitmapRegionDecoder does not support this image format.
-                // If it does not, we will just have to load the bitmap in full resolution using BitmapFactory.
+                // Unsupported formats use Glide's bounded decode below.
                 Log.w("CropperUtils", "Failed to load image into BitmapRegionDecoder", e);
             }
         }
-        // We can safely re-open the stream here as ACTION_OPEN_DOCUMENT grants us long-term access
-        // to the file that we have picked.
-        try (InputStream inputStream = contentResolver.openInputStream(selectedUri)) {
-            if(inputStream == null) return null;
-            Bitmap originalBitmap = BitmapFactory.decodeStream(inputStream);
-            BitmapCropBehaviour cropBehaviour = new BitmapCropBehaviour(cropImageView);
-            cropBehaviour.setBitmap(originalBitmap);
-            return cropBehaviour;
-        }
+        Bitmap originalBitmap = Glide.with(context)
+                .asBitmap()
+                .load(selectedUri)
+                .submit(2048, 2048)
+                .get();
+        if (originalBitmap == null) return null;
+        BitmapCropBehaviour cropBehaviour = new BitmapCropBehaviour(cropImageView);
+        cropBehaviour.setBitmap(originalBitmap);
+        return cropBehaviour;
     }
 
     private static void bindViews(AlertDialog alertDialog, CropperView imageCropperView) {

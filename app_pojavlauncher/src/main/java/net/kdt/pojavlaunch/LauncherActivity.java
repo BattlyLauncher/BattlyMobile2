@@ -88,6 +88,7 @@ import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 import net.kdt.pojavlaunch.utils.NotificationUtils;
 import net.kdt.pojavlaunch.utils.PromotedServersManager;
+import net.kdt.pojavlaunch.utils.BattlyOfflineMode;
 import net.kdt.pojavlaunch.onboarding.OnboardingActivity;
 
 import java.io.File;
@@ -103,6 +104,7 @@ public class LauncherActivity extends BaseActivity {
     public static final String SETTING_FRAGMENT_TAG = "SETTINGS_FRAGMENT";
     public static final String EXTRA_GAME_EXIT_CODE = "net.kdt.pojavlaunch.extra.GAME_EXIT_CODE";
     public static final String EXTRA_GAME_EXIT_DETAILS = "net.kdt.pojavlaunch.extra.GAME_EXIT_DETAILS";
+    private static final String EXTRA_GAME_SESSION_CONSUMED = "net.kdt.pojavlaunch.extra.GAME_SESSION_CONSUMED";
     private static final String GAME_SESSION_PREFS = "battly_game_session";
     private static final String GAME_SESSION_ACTIVE = "active";
     private static final String GAME_SESSION_VERSION = "version";
@@ -261,8 +263,10 @@ public class LauncherActivity extends BaseActivity {
             return false;
         }
         String hostedVersionOverride = BattlyWorldsInvites.consumePendingLaunchVersion();
+        String socialVersionOverride = BattlySocialManager.consumePendingLaunchVersion();
         String requestedVersionId = Tools.isValidString(hostedVersionOverride)
-                ? hostedVersionOverride : prof.lastVersionId;
+                ? hostedVersionOverride
+                : Tools.isValidString(socialVersionOverride) ? socialVersionOverride : prof.lastVersionId;
         String normalizedVersionId = AsyncMinecraftDownloader.normalizeVersionId(requestedVersionId);
         JMinecraftVersionList.Version mcVersion = AsyncMinecraftDownloader.getListedVersion(normalizedVersionId);
         Telemetry.logLaunchRequested(selectedProfile, normalizedVersionId);
@@ -338,7 +342,9 @@ public class LauncherActivity extends BaseActivity {
                     .add(R.id.container_fragment, MainMenuFragment.class, null, "ROOT").commit();
         }
 
-        PojavApplication.sExecutorService.execute(IconCacheJanitor::runJanitor);
+        if (!BattlyOfflineMode.isOffline(this)) {
+            PojavApplication.sExecutorService.execute(IconCacheJanitor::runJanitor);
+        }
         mRequestNotificationPermissionLauncher = registerForActivityResult(
                 new ActivityResultContracts.RequestPermission(),
                 isAllowed -> {
@@ -385,8 +391,10 @@ public class LauncherActivity extends BaseActivity {
             return;
         }
 
-        PojavApplication.sExecutorService.execute(
-                () -> PromotedServersManager.syncAllAtLauncherStart(getApplicationContext()));
+        if (!BattlyOfflineMode.isOffline(this)) {
+            PojavApplication.sExecutorService.execute(
+                    () -> PromotedServersManager.syncAllAtLauncherStart(getApplicationContext()));
+        }
 
         mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         ProgressKeeper.addTaskCountListener(mDoubleLaunchPreventionListener);
@@ -559,13 +567,26 @@ public class LauncherActivity extends BaseActivity {
                 Toast.makeText(this, message, ok ? Toast.LENGTH_LONG : Toast.LENGTH_SHORT).show());
     }
 
-    public static void openAfterGameExit(Context context, int exitCode, String details) {
+    public static boolean openAfterGameExit(Context context, int exitCode, String details) {
         Intent intent = new Intent(context, LauncherActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        intent.putExtra(EXTRA_GAME_EXIT_CODE, exitCode);
-        if (details != null && !details.trim().isEmpty()) {
-            intent.putExtra(EXTRA_GAME_EXIT_DETAILS, details.trim());
+        intent.putExtra(EXTRA_GAME_SESSION_CONSUMED, true);
+        boolean unexpected = consumeGameSessionWasUnexpected(context, exitCode, details);
+        if (unexpected) {
+            intent.putExtra(EXTRA_GAME_EXIT_CODE, exitCode);
+            if (details != null && !details.trim().isEmpty()) {
+                intent.putExtra(EXTRA_GAME_EXIT_DETAILS, details.trim());
+            }
         }
+        context.startActivity(intent);
+        return unexpected;
+    }
+
+    public static void openAfterExpectedGameExit(Context context) {
+        clearGameSession(context);
+        Intent intent = new Intent(context, LauncherActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP | Intent.FLAG_ACTIVITY_SINGLE_TOP);
+        intent.putExtra(EXTRA_GAME_SESSION_CONSUMED, true);
         context.startActivity(intent);
     }
 
@@ -576,6 +597,31 @@ public class LauncherActivity extends BaseActivity {
                 .putString(GAME_SESSION_VERSION, versionId == null ? "" : versionId)
                 .putLong(GAME_SESSION_LOG_OFFSET, latestLog.isFile() ? latestLog.length() : 0L)
                 .apply();
+    }
+
+    private static boolean consumeGameSessionWasUnexpected(Context context, int exitCode, String details) {
+        android.content.SharedPreferences session = context.getSharedPreferences(GAME_SESSION_PREFS, MODE_PRIVATE);
+        boolean active = session.getBoolean(GAME_SESSION_ACTIVE, false);
+        long logOffset = session.getLong(GAME_SESSION_LOG_OFFSET, 0L);
+        clearGameSession(context);
+
+        if (!active) return GameSessionExitClassifier.endedUnexpectedly(exitCode, details, null);
+
+        File latestLog = new File(Tools.DIR_GAME_HOME, "latestlog.txt");
+        if (!latestLog.isFile()) {
+            return GameSessionExitClassifier.endedUnexpectedly(exitCode, details, null);
+        }
+        try {
+            String log = readGameSessionLog(latestLog, logOffset);
+            return GameSessionExitClassifier.endedUnexpectedly(exitCode, details, log);
+        } catch (IOException exception) {
+            Log.w("LauncherActivity", "Unable to classify the completed game session", exception);
+            return GameSessionExitClassifier.endedUnexpectedly(exitCode, details, null);
+        }
+    }
+
+    private static void clearGameSession(Context context) {
+        context.getSharedPreferences(GAME_SESSION_PREFS, MODE_PRIVATE).edit().clear().commit();
     }
 
     private void inspectReturnedGameSession() {
@@ -616,6 +662,12 @@ public class LauncherActivity extends BaseActivity {
     }
 
     private void showGameExitInfoIfNeeded(Intent intent) {
+        if (intent != null && intent.getBooleanExtra(EXTRA_GAME_SESSION_CONSUMED, false)) {
+            // SharedPreferences are cached per process. Clear the launcher's cached copy even
+            // though the :game process already consumed the same session on disk.
+            clearGameSession(this);
+            intent.removeExtra(EXTRA_GAME_SESSION_CONSUMED);
+        }
         if (mGameExitInfoShown || intent == null || !intent.hasExtra(EXTRA_GAME_EXIT_CODE)) {
             return;
         }
@@ -672,9 +724,13 @@ public class LauncherActivity extends BaseActivity {
         ContextExecutor.setActivity(this);
         inspectReturnedGameSession();
         applyLauncherBackground();
-        BattlyWorldsInvites.heartbeat(this);
-        BattlyWorldsInvites.startInvitePolling(this);
-        BattlySocialManager.heartbeatLauncher(this);
+        if (!BattlyOfflineMode.isOffline(this)) {
+            BattlyWorldsInvites.heartbeat(this);
+            BattlyWorldsInvites.startInvitePolling(this);
+            BattlySocialManager.heartbeatLauncher(this);
+        } else {
+            BattlyWorldsInvites.stopInvitePolling();
+        }
         if (mInstallTracker != null) {
             mInstallTracker.attach();
         }
@@ -1221,6 +1277,8 @@ public class LauncherActivity extends BaseActivity {
                 return getString(R.string.download_action_browse_shaders_title);
             case SearchFilters.TYPE_DATAPACK:
                 return getString(R.string.download_action_browse_datapacks_title);
+            case SearchFilters.TYPE_WORLD:
+                return getString(R.string.download_action_browse_worlds_title);
             case SearchFilters.TYPE_MODPACK:
             default:
                 return getString(R.string.download_action_browse_modpacks_title);

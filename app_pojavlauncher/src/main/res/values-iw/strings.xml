@@ -591,7 +591,7 @@
     <string name="battlyworlds_friend_request_message">לשלוח בקשת חברות אל %1$s?</string>
     <string name="battlyworlds_friend_request_sent">בקשת חברות נשלחה אל %1$s.</string>
     <string name="battlyworlds_friend_request_title">שלח בקשת חברות</string>
-    <string name="battlyworlds_guest_connected_simple">פתח את Multiplayer והצטרף ל-Terracotta לובי. זה עשוי להופיע עם טקסט סיני.</string>
+    <string name="battlyworlds_guest_connected_simple">פתח את Multiplayer והצטרף ל-BattlyWorlds לובי.</string>
     <string name="battlyworlds_guest_hint_simple">אם השרת לא מופיע, המתן מספר שניות ורענן את Multiplayer.</string>
     <string name="battlyworlds_guest_url">כתובת גיבוי: %1$s</string>
     <string name="battlyworlds_host">מארח</string>
@@ -617,7 +617,7 @@
     <string name="battlyworlds_join">הצטרף</string>
     <string name="battlyworlds_join_hint">קוד הזמנה</string>
     <string name="battlyworlds_join_status_preparing">מכין את החיבור הפרטי LAN...</string>
-    <string name="battlyworlds_join_status_ready">מחובר. ב-Multiplayer, פתח את שרת LAN בשם Terracotta Lobby. זה עשוי להופיע עם טקסט סיני.</string>
+    <string name="battlyworlds_join_status_ready">מחובר. ב-Multiplayer, הצטרף לשרת BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">מצטרף ל-BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">הזמן</string>
     <string name="battlyworlds_lan_prompt_message">השתמש ב-BattlyWorlds כדי להזמין חברים מבלי לשתף את הרשת שלך.</string>
@@ -711,13 +711,13 @@
     <string name="credits_based_on">מבוסס על PojavLauncher וטיילת</string>
     <string name="credits_game_engine">מנוע משחק</string>
     <string name="credits_inspiration">השראה</string>
-    <string name="credits_license_text">GNU GPLv3 ורכיבי צד שלישי הכלולים בפרויקט. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ועוד תחת הרישיונות המקוריים שלהם.</string>
+    <string name="credits_license_text">GNU GPLv3 ורכיבי צד שלישי הכלולים בפרויקט. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ועוד תחת הרישיונות המקוריים שלהם.</string>
     <string name="credits_license_title">רישיון</string>
     <string name="credits_pojav_founder">מייסד PojavLauncher</string>
     <string name="credits_primary_development">פיתוח עיקרי</string>
     <string name="credits_section_title">קרדיטים</string>
     <string name="credits_unaffiliated">אפליקציה זו אינה מזוהה עם Minecraft, Mojang או Microsoft.</string>
-    <string name="credits_version">גרסה 2.2.1</string>
+    <string name="credits_version">גרסה 2.2.3</string>
     <string name="ctrl_applied_success">הפקד "%1$s" הוחל בהצלחה.</string>
     <string name="ctrl_apply_btn">החל שליטה</string>
     <string name="ctrl_apply_msg">להוריד ולהחיל את "%1$s" בתור פריסת הבקרה שלך?</string>
@@ -911,7 +911,7 @@
     <string name="java_runtime_download_progress">הורדת Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">התקנת Java 8</string>
     <string name="java_runtime_download_waiting">מכין הורדה של Java 8...</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         משגר מבוסס על PojavLauncher ו-Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;קרדיטים&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -920,13 +920,13 @@
         • טיילת&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;רישיון וצדדים שלישיים&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 ורכיבי צד שלישי הכלולים בפרויקט.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ועוד תחת הרישיונות המקוריים שלהם.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ועוד תחת הרישיונות המקוריים שלהם.&lt;br/&gt;&lt;br/&gt;
         אפליקציה זו אינה מזוהה עם Minecraft, Mojang או Microsoft.</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
     <string name="launcher_download">הורד</string>
     <string name="launcher_download_modpack">ייבוא modpack</string>
     <string name="launcher_execute">שחק</string>
-    <string name="launcher_mobile_badge">נייד 2.2.1</string>
+    <string name="launcher_mobile_badge">נייד 2.2.3</string>
     <string name="launcher_nav_back">תחזור אחורה</string>
     <string name="launcher_nav_home">תחזור הביתה</string>
     <string name="launcher_nav_workspace">Battly סביבת עבודה</string>
@@ -1076,7 +1076,7 @@
     <string name="preference_disable_autojre_select">השבת את בחירת JRE אוטומטית</string>
     <string name="preference_download_threads_auto_description">Battly מתאים הורדות בו-זמנית למעבד, זיכרון וסוג רשת. השבת אותו כדי להשתמש בערך הידני.</string>
     <string name="preference_download_threads_auto_title">מקביליות הורדה אוטומטית</string>
-    <string name="preference_download_threads_description">שולט בכמה קבצי משחק מוריד Battly בו-זמנית. ערכים גבוהים יותר מהירים יותר ברשתות טובות.</string>
+    <string name="preference_download_threads_description">Battly משתמש ב-64 הורדות בו זמנית כברירת מחדל. הגדל אותו ל-100 בחיבורים מהירים.</string>
     <string name="preference_download_threads_title">הורדות בו זמנית</string>
     <string name="preference_renderer_auto">אוטומטי</string>
     <string name="preference_renderer_title">מעבד</string>
@@ -1400,21 +1400,6 @@
 
     <string name="battly_new_badge">חָדָשׁ</string>
 
-    <string name="battly_whats_new_transition_desc">הפרופילים שלך שלמים ומוכנים להפעלה.</string>
-    <string name="battly_whats_new_action_start">חקור את 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">כפתור החזרה Android חוזר כעת ל-Minecraft במקום לסגור אותו, וחיפושים פוסלים את המקלדת כאשר אתה מאשר אותם.</string>
-    <string name="battly_whats_new_compatibility_title">ניווט שמתרחק מהדרך שלך</string>
-    <string name="battly_whats_new_controllers_desc">הגדר חיבור אוטומטי, מצב מיקרופון ושמע, נראות שכבת-על של רמקולים, שקיפות ומיקום מהגדרות Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">צ\'אט קולי בשליטתך</string>
-    <string name="battly_whats_new_desc">עדכון ממוקד לעולמות Battly, חברתי, צ\'אט קולי וניווט יומיומי.</string>
-    <string name="battly_whats_new_instances_desc">בחר מופע לפני סקירת המודים המותקנים שלו, ערכות המשאבים, ההצללות והנתונים. כל ספריה נשארת כעת מופרדת בבירור.</string>
-    <string name="battly_whats_new_instances_title">תוכן מאורגן לפי מופע</string>
-    <string name="battly_whats_new_recovery_desc">Battly מסביר מדוע יש צורך בגישה למיקרופון לפני שמבקשים, שומר את העדפות הקול ומשפר באינטרנט, Battly Worlds ונוכחות מרובה משתתפים.</string>
-    <string name="battly_whats_new_recovery_title">הרשאות ונוכחות ברורות יותר</string>
-    <string name="battly_whats_new_title">Battly נייד 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 מוכן</string>
-    <string name="battly_whats_new_worlds_desc">הזמן חברים ישירות מ-Battly Social, קבל פעילות בחדר באופן אמין ושמור על הסטטוס שלך מעודכן תוך כדי משחק ב-Battly Worlds או בשרת מרובה משתתפים.</string>
-    <string name="battly_whats_new_worlds_title">Battly עולמות, מחובר טוב יותר</string>
     <string name="customctrl_voice_microphone_add">כפתור הוספת מיקרופון קולי</string>
     <string name="customctrl_voice_audio_add">הוסף לחצן שמע קולי</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1488,4 +1473,30 @@
     <string name="battly_social_playing_worlds">משחק בעולמות Battly · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">צלילי התחברות לצ׳אט הקולי</string>
     <string name="battlyworlds_voice_sounds_summary">השמע צליל כאשר אתה או שחקן אחר מצטרפים לצ׳אט הקולי או עוזבים אותו.</string>
+<string name="download_action_browse_worlds_title">עיין בעולמות</string>
+    <string name="download_action_browse_worlds_subtitle">הורד עולמות שניתנים להפעלה למופע שתבחר.</string>
+    <string name="search_world_title">עיין בעולמות</string>
+    <string name="search_world_subtitle">גלה והתקן את עולמות CurseForge במופע שתבחר.</string>
+    <string name="hint_search_world">חפש עולמות</string>
+    <string name="search_world_no_result">לא נמצאו עולמות</string>
+    <string name="search_world_error">לא הצליח למצוא עולמות</string>
+    <string name="search_world_download_error">הורדת המטא נתונים של העולם נכשלה</string>
+    <string name="world_install_button">התקן עולם</string>
+    <string name="world_install_success">%1$s מותקן במופע זה</string>
+
+    <string name="battly_whats_new_action_start">חקור את 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">הפעולה Open modpack בוחרת כעת את המופע החדש וסוגרת כל חלון התקנה ותוכן בצורה נכונה.</string>
+    <string name="battly_whats_new_compatibility_title">פתח חבילות modpack מותקנות ישירות</string>
+    <string name="battly_whats_new_controllers_desc">מתקין הלקוח Battly משתמש כעת ברשימה מתאימה לגלילה, כולל במסכים קומפקטיים.</string>
+    <string name="battly_whats_new_controllers_title">גלילה ברשימת הלקוחות תוקנה</string>
+    <string name="battly_whats_new_desc">מופעים מבודדים חדשים, עולמות להורדה ותיקונים חשובים עבור Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">מופעים חדשים של Vanilla, loader, client ו-modpack שומרים את העולמות, המודים, ההגדרות וחבילות המשאבים שלהם בתיקייה עצמאית.</string>
+    <string name="battly_whats_new_instances_title">תיקיה נפרדת לכל מופע חדש</string>
+    <string name="battly_whats_new_recovery_desc">בידוד מופעים חדשים, אחסון הגדרות בטוח יותר ואבחון הפעלה ארוך מפחיתים את איפוסי התצורה ומקלים על זיהוי הבעיות.</string>
+    <string name="battly_whats_new_recovery_title">יציבות משופרת</string>
+    <string name="battly_whats_new_title">Battly נייד 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">המקרים הקיימים נשארים היכן שהם נמצאים. בידוד התיקיות חל רק על מופעים שנוצרו מגרסה זו ואילך.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 מוכן</string>
+    <string name="battly_whats_new_worlds_desc">עיין והתקן את עולמות Minecraft מ-CurseForge ישירות לתוך המופע שתבחר.</string>
+    <string name="battly_whats_new_worlds_title">הורד עולמות מ-Workspace</string>
 </resources>

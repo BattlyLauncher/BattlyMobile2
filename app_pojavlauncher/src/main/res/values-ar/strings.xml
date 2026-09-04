@@ -564,7 +564,7 @@
     <string name="battlyworlds_friend_request_message">إرسال طلب صداقة إلى %1$s؟</string>
     <string name="battlyworlds_friend_request_sent">تم إرسال طلب الصداقة إلى %1$s.</string>
     <string name="battlyworlds_friend_request_title">إرسال طلب الصداقة</string>
-    <string name="battlyworlds_guest_connected_simple">افتح لعبة Multiplayer وانضم إلى ردهة Terracotta. قد يظهر مع النص الصيني.</string>
+    <string name="battlyworlds_guest_connected_simple">افتح لعبة Multiplayer وانضم إلى ردهة BattlyWorlds.</string>
     <string name="battlyworlds_guest_hint_simple">إذا لم يظهر الخادم، فانتظر بضع ثوانٍ وقم بتحديث وضع اللاعبين المتعددين.</string>
     <string name="battlyworlds_guest_url">العنوان الاحتياطي: %1$s</string>
     <string name="battlyworlds_host">المضيف</string>
@@ -590,7 +590,7 @@
     <string name="battlyworlds_join">انضم</string>
     <string name="battlyworlds_join_hint">رمز الدعوة</string>
     <string name="battlyworlds_join_status_preparing">يتم الآن تحضير اتصال LAN الخاص...</string>
-    <string name="battlyworlds_join_status_ready">متصل. في وضع اللعب الجماعي، افتح خادم LAN المسمى Terracotta Lobby. قد يظهر مع النص الصيني.</string>
+    <string name="battlyworlds_join_status_ready">متصل. في وضع اللعب الجماعي، انضم إلى خادم BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">الانضمام إلى BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">دعوة</string>
     <string name="battlyworlds_lan_prompt_message">استخدم BattlyWorlds لدعوة الأصدقاء دون مشاركة شبكتك.</string>
@@ -684,13 +684,13 @@
     <string name="credits_based_on">استنادًا إلى PojavLauncher وBoardwalk</string>
     <string name="credits_game_engine">محرك اللعبة</string>
     <string name="credits_inspiration">الإلهام</string>
-    <string name="credits_license_text">GNU GPLv3 ومكونات الطرف الثالث المضمنة في المشروع. OpenJDK وLWJGL وGL4ES وApache Commons وexp4j والمزيد بموجب تراخيصهم الأصلية.</string>
+    <string name="credits_license_text">GNU GPLv3 ومكونات الطرف الثالث المضمنة في المشروع. OpenJDK وLWJGL وGL4ES وLTW وApache Commons وexp4j والمزيد بموجب تراخيصهم الأصلية.</string>
     <string name="credits_license_title">الترخيص</string>
     <string name="credits_pojav_founder">مؤسس PojavLauncher</string>
     <string name="credits_primary_development">التطوير الرئيسي</string>
     <string name="credits_section_title">الاعتمادات</string>
     <string name="credits_unaffiliated">لا يرتبط هذا التطبيق بـ Minecraft أو Mojang أو Microsoft.</string>
-    <string name="credits_version">الإصدار 2.2.1</string>
+    <string name="credits_version">الإصدار 2.2.3</string>
     <string name="ctrl_applied_success">تم تطبيق التحكم "%1$s" بنجاح.</string>
     <string name="ctrl_apply_btn">تطبيق السيطرة</string>
     <string name="ctrl_apply_msg">هل تريد تنزيل وتطبيق "%1$s" كتخطيط التحكم الخاص بك؟</string>
@@ -876,7 +876,7 @@
     <string name="instance_storage_calculating">جارٍ حساب مساحة التخزين...</string>
     <string name="instance_use">استخدم</string>
     <string name="java_runtime_download_message">يقوم Battly بتنزيل Java 8 بعد الإعداد الأول بدلاً من شحنه داخل التطبيق. يؤدي هذا إلى تقليل حجم التطبيق وإعداد الإصدارات الأقدم من Minecraft.</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher يعتمد على PojavLauncher وBoardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;الائتمانات&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -885,13 +885,13 @@
         • الممر&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;الترخيص والجهات الخارجية&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 ومكونات الطرف الثالث المضمنة في المشروع.&lt;br/&gt;
-        • OpenJDK، LWJGL، GL4ES، Apache Commons، exp4j والمزيد بموجب تراخيصهم الأصلية.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK، LWJGL، GL4ES، LTW، Apache Commons، exp4j والمزيد بموجب تراخيصهم الأصلية.&lt;br/&gt;&lt;br/&gt;
         لا يرتبط هذا التطبيق بـ Minecraft أو Mojang أو Microsoft.</string>
-    <string name="launcher_credits_title">Battly قاذفة 2.2.1</string>
+    <string name="launcher_credits_title">Battly قاذفة 2.2.3</string>
     <string name="launcher_download">تحميل</string>
     <string name="launcher_download_modpack">استيراد modpack</string>
     <string name="launcher_execute">العب</string>
-    <string name="launcher_mobile_badge">الجوال 2.2.1</string>
+    <string name="launcher_mobile_badge">الجوال 2.2.3</string>
     <string name="launcher_nav_back">ارجع</string>
     <string name="launcher_nav_home">العودة إلى المنزل</string>
     <string name="launcher_nav_workspace">مساحة العمل Battly</string>
@@ -1041,7 +1041,7 @@
     <string name="preference_disable_autojre_select">تعطيل التحديد التلقائي لـ JRE</string>
     <string name="preference_download_threads_auto_description">يتكيف Battly مع التنزيلات المتزامنة لوحدة المعالجة المركزية والذاكرة ونوع الشبكة. قم بتعطيله لاستخدام القيمة اليدوية.</string>
     <string name="preference_download_threads_auto_title">تحميل التوازي التلقائي</string>
-    <string name="preference_download_threads_description">يتحكم في عدد ملفات اللعبة التي يتم تنزيلها Battly في نفس الوقت. تكون القيم الأعلى أسرع على الشبكات الجيدة.</string>
+    <string name="preference_download_threads_description">يستخدم Battly 64 عملية تنزيل متزامنة بشكل افتراضي. قم بزيادتها حتى 100 على الاتصالات السريعة.</string>
     <string name="preference_download_threads_title">التنزيلات المتزامنة</string>
     <string name="preference_renderer_auto">تلقائي</string>
     <string name="preference_renderer_title">العارض</string>
@@ -1359,21 +1359,6 @@
 
     <string name="battly_new_badge">جديد</string>
 
-    <string name="battly_whats_new_transition_desc">ملفات التعريف الخاصة بك سليمة وجاهزة للعب.</string>
-    <string name="battly_whats_new_action_start">اكتشف 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">يعود الآن زر الرجوع Android إلى Minecraft بدلاً من إغلاقه، وتقوم عمليات البحث بتجاهل لوحة المفاتيح عند تأكيدها.</string>
-    <string name="battly_whats_new_compatibility_title">التنقل الذي يبقى بعيدًا عن طريقك</string>
-    <string name="battly_whats_new_controllers_desc">قم بتكوين الانضمام التلقائي والميكروفون وحالة الصوت ورؤية تراكب السماعة والشفافية والموضع من إعدادات Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">الدردشة الصوتية تحت سيطرتك</string>
-    <string name="battly_whats_new_desc">تحديث مركّز لعوالم Battly والدردشة الصوتية والتنقل اليومي.</string>
-    <string name="battly_whats_new_instances_desc">اختر مثيلًا قبل مراجعة التعديلات المثبتة وحزم الموارد والتظليل وحزم البيانات. تظل كل مكتبة الآن منفصلة بشكل واضح.</string>
-    <string name="battly_whats_new_instances_title">المحتوى منظم حسب المثال</string>
-    <string name="battly_whats_new_recovery_desc">يشرح Battly سبب الحاجة إلى الوصول إلى الميكروفون قبل السؤال، ويحافظ على حفظ تفضيلات الصوت ويحسن الاتصال بالإنترنت، وعوالم Battly والتواجد المتعدد اللاعبين.</string>
-    <string name="battly_whats_new_recovery_title">أذونات وحضور أكثر وضوحًا</string>
-    <string name="battly_whats_new_title">Battly موبايل 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 جاهز</string>
-    <string name="battly_whats_new_worlds_desc">قم بدعوة الأصدقاء مباشرةً من Battly Social، واحصل على نشاط الغرفة بشكل موثوق وحافظ على تحديث حالتك أثناء اللعب في Battly Worlds أو على خادم متعدد اللاعبين.</string>
-    <string name="battly_whats_new_worlds_title">Battly عوالم، متصلة بشكل أفضل</string>
     <string name="customctrl_voice_microphone_add">إضافة زر ميكروفون صوتي</string>
     <string name="customctrl_voice_audio_add">إضافة زر الصوت الصوت</string>
     <string name="customctrl_voice_microphone_on">هيئة التصنيع العسكري</string>
@@ -1447,4 +1432,30 @@
     <string name="battly_social_playing_worlds">اللعب في عوالم Battly · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">أصوات اتصال الدردشة الصوتية</string>
     <string name="battlyworlds_voice_sounds_summary">تشغيل صوت عندما تنضم أنت أو لاعب آخر إلى الدردشة الصوتية أو تغادرها.</string>
+<string name="download_action_browse_worlds_title">تصفح العوالم</string>
+    <string name="download_action_browse_worlds_subtitle">قم بتنزيل عوالم قابلة للتشغيل في المثيل الذي تختاره.</string>
+    <string name="search_world_title">تصفح العوالم</string>
+    <string name="search_world_subtitle">اكتشف عوالم CurseForge وقم بتثبيتها في المثيل الذي تختاره.</string>
+    <string name="hint_search_world">البحث عن عوالم</string>
+    <string name="search_world_no_result">لم يتم العثور على عوالم</string>
+    <string name="search_world_error">فشل في العثور على العوالم</string>
+    <string name="search_world_download_error">فشل تنزيل بيانات التعريف العالمية</string>
+    <string name="world_install_button">تثبيت العالم</string>
+    <string name="world_install_success">تم تثبيت %1$s في هذه الحالة</string>
+
+    <string name="battly_whats_new_action_start">اكتشف 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">يحدد إجراء Open modpack الآن المثيل الجديد ويغلق كل نافذة تثبيت ومحتوى بشكل صحيح.</string>
+    <string name="battly_whats_new_compatibility_title">افتح حزم modpack المثبتة مباشرة</string>
+    <string name="battly_whats_new_controllers_desc">يستخدم برنامج تثبيت العميل Battly الآن قائمة مناسبة قابلة للتمرير، بما في ذلك الشاشات المدمجة.</string>
+    <string name="battly_whats_new_controllers_title">تم إصلاح تمرير قائمة العملاء</string>
+    <string name="battly_whats_new_desc">مثيلات معزولة جديدة وعوالم قابلة للتنزيل وإصلاحات مهمة لمساحة عمل Battly.</string>
+    <string name="battly_whats_new_instances_desc">تحتفظ مثيلات Vanilla والمحمل والعميل وmodpack الجديدة بعوالمها وتعديلاتها وإعداداتها وحزم الموارد الخاصة بها في مجلد مستقل.</string>
+    <string name="battly_whats_new_instances_title">مجلد منفصل لكل مثيل جديد</string>
+    <string name="battly_whats_new_recovery_desc">يؤدي عزل المثيلات الجديدة وتخزين الإعدادات الأكثر أمانًا وتشخيصات الجلسة الطويلة إلى تقليل عمليات إعادة تعيين التكوين وتسهيل التعرف على المشكلات.</string>
+    <string name="battly_whats_new_recovery_title">تحسين الاستقرار</string>
+    <string name="battly_whats_new_title">Battly موبايل 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">تبقى المثيلات الموجودة في مكانها. ينطبق عزل المجلد فقط على المثيلات التي تم إنشاؤها من هذا الإصدار وما بعده.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 جاهز</string>
+    <string name="battly_whats_new_worlds_desc">تصفح وقم بتثبيت عوالم Minecraft من CurseForge مباشرة في المثيل الذي تختاره.</string>
+    <string name="battly_whats_new_worlds_title">قم بتنزيل العوالم من مساحة العمل</string>
 </resources>

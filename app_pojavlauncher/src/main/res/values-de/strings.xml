@@ -672,7 +672,7 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
     <string name="battlyworlds_join">Machen Sie mit</string>
     <string name="battlyworlds_join_hint">Einladungscode</string>
     <string name="battlyworlds_join_status_preparing">Die private LAN-Verbindung wird vorbereitet...</string>
-    <string name="battlyworlds_join_status_ready">Verbunden. Öffnen Sie im Mehrspielermodus den LAN-Server mit dem Namen BattlyWorlds Lobby.</string>
+    <string name="battlyworlds_join_status_ready">Verbunden. Treten Sie im Mehrspielermodus dem BattlyWorlds Lobby-Server LAN bei.</string>
     <string name="battlyworlds_join_status_title">Beitritt BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Einladen</string>
     <string name="battlyworlds_lan_prompt_message">Verwenden Sie BattlyWorlds, um Freunde einzuladen, ohne Ihr Netzwerk zu teilen.</string>
@@ -766,13 +766,13 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
     <string name="credits_based_on">Basierend auf PojavLauncher und Boardwalk</string>
     <string name="credits_game_engine">Spiel-Engine</string>
     <string name="credits_inspiration">Inspiration</string>
-    <string name="credits_license_text">GNU GPLv3 und im Projekt enthaltene Komponenten von Drittanbietern. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j und mehr unter ihren Originallizenzen.</string>
+    <string name="credits_license_text">GNU GPLv3 und im Projekt enthaltene Komponenten von Drittanbietern. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j und mehr unter ihren Originallizenzen.</string>
     <string name="credits_license_title">Lizenz</string>
     <string name="credits_pojav_founder">PojavLauncher-Gründer</string>
     <string name="credits_primary_development">Hauptentwicklung</string>
     <string name="credits_section_title">Credits</string>
     <string name="credits_unaffiliated">Diese App ist nicht mit Minecraft, Mojang oder Microsoft verbunden.</string>
-    <string name="credits_version">Version 2.2.1</string>
+    <string name="credits_version">Version 2.2.3</string>
     <string name="ctrl_applied_success">Steuerung „%1$s“ erfolgreich angewendet.</string>
     <string name="ctrl_apply_btn">Kontrolle anwenden</string>
     <string name="ctrl_apply_msg">„%1$s“ herunterladen und als Steuerelementlayout anwenden?</string>
@@ -958,7 +958,7 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
     <string name="instance_storage_calculating">Speicher wird berechnet…</string>
     <string name="instance_use">Benutzen</string>
     <string name="java_runtime_download_message">Battly lädt Java 8 nach der ersten Einrichtung herunter, anstatt es innerhalb der App zu versenden. Dadurch wird die App-Größe reduziert und ältere Minecraft-Versionen vorbereitet.</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher basierend auf PojavLauncher und Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Credits&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -967,13 +967,13 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
         • Promenade&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lizenz und Dritte&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 und Komponenten von Drittanbietern im Projekt enthalten.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j und mehr unter ihren Originallizenzen.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j und mehr unter ihren Originallizenzen.&lt;br/&gt;&lt;br/&gt;
         Diese App ist nicht mit Minecraft, Mojang oder Microsoft verbunden.</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
     <string name="launcher_download">Herunterladen</string>
     <string name="launcher_download_modpack">Modpack importieren</string>
     <string name="launcher_execute">Spielen</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_nav_back">Geh zurück</string>
     <string name="launcher_nav_home">Rückkehr nach Hause</string>
     <string name="launcher_nav_workspace">Battly Arbeitsbereich</string>
@@ -1122,7 +1122,7 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
     <string name="preference_disable_autojre_select">Deaktivieren Sie die automatische JRE-Auswahl</string>
     <string name="preference_download_threads_auto_description">Battly passt gleichzeitige Downloads an CPU, Speicher und Netzwerktyp an. Deaktivieren Sie es, um den manuellen Wert zu verwenden.</string>
     <string name="preference_download_threads_auto_title">Automatische Download-Parallelität</string>
-    <string name="preference_download_threads_description">Steuert, wie viele Spieledateien Battly gleichzeitig herunterlädt. Höhere Werte sind in guten Netzwerken schneller.</string>
+    <string name="preference_download_threads_description">Battly verwendet standardmäßig 64 gleichzeitige Downloads. Erhöhen Sie den Wert bei schnellen Verbindungen auf bis zu 100.</string>
     <string name="preference_download_threads_title">Gleichzeitige Downloads</string>
     <string name="preference_renderer_auto">Automatisch</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1434,21 +1434,6 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
 
     <string name="battly_new_badge">Neu</string>
 
-    <string name="battly_whats_new_transition_desc">Ihre Profile sind intakt und spielbereit.</string>
-    <string name="battly_whats_new_action_start">Entdecken Sie 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Die Android-Zurück-Schaltfläche kehrt jetzt zu Minecraft zurück, anstatt sie zu schließen, und sucht, wenn Sie sie bestätigen.</string>
-    <string name="battly_whats_new_compatibility_title">Navigation, die Ihnen nicht im Weg steht</string>
-    <string name="battly_whats_new_controllers_desc">Konfigurieren Sie die automatische Verbindung, den Mikrofon- und Audiostatus, die Sichtbarkeit der Lautsprecherüberlagerung, die Transparenz und die Position in den Battly Worlds-Einstellungen.</string>
-    <string name="battly_whats_new_controllers_title">Voice-Chat unter Ihrer Kontrolle</string>
-    <string name="battly_whats_new_desc">Ein gezieltes Update für Battly Worlds, Social, Voice-Chat und alltägliche Navigation.</string>
-    <string name="battly_whats_new_instances_desc">Wählen Sie eine Instanz aus, bevor Sie die installierten Mods, Ressourcenpakete, Shader und Datenpakete überprüfen. Jede Bibliothek bleibt nun klar getrennt.</string>
-    <string name="battly_whats_new_instances_title">Nach Instanz geordneter Inhalt</string>
-    <string name="battly_whats_new_recovery_desc">Battly erklärt, warum vor dem Fragen Zugriff auf das Mikrofon erforderlich ist, speichert Spracheinstellungen und verbessert die Online-, Battly Worlds- und Multiplayer-Präsenz.</string>
-    <string name="battly_whats_new_recovery_title">Klarere Berechtigungen und Präsenz</string>
-    <string name="battly_whats_new_title">Battly Mobil 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 ist fertig</string>
-    <string name="battly_whats_new_worlds_desc">Laden Sie Freunde direkt über Battly Social ein, empfangen Sie zuverlässig Raumaktivitäten und halten Sie Ihren Status auf dem neuesten Stand, während Sie in Battly Worlds oder auf einem Multiplayer-Server spielen.</string>
-    <string name="battly_whats_new_worlds_title">Battly Welten, besser vernetzt</string>
     <string name="customctrl_voice_microphone_add">Schaltfläche „Sprachmikrofon hinzufügen“.</string>
     <string name="customctrl_voice_audio_add">Schaltfläche „Sprachaudio hinzufügen“.</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1522,4 +1507,30 @@ Um die offizielle Download-Quelle zu verwenden, drücke \"Auf offizielle Seite u
     <string name="battly_social_playing_worlds">Spielen in den Battly-Welten · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Verbindungstöne für den Sprachchat</string>
     <string name="battlyworlds_voice_sounds_summary">Spielt einen Ton ab, wenn du oder ein anderer Spieler dem Sprachchat beitritt oder ihn verlässt.</string>
+<string name="download_action_browse_worlds_title">Durchsuchen Sie Welten</string>
+    <string name="download_action_browse_worlds_subtitle">Laden Sie spielbare Welten in die Instanz Ihrer Wahl herunter.</string>
+    <string name="search_world_title">Durchsuchen Sie Welten</string>
+    <string name="search_world_subtitle">Entdecken und installieren Sie CurseForge-Welten in der von Ihnen gewählten Instanz.</string>
+    <string name="hint_search_world">Suche nach Welten</string>
+    <string name="search_world_no_result">Keine Welten gefunden</string>
+    <string name="search_world_error">Welten konnten nicht gefunden werden</string>
+    <string name="search_world_download_error">Weltmetadaten konnten nicht heruntergeladen werden</string>
+    <string name="world_install_button">Welt installieren</string>
+    <string name="world_install_success">%1$s wurde in dieser Instanz installiert</string>
+
+    <string name="battly_whats_new_action_start">Entdecken Sie 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Die Aktion „Modpack öffnen“ wählt nun die neue Instanz aus und schließt jedes Installations- und Inhaltsfenster korrekt.</string>
+    <string name="battly_whats_new_compatibility_title">Installierte Modpacks direkt öffnen</string>
+    <string name="battly_whats_new_controllers_desc">Das Battly-Client-Installationsprogramm verwendet jetzt eine ordnungsgemäß scrollbare Liste, auch auf kompakten Bildschirmen.</string>
+    <string name="battly_whats_new_controllers_title">Das Scrollen in der Kundenliste wurde behoben</string>
+    <string name="battly_whats_new_desc">Neue isolierte Instanzen, herunterladbare Welten und wichtige Korrekturen für Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Neue Vanilla-, Loader-, Client- und Modpack-Instanzen behalten ihre Welten, Mods, Einstellungen und Ressourcenpakete in einem unabhängigen Ordner.</string>
+    <string name="battly_whats_new_instances_title">Ein separater Ordner für jede neue Instanz</string>
+    <string name="battly_whats_new_recovery_desc">Neue Instanzisolation, sicherere Einstellungsspeicherung und Diagnose über lange Sitzungen reduzieren Konfigurationsrücksetzungen und erleichtern die Identifizierung von Problemen.</string>
+    <string name="battly_whats_new_recovery_title">Verbesserte Stabilität</string>
+    <string name="battly_whats_new_title">Battly Mobil 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Vorhandene Instanzen bleiben dort, wo sie sind. Die Ordnerisolation gilt nur für Instanzen, die ab dieser Version erstellt wurden.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 ist fertig</string>
+    <string name="battly_whats_new_worlds_desc">Durchsuchen und installieren Sie Minecraft-Welten von CurseForge direkt in der von Ihnen gewählten Instanz.</string>
+    <string name="battly_whats_new_worlds_title">Laden Sie Welten von Workspace herunter</string>
 </resources>

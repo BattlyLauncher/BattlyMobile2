@@ -25,9 +25,10 @@ public class ModDetail extends ModItem {
                      String[][] versionGameVersions, String[] versionUrls,
                      String[] versionFileNames, String[] hashes, String[][] versionLoaders,
                      ModDependency[][] versionDependencies) {
-        super(item.apiSource, item.contentType, item.id, item.title, item.description, item.imageUrl);
-        this.categories = item.categories;
-        this.loaders = item.loaders;
+        super(item.apiSource, item.contentType, item.id, item.title, item.description, item.imageUrl,
+                item.categories, item.loaders, item.downloadCount, item.followCount,
+                item.previewImageUrls);
+        this.galleryImageUrls = item.galleryImageUrls;
         this.versionNames = versionNames;
         this.mcVersionNames = mcVersionNames;
         this.versionGameVersions = versionGameVersions == null

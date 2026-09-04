@@ -112,6 +112,7 @@ def battlyWorldsVpnEnabled = providers.gradleProperty("battlyWorldsVpnEnabled")
         .get()
 def battlyWorldsManifestSource = file("src/main/AndroidManifest.xml")
 def battlyWorldsGeneratedManifest = file("${buildDir}/generated/battlyworlds/AndroidManifest.xml")
+def generatedThirdPartyAssets = file("${buildDir}/generated/third_party_assets")
 def generateBattlyWorldsManifest = tasks.register("generateBattlyWorldsManifest") {
     inputs.file battlyWorldsManifestSource
     inputs.property "battlyWorldsEnabled", battlyWorldsEnabled
@@ -127,6 +128,18 @@ def generateBattlyWorldsManifest = tasks.register("generateBattlyWorldsManifest"
         battlyWorldsGeneratedManifest.parentFile.mkdirs()
         battlyWorldsGeneratedManifest.setText(manifestText, "UTF-8")
     }
+}
+def syncThirdPartyLicenses = tasks.register("syncThirdPartyLicenses", Copy) {
+    File ltwLicense = rootProject.file("LTW/LICENSE")
+    doFirst {
+        if (!ltwLicense.isFile()) {
+            throw new GradleException(
+                    "LTW source is missing. Initialize submodules before building Battly Mobile.")
+        }
+    }
+    from(ltwLicense)
+    into(new File(generatedThirdPartyAssets, "licenses"))
+    rename { "LTW-LICENSE.txt" }
 }
 
 def battlyDebugAbi = project.findProperty('battlyDebugAbi')?.toString()?.trim()
@@ -169,8 +182,8 @@ android {
         applicationId "com.tecnobros.battlylauncher"
         minSdkVersion 21
         targetSdkVersion 36
-        versionCode 10000020
-        versionName "2.2.1"
+        versionCode 10000023
+        versionName "2.2.3"
         multiDexEnabled true //important
         buildConfigField "boolean", "BATTLY_WORLDS_ENABLED", battlyWorldsEnabled.toString()
         buildConfigField "boolean", "BATTLY_WORLDS_VPN_ENABLED", battlyWorldsVpnEnabled.toString()
@@ -209,6 +222,7 @@ android {
             initWith debug
             minifyEnabled true
             shrinkResources true
+            matchingFallbacks = [ 'debug', 'release' ]
         }
         proguardNoDebug {
             initWith proguard
@@ -248,7 +262,10 @@ android {
     }
 
     sourceSets {
-        main.manifest.srcFile battlyWorldsGeneratedManifest
+        main {
+            manifest.srcFile battlyWorldsGeneratedManifest
+            assets.srcDir generatedThirdPartyAssets
+        }
     }
 
     ndkVersion "28.2.13676358"
@@ -286,6 +303,7 @@ android {
     buildFeatures {
         prefab true
         buildConfig true
+        aidl true
     }
 
     buildToolsVersion = '36.0.0'
@@ -293,6 +311,9 @@ android {
 }
 
 afterEvaluate {
+    tasks.named("preBuild").configure {
+        dependsOn syncThirdPartyLicenses
+    }
     tasks.matching {
         it.name.startsWith("process") && it.name.endsWith("MainManifest")
     }.configureEach {
@@ -376,6 +397,32 @@ afterEvaluate {
 android.applicationVariants.all { variant ->
     def variantCap = variant.name.capitalize()
     def pythonExe = System.getenv("PYTHON") ?: "python"
+    def verifyLtwPackaging = tasks.register("verify${variantCap}LtwPackaging") {
+        group = "verification"
+        description = "Verify that LTW is packaged for every ABI in ${variant.name}."
+        dependsOn "merge${variantCap}NativeLibs"
+        doLast {
+            File mergedLibRoot = file(
+                    "${buildDir}/intermediates/merged_native_libs/${variant.name}/" +
+                            "merge${variantCap}NativeLibs/out/lib")
+            List<File> abiDirectories = mergedLibRoot.listFiles()
+                    ?.findAll { File candidate -> candidate.isDirectory() }
+                    ?: []
+            if (abiDirectories.isEmpty()) {
+                throw new GradleException("No merged native ABI directories found at ${mergedLibRoot}")
+            }
+
+            List<String> missingAbis = abiDirectories.findAll { File abiDirectory ->
+                File ltwLibrary = new File(abiDirectory, "libltw.so")
+                !ltwLibrary.isFile() || ltwLibrary.length() == 0L
+            }.collect { File abiDirectory -> abiDirectory.name }
+            if (!missingAbis.isEmpty()) {
+                throw new GradleException(
+                        "LTW is missing from the packaged native libraries for: " +
+                                missingAbis.join(", "))
+            }
+        }
+    }
     def nativePageSizeArgs = [
             pythonExe,
             "tools/android/elf_16k_page_align.py",
@@ -403,8 +450,9 @@ android.applicationVariants.all { variant ->
                 it.name == "sign${variantCap}Bundle" ||
                 it.name == "compress${variantCap}Assets"
     }.configureEach {
-        dependsOn fixNativeLibPageSize
+        dependsOn fixNativeLibPageSize, verifyLtwPackaging
     }
+
 }
 
 gradle.taskGraph.whenReady { taskGraph ->
@@ -465,6 +513,7 @@ dependencies {
 
     implementation project(":MobileGlues")
     implementation project(":Terracotta")
+    implementation project(":ltw")
 
     implementation platform('com.google.firebase:firebase-bom:33.16.0')
     implementation 'com.google.firebase:firebase-analytics'

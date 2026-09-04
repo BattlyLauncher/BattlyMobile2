@@ -277,7 +277,7 @@
     <string name="crash_no_findings">No s\'ha trobat cap patró d\'error conegut als darrers registres.</string>
     <string name="crash_recovery_applied">Acció de recuperació completada</string>
     <string name="crash_recovery_manual">Aquest problema necessita un canvi manual. Obriu el registre per obtenir més informació.</string>
-    <string name="credits_version">Versió 2.2.1</string>
+    <string name="credits_version">Versió 2.2.3</string>
     <string name="ctrl_like_btn">M\'agrada</string>
     <string name="ctrl_liked_added">S\'ha afegit als controls que m\'agraden.</string>
     <string name="ctrl_liked_btn">M\'ha agradat</string>
@@ -338,8 +338,8 @@
     <string name="java_runtime_download_progress">S\'està baixant Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Instal·lació de Java 8</string>
     <string name="java_runtime_download_waiting">S\'està preparant la baixada de Java 8...</string>
-    <string name="launcher_credits_title">Battly Llançador 2.2.1</string>
-    <string name="launcher_mobile_badge">Mòbil 2.2.1</string>
+    <string name="launcher_credits_title">Battly Llançador 2.2.3</string>
+    <string name="launcher_mobile_badge">Mòbil 2.2.3</string>
     <string name="launcher_status_battly">Compte Battly</string>
     <string name="launcher_status_battly_plus">Compte Battly+</string>
     <string name="library_analyze_mods">Analitzar</string>
@@ -585,7 +585,7 @@
     <string name="battlyworlds_friend_request_message">Envieu una sol·licitud d\'amistat a %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Sol·licitud d\'amistat enviada a %1$s.</string>
     <string name="battlyworlds_friend_request_title">Envia sol·licitud d\'amistat</string>
-    <string name="battlyworlds_guest_connected_simple">Obre Multijugador i uneix-te al lobby Terracotta. Pot aparèixer amb text xinès.</string>
+    <string name="battlyworlds_guest_connected_simple">Obre Multijugador i uneix-te al lobby BattlyWorlds.</string>
     <string name="battlyworlds_guest_hint_simple">Si el servidor no apareix, espereu uns segons i actualitzeu Multijugador.</string>
     <string name="battlyworlds_guest_url">Adreça de còpia de seguretat: %1$s</string>
     <string name="battlyworlds_host">Amfitrió</string>
@@ -610,7 +610,7 @@
     <string name="battlyworlds_join">Uneix-te</string>
     <string name="battlyworlds_join_hint">Codi d\'invitació</string>
     <string name="battlyworlds_join_status_preparing">S\'està preparant la connexió privada LAN...</string>
-    <string name="battlyworlds_join_status_ready">Connectat. A Multijugador, obriu el servidor LAN anomenat Terracotta Lobby. Pot aparèixer amb text xinès.</string>
+    <string name="battlyworlds_join_status_ready">Connectat. En Multijugador, uneix-te al servidor BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">S\'uneix a BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Convidar</string>
     <string name="battlyworlds_lan_prompt_message">Utilitzeu BattlyWorlds per convidar amics sense compartir la vostra xarxa.</string>
@@ -684,7 +684,7 @@
     <string name="credits_based_on">Basat en PojavLauncher i Boardwalk</string>
     <string name="credits_game_engine">Motor de joc</string>
     <string name="credits_inspiration">Inspiració</string>
-    <string name="credits_license_text">GNU GPLv3 i components de tercers inclosos al projecte. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j i més amb les seves llicències originals.</string>
+    <string name="credits_license_text">GNU GPLv3 i components de tercers inclosos al projecte. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j i més amb les seves llicències originals.</string>
     <string name="credits_license_title">llicència</string>
     <string name="credits_pojav_founder">Fundador de PojavLauncher</string>
     <string name="credits_primary_development">Principal desenvolupament</string>
@@ -820,7 +820,7 @@
     <string name="installer_internal_fallback">Instal·lador no compatible, que obre la interfície d\'usuari Java heretada</string>
     <string name="installer_internal_running">S\'està analitzant l\'instal·lador...</string>
     <string name="installer_internal_success">%1$s instal·lat directament dins de Battly</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Llançador basat en PojavLauncher i Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Crèdits&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -829,7 +829,7 @@
         • Passeig marítim&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Llicència i tercers&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 i components de tercers inclosos al projecte.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j i més amb les seves llicències originals.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j i més amb les seves llicències originals.&lt;br/&gt;&lt;br/&gt;
         Aquesta aplicació no està afiliada a Minecraft, Mojang o Microsoft.</string>
     <string name="launcher_download">Descarregar</string>
     <string name="launcher_download_modpack">Importa el modpack</string>
@@ -959,7 +959,7 @@
     <string name="onboarding_welcome_title">Benvingut a Battly Mobile</string>
     <string name="preference_category_experimental_settings">Configuracions experimentals</string>
     <string name="preference_disable_autojre_select">Desactiva la selecció automàtica de JRE</string>
-    <string name="preference_download_threads_description">Controla quants fitxers de joc descarrega Battly alhora. Els valors més alts són més ràpids en bones xarxes.</string>
+    <string name="preference_download_threads_description">Battly utilitza 64 descàrregues simultànies de manera predeterminada. Augmenteu-lo fins a 100 en connexions ràpides.</string>
     <string name="preference_download_threads_title">Descàrregues simultànies</string>
     <string name="preference_renderer_auto">Automàtic</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1173,21 +1173,6 @@
 
     <string name="battly_new_badge">Nou</string>
 
-    <string name="battly_whats_new_transition_desc">Els teus perfils estan intactes i preparats per jugar.</string>
-    <string name="battly_whats_new_action_start">Exploreu 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">El botó enrere Android ara torna a Minecraft en lloc de tancar-lo, i les cerques descarten el teclat quan les confirmeu.</string>
-    <string name="battly_whats_new_compatibility_title">Navegació que es manté fora del teu camí</string>
-    <string name="battly_whats_new_controllers_desc">Configureu la unió automàtica, l\'estat del micròfon i l\'àudio, la visibilitat de la superposició dels altaveus, la transparència i la posició des de la configuració de Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">Xat de veu sota el teu control</string>
-    <string name="battly_whats_new_desc">Una actualització centrada per a Battly Worlds, Social, xat de veu i navegació diària.</string>
-    <string name="battly_whats_new_instances_desc">Trieu una instància abans de revisar les seves modificacions instal·lades, paquets de recursos, shaders i paquets de dades. Ara cada biblioteca roman clarament separada.</string>
-    <string name="battly_whats_new_instances_title">Contingut organitzat per instància</string>
-    <string name="battly_whats_new_recovery_desc">Battly explica per què cal accedir al micròfon abans de preguntar, manté les preferències de veu desades i millora en línia, Battly Worlds i la presència multijugador.</string>
-    <string name="battly_whats_new_recovery_title">Permisos i presència més clars</string>
-    <string name="battly_whats_new_title">Battly mòbil 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 està llest</string>
-    <string name="battly_whats_new_worlds_desc">Convida amics directament des de Battly Social, rep l\'activitat de la sala de manera fiable i mantén el teu estat actualitzat mentre jugues a Battly Worlds o en un servidor multijugador.</string>
-    <string name="battly_whats_new_worlds_title">Battly Mons, millor connectats</string>
     <string name="customctrl_voice_microphone_add">Afegeix un botó de micròfon de veu</string>
     <string name="customctrl_voice_audio_add">Afegeix un botó d\'àudio de veu</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1261,4 +1246,30 @@
     <string name="battly_social_playing_worlds">Jugant als mons Battly · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Sons de connexió del xat de veu</string>
     <string name="battlyworlds_voice_sounds_summary">Reprodueix un so quan tu o un altre jugador entreu o sortiu del xat de veu.</string>
+<string name="download_action_browse_worlds_title">Navega pels mons</string>
+    <string name="download_action_browse_worlds_subtitle">Baixeu mons jugables a la instància que trieu.</string>
+    <string name="search_world_title">Navega pels mons</string>
+    <string name="search_world_subtitle">Descobriu i instal·leu els mons CurseForge a la instància que trieu.</string>
+    <string name="hint_search_world">Busca mons</string>
+    <string name="search_world_no_result">No s\'han trobat mons</string>
+    <string name="search_world_error">No s\'ha pogut trobar mons</string>
+    <string name="search_world_download_error">No s\'han pogut baixar les metadades mundials</string>
+    <string name="world_install_button">Instal·leu el món</string>
+    <string name="world_install_success">%1$s instal·lat en aquesta instància</string>
+
+    <string name="battly_whats_new_action_start">Exploreu 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">L\'acció Obrir modpack ara selecciona la nova instància i tanca correctament totes les finestres d\'instal·lació i contingut.</string>
+    <string name="battly_whats_new_compatibility_title">Obriu els modpacks instal·lats directament</string>
+    <string name="battly_whats_new_controllers_desc">L\'instal·lador del client Battly ara utilitza una llista de desplaçament adequada, incloses les pantalles compactes.</string>
+    <string name="battly_whats_new_controllers_title">S\'ha corregit el desplaçament de la llista de clients</string>
+    <string name="battly_whats_new_desc">Noves instàncies aïllades, mons descarregables i correccions importants per a l\'espai de treball Battly.</string>
+    <string name="battly_whats_new_instances_desc">Les noves instàncies de Vanilla, loader, client i modpack mantenen els seus mons, modificacions, configuracions i paquets de recursos en una carpeta independent.</string>
+    <string name="battly_whats_new_instances_title">Una carpeta separada per a cada instància nova</string>
+    <string name="battly_whats_new_recovery_desc">El nou aïllament d\'instàncies, l\'emmagatzematge més segur de la configuració i els diagnòstics de sessió llarga redueixen els restabliments de configuració i faciliten la identificació dels problemes.</string>
+    <string name="battly_whats_new_recovery_title">Millora de l\'estabilitat</string>
+    <string name="battly_whats_new_title">Battly mòbil 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Els casos existents es queden on són. L\'aïllament de carpetes només s\'aplica a les instàncies creades a partir d\'aquesta versió.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 està llest</string>
+    <string name="battly_whats_new_worlds_desc">Navegueu i instal·leu els mons Minecraft de CurseForge directament a la instància que trieu.</string>
+    <string name="battly_whats_new_worlds_title">Baixeu mons des de Workspace</string>
 </resources>

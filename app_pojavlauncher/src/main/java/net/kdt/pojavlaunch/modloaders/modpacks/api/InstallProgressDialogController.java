@@ -29,16 +29,20 @@ import com.google.android.gms.ads.nativead.NativeAdView;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.progresskeeper.ProgressListener;
 
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class InstallProgressDialogController {
     private final Activity mActivity;
     private final AlertDialog mDialog;
     private final BattlyProgressTaskView mTaskView;
     private final ProgressListener mListener;
+    private final AtomicBoolean mCleanedUp = new AtomicBoolean();
     private NativeAd mNativeAd;
 
     public static InstallProgressDialogController show(Context context, boolean showNativeAd) {
@@ -46,7 +50,7 @@ public final class InstallProgressDialogController {
             return null;
         }
         Activity activity = (Activity) context;
-        if (activity.isFinishing()) {
+        if (activity.isFinishing() || activity.isDestroyed()) {
             return null;
         }
         if (Looper.myLooper() == Looper.getMainLooper()) {
@@ -55,11 +59,15 @@ public final class InstallProgressDialogController {
         InstallProgressDialogController[] holder = new InstallProgressDialogController[1];
         CountDownLatch latch = new CountDownLatch(1);
         Tools.runOnUiThread(() -> {
-            holder[0] = new InstallProgressDialogController(activity, showNativeAd);
+            if (!activity.isFinishing() && !activity.isDestroyed()) {
+                holder[0] = new InstallProgressDialogController(activity, showNativeAd);
+            }
             latch.countDown();
         });
         try {
-            latch.await();
+            if (!latch.await(5, TimeUnit.SECONDS)) {
+                return null;
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -144,14 +152,7 @@ public final class InstallProgressDialogController {
                 }
             }
         };
-        mDialog.setOnDismissListener(dialog -> {
-            ProgressKeeper.removeListener(ProgressLayout.INSTALL_MODPACK, mListener);
-            ProgressLayout.setProgressMuted(ProgressLayout.INSTALL_MODPACK, false);
-            if (mNativeAd != null) {
-                mNativeAd.destroy();
-                mNativeAd = null;
-            }
-        });
+        mDialog.setOnDismissListener(dialog -> cleanup());
         ProgressKeeper.addListener(ProgressLayout.INSTALL_MODPACK, mListener);
         mDialog.show();
         applyDialogWidth();
@@ -161,36 +162,36 @@ public final class InstallProgressDialogController {
     }
 
     private void loadNativeAd(LinearLayout container) {
-        MobileAds.initialize(mActivity, status -> {
-            if (mActivity.isFinishing()) {
-                return;
-            }
-            AdLoader loader = new AdLoader.Builder(
-                    mActivity,
-                    mActivity.getString(R.string.battly_modpack_native_ad_unit_id))
-                    .forNativeAd(nativeAd -> Tools.runOnUiThread(() -> {
-                        if (mActivity.isFinishing() || !mDialog.isShowing()) {
-                            nativeAd.destroy();
-                            return;
-                        }
-                        if (mNativeAd != null) {
-                            mNativeAd.destroy();
-                        }
-                        mNativeAd = nativeAd;
-                        container.removeAllViews();
-                        container.addView(createNativeAdView(nativeAd));
-                        container.setVisibility(android.view.View.VISIBLE);
-                        applyDialogWidth();
-                    }))
-                    .withAdListener(new AdListener() {
-                        @Override
-                        public void onAdFailedToLoad(@NonNull LoadAdError error) {
-                            container.setVisibility(android.view.View.GONE);
-                        }
-                    })
-                    .build();
-            loader.loadAd(new AdRequest.Builder().build());
-        });
+        PojavApplication.sExecutorService.execute(() ->
+                MobileAds.initialize(mActivity.getApplicationContext(), status ->
+                        Tools.runOnUiThread(() -> {
+                            if (mActivity.isFinishing() || mActivity.isDestroyed()
+                                    || !mDialog.isShowing()) return;
+                            AdLoader loader = new AdLoader.Builder(
+                                    mActivity,
+                                    mActivity.getString(R.string.battly_modpack_native_ad_unit_id))
+                                    .forNativeAd(nativeAd -> Tools.runOnUiThread(() -> {
+                                        if (mActivity.isFinishing() || mActivity.isDestroyed()
+                                                || !mDialog.isShowing()) {
+                                            nativeAd.destroy();
+                                            return;
+                                        }
+                                        if (mNativeAd != null) mNativeAd.destroy();
+                                        mNativeAd = nativeAd;
+                                        container.removeAllViews();
+                                        container.addView(createNativeAdView(nativeAd));
+                                        container.setVisibility(android.view.View.VISIBLE);
+                                        applyDialogWidth();
+                                    }))
+                                    .withAdListener(new AdListener() {
+                                        @Override
+                                        public void onAdFailedToLoad(@NonNull LoadAdError error) {
+                                            container.setVisibility(android.view.View.GONE);
+                                        }
+                                    })
+                                    .build();
+                            loader.loadAd(new AdRequest.Builder().build());
+                        })));
     }
 
     private NativeAdView createNativeAdView(NativeAd nativeAd) {
@@ -257,13 +258,26 @@ public final class InstallProgressDialogController {
 
     public void dismiss() {
         Tools.runOnUiThread(() -> {
-            if (!mActivity.isFinishing() && mDialog.isShowing()) {
-                mDialog.dismiss();
-            } else {
-                ProgressKeeper.removeListener(ProgressLayout.INSTALL_MODPACK, mListener);
-                ProgressLayout.setProgressMuted(ProgressLayout.INSTALL_MODPACK, false);
+            try {
+                if (!mActivity.isFinishing() && !mActivity.isDestroyed() && mDialog.isShowing()) {
+                    mDialog.dismiss();
+                }
+            } catch (IllegalArgumentException | IllegalStateException exception) {
+                android.util.Log.w("BattlyInstallDialog", "Dialog window was already detached", exception);
+            } finally {
+                cleanup();
             }
         });
+    }
+
+    private void cleanup() {
+        if (!mCleanedUp.compareAndSet(false, true)) return;
+        ProgressKeeper.removeListener(ProgressLayout.INSTALL_MODPACK, mListener);
+        ProgressLayout.setProgressMuted(ProgressLayout.INSTALL_MODPACK, false);
+        if (mNativeAd != null) {
+            mNativeAd.destroy();
+            mNativeAd = null;
+        }
     }
 
     private void update(int progress, int fallbackString) {

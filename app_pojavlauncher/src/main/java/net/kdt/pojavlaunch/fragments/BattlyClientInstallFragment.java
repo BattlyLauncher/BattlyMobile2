@@ -15,6 +15,8 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
@@ -36,7 +38,9 @@ public class BattlyClientInstallFragment extends Fragment {
     public static final String TAG = "BattlyClientInstallFragment";
     private static final String VERSIONS_URL = "https://api.battlylauncher.com/v3/battlylauncher/launcher/config-launcher/versions.json";
 
-    private LinearLayout mList;
+    private RecyclerView mList;
+    private final ArrayList<ClientEntry> mVisibleClients = new ArrayList<>();
+    private final ClientAdapter mClientAdapter = new ClientAdapter();
     private ProgressBar mProgress;
     private ProgressBar mInstallProgress;
     private TextView mInstallProgressText;
@@ -72,14 +76,10 @@ public class BattlyClientInstallFragment extends Fragment {
                 dp(8));
         installProgressParams.setMargins(0, dp(8), 0, 0);
         panel.addView(mInstallProgress, installProgressParams);
-        ViewGroup listParent = view.findViewById(R.id.mod_dl_version_grid);
-        listParent.setVisibility(View.GONE);
-        mList = new LinearLayout(requireContext());
-        mList.setOrientation(LinearLayout.VERTICAL);
-        ((ViewGroup) listParent.getParent()).addView(mList, new LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT
-        ));
+        mList = view.findViewById(R.id.mod_dl_version_grid);
+        mList.setLayoutManager(new LinearLayoutManager(requireContext()));
+        mList.setAdapter(mClientAdapter);
+        mList.setNestedScrollingEnabled(true);
         ((TextView) ((ViewGroup) view.findViewById(R.id.mod_dl_retry_layout)).getChildAt(0))
                 .setText(R.string.download_version_clients);
         view.findViewById(R.id.forge_installer_retry_button).setOnClickListener(v -> loadClients());
@@ -142,7 +142,7 @@ public class BattlyClientInstallFragment extends Fragment {
     private void bindList(String query) {
         if (mList == null) return;
         viewRetry(false);
-        mList.removeAllViews();
+        mVisibleClients.clear();
         String normalized = query == null ? "" : query.trim().toLowerCase(Locale.ROOT);
         for (ClientEntry client : mClients) {
             if (!normalized.isEmpty()
@@ -150,15 +150,9 @@ public class BattlyClientInstallFragment extends Fragment {
                     && !client.version.toLowerCase(Locale.ROOT).contains(normalized)) {
                 continue;
             }
-            mList.addView(createClientRow(client));
+            mVisibleClients.add(client);
         }
-        if (mList.getChildCount() == 0) {
-            TextView empty = new TextView(requireContext());
-            empty.setText(R.string.download_version_empty_search);
-            empty.setTextColor(0xFFC7D4DF);
-            empty.setPadding(dp(14), dp(20), dp(14), dp(20));
-            mList.addView(empty);
-        }
+        mClientAdapter.notifyDataSetChanged();
     }
 
     private View createClientRow(ClientEntry client) {
@@ -169,7 +163,6 @@ public class BattlyClientInstallFragment extends Fragment {
         row.setBackgroundResource(R.drawable.bg_battly_version_option);
         row.setClickable(true);
         row.setFocusable(true);
-        row.setOnClickListener(v -> installClient(client));
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
@@ -178,20 +171,23 @@ public class BattlyClientInstallFragment extends Fragment {
         row.setLayoutParams(params);
 
         TextView title = new TextView(requireContext());
-        title.setText(client.name);
+        if (client != null) title.setText(client.name);
         title.setTextColor(0xFFFFFFFF);
         title.setTextSize(15);
         title.setTypeface(Typeface.DEFAULT_BOLD);
         row.addView(title);
 
         TextView meta = new TextView(requireContext());
-        String status = Tools.isValidString(client.downloadUrl)
-                ? getString(R.string.download_client_ready, client.version)
-                : getString(R.string.download_client_missing_url, client.version);
-        if (Tools.isValidString(client.description)) {
-            status += " · " + client.description;
+        if (client != null) {
+            String status = Tools.isValidString(client.downloadUrl)
+                    ? getString(R.string.download_client_ready, client.version)
+                    : getString(R.string.download_client_missing_url, client.version);
+            if (Tools.isValidString(client.description)) {
+                status += " · " + client.description;
+            }
+            meta.setText(status);
+            row.setOnClickListener(v -> installClient(client));
         }
-        meta.setText(status);
         meta.setTextColor(0xFF9FB8C5);
         meta.setTextSize(11);
         row.addView(meta);
@@ -226,7 +222,7 @@ public class BattlyClientInstallFragment extends Fragment {
                 profile.lastVersionId = client.folderName;
                 profile.icon = "furnace";
                 String key = LauncherProfiles.getFreeProfileKey();
-                LauncherProfiles.mainProfileJson.profiles.put(key, profile);
+                LauncherProfiles.putNewProfile(key, profile);
                 LauncherProfiles.write();
                 LauncherPreferences.DEFAULT_PREF.edit()
                         .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, key)
@@ -300,5 +296,45 @@ public class BattlyClientInstallFragment extends Fragment {
         String folderName;
         String downloadUrl;
         String description;
+    }
+
+    private final class ClientAdapter extends RecyclerView.Adapter<ClientViewHolder> {
+        @NonNull
+        @Override
+        public ClientViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+            return new ClientViewHolder(createClientRow(null));
+        }
+
+        @Override
+        public void onBindViewHolder(@NonNull ClientViewHolder holder, int position) {
+            holder.bind(mVisibleClients.get(position));
+        }
+
+        @Override
+        public int getItemCount() {
+            return mVisibleClients.size();
+        }
+    }
+
+    private final class ClientViewHolder extends RecyclerView.ViewHolder {
+        private final TextView title;
+        private final TextView meta;
+
+        ClientViewHolder(@NonNull View itemView) {
+            super(itemView);
+            LinearLayout row = (LinearLayout) itemView;
+            title = (TextView) row.getChildAt(0);
+            meta = (TextView) row.getChildAt(1);
+        }
+
+        void bind(ClientEntry client) {
+            title.setText(client.name);
+            String status = Tools.isValidString(client.downloadUrl)
+                    ? getString(R.string.download_client_ready, client.version)
+                    : getString(R.string.download_client_missing_url, client.version);
+            if (Tools.isValidString(client.description)) status += " · " + client.description;
+            meta.setText(status);
+            itemView.setOnClickListener(v -> installClient(client));
+        }
     }
 }

@@ -63,6 +63,15 @@ ifeq ($(TARGET_ARCH_ABI),arm64-v8a)
 LOCAL_CFLAGS += -DADRENO_POSSIBLE
 endif
 include $(BUILD_SHARED_LIBRARY)
+
+include $(CLEAR_VARS)
+LOCAL_MODULE := mobileglues_benchmark
+LOCAL_SRC_FILES := mobileglues_benchmark.cpp
+LOCAL_CPPFLAGS += -std=c++17 -fvisibility=hidden
+LOCAL_LDLIBS := -ldl -llog
+LOCAL_LDFLAGS := -Wl,--no-undefined
+include $(BUILD_SHARED_LIBRARY)
+
 include $(CLEAR_VARS)
 LOCAL_MODULE := exithook
 LOCAL_LDLIBS := -ldl -llog

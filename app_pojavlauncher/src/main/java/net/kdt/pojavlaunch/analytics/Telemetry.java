@@ -13,6 +13,7 @@ import com.google.firebase.messaging.FirebaseMessaging;
 
 import net.kdt.pojavlaunch.BuildConfig;
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.utils.BattlyOfflineMode;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
 import net.kdt.pojavlaunch.modloaders.modpacks.models.SearchFilters;
@@ -37,6 +38,14 @@ public final class Telemetry {
         try {
             Context appContext = context.getApplicationContext();
             Tools.buildNotificationChannel(appContext);
+            if (BattlyOfflineMode.isOffline(appContext)) {
+                Log.i(TAG, "Telemetry disabled while Battly Mobile Offline is active");
+                return;
+            }
+            if (!FirebaseProcessGuard.ensureInitialized(appContext)) {
+                Log.i(TAG, "Firebase disabled outside the launcher process");
+                return;
+            }
             sAnalytics = FirebaseAnalytics.getInstance(appContext);
             sCrashlytics = FirebaseCrashlytics.getInstance();
             sCrashlytics.setCustomKey("launcher_process", context.getPackageName());
@@ -102,13 +111,14 @@ public final class Telemetry {
         }
     }
 
-    public static void logGameExit(int exitCode) {
-        String reason = inferGameExitReason(exitCode);
+    public static void logGameExit(int exitCode, boolean unexpected) {
+        String reason = unexpected ? inferGameExitReason(exitCode) : "clean_exit";
         Bundle bundle = new Bundle();
         bundle.putLong("exit_code", exitCode);
         bundle.putString("reason", reason);
+        bundle.putBoolean("unexpected", unexpected);
         logEvent("game_exit", bundle);
-        if (exitCode != 0) {
+        if (unexpected) {
             FirebaseCrashlytics crashlytics = sCrashlytics;
             if (crashlytics != null) {
                 crashlytics.setCustomKey("game_exit_code", exitCode);
@@ -201,6 +211,8 @@ public final class Telemetry {
                 return "shader";
             case SearchFilters.TYPE_DATAPACK:
                 return "datapack";
+            case SearchFilters.TYPE_WORLD:
+                return "world";
             case SearchFilters.TYPE_MOD:
             default:
                 return "mod";

@@ -177,6 +177,10 @@ public class CommonApi implements ModpackApi {
     }
 
     private boolean shouldQuerySource(SearchFilters filters, int index) {
+        if (filters.contentType == SearchFilters.TYPE_WORLD) {
+            return index == 1 && (filters.source == SearchFilters.SOURCE_ANY
+                    || filters.source == Constants.SOURCE_CURSEFORGE);
+        }
         if (filters.source == SearchFilters.SOURCE_ANY) {
             return true;
         }

@@ -15,6 +15,7 @@ import net.kdt.pojavlaunch.modloaders.modpacks.models.Constants;
 import net.kdt.pojavlaunch.progresskeeper.DownloaderProgressWrapper;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
+import net.kdt.pojavlaunch.value.launcherprofiles.InstanceDirectoryPolicy;
 import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 
@@ -29,7 +30,6 @@ import java.security.DigestInputStream;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Locale;
-import java.util.UUID;
 import java.util.concurrent.Callable;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -48,7 +48,8 @@ public class ModpackInstaller {
             modpackName = modpackName.substring(0,255);
         }
 
-        // Build a new minecraft instance, folder first
+        String profileKey = LauncherProfiles.getFreeProfileKey();
+        String gameDir = InstanceDirectoryPolicy.isolatedGameDir(modDetail.title, profileKey);
 
         // Get the modpack file
         File modpackFile = new File(Tools.DIR_CACHE, modpackName + ".cf"); // Cache File
@@ -63,7 +64,8 @@ public class ModpackInstaller {
             });
 
             // Install the modpack
-            modLoaderInfo = installFunction.installModpack(modpackFile, new File(Tools.DIR_GAME_HOME, "custom_instances/"+modpackName));
+            modLoaderInfo = installFunction.installModpack(
+                    modpackFile, new File(Tools.DIR_GAME_HOME, gameDir));
 
         } finally {
             modpackFile.delete();
@@ -74,7 +76,7 @@ public class ModpackInstaller {
 
         // Create the instance
         MinecraftProfile profile = new MinecraftProfile();
-        profile.gameDir = "./custom_instances/" + modpackName;
+        profile.gameDir = gameDir;
         profile.name = modDetail.title;
         profile.lastVersionId = modLoaderInfo.getVersionId();
         profile.icon = ModIconCache.getBase64Image(modDetail.getIconCacheTag());
@@ -82,9 +84,8 @@ public class ModpackInstaller {
         applySourceMetadata(profile, modDetail, selectedVersion);
         writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
 
-        String profileKey = UUID.randomUUID().toString();
         profile.battlyInstanceId = profileKey;
-        LauncherProfiles.mainProfileJson.profiles.put(profileKey, profile);
+        LauncherProfiles.putNewProfile(profileKey, profile);
         LauncherProfiles.write();
         ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 96,
                 R.string.modpack_import_finalizing);
@@ -157,8 +158,13 @@ public class ModpackInstaller {
             }
             output.flush();
 
-            // Install the actual pack into custom_instances
-            ModLoader modLoaderInfo = installFunction.installModpack(modpackFile, new File(Tools.DIR_GAME_HOME, "custom_instances/"+modpackName));
+            String profileKey = LauncherProfiles.getFreeProfileKey();
+            String gameDir = InstanceDirectoryPolicy.isolatedGameDir(
+                    packInfoJson.get("name").getAsString(), profileKey);
+
+            // Install the actual pack into its own custom_instances directory.
+            ModLoader modLoaderInfo = installFunction.installModpack(
+                    modpackFile, new File(Tools.DIR_GAME_HOME, gameDir));
             // We have to do this because installModpack doesn't clean up after itself
             modpackFile.delete();
             if(modLoaderInfo == null) {
@@ -167,7 +173,7 @@ public class ModpackInstaller {
 
             // Create the instance (We don't have a picture guys)
             MinecraftProfile profile = new MinecraftProfile();
-            profile.gameDir = "./custom_instances/" + modpackName;
+            profile.gameDir = gameDir;
             profile.name = packInfoJson.get("name").getAsString();
             profile.lastVersionId = modLoaderInfo.getVersionId();
             profile.sourceProvider = isModrinth ? "modrinth-local" : "curseforge-local";
@@ -176,9 +182,8 @@ public class ModpackInstaller {
             profile.sourceVersionName = profile.sourceVersionId;
             profile.sourceHash = hash;
             writeManagedManifest(new File(Tools.DIR_GAME_HOME, profile.gameDir), profile);
-            String profileKey = UUID.randomUUID().toString();
             profile.battlyInstanceId = profileKey;
-            LauncherProfiles.mainProfileJson.profiles.put(profileKey, profile);
+            LauncherProfiles.putNewProfile(profileKey, profile);
             LauncherProfiles.write();
             ProgressLayout.setProgress(ProgressLayout.INSTALL_MODPACK, 96,
                     R.string.modpack_import_finalizing);

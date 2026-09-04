@@ -44,6 +44,10 @@ public final class BattlyUpdateVideoDialog {
             runAfterDone(afterDone);
             return;
         }
+        if (BattlyOfflineMode.isOffline(activity)) {
+            runAfterDone(afterDone);
+            return;
+        }
         SharedPreferences prefs = activity.getSharedPreferences(BattlyPlusManager.PREFS_NAME, Context.MODE_PRIVATE);
         if (prefs.getBoolean(PREF_UPDATE_VIDEO_SEEN, false)) {
             runAfterDone(afterDone);

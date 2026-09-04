@@ -60,6 +60,7 @@ public class LauncherPreferences {
     public static boolean PREF_BATTLY_ONBOARDING_COMPLETED = false;
     public static boolean PREF_USE_ALTERNATE_SURFACE = true;
     public static String PREF_RENDERER = "auto";
+    public static String PREF_GRAPHICS_PROFILE = "auto";
     public static boolean PREF_JAVA_SANDBOX = true;
     public static float PREF_SCALE_FACTOR = 1f;
 
@@ -91,6 +92,7 @@ public class LauncherPreferences {
     public static int PREF_TOUCHCONTROLLER_VIBRATE_LENGTH = 100;
 
     public static boolean PREF_MOUSE_GRAB_FORCE = false;
+    public static boolean PREF_OFFLINE_MODE = false;
 
 
     public static void loadPreferences(Context ctx) {
@@ -125,6 +127,7 @@ public class LauncherPreferences {
         PREF_ARC_CAPES = DEFAULT_PREF.getBoolean("arc_capes",false);
         PREF_USE_ALTERNATE_SURFACE = DEFAULT_PREF.getBoolean("alternate_surface", isDevicePowerful);
         PREF_RENDERER = DEFAULT_PREF.getString("renderer", "auto");
+        PREF_GRAPHICS_PROFILE = DEFAULT_PREF.getString("graphicsProfile", "auto");
         PREF_JAVA_SANDBOX = DEFAULT_PREF.getBoolean("java_sandbox", true);
         PREF_SCALE_FACTOR = DEFAULT_PREF.getInt("resolutionRatio", findBestResolution(ctx, isDevicePowerful))/100f;
         PREF_ENABLE_GYRO = DEFAULT_PREF.getBoolean("enableGyro", false);
@@ -133,7 +136,7 @@ public class LauncherPreferences {
         PREF_GYRO_SMOOTHING = DEFAULT_PREF.getBoolean("gyroSmoothing", true);
         PREF_GYRO_INVERT_X = DEFAULT_PREF.getBoolean("gyroInvertX", false);
         PREF_GYRO_INVERT_Y = DEFAULT_PREF.getBoolean("gyroInvertY", false);
-        PREF_FORCE_VSYNC = DEFAULT_PREF.getBoolean("force_vsync", isDevicePowerful && !isEntryLevelDevice);
+        PREF_FORCE_VSYNC = DEFAULT_PREF.getBoolean("force_vsync", true);
         PREF_BUTTON_ALL_CAPS = DEFAULT_PREF.getBoolean("buttonAllCaps", true);
         PREF_DUMP_SHADERS = DEFAULT_PREF.getBoolean("dump_shaders", false);
         PREF_DEADZONE_SCALE = ((float) DEFAULT_PREF.getInt("gamepad_deadzone_scale", 100))/100f;
@@ -167,6 +170,8 @@ public class LauncherPreferences {
         PREF_FORCE_ENABLE_TOUCHCONTROLLER = DEFAULT_PREF.getBoolean("forceEnableTouchController", false);
         PREF_TOUCHCONTROLLER_VIBRATE_LENGTH = DEFAULT_PREF.getInt("touchControllerVibrateLength", 100);
         PREF_MOUSE_GRAB_FORCE = DEFAULT_PREF.getBoolean("always_grab_mouse", false);
+        PREF_OFFLINE_MODE = DEFAULT_PREF.getBoolean(
+                net.kdt.pojavlaunch.utils.BattlyOfflineMode.PREF_KEY, false);
 
         String argLwjglLibname = "-Dorg.lwjgl.opengl.libname=";
         for (String arg : JREUtils.parseJavaArguments(PREF_CUSTOM_JAVA_ARGS)) {

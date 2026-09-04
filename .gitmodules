@@ -9,3 +9,6 @@
 [submodule "sdl2-compat"]
 	path = app_pojavlauncher/src/main/jni/sdl2-compat
 	url = https://github.com/libsdl-org/sdl2-compat.git
+[submodule "LTW"]
+	path = LTW
+	url = https://github.com/MojoLauncher/LTW.git

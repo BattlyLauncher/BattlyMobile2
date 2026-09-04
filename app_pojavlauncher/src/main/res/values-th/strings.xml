@@ -448,7 +448,7 @@
     <string name="crash_no_findings">ไม่พบรูปแบบการชนที่ทราบในบันทึกล่าสุด</string>
     <string name="crash_recovery_applied">การดำเนินการกู้คืนเสร็จสมบูรณ์</string>
     <string name="crash_recovery_manual">ปัญหานี้ต้องการการเปลี่ยนแปลงด้วยตนเอง เปิดบันทึกเพื่อดูรายละเอียด</string>
-    <string name="credits_version">เวอร์ชัน 2.2.1</string>
+    <string name="credits_version">เวอร์ชัน 2.2.3</string>
     <string name="ctrl_like_btn">ถูกใจ</string>
     <string name="ctrl_liked_added">เพิ่มไปยังการควบคุมที่ถูกใจแล้ว</string>
     <string name="ctrl_liked_btn">ถูกใจแล้ว</string>
@@ -509,8 +509,8 @@
     <string name="java_runtime_download_progress">กำลังดาวน์โหลด Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">การติดตั้ง Java 8</string>
     <string name="java_runtime_download_waiting">กำลังเตรียมดาวน์โหลด Java 8...</string>
-    <string name="launcher_credits_title">ตัวเปิด Battly 2.2.1</string>
-    <string name="launcher_mobile_badge">มือถือ 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
+    <string name="launcher_mobile_badge">มือถือ 2.2.3</string>
     <string name="launcher_status_battly">บัญชี Battly</string>
     <string name="launcher_status_battly_plus">บัญชี Battly+</string>
     <string name="library_analyze_mods">วิเคราะห์</string>
@@ -753,7 +753,7 @@
     <string name="battlyworlds_friend_request_message">ส่งคำขอเป็นเพื่อนไปที่ %1$s?</string>
     <string name="battlyworlds_friend_request_sent">ส่งคำขอเป็นเพื่อนไปที่ %1$s แล้ว</string>
     <string name="battlyworlds_friend_request_title">ส่งคำขอเป็นเพื่อน</string>
-    <string name="battlyworlds_guest_connected_simple">เปิด Multiplayer และเข้าร่วม Terracotta Lobby อาจปรากฏเป็นข้อความภาษาจีน</string>
+    <string name="battlyworlds_guest_connected_simple">เปิด Multiplayer และเข้าร่วม BattlyWorlds Lobby</string>
     <string name="battlyworlds_guest_hint_simple">หากเซิร์ฟเวอร์ไม่ปรากฏขึ้น ให้รอสักครู่แล้วรีเฟรช Multiplayer</string>
     <string name="battlyworlds_guest_url">ที่อยู่สำรอง: %1$s</string>
     <string name="battlyworlds_host">โฮสต์</string>
@@ -778,7 +778,7 @@
     <string name="battlyworlds_join">เข้าร่วม</string>
     <string name="battlyworlds_join_hint">รหัสเชิญ</string>
     <string name="battlyworlds_join_status_preparing">กำลังเตรียมการเชื่อมต่อ LAN ส่วนตัว...</string>
-    <string name="battlyworlds_join_status_ready">เชื่อมต่อแล้ว ในโหมดผู้เล่นหลายคน ให้เปิดเซิร์ฟเวอร์ LAN ชื่อ Terracotta Lobby อาจปรากฏเป็นข้อความภาษาจีน</string>
+    <string name="battlyworlds_join_status_ready">เชื่อมต่อแล้ว ในโหมดผู้เล่นหลายคน เข้าร่วมเซิร์ฟเวอร์ BattlyWorlds Lobby LAN</string>
     <string name="battlyworlds_join_status_title">เข้าร่วม BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">เชิญ</string>
     <string name="battlyworlds_lan_prompt_message">ใช้ BattlyWorlds เพื่อเชิญเพื่อนโดยไม่ต้องแชร์เครือข่ายของคุณ</string>
@@ -850,7 +850,7 @@
     <string name="credits_based_on">ขึ้นอยู่กับ PojavLauncher และ Boardwalk</string>
     <string name="credits_game_engine">เครื่องยนต์เกม</string>
     <string name="credits_inspiration">แรงบันดาลใจ</string>
-    <string name="credits_license_text">GNU GPLv3 และส่วนประกอบของบุคคลที่สามรวมอยู่ในโปรเจ็กต์ OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j และอื่นๆ อีกมากมายภายใต้ลิขสิทธิ์ดั้งเดิม</string>
+    <string name="credits_license_text">GNU GPLv3 และส่วนประกอบของบุคคลที่สามรวมอยู่ในโปรเจ็กต์ OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j และอื่นๆ อีกมากมายภายใต้ลิขสิทธิ์ดั้งเดิม</string>
     <string name="credits_license_title">ใบอนุญาต</string>
     <string name="credits_pojav_founder">ผู้ก่อตั้ง PojavLauncher</string>
     <string name="credits_primary_development">การพัฒนาหลัก</string>
@@ -986,7 +986,7 @@
     <string name="installer_internal_fallback">โปรแกรมติดตั้งที่ไม่รองรับ กำลังเปิด Java UI ดั้งเดิม</string>
     <string name="installer_internal_running">กำลังวิเคราะห์ตัวติดตั้ง...</string>
     <string name="installer_internal_success">%1$s ติดตั้งโดยตรงภายใน Battly</string>
-    <string name="launcher_credits_html">&lt;b&gt;ตัวเปิด Battly 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         ตัวเรียกใช้งานขึ้นอยู่กับ PojavLauncher และ Boardwalk&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;เครดิต&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -995,7 +995,7 @@
         • ทางเดินไม้&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;ใบอนุญาตและบุคคลที่สาม&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 และส่วนประกอบของบุคคลที่สามรวมอยู่ในโปรเจ็กต์&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j และอื่นๆ อีกมากมายภายใต้ลิขสิทธิ์ดั้งเดิม&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j และอื่นๆ อีกมากมายภายใต้ลิขสิทธิ์ดั้งเดิม&lt;br/&gt;&lt;br/&gt;
         แอพนี้ไม่มีส่วนเกี่ยวข้องกับ Minecraft, Mojang หรือ Microsoft</string>
     <string name="launcher_download">ดาวน์โหลด</string>
     <string name="launcher_download_modpack">นำเข้า modpack</string>
@@ -1123,7 +1123,7 @@
     <string name="onboarding_welcome_desc">เล่น ติดตั้งเวอร์ชัน จัดการโปรไฟล์ และปรับแต่ง Minecraft จากโทรศัพท์ของคุณ</string>
     <string name="onboarding_welcome_title">ยินดีต้อนรับสู่ Battly มือถือ</string>
     <string name="preference_disable_autojre_select">ปิดใช้งานการเลือก JRE อัตโนมัติ</string>
-    <string name="preference_download_threads_description">ควบคุมจำนวนไฟล์เกมที่ Battly ดาวน์โหลดพร้อมกัน ค่าที่สูงกว่าจะเร็วกว่าบนเครือข่ายที่ดี</string>
+    <string name="preference_download_threads_description">Battly ใช้การดาวน์โหลดพร้อมกัน 64 รายการตามค่าเริ่มต้น เพิ่มได้ถึง 100 สำหรับการเชื่อมต่อที่รวดเร็ว</string>
     <string name="preference_download_threads_title">ดาวน์โหลดพร้อมกัน</string>
     <string name="preference_renderer_auto">อัตโนมัติ</string>
     <string name="preference_renderer_title">เรนเดอร์</string>
@@ -1336,21 +1336,6 @@
 
     <string name="battly_new_badge">ใหม่</string>
 
-    <string name="battly_whats_new_transition_desc">โปรไฟล์ของคุณไม่เสียหายและพร้อมที่จะเล่น</string>
-    <string name="battly_whats_new_action_start">สำรวจ 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">ขณะนี้ปุ่มย้อนกลับของ Android กลับไปเป็น Minecraft แทนที่จะปิด และการค้นหาจะปิดแป้นพิมพ์เมื่อคุณยืนยัน</string>
-    <string name="battly_whats_new_compatibility_title">การนำทางที่ไม่เกะกะคุณ</string>
-    <string name="battly_whats_new_controllers_desc">กำหนดค่าการเข้าร่วมอัตโนมัติ สถานะไมโครโฟนและเสียง การมองเห็นการซ้อนทับของลำโพง ความโปร่งใส และตำแหน่งจากการตั้งค่า Battly Worlds</string>
-    <string name="battly_whats_new_controllers_title">แชทด้วยเสียงภายใต้การควบคุมของคุณ</string>
-    <string name="battly_whats_new_desc">การอัปเดตที่มุ่งเน้นสำหรับ Battly Worlds, Social, การแชทด้วยเสียง และการนำทางในชีวิตประจำวัน</string>
-    <string name="battly_whats_new_instances_desc">เลือกอินสแตนซ์ก่อนที่จะตรวจสอบม็อด แพ็กทรัพยากร เชเดอร์ และแพ็กข้อมูลที่ติดตั้งไว้ ปัจจุบันห้องสมุดแต่ละแห่งแยกจากกันอย่างชัดเจน</string>
-    <string name="battly_whats_new_instances_title">เนื้อหาจัดตามอินสแตนซ์</string>
-    <string name="battly_whats_new_recovery_desc">Battly อธิบายว่าทำไมจึงจำเป็นต้องเข้าถึงไมโครโฟนก่อนที่จะถาม บันทึกการตั้งค่าเสียงไว้ และปรับปรุงออนไลน์ Battly Worlds และการแสดงตนของผู้เล่นหลายคน</string>
-    <string name="battly_whats_new_recovery_title">สิทธิ์และการมีอยู่ที่ชัดเจนยิ่งขึ้น</string>
-    <string name="battly_whats_new_title">Battly มือถือ 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 พร้อมแล้ว</string>
-    <string name="battly_whats_new_worlds_desc">เชิญเพื่อนโดยตรงจาก Battly Social รับกิจกรรมในห้องได้อย่างน่าเชื่อถือและอัปเดตสถานะของคุณขณะเล่นใน Battly Worlds หรือบนเซิร์ฟเวอร์ที่มีผู้เล่นหลายคน</string>
-    <string name="battly_whats_new_worlds_title">Battly Worlds เชื่อมต่อได้ดีขึ้น</string>
     <string name="customctrl_voice_microphone_add">เพิ่มปุ่มไมโครโฟนเสียง</string>
     <string name="customctrl_voice_audio_add">เพิ่มปุ่มเสียงพูด</string>
     <string name="customctrl_voice_microphone_on">ไมค์</string>
@@ -1424,4 +1409,30 @@
     <string name="battly_social_playing_worlds">กำลังเล่นใน Battly Worlds · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">เสียงการเชื่อมต่อแชทด้วยเสียง</string>
     <string name="battlyworlds_voice_sounds_summary">เล่นเสียงเมื่อคุณหรือผู้เล่นคนอื่นเข้าร่วมหรือออกจากแชทด้วยเสียง</string>
+<string name="download_action_browse_worlds_title">เรียกดูโลก</string>
+    <string name="download_action_browse_worlds_subtitle">ดาวน์โหลดโลกที่สามารถเล่นได้ลงในอินสแตนซ์ที่คุณเลือก</string>
+    <string name="search_world_title">เรียกดูโลก</string>
+    <string name="search_world_subtitle">ค้นหาและติดตั้งโลก CurseForge ลงในอินสแตนซ์ที่คุณเลือก</string>
+    <string name="hint_search_world">ค้นหาโลก</string>
+    <string name="search_world_no_result">ไม่พบโลก</string>
+    <string name="search_world_error">ล้มเหลวในการค้นหาโลก</string>
+    <string name="search_world_download_error">ดาวน์โหลดข้อมูลเมตาของโลกไม่สำเร็จ</string>
+    <string name="world_install_button">ติดตั้งโลก</string>
+    <string name="world_install_success">ติดตั้ง %1$s ในอินสแตนซ์นี้แล้ว</string>
+
+    <string name="battly_whats_new_action_start">สำรวจ 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">การดำเนินการ Open modpack จะเลือกอินสแตนซ์ใหม่และปิดทุกหน้าต่างการติดตั้งและเนื้อหาอย่างถูกต้อง</string>
+    <string name="battly_whats_new_compatibility_title">เปิด modpacks ที่ติดตั้งไว้โดยตรง</string>
+    <string name="battly_whats_new_controllers_desc">ขณะนี้ตัวติดตั้งไคลเอ็นต์ Battly ใช้รายการที่เลื่อนได้อย่างเหมาะสม รวมถึงบนหน้าจอขนาดเล็กด้วย</string>
+    <string name="battly_whats_new_controllers_title">แก้ไขการเลื่อนรายชื่อลูกค้าแล้ว</string>
+    <string name="battly_whats_new_desc">อินสแตนซ์แบบแยกใหม่ โลกที่ดาวน์โหลดได้ และการแก้ไขที่สำคัญสำหรับ Battly Workspace</string>
+    <string name="battly_whats_new_instances_desc">อินสแตนซ์ Vanilla ตัวโหลด ไคลเอนต์ และ modpack ใหม่จะเก็บโลก ม็อด การตั้งค่า และชุดทรัพยากรไว้ในโฟลเดอร์อิสระ</string>
+    <string name="battly_whats_new_instances_title">โฟลเดอร์แยกต่างหากสำหรับอินสแตนซ์ใหม่ทุกรายการ</string>
+    <string name="battly_whats_new_recovery_desc">การแยกอินสแตนซ์ใหม่ พื้นที่จัดเก็บการตั้งค่าที่ปลอดภัยยิ่งขึ้น และการวินิจฉัยเซสชันยาว ช่วยลดการรีเซ็ตการกำหนดค่า และทำให้ระบุปัญหาได้ง่ายขึ้น</string>
+    <string name="battly_whats_new_recovery_title">ปรับปรุงเสถียรภาพ</string>
+    <string name="battly_whats_new_title">Battly มือถือ 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">อินสแตนซ์ที่มีอยู่จะยังคงอยู่ที่เดิม การแยกโฟลเดอร์มีผลกับอินสแตนซ์ที่สร้างจากเวอร์ชันนี้เป็นต้นไปเท่านั้น</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 พร้อมแล้ว</string>
+    <string name="battly_whats_new_worlds_desc">เรียกดูและติดตั้งโลก Minecraft จาก CurseForge ลงในอินสแตนซ์ที่คุณเลือกโดยตรง</string>
+    <string name="battly_whats_new_worlds_title">ดาวน์โหลดโลกจาก Workspace</string>
 </resources>

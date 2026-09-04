@@ -623,7 +623,7 @@
     <string name="battlyworlds_friend_request_message">Hantar permintaan rakan kepada %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Permintaan rakan dihantar kepada %1$s.</string>
     <string name="battlyworlds_friend_request_title">Hantar permintaan rakan</string>
-    <string name="battlyworlds_guest_connected_simple">Buka Berbilang Pemain dan sertai Lobi Terracotta. Ia mungkin muncul dengan teks Cina.</string>
+    <string name="battlyworlds_guest_connected_simple">Buka Berbilang Pemain dan sertai Lobi BattlyWorlds.</string>
     <string name="battlyworlds_guest_hint_simple">Jika pelayan tidak muncul, tunggu beberapa saat dan muat semula Multiplayer.</string>
     <string name="battlyworlds_guest_url">Alamat sandaran: %1$s</string>
     <string name="battlyworlds_host">hos</string>
@@ -649,7 +649,7 @@
     <string name="battlyworlds_join">Sertai</string>
     <string name="battlyworlds_join_hint">Kod jemputan</string>
     <string name="battlyworlds_join_status_preparing">Menyediakan sambungan LAN peribadi...</string>
-    <string name="battlyworlds_join_status_ready">Bersambung. Dalam Multiplayer, buka pelayan LAN bernama Lobi Terracotta. Ia mungkin muncul dengan teks Cina.</string>
+    <string name="battlyworlds_join_status_ready">Bersambung. Dalam Multiplayer, sertai pelayan BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">Menyertai BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Jemput</string>
     <string name="battlyworlds_lan_prompt_message">Gunakan BattlyWorlds untuk menjemput rakan tanpa berkongsi rangkaian anda.</string>
@@ -743,13 +743,13 @@
     <string name="credits_based_on">Berdasarkan PojavLauncher dan Boardwalk</string>
     <string name="credits_game_engine">Enjin permainan</string>
     <string name="credits_inspiration">Inspirasi</string>
-    <string name="credits_license_text">GNU GPLv3 dan komponen pihak ketiga disertakan dalam projek. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j dan banyak lagi di bawah lesen asal mereka.</string>
+    <string name="credits_license_text">GNU GPLv3 dan komponen pihak ketiga disertakan dalam projek. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j dan banyak lagi di bawah lesen asal mereka.</string>
     <string name="credits_license_title">Lesen</string>
     <string name="credits_pojav_founder">Pengasas PojavLauncher</string>
     <string name="credits_primary_development">Pembangunan utama</string>
     <string name="credits_section_title">Kredit</string>
     <string name="credits_unaffiliated">Apl ini tidak bergabung dengan Minecraft, Mojang atau Microsoft.</string>
-    <string name="credits_version">Versi 2.2.1</string>
+    <string name="credits_version">Versi 2.2.3</string>
     <string name="ctrl_applied_success">Kawalan "%1$s" berjaya digunakan.</string>
     <string name="ctrl_apply_btn">Guna kawalan</string>
     <string name="ctrl_apply_msg">Muat turun dan gunakan "%1$s" sebagai reka letak kawalan anda?</string>
@@ -943,7 +943,7 @@
     <string name="java_runtime_download_progress">Memuat turun Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Memasang Java 8</string>
     <string name="java_runtime_download_waiting">Menyediakan muat turun Java 8...</string>
-    <string name="launcher_credits_html">&lt;b&gt;Pelancar Battly 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Pelancar Battly 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Pelancar berdasarkan PojavLauncher dan Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Kredit&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -952,13 +952,13 @@
         • Boardwalk&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lesen dan pihak ketiga&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 dan komponen pihak ketiga disertakan dalam projek.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j dan banyak lagi di bawah lesen asal mereka.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j dan banyak lagi di bawah lesen asal mereka.&lt;br/&gt;&lt;br/&gt;
         Apl ini tidak bergabung dengan Minecraft, Mojang atau Microsoft.</string>
-    <string name="launcher_credits_title">Pelancar Battly 2.2.1</string>
+    <string name="launcher_credits_title">Pelancar Battly 2.2.3</string>
     <string name="launcher_download">Muat turun</string>
     <string name="launcher_download_modpack">Import modpack</string>
     <string name="launcher_execute">Main</string>
-    <string name="launcher_mobile_badge">Mudah Alih 2.2.1</string>
+    <string name="launcher_mobile_badge">Mudah Alih 2.2.3</string>
     <string name="launcher_nav_back">pergi balik</string>
     <string name="launcher_nav_home">Pulang ke rumah</string>
     <string name="launcher_nav_workspace">Battly Ruang Kerja</string>
@@ -1108,7 +1108,7 @@
     <string name="preference_disable_autojre_select">Lumpuhkan pemilihan JRE automatik</string>
     <string name="preference_download_threads_auto_description">Battly menyesuaikan muat turun serentak kepada CPU, memori dan jenis rangkaian. Lumpuhkannya untuk menggunakan nilai manual.</string>
     <string name="preference_download_threads_auto_title">Paralelisme muat turun automatik</string>
-    <string name="preference_download_threads_description">Mengawal bilangan fail permainan Battly muat turun pada masa yang sama. Nilai yang lebih tinggi adalah lebih pantas pada rangkaian yang baik.</string>
+    <string name="preference_download_threads_description">Battly menggunakan 64 muat turun serentak secara lalai. Tingkatkannya sehingga 100 pada sambungan pantas.</string>
     <string name="preference_download_threads_title">Muat turun serentak</string>
     <string name="preference_renderer_auto">Automatik</string>
     <string name="preference_renderer_title">Penyampai</string>
@@ -1426,21 +1426,6 @@
 
     <string name="battly_new_badge">baru</string>
 
-    <string name="battly_whats_new_transition_desc">Profil anda adalah utuh dan sedia untuk dimainkan.</string>
-    <string name="battly_whats_new_action_start">Teroka 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Butang belakang Android kini kembali kepada Minecraft dan bukannya menutupnya dan carian mengetepikan papan kekunci apabila anda mengesahkannya.</string>
-    <string name="battly_whats_new_compatibility_title">Navigasi yang menghalang anda</string>
-    <string name="battly_whats_new_controllers_desc">Konfigurasikan penyambungan automatik, keadaan mikrofon dan audio, keterlihatan tindanan pembesar suara, ketelusan dan kedudukan daripada tetapan Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">Sembang suara di bawah kawalan anda</string>
-    <string name="battly_whats_new_desc">Kemas kini tertumpu untuk Battly Worlds, Sosial, sembang suara dan navigasi setiap hari.</string>
-    <string name="battly_whats_new_instances_desc">Pilih contoh sebelum menyemak mod yang dipasang, pek sumber, pelorek dan pek data. Setiap perpustakaan kini kekal dipisahkan dengan jelas.</string>
-    <string name="battly_whats_new_instances_title">Kandungan disusun mengikut contoh</string>
-    <string name="battly_whats_new_recovery_desc">Battly menerangkan sebab akses mikrofon diperlukan sebelum bertanya, menyimpan pilihan suara dan menambah baik dalam talian, Battly Worlds dan kehadiran berbilang pemain.</string>
-    <string name="battly_whats_new_recovery_title">Keizinan dan kehadiran yang lebih jelas</string>
-    <string name="battly_whats_new_title">Battly Mudah Alih 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 sudah sedia</string>
-    <string name="battly_whats_new_worlds_desc">Jemput rakan terus dari Battly Social, terima aktiviti bilik dengan pasti dan pastikan status anda dikemas kini semasa bermain di Battly Worlds atau pada pelayan berbilang pemain.</string>
-    <string name="battly_whats_new_worlds_title">Battly Worlds, disambungkan dengan lebih baik</string>
     <string name="customctrl_voice_microphone_add">Tambah butang mikrofon suara</string>
     <string name="customctrl_voice_audio_add">Tambah butang audio suara</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1514,4 +1499,30 @@
     <string name="battly_social_playing_worlds">Bermain dalam Battly Worlds · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Bunyi sambungan sembang suara</string>
     <string name="battlyworlds_voice_sounds_summary">Mainkan bunyi apabila anda atau pemain lain menyertai atau meninggalkan sembang suara.</string>
+<string name="download_action_browse_worlds_title">Semak imbas dunia</string>
+    <string name="download_action_browse_worlds_subtitle">Muat turun dunia yang boleh dimainkan ke dalam contoh yang anda pilih.</string>
+    <string name="search_world_title">Semak imbas Dunia</string>
+    <string name="search_world_subtitle">Temui dan pasang dunia CurseForge ke dalam contoh yang anda pilih.</string>
+    <string name="hint_search_world">Cari dunia</string>
+    <string name="search_world_no_result">Tiada dunia ditemui</string>
+    <string name="search_world_error">Gagal mencari dunia</string>
+    <string name="search_world_download_error">Gagal memuat turun metadata dunia</string>
+    <string name="world_install_button">Pasang dunia</string>
+    <string name="world_install_success">%1$s dipasang ke dalam contoh ini</string>
+
+    <string name="battly_whats_new_action_start">Teroka 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Tindakan modpack Buka kini memilih contoh baharu dan menutup setiap tetingkap pemasangan dan kandungan dengan betul.</string>
+    <string name="battly_whats_new_compatibility_title">Buka modpack yang dipasang secara langsung</string>
+    <string name="battly_whats_new_controllers_desc">Pemasang klien Battly kini menggunakan senarai boleh tatal yang betul, termasuk pada skrin padat.</string>
+    <string name="battly_whats_new_controllers_title">Penatalan senarai pelanggan tetap</string>
+    <string name="battly_whats_new_desc">Kejadian terpencil baharu, dunia boleh dimuat turun dan pembetulan penting untuk Ruang Kerja Battly.</string>
+    <string name="battly_whats_new_instances_desc">Kejadian Vanila, pemuat, klien dan modpack baharu mengekalkan dunia, mod, tetapan dan pek sumber mereka dalam folder bebas.</string>
+    <string name="battly_whats_new_instances_title">Folder berasingan untuk setiap contoh baharu</string>
+    <string name="battly_whats_new_recovery_desc">Pengasingan contoh baharu, storan tetapan lebih selamat dan diagnostik sesi panjang mengurangkan tetapan semula konfigurasi dan memudahkan masalah dikenal pasti.</string>
+    <string name="battly_whats_new_recovery_title">Kestabilan yang lebih baik</string>
+    <string name="battly_whats_new_title">Battly Mudah Alih 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Keadaan sedia ada kekal di tempatnya. Pengasingan folder hanya digunakan pada kejadian yang dibuat daripada versi ini dan seterusnya.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 sedia</string>
+    <string name="battly_whats_new_worlds_desc">Semak imbas dan pasang dunia Minecraft daripada CurseForge terus ke dalam contoh yang anda pilih.</string>
+    <string name="battly_whats_new_worlds_title">Muat turun dunia daripada Ruang Kerja</string>
 </resources>

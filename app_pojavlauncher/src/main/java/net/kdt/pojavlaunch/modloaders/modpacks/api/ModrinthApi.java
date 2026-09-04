@@ -90,7 +90,8 @@ public class ModrinthApi implements ModpackApi{
                     jsonArrayToStrings(hit.getAsJsonArray("categories")),
                     extractLoaders(hit.getAsJsonArray("categories")),
                     downloads,
-                    follows
+                    follows,
+                    galleryImages(hit.getAsJsonArray("gallery"))
             );
         }
         if(modrinthSearchResult == null) modrinthSearchResult = new ModrinthSearchResult();
@@ -102,6 +103,13 @@ public class ModrinthApi implements ModpackApi{
 
     @Override
     public ModDetail getModDetails(ModItem item) {
+        JsonObject project = mApiHandler.get(String.format("project/%s", item.id), JsonObject.class);
+        if (project != null) {
+            String[] gallery = galleryImages(project.getAsJsonArray("gallery"));
+            if (gallery.length > 0) {
+                item.setGalleryImages(gallery, galleryRawImages(project.getAsJsonArray("gallery")));
+            }
+        }
         JsonArray response = mApiHandler.get(String.format("project/%s/version", item.id), JsonArray.class);
         if(response == null) return null;
         String[] names = new String[response.size()];
@@ -154,7 +162,8 @@ public class ModrinthApi implements ModpackApi{
                 jsonArrayToStrings(response.getAsJsonArray("categories")),
                 extractLoaders(response.getAsJsonArray("categories")),
                 downloads,
-                follows
+                follows,
+                galleryImages(response.getAsJsonArray("gallery"))
         );
     }
 
@@ -260,6 +269,54 @@ public class ModrinthApi implements ModpackApi{
             values[i] = array.get(i).getAsString();
         }
         return values;
+    }
+
+    static String firstGalleryImage(JsonArray gallery) {
+        String[] images = galleryImages(gallery);
+        return images.length == 0 ? null : images[0];
+    }
+
+    static String[] galleryImages(JsonArray gallery) {
+        return galleryImages(gallery, "url");
+    }
+
+    static String[] galleryRawImages(JsonArray gallery) {
+        return galleryImages(gallery, "raw_url");
+    }
+
+    private static String[] galleryImages(JsonArray gallery, String objectUrlKey) {
+        if (gallery == null || gallery.size() == 0) return new String[0];
+        java.util.ArrayList<String> images = new java.util.ArrayList<>();
+        String featured = null;
+        for (JsonElement element : gallery) {
+            if (element == null || element.isJsonNull()) continue;
+            if (element.isJsonPrimitive()) {
+                String url = element.getAsString();
+                if (isNonEmpty(url) && !images.contains(url)) images.add(url);
+                continue;
+            }
+            if (!element.isJsonObject()) continue;
+            JsonObject image = element.getAsJsonObject();
+            JsonElement urlElement = image.get(objectUrlKey);
+            if ((urlElement == null || urlElement.isJsonNull()) && !"url".equals(objectUrlKey)) {
+                urlElement = image.get("url");
+            }
+            if (urlElement == null || urlElement.isJsonNull()) continue;
+            String url = urlElement.getAsString();
+            if (!isNonEmpty(url)) continue;
+            if (!images.contains(url)) images.add(url);
+            JsonElement featuredElement = image.get("featured");
+            if (featuredElement != null && !featuredElement.isJsonNull()
+                    && featuredElement.getAsBoolean()) {
+                featured = url;
+            }
+        }
+        if (featured != null && images.remove(featured)) images.add(0, featured);
+        return images.toArray(new String[0]);
+    }
+
+    private static boolean isNonEmpty(String value) {
+        return value != null && !value.trim().isEmpty();
     }
 
     private static String[] extractLoaders(JsonArray categories) {

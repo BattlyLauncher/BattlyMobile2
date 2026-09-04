@@ -28,7 +28,7 @@ import java.util.List;
 
 public class OnboardingActivity extends AppCompatActivity {
     public static final String EXTRA_WHATS_NEW = "battly_whats_new";
-    public static final String PREF_WHATS_NEW_SEEN = "battly_whats_new_seen_2_2_1_v1";
+    public static final String PREF_WHATS_NEW_SEEN = "battly_whats_new_seen_2_2_3_v1";
 
     private ViewPager2 viewPager;
     private OnboardingAdapter adapter;

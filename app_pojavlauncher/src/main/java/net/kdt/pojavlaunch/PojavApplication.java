@@ -20,6 +20,7 @@ import java.util.concurrent.TimeUnit;
 import net.kdt.pojavlaunch.lifecycle.ContextExecutor;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.analytics.Telemetry;
+import net.kdt.pojavlaunch.analytics.FirebaseProcessGuard;
 import net.kdt.pojavlaunch.utils.*;
 import net.kdt.pojavlaunch.utils.FileUtils;
 
@@ -39,7 +40,9 @@ public class PojavApplication extends Application {
 		if (!webViewDirectoryConfigured) configureWebViewDataDirectory(this);
 		sInstance = this;
 		ContextExecutor.setApplication(this);
-		Telemetry.initialize(this);
+		if (FirebaseProcessGuard.isLauncherProcess(this)) {
+			Telemetry.initialize(this);
+		}
 		Thread.setDefaultUncaughtExceptionHandler((thread, th) -> {
 			Telemetry.recordLauncherCrash(thread.getName(), th);
 			boolean storagePermAllowed = Tools.checkStorageRoot(PojavApplication.this);
@@ -84,7 +87,8 @@ public class PojavApplication extends Application {
 			// required to draw the first frame, so keep it off every Activity's startup.
 			if (Tools.checkStorageRoot(this)) {
 				sExecutorService.execute(BattlyControlLayouts::migrateDefaultPerformanceWidget);
-				if (getPackageName().equals(currentProcessName(this))) {
+				if (FirebaseProcessGuard.isLauncherProcess(this)
+						&& !BattlyOfflineMode.isOffline(this)) {
 					BattlyComponentUpdater.scheduleBackgroundCheck(this);
 				}
 			}

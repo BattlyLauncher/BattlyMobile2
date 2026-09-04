@@ -20,6 +20,8 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAd;
 import com.google.android.gms.ads.rewardedinterstitial.RewardedInterstitialAdLoadCallback;
 
+import net.kdt.pojavlaunch.PojavApplication;
+
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /** Loads Google full-screen ads in the launcher process, where Google AdActivity also runs. */
@@ -50,7 +52,9 @@ public final class BattlyRewardedInterstitialActivity extends Activity {
             return;
         }
 
-        MobileAds.initialize(this, status -> runOnUiThread(() -> loadAd(unitId)));
+        PojavApplication.sExecutorService.execute(() ->
+                MobileAds.initialize(getApplicationContext(),
+                        status -> runOnUiThread(() -> loadAd(unitId))));
     }
 
     private void showLoadingView() {

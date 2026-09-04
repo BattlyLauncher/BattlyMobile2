@@ -46,7 +46,6 @@ serviceAccount*.json
 *.ap_
 *.idsig
 *.mapping
-/app_pojavlauncher/libs/ltw-release.aar
 
 # Logs, crash dumps and profiling artifacts
 *.log

@@ -284,7 +284,7 @@
     <string name="crash_no_findings">Viimastest logidest teadaolevat krahhimustrit ei leitud.</string>
     <string name="crash_recovery_applied">Taastetoiming lõpetatud</string>
     <string name="crash_recovery_manual">See probleem vajab käsitsi muutmist. Üksikasjade vaatamiseks avage logi.</string>
-    <string name="credits_version">Versioon 2.2.1</string>
+    <string name="credits_version">Versioon 2.2.3</string>
     <string name="ctrl_like_btn">meeldib</string>
     <string name="ctrl_liked_added">Lisatud meeldinud juhtnuppudele.</string>
     <string name="ctrl_liked_btn">Meeldis</string>
@@ -345,8 +345,8 @@
     <string name="java_runtime_download_progress">Java %1$d (%2$.1f MB / %3$.1f MB) allalaadimine</string>
     <string name="java_runtime_download_title">Java 8 installimine</string>
     <string name="java_runtime_download_waiting">Java 8 allalaadimise ettevalmistamine...</string>
-    <string name="launcher_credits_title">Battly käivitaja 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobiil 2.2.1</string>
+    <string name="launcher_credits_title">Battly kanderakett 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobiil 2.2.3</string>
     <string name="launcher_status_battly">Battly konto</string>
     <string name="launcher_status_battly_plus">Battly+ konto</string>
     <string name="library_analyze_mods">Analüüsida</string>
@@ -594,7 +594,7 @@
     <string name="battlyworlds_friend_request_message">Kas saata sõbrakutse numbrile %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Sõbrakutse saadeti aadressile %1$s.</string>
     <string name="battlyworlds_friend_request_title">Saada sõbrakutse</string>
-    <string name="battlyworlds_guest_connected_simple">Avage mitmikmäng ja liituge Terracotta fuajeega. See võib ilmuda koos hiinakeelse tekstiga.</string>
+    <string name="battlyworlds_guest_connected_simple">Avage mitmikmäng ja liituge BattlyWorlds fuajeega.</string>
     <string name="battlyworlds_guest_hint_simple">Kui serverit ei kuvata, oodake mõni sekund ja värskendage Multiplayer.</string>
     <string name="battlyworlds_guest_url">Varuaadress: %1$s</string>
     <string name="battlyworlds_host">Host</string>
@@ -619,7 +619,7 @@
     <string name="battlyworlds_join">Liitu</string>
     <string name="battlyworlds_join_hint">Kutse kood</string>
     <string name="battlyworlds_join_status_preparing">Privaatse LAN ühenduse ettevalmistamine...</string>
-    <string name="battlyworlds_join_status_ready">Ühendatud. Mitme mängijaga mängus avage LAN server nimega Terracotta Lobby. See võib ilmuda koos hiinakeelse tekstiga.</string>
+    <string name="battlyworlds_join_status_ready">Ühendatud. Mitme mängijaga mängus liituge BattlyWorlds Lobby LAN serveriga.</string>
     <string name="battlyworlds_join_status_title">Liitumine BattlyWorlds-ga</string>
     <string name="battlyworlds_lan_prompt_action">Kutsu</string>
     <string name="battlyworlds_lan_prompt_message">Kasutage BattlyWorlds, et kutsuda sõpru ilma võrku jagamata.</string>
@@ -691,7 +691,7 @@
     <string name="credits_based_on">Põhineb PojavLauncheril ja Boardwalkil</string>
     <string name="credits_game_engine">Mängu mootor</string>
     <string name="credits_inspiration">Inspiratsioon</string>
-    <string name="credits_license_text">GNU GPLv3 ja projekti kaasatud kolmandate osapoolte komponendid. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ja palju muud nende algsete litsentside alusel.</string>
+    <string name="credits_license_text">GNU GPLv3 ja projekti kaasatud kolmandate osapoolte komponendid. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ja palju muud nende algsete litsentside alusel.</string>
     <string name="credits_license_title">Litsents</string>
     <string name="credits_pojav_founder">PojavLauncheri asutaja</string>
     <string name="credits_primary_development">Peamine areng</string>
@@ -828,8 +828,8 @@
     <string name="installer_internal_fallback">Toetamata installiprogramm avab pärandkasutajaliidese Java</string>
     <string name="installer_internal_running">Installeri analüüsimine…</string>
     <string name="installer_internal_success">%1$s, mis on paigaldatud otse Battly sisse</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly käivitusprogramm 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
-        Käivitaja, mis põhineb PojavLauncheril ja Boardwalkil.&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly käivitusprogramm 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+        Käivitusprogramm, mis põhineb PojavLauncheril ja Boardwalkil.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Krediidid&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
         • PojavLauncherTeam&lt;br/&gt;
@@ -837,7 +837,7 @@
         • Laudtee&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Litsents ja kolmandad osapooled&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 ja projekti kaasatud kolmandate osapoolte komponendid.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ja palju muud nende algsete litsentside alusel.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ja palju muud nende algsete litsentside alusel.&lt;br/&gt;&lt;br/&gt;
         See rakendus ei ole seotud rakendustega Minecraft, Mojang ega Microsoft.</string>
     <string name="launcher_download">Laadi alla</string>
     <string name="launcher_download_modpack">Import modpack</string>
@@ -967,7 +967,7 @@
     <string name="onboarding_welcome_title">Tere tulemast Battly Mobile\'i</string>
     <string name="preference_category_experimental_settings">Katseseaded</string>
     <string name="preference_disable_autojre_select">Keela automaatne JRE valik</string>
-    <string name="preference_download_threads_description">Juhib, kui palju mängufaile Battly korraga alla laadib. Kõrgemad väärtused on heades võrkudes kiiremad.</string>
+    <string name="preference_download_threads_description">Battly kasutab vaikimisi 64 samaaegset allalaadimist. Kiirete ühenduste korral suurendage seda kuni 100-ni.</string>
     <string name="preference_download_threads_title">Samaaegsed allalaadimised</string>
     <string name="preference_renderer_auto">Automaatne</string>
     <string name="preference_renderer_title">Renderdaja</string>
@@ -1182,21 +1182,6 @@
 
     <string name="battly_new_badge">Uus</string>
 
-    <string name="battly_whats_new_transition_desc">Teie profiilid on terved ja mängimiseks valmis.</string>
-    <string name="battly_whats_new_action_start">Uurige 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Tagasinupp Android naaseb nüüd selle sulgemise asemel numbrile Minecraft ja otsingud tühistavad nende kinnitamisel klaviatuuri.</string>
-    <string name="battly_whats_new_compatibility_title">Navigeerimine, mis jääb teie teest kõrvale</string>
-    <string name="battly_whats_new_controllers_desc">Konfigureerige automaatne ühendamine, mikrofoni ja heli olek, kõlarite ülekatte nähtavus, läbipaistvus ja asukoht Battly Worldsi seadetest.</string>
-    <string name="battly_whats_new_controllers_title">Häälvestlus teie kontrolli all</string>
-    <string name="battly_whats_new_desc">Kontsentreeritud värskendus Battly maailmadele, suhtlusvõrgustikele, häälvestlusele ja igapäevasele navigeerimisele.</string>
-    <string name="battly_whats_new_instances_desc">Valige eksemplar enne selle installitud modifikatsioonide, ressursipakettide, varjutajate ja andmepakettide ülevaatamist. Iga raamatukogu on nüüd selgelt eraldatud.</string>
-    <string name="battly_whats_new_instances_title">Eksemplari järgi korraldatud sisu</string>
-    <string name="battly_whats_new_recovery_desc">Battly selgitab, miks on enne küsimist vaja juurdepääsu mikrofonile, hoiab hääleeelistused salvestatud ja täiustab võrguühendust, Battly maailmu ja mitme mängijaga kohalolekut.</string>
-    <string name="battly_whats_new_recovery_title">Selgemad load ja kohalolek</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 on valmis</string>
-    <string name="battly_whats_new_worlds_desc">Kutsuge sõpru otse Battly Socialist, saage toas toimuvaid tegevusi usaldusväärselt vastu ja hoidke oma olekut kursis Battly Worldsis või mitme mängijaga serveris mängides.</string>
-    <string name="battly_whats_new_worlds_title">Battly Maailmad, parem ühendatud</string>
     <string name="customctrl_voice_microphone_add">Lisa häälmikrofoni nupp</string>
     <string name="customctrl_voice_audio_add">Lisa häälheli nupp</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1270,4 +1255,30 @@
     <string name="battly_social_playing_worlds">Mängimine Battly maailmades · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Häälvestluse ühenduse helid</string>
     <string name="battlyworlds_voice_sounds_summary">Esita heli, kui sina või mõni teine mängija liitub häälvestlusega või lahkub sellest.</string>
+<string name="download_action_browse_worlds_title">Sirvige maailmu</string>
+    <string name="download_action_browse_worlds_subtitle">Laadige mängitavad maailmad alla teie valitud eksemplari.</string>
+    <string name="search_world_title">Sirvige maailmu</string>
+    <string name="search_world_subtitle">Avastage ja installige CurseForge maailmad valitud eksemplari.</string>
+    <string name="hint_search_world">Otsige maailmu</string>
+    <string name="search_world_no_result">Ühtegi maailma ei leitud</string>
+    <string name="search_world_error">Maailmade leidmine ebaõnnestus</string>
+    <string name="search_world_download_error">Maailma metaandmete allalaadimine ebaõnnestus</string>
+    <string name="world_install_button">Installimaailm</string>
+    <string name="world_install_success">Sellesse eksemplari installitud %1$s</string>
+
+    <string name="battly_whats_new_action_start">Uurige 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Toiming Ava modpack valib nüüd uue eksemplari ja sulgeb õigesti kõik installi- ja sisuaknad.</string>
+    <string name="battly_whats_new_compatibility_title">Avage installitud modifikatsioonipaketid otse</string>
+    <string name="battly_whats_new_controllers_desc">Battly kliendiinstaller kasutab nüüd korralikku keritavat loendit, sealhulgas kompaktsetel ekraanidel.</string>
+    <string name="battly_whats_new_controllers_title">Kliendiloendi kerimine parandatud</string>
+    <string name="battly_whats_new_desc">Uued isoleeritud eksemplarid, allalaaditavad maailmad ja olulised parandused Battly tööruumi jaoks.</string>
+    <string name="battly_whats_new_instances_desc">Uued Vanilla, laaduri, kliendi ja modifikatsioonipaketi eksemplarid hoiavad oma maailmad, modifikatsioonid, sätted ja ressursipaketid sõltumatus kaustas.</string>
+    <string name="battly_whats_new_instances_title">Iga uue eksemplari jaoks eraldi kaust</string>
+    <string name="battly_whats_new_recovery_desc">Uue eksemplari isoleerimine, turvalisem seadete salvestamine ja pika seansi diagnostika vähendavad konfiguratsiooni lähtestamist ja muudavad probleemide tuvastamise lihtsamaks.</string>
+    <string name="battly_whats_new_recovery_title">Parem stabiilsus</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Olemasolevad eksemplarid jäävad sinna, kus nad on. Kausta eraldamine kehtib ainult sellest versioonist alates loodud eksemplaride puhul.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 on valmis</string>
+    <string name="battly_whats_new_worlds_desc">Sirvige ja installige Minecraft maailmu CurseForge-st otse valitud eksemplari.</string>
+    <string name="battly_whats_new_worlds_title">Laadige tööruumist alla maailmad</string>
 </resources>

@@ -14,6 +14,8 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.annotation.RequiresApi;
+import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import net.kdt.pojavlaunch.R;
@@ -45,6 +47,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Listener {
     interface Listener {
@@ -56,6 +60,11 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
     private static final String TAG = "BattlyWorldsVoice";
     private static final BattlyWorldsVoiceManager INSTANCE = new BattlyWorldsVoiceManager();
     private static final CopyOnWriteArrayList<Listener> LISTENERS = new CopyOnWriteArrayList<>();
+    private static final ExecutorService VOICE_EXECUTOR = Executors.newSingleThreadExecutor(runnable -> {
+        Thread thread = new Thread(runnable, "BattlyWorldsVoice");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     private final Map<String, PeerConnection> peers = new HashMap<>();
     private final Map<String, AudioTrack> remoteTracks = new HashMap<>();
@@ -65,6 +74,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
     private final Set<String> speakingUsers = new HashSet<>();
     private final Set<String> connectedVoiceUsers = new HashSet<>();
     private final Map<String, List<IceCandidate>> pendingIceCandidates = new HashMap<>();
+    private final Set<String> remoteDescriptionUsers = new HashSet<>();
     private final Set<String> locallySilenced = new HashSet<>();
     private final Map<String, Integer> userVolumes = new HashMap<>();
     private final Map<String, Runnable> peerRecoveries = new HashMap<>();
@@ -112,7 +122,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
 
     private static void requestMicrophonePermission(Activity activity) {
         if (BattlyWorldsPreferences.wasMicrophoneExplanationShown(activity)) {
-            activity.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},
+            ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.RECORD_AUDIO},
                     MICROPHONE_PERMISSION_REQUEST);
             return;
         }
@@ -124,7 +134,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
                 })
                 .setPositiveButton(R.string.battlyworlds_microphone_continue, (d, which) -> {
                     BattlyWorldsPreferences.markMicrophoneExplanationShown(activity);
-                    activity.requestPermissions(new String[]{Manifest.permission.RECORD_AUDIO},
+                    ActivityCompat.requestPermissions(activity, new String[]{Manifest.permission.RECORD_AUDIO},
                             MICROPHONE_PERMISSION_REQUEST);
                 })
                 .create();
@@ -150,7 +160,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
     }
 
     static void leave() {
-        INSTANCE.leaveInternal();
+        runVoice(INSTANCE::leaveInternal);
     }
 
     static void setMuted(boolean value) {
@@ -158,10 +168,14 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         if (INSTANCE.appContext != null) {
             BattlyWorldsPreferences.setVoiceMuted(INSTANCE.appContext, value);
         }
-        if (INSTANCE.audioDeviceModule != null) {
-            INSTANCE.audioDeviceModule.setMicrophoneMute(value);
-        }
-        if (INSTANCE.localTrack != null) INSTANCE.localTrack.setEnabled(!value);
+        runVoice(() -> {
+            synchronized (INSTANCE) {
+                if (INSTANCE.audioDeviceModule != null) {
+                    INSTANCE.audioDeviceModule.setMicrophoneMute(value);
+                }
+                if (INSTANCE.localTrack != null) INSTANCE.localTrack.setEnabled(!value);
+            }
+        });
         if (value) INSTANCE.setSpeakingState(BattlyWorldsRealtimeClient.getCurrentUserId(), false);
         BattlyWorldsRealtimeClient.setVoiceState(value, INSTANCE.joined);
         notifyChanged();
@@ -172,11 +186,15 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         if (INSTANCE.appContext != null) {
             BattlyWorldsPreferences.setVoiceDeafened(INSTANCE.appContext, value);
         }
-        if (INSTANCE.audioDeviceModule != null) {
-            INSTANCE.audioDeviceModule.setSpeakerMute(value);
-        }
-        if (value) INSTANCE.stopRemoteSpeakingIndicators();
-        INSTANCE.applyRemoteTrackStates();
+        runVoice(() -> {
+            synchronized (INSTANCE) {
+                if (INSTANCE.audioDeviceModule != null) {
+                    INSTANCE.audioDeviceModule.setSpeakerMute(value);
+                }
+                if (value) INSTANCE.stopRemoteSpeakingIndicators();
+                INSTANCE.applyRemoteTrackStates();
+            }
+        });
         notifyChanged();
     }
 
@@ -184,7 +202,11 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         if (value) INSTANCE.locallySilenced.add(userId);
         else INSTANCE.locallySilenced.remove(userId);
         if (value) INSTANCE.setSpeakingState(userId, false);
-        INSTANCE.applyRemoteTrackState(userId);
+        runVoice(() -> {
+            synchronized (INSTANCE) {
+                INSTANCE.applyRemoteTrackState(userId);
+            }
+        });
         notifyChanged();
     }
 
@@ -194,7 +216,11 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         if (INSTANCE.appContext != null) {
             BattlyWorldsPreferences.setVoiceUserVolume(INSTANCE.appContext, userId, safeVolume);
         }
-        INSTANCE.applyRemoteTrackState(userId);
+        runVoice(() -> {
+            synchronized (INSTANCE) {
+                INSTANCE.applyRemoteTrackState(userId);
+            }
+        });
     }
 
     static int getUserVolume(String userId) {
@@ -245,10 +271,10 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
                     .setUseHardwareNoiseSuppressor(audioPolicy.hardwareNoiseSuppressor)
                     .setSamplesReadyCallback(samples -> onLocalAudioSamples(samples.getData()))
                     .createAudioDeviceModule();
-            if (preferredInputDevice != null) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && preferredInputDevice != null) {
                 audioDeviceModule.setPreferredInputDevice(preferredInputDevice);
             }
-            Log.i(TAG, "Microphone route: device=" + describeAudioDevice(preferredInputDevice)
+            Log.i(TAG, "Microphone route: device=" + describeAudioDeviceCompat(preferredInputDevice)
                     + ", source=" + audioPolicy.audioSource
                     + ", hardwareAEC=" + audioPolicy.hardwareEchoCanceler
                     + ", hardwareNS=" + audioPolicy.hardwareNoiseSuppressor);
@@ -294,6 +320,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         peers.clear();
         clearRemoteTracks();
         pendingIceCandidates.clear();
+        remoteDescriptionUsers.clear();
         pendingVoiceSignals.clear();
         cancelPeerRecoveries();
         locallySilenced.clear();
@@ -370,6 +397,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         peers.clear();
         clearRemoteTracks();
         pendingIceCandidates.clear();
+        remoteDescriptionUsers.clear();
         notifyChanged();
     }
 
@@ -446,7 +474,17 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
             }
             return;
         }
-        handleVoiceSignal(from, signal);
+        JSONObject signalCopy;
+        try {
+            signalCopy = new JSONObject(signal.toString());
+        } catch (Exception exception) {
+            return;
+        }
+        runVoice(() -> {
+            synchronized (BattlyWorldsVoiceManager.this) {
+                if (joined) handleVoiceSignal(from, signalCopy);
+            }
+        });
     }
 
     private void handleVoiceSignal(String from, JSONObject signal) {
@@ -454,20 +492,23 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         if ("offer".equals(type)) {
             PeerConnection peer = peer(from);
             peer.setRemoteDescription(new SimpleSdpObserver(() -> {
+                        remoteDescriptionUsers.add(from);
                         flushPendingIceCandidates(from);
                         createAnswer(from);
                     }),
                     new SessionDescription(SessionDescription.Type.OFFER, signal.optString("sdp", "")));
         } else if ("answer".equals(type)) {
             PeerConnection peer = peers.get(from);
-            if (peer != null) peer.setRemoteDescription(new SimpleSdpObserver(
-                            () -> flushPendingIceCandidates(from)),
+            if (peer != null) peer.setRemoteDescription(new SimpleSdpObserver(() -> {
+                            remoteDescriptionUsers.add(from);
+                            flushPendingIceCandidates(from);
+                        }),
                     new SessionDescription(SessionDescription.Type.ANSWER, signal.optString("sdp", "")));
         } else if ("candidate".equals(type)) {
             PeerConnection peer = peer(from);
             IceCandidate candidate = new IceCandidate(signal.optString("sdpMid", "audio"),
                     signal.optInt("sdpMLineIndex", 0), signal.optString("candidate", ""));
-            if (peer.getRemoteDescription() == null) {
+            if (!remoteDescriptionUsers.contains(from)) {
                 pendingIceCandidates.computeIfAbsent(from, ignored -> new ArrayList<>()).add(candidate);
             } else {
                 peer.addIceCandidate(candidate);
@@ -531,6 +572,7 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         setSpeakingState(userId, false);
         usernames.remove(userId);
         pendingIceCandidates.remove(userId);
+        remoteDescriptionUsers.remove(userId);
     }
 
     private void clearRemoteTracks() {
@@ -586,6 +628,16 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         for (Listener listener : LISTENERS) listener.onVoiceChanged();
     }
 
+    private static void runVoice(Runnable operation) {
+        VOICE_EXECUTOR.execute(() -> {
+            try {
+                operation.run();
+            } catch (Throwable error) {
+                Log.e(TAG, "Voice operation failed", error);
+            }
+        });
+    }
+
     private static void emitError(String message) {
         for (Listener listener : LISTENERS) listener.onVoiceError(message);
     }
@@ -632,18 +684,23 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         @Override public void onAddTrack(RtpReceiver receiver, MediaStream[] streams) {
             if (receiver.track() instanceof AudioTrack) {
                 AudioTrack remoteTrack = (AudioTrack) receiver.track();
-                remoteTrack.setVolume(1.0d);
-                AudioTrackSink oldSink = remoteTrackSinks.remove(userId);
-                AudioTrack oldTrack = remoteTracks.get(userId);
-                if (oldTrack != null && oldTrack != remoteTrack) oldTrack.setEnabled(false);
-                if (oldTrack != null && oldSink != null) oldTrack.removeSink(oldSink);
-                AudioTrackSink sink = new SpeakingSink(userId);
-                remoteTrack.addSink(sink);
-                remoteTrackSinks.put(userId, sink);
-                remoteTracks.put(userId, remoteTrack);
-                applyRemoteTrackState(userId);
-                Log.i(TAG, "Remote audio track received from " + userId);
-                notifyChanged();
+                runVoice(() -> {
+                    synchronized (BattlyWorldsVoiceManager.this) {
+                        if (!joined || !peers.containsKey(userId)) return;
+                        remoteTrack.setVolume(1.0d);
+                        AudioTrackSink oldSink = remoteTrackSinks.remove(userId);
+                        AudioTrack oldTrack = remoteTracks.get(userId);
+                        if (oldTrack != null && oldTrack != remoteTrack) oldTrack.setEnabled(false);
+                        if (oldTrack != null && oldSink != null) oldTrack.removeSink(oldSink);
+                        AudioTrackSink sink = new SpeakingSink(userId);
+                        remoteTrack.addSink(sink);
+                        remoteTrackSinks.put(userId, sink);
+                        remoteTracks.put(userId, remoteTrack);
+                        applyRemoteTrackState(userId);
+                        Log.i(TAG, "Remote audio track received from " + userId);
+                        notifyChanged();
+                    }
+                });
             }
         }
     }
@@ -792,14 +849,18 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
             audioManager.setSpeakerphoneOn(true);
         }
 
-        preferredInputDevice = chooseInputDevice(audioManager, selectedOutput);
-        externalInputSelected = preferredInputDevice != null
+        preferredInputDevice = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                ? chooseInputDevice(audioManager, selectedOutput)
+                : null;
+        externalInputSelected = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+                && preferredInputDevice != null
                 && isExternalAudioType(preferredInputDevice.getType());
         Log.i(TAG, "Android voice audio session configured: output="
-                + describeAudioDevice(selectedOutput) + ", input="
-                + describeAudioDevice(preferredInputDevice));
+                + describeAudioDeviceCompat(selectedOutput) + ", input="
+                + describeAudioDeviceCompat(preferredInputDevice));
     }
 
+    @RequiresApi(Build.VERSION_CODES.M)
     private static AudioDeviceInfo chooseInputDevice(AudioManager manager, AudioDeviceInfo selectedOutput) {
         AudioDeviceInfo builtIn = null;
         AudioDeviceInfo external = null;
@@ -825,6 +886,12 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
                 || type == AudioDeviceInfo.TYPE_USB_DEVICE;
     }
 
+    private static String describeAudioDeviceCompat(AudioDeviceInfo device) {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return "default";
+        return describeAudioDevice(device);
+    }
+
+    @RequiresApi(Build.VERSION_CODES.M)
     private static String describeAudioDevice(AudioDeviceInfo device) {
         if (device == null) return "default";
         CharSequence name = device.getProductName();
@@ -850,17 +917,16 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
 
     private synchronized void schedulePeerRecovery(String userId, long delayMs) {
         if (!joined || userId == null || userId.isEmpty() || peerRecoveries.containsKey(userId)) return;
-        Runnable recovery = () -> {
+        Runnable recovery = () -> runVoice(() -> {
             synchronized (BattlyWorldsVoiceManager.this) {
                 peerRecoveries.remove(userId);
                 if (!joined || !isActiveVoiceMember(userId)) return;
                 Log.i(TAG, "Rebuilding stalled voice peer " + userId);
                 removePeer(userId);
                 sendRestartSignal(userId);
-                String ownId = BattlyWorldsRealtimeClient.getCurrentUserId();
                 createOffer(userId);
             }
-        };
+        });
         peerRecoveries.put(userId, recovery);
         recoveryHandler.postDelayed(recovery, delayMs);
     }
@@ -896,7 +962,9 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         private final Runnable success;
         SimpleSdpObserver(Runnable success) { this.success = success; }
         @Override public void onCreateSuccess(SessionDescription description) { }
-        @Override public void onSetSuccess() { if (success != null) success.run(); }
+        @Override public void onSetSuccess() {
+            if (success != null) runVoice(success);
+        }
         @Override public void onCreateFailure(String error) { Log.w(TAG, error); }
         @Override public void onSetFailure(String error) { Log.w(TAG, error); }
     }
@@ -916,9 +984,13 @@ final class BattlyWorldsVoiceManager implements BattlyWorldsRealtimeClient.Liste
         private final String type;
         DescriptionObserver(String userId, String type) { this.userId = userId; this.type = type; }
         @Override public void onCreateSuccess(SessionDescription description) {
-            PeerConnection peer = peers.get(userId);
-            if (peer != null) peer.setLocalDescription(new SimpleSdpObserver(
-                    () -> sendDescription(userId, type, description)), description);
+            runVoice(() -> {
+                synchronized (BattlyWorldsVoiceManager.this) {
+                    PeerConnection peer = peers.get(userId);
+                    if (peer != null) peer.setLocalDescription(new SimpleSdpObserver(
+                            () -> sendDescription(userId, type, description)), description);
+                }
+            });
         }
         @Override public void onSetSuccess() { }
         @Override public void onCreateFailure(String error) { Log.w(TAG, error); }

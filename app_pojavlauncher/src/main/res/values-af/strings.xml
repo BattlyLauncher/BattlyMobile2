@@ -261,7 +261,7 @@
     <string name="battlyworlds_friend_request_message">Stuur \'n vriendskapsversoek na %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Vriendversoek gestuur aan %1$s.</string>
     <string name="battlyworlds_friend_request_title">Stuur vriendskapsversoek</string>
-    <string name="battlyworlds_guest_connected_simple">Maak Multiplayer oop en sluit aan by Terracotta Lobby. Dit kan met Chinese teks verskyn.</string>
+    <string name="battlyworlds_guest_connected_simple">Maak Multiplayer oop en sluit aan by BattlyWorlds Lobby.</string>
     <string name="battlyworlds_guest_hint_simple">As die bediener nie verskyn nie, wag \'n paar sekondes en verfris Multiplayer.</string>
     <string name="battlyworlds_guest_url">Rugsteunadres: %1$s</string>
     <string name="battlyworlds_host">Gasheer</string>
@@ -287,7 +287,7 @@
     <string name="battlyworlds_join">Sluit aan</string>
     <string name="battlyworlds_join_hint">Nooi kode</string>
     <string name="battlyworlds_join_status_preparing">Berei tans die private LAN-verbinding voor...</string>
-    <string name="battlyworlds_join_status_ready">Gekoppel. In Multiplayer, maak die LAN-bediener genaamd Terracotta Lobby oop. Dit kan met Chinese teks verskyn.</string>
+    <string name="battlyworlds_join_status_ready">Gekoppel. Sluit in Multiplayer aan by die BattlyWorlds Lobby LAN-bediener.</string>
     <string name="battlyworlds_join_status_title">Sluit aan by BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Nooi</string>
     <string name="battlyworlds_lan_prompt_message">Gebruik BattlyWorlds om vriende te nooi sonder om jou netwerk te deel.</string>
@@ -383,13 +383,13 @@
     <string name="credits_based_on">Gebaseer op PojavLauncher en Boardwalk</string>
     <string name="credits_game_engine">Spel enjin</string>
     <string name="credits_inspiration">Inspirasie</string>
-    <string name="credits_license_text">GNU GPLv3 en derdeparty-komponente wat by die projek ingesluit is. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j en meer onder hul oorspronklike lisensies.</string>
+    <string name="credits_license_text">GNU GPLv3 en derdeparty-komponente wat by die projek ingesluit is. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j en meer onder hul oorspronklike lisensies.</string>
     <string name="credits_license_title">Lisensie</string>
     <string name="credits_pojav_founder">PojavLauncher stigter</string>
     <string name="credits_primary_development">Hoofontwikkeling</string>
     <string name="credits_section_title">Krediete</string>
     <string name="credits_unaffiliated">Hierdie toepassing is nie geaffilieer met Minecraft, Mojang of Microsoft nie.</string>
-    <string name="credits_version">Weergawe 2.2.1</string>
+    <string name="credits_version">Weergawe 2.2.3</string>
     <string name="ctrl_applied_success">Beheer "%1$s" is suksesvol toegepas.</string>
     <string name="ctrl_apply_btn">Pas beheer toe</string>
     <string name="ctrl_apply_msg">Laai "%1$s" af en pas dit toe as jou beheeruitleg?</string>
@@ -584,7 +584,7 @@
     <string name="java_runtime_download_progress">Laai tans af Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Installeer Java 8</string>
     <string name="java_runtime_download_waiting">Berei tans Java 8 aflaai voor...</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher gebaseer op PojavLauncher en Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Krediete&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -593,13 +593,13 @@
         • Boardwalk&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lisensie en derde partye&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 en derdeparty-komponente ingesluit by die projek.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j en meer onder hul oorspronklike lisensies.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j en meer onder hul oorspronklike lisensies.&lt;br/&gt;&lt;br/&gt;
         Hierdie toepassing is nie geaffilieer met Minecraft, Mojang of Microsoft nie.</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
     <string name="launcher_download">Laai af</string>
     <string name="launcher_download_modpack">Voer modpack in</string>
     <string name="launcher_execute">Speel</string>
-    <string name="launcher_mobile_badge">Selfoon 2.2.1</string>
+    <string name="launcher_mobile_badge">Selfoon 2.2.3</string>
     <string name="launcher_nav_back">Gaan terug</string>
     <string name="launcher_nav_home">Keer terug huis toe</string>
     <string name="launcher_nav_workspace">Battly Werkspasie</string>
@@ -754,7 +754,7 @@
     <string name="preference_disable_autojre_select">Deaktiveer outomatiese JRE-keuse</string>
     <string name="preference_download_threads_auto_description">Battly pas gelyktydige aflaaie aan by SVE, geheue en netwerktipe. Deaktiveer dit om die handmatige waarde te gebruik.</string>
     <string name="preference_download_threads_auto_title">Outomatiese aflaai parallelisme</string>
-    <string name="preference_download_threads_description">Beheer hoeveel speletjielêers Battly op dieselfde tyd aflaai. Hoër waardes is vinniger op goeie netwerke.</string>
+    <string name="preference_download_threads_description">Battly gebruik by verstek 64 gelyktydige aflaaie. Verhoog dit tot 100 op vinnige verbindings.</string>
     <string name="preference_download_threads_title">Gelyktydige aflaaie</string>
     <string name="preference_renderer_auto">Outomatiese</string>
     <string name="preference_renderer_title">Leweraar</string>
@@ -1106,21 +1106,6 @@
 
     <string name="battly_new_badge">Nuut</string>
 
-    <string name="battly_whats_new_transition_desc">Jou profiele is ongeskonde en gereed om te speel.</string>
-    <string name="battly_whats_new_action_start">Verken 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Die Android terug-knoppie keer nou terug na Minecraft in plaas daarvan om dit toe te maak, en soektogte maak die sleutelbord af wanneer jy dit bevestig.</string>
-    <string name="battly_whats_new_compatibility_title">Navigasie wat uit jou pad bly</string>
-    <string name="battly_whats_new_controllers_desc">Stel outomatiese aansluiting, mikrofoon- en oudio-toestand, sigbaarheid van luidspreker-oorleg, deursigtigheid en posisie op vanaf Battly Worlds-instellings.</string>
-    <string name="battly_whats_new_controllers_title">Stemklets onder jou beheer</string>
-    <string name="battly_whats_new_desc">\'n Gefokusde opdatering vir Battly Worlds, Sosiaal, stemklets en alledaagse navigasie.</string>
-    <string name="battly_whats_new_instances_desc">Kies \'n instansie voordat u die geïnstalleerde mods, hulpbronpakkette, shaders en datapakke hersien. Elke biblioteek bly nou duidelik geskei.</string>
-    <string name="battly_whats_new_instances_title">Inhoud georganiseer volgens instansie</string>
-    <string name="battly_whats_new_recovery_desc">Battly verduidelik hoekom mikrofoontoegang nodig is voordat jy vra, hou stemvoorkeure gestoor en verbeter aanlyn, Battly Worlds en multispeler-teenwoordigheid.</string>
-    <string name="battly_whats_new_recovery_title">Duideliker toestemmings en teenwoordigheid</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 is gereed</string>
-    <string name="battly_whats_new_worlds_desc">Nooi vriende direk vanaf Battly Social, ontvang kameraktiwiteit betroubaar en hou jou status op datum terwyl jy in Battly Worlds of op \'n multispeler-bediener speel.</string>
-    <string name="battly_whats_new_worlds_title">Battly Worlds, beter verbind</string>
     <string name="customctrl_voice_microphone_add">Voeg stemmikrofoonknoppie by</string>
     <string name="customctrl_voice_audio_add">Voeg stem klank-knoppie by</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1194,4 +1179,30 @@
     <string name="battly_social_playing_worlds">Speel in Battly Wêrelde · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Stemverbindingsklanke</string>
     <string name="battlyworlds_voice_sounds_summary">Speel ’n klank wanneer jy of ’n ander speler by die stemklets aansluit of dit verlaat.</string>
+<string name="download_action_browse_worlds_title">Blaai deur wêrelde</string>
+    <string name="download_action_browse_worlds_subtitle">Laai speelbare wêrelde af in die geval wat jy kies.</string>
+    <string name="search_world_title">Blaai deur wêrelde</string>
+    <string name="search_world_subtitle">Ontdek en installeer CurseForge-wêrelde in die geval wat jy kies.</string>
+    <string name="hint_search_world">Soek vir wêrelde</string>
+    <string name="search_world_no_result">Geen wêrelde gevind nie</string>
+    <string name="search_world_error">Kon nie wêrelde vind nie</string>
+    <string name="search_world_download_error">Kon nie wêreldmetadata aflaai nie</string>
+    <string name="world_install_button">Installeer wêreld</string>
+    <string name="world_install_success">%1$s in hierdie geval geïnstalleer</string>
+
+    <string name="battly_whats_new_action_start">Verken 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Die Open modpack-aksie kies nou die nuwe instansie en maak elke installasie- en inhoudvenster korrek toe.</string>
+    <string name="battly_whats_new_compatibility_title">Maak geïnstalleerde modpacks direk oop</string>
+    <string name="battly_whats_new_controllers_desc">Die Battly-kliëntinstalleerder gebruik nou \'n behoorlike blaaibare lys, insluitend op kompakte skerms.</string>
+    <string name="battly_whats_new_controllers_title">Kliëntlysblaai is opgelos</string>
+    <string name="battly_whats_new_desc">Nuwe geïsoleerde gevalle, aflaaibare wêrelde en belangrike regstellings vir Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Nuwe Vanilla, loader, client en modpack gevalle hou hul wêrelde, mods, instellings en hulpbronpakke in \'n onafhanklike vouer.</string>
+    <string name="battly_whats_new_instances_title">\'n Aparte gids vir elke nuwe instansie</string>
+    <string name="battly_whats_new_recovery_desc">Nuwe instansie-isolasie, veiliger instellingsberging en langsessiediagnostiek verminder konfigurasieterugstellings en maak probleme makliker om te identifiseer.</string>
+    <string name="battly_whats_new_recovery_title">Verbeterde stabiliteit</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Bestaande gevalle bly waar hulle is. Vouer-isolasie is slegs van toepassing op gevalle wat vanaf hierdie weergawe geskep is.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 is gereed</string>
+    <string name="battly_whats_new_worlds_desc">Blaai deur en installeer Minecraft wêrelde vanaf CurseForge direk in die geval wat jy kies.</string>
+    <string name="battly_whats_new_worlds_title">Laai wêrelde van Workspace af</string>
 </resources>

@@ -368,7 +368,7 @@
     <string name="crash_no_findings">Er is geen bekend crashpatroon gevonden in de nieuwste logboeken.</string>
     <string name="crash_recovery_applied">Herstelactie voltooid</string>
     <string name="crash_recovery_manual">Dit probleem vereist een handmatige wijziging. Open het logboek voor meer informatie.</string>
-    <string name="credits_version">Versie 2.2.1</string>
+    <string name="credits_version">Versie 2.2.3</string>
     <string name="ctrl_like_btn">Zoals</string>
     <string name="ctrl_liked_added">Toegevoegd aan \'gelikete\' besturingselementen.</string>
     <string name="ctrl_liked_btn">Vond ik leuk</string>
@@ -429,8 +429,8 @@
     <string name="java_runtime_download_progress">Java %1$d (%2$.1f MB / %3$.1f MB) downloaden</string>
     <string name="java_runtime_download_title">Java installeren 8</string>
     <string name="java_runtime_download_waiting">Java 8 downloaden voorbereiden...</string>
-    <string name="launcher_credits_title">Battly-opstartprogramma 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobiel 2.2.1</string>
+    <string name="launcher_credits_title">Battly-opstartprogramma 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobiel 2.2.3</string>
     <string name="launcher_status_battly">Battly-rekening</string>
     <string name="launcher_status_battly_plus">Battly+-rekening</string>
     <string name="library_analyze_mods">Analyseer</string>
@@ -673,7 +673,7 @@
     <string name="battlyworlds_friend_request_message">Een vriendschapsverzoek sturen naar %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Vriendschapsverzoek verzonden naar %1$s.</string>
     <string name="battlyworlds_friend_request_title">Vriendschapsverzoek versturen</string>
-    <string name="battlyworlds_guest_connected_simple">Open Multiplayer en sluit je aan bij de Terracotta-lobby. Het kan verschijnen met Chinese tekst.</string>
+    <string name="battlyworlds_guest_connected_simple">Open Multiplayer en sluit je aan bij de BattlyWorlds-lobby.</string>
     <string name="battlyworlds_guest_hint_simple">Als de server niet verschijnt, wacht dan een paar seconden en vernieuw Multiplayer.</string>
     <string name="battlyworlds_guest_url">Back-upadres: %1$s</string>
     <string name="battlyworlds_host">Gastheer</string>
@@ -698,7 +698,7 @@
     <string name="battlyworlds_join">Doe mee</string>
     <string name="battlyworlds_join_hint">Uitnodigingscode</string>
     <string name="battlyworlds_join_status_preparing">De privé LAN-verbinding voorbereiden...</string>
-    <string name="battlyworlds_join_status_ready">Verbonden. Open in Multiplayer de LAN-server met de naam Terracotta Lobby. Het kan verschijnen met Chinese tekst.</string>
+    <string name="battlyworlds_join_status_ready">Verbonden. Sluit je in Multiplayer aan bij de BattlyWorlds Lobby LAN-server.</string>
     <string name="battlyworlds_join_status_title">Deelnemen aan BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Uitnodigen</string>
     <string name="battlyworlds_lan_prompt_message">Gebruik BattlyWorlds om vrienden uit te nodigen zonder uw netwerk te delen.</string>
@@ -772,7 +772,7 @@
     <string name="credits_based_on">Gebaseerd op PojavLauncher en Boardwalk</string>
     <string name="credits_game_engine">Game-engine</string>
     <string name="credits_inspiration">Inspiratie</string>
-    <string name="credits_license_text">GNU GPLv3 en componenten van derden zijn in het project opgenomen. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j en meer onder hun oorspronkelijke licenties.</string>
+    <string name="credits_license_text">GNU GPLv3 en componenten van derden zijn in het project opgenomen. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j en meer onder hun oorspronkelijke licenties.</string>
     <string name="credits_license_title">Licentie</string>
     <string name="credits_pojav_founder">Oprichter van PojavLauncher</string>
     <string name="credits_primary_development">Belangrijkste ontwikkeling</string>
@@ -908,7 +908,7 @@
     <string name="installer_internal_fallback">Niet-ondersteund installatieprogramma, waardoor de verouderde Java-gebruikersinterface wordt geopend</string>
     <string name="installer_internal_running">Installateur analyseren…</string>
     <string name="installer_internal_success">%1$s direct in de Battly geïnstalleerd</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher gebaseerd op PojavLauncher en Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Tegoeden&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -917,7 +917,7 @@
         • Promenade&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Licentie en derden&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 en componenten van derden opgenomen in het project.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j en meer onder hun oorspronkelijke licenties.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j en meer onder hun oorspronkelijke licenties.&lt;br/&gt;&lt;br/&gt;
         Deze app is niet aangesloten bij Minecraft, Mojang of Microsoft.</string>
     <string name="launcher_download">Downloaden</string>
     <string name="launcher_download_modpack">Modpack importeren</string>
@@ -1045,7 +1045,7 @@
     <string name="onboarding_welcome_desc">Speel, installeer versies, beheer profielen en pas de Minecraft aan vanaf je telefoon.</string>
     <string name="onboarding_welcome_title">Welkom bij Battly mobiel</string>
     <string name="preference_disable_autojre_select">Schakel automatische JRE-selectie uit</string>
-    <string name="preference_download_threads_description">Bepaalt hoeveel gamebestanden Battly tegelijkertijd downloadt. Hogere waarden zijn sneller op goede netwerken.</string>
+    <string name="preference_download_threads_description">Battly gebruikt standaard 64 gelijktijdige downloads. Verhoog dit tot 100 bij snelle verbindingen.</string>
     <string name="preference_download_threads_title">Gelijktijdige downloads</string>
     <string name="preference_renderer_auto">Automatisch</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1260,21 +1260,6 @@
 
     <string name="battly_new_badge">Nieuw</string>
 
-    <string name="battly_whats_new_transition_desc">Je profielen zijn intact en klaar om te spelen.</string>
-    <string name="battly_whats_new_action_start">Verken 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">De terugknop van Android keert nu terug naar Minecraft in plaats van deze te sluiten, en zoekopdrachten sluiten het toetsenbord uit wanneer u ze bevestigt.</string>
-    <string name="battly_whats_new_compatibility_title">Navigatie die u niet in de weg zit</string>
-    <string name="battly_whats_new_controllers_desc">Configureer automatische deelname, microfoon- en audiostatus, zichtbaarheid van de luidsprekeroverlay, transparantie en positie vanuit de Battly Wereldinstellingen.</string>
-    <string name="battly_whats_new_controllers_title">Voicechat onder uw controle</string>
-    <string name="battly_whats_new_desc">Een gerichte update voor Battly Worlds, Social, voicechat en dagelijkse navigatie.</string>
-    <string name="battly_whats_new_instances_desc">Kies een exemplaar voordat u de geïnstalleerde mods, resourcepakketten, shaders en datapacks bekijkt. Elke bibliotheek blijft nu duidelijk gescheiden.</string>
-    <string name="battly_whats_new_instances_title">Inhoud geordend op exemplaar</string>
-    <string name="battly_whats_new_recovery_desc">Battly legt uit waarom microfoontoegang nodig is voordat er wordt gevraagd, houdt stemvoorkeuren opgeslagen en verbetert de online-, Battly-werelden en multiplayer-aanwezigheid.</string>
-    <string name="battly_whats_new_recovery_title">Duidelijkere rechten en aanwezigheid</string>
-    <string name="battly_whats_new_title">Battly Mobiel 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 is klaar</string>
-    <string name="battly_whats_new_worlds_desc">Nodig vrienden rechtstreeks uit via Battly Social, ontvang betrouwbaar kameractiviteit en houd uw status up-to-date tijdens het spelen in Battly Worlds of op een multiplayer-server.</string>
-    <string name="battly_whats_new_worlds_title">Battly Werelden, beter verbonden</string>
     <string name="customctrl_voice_microphone_add">Knop voor stemmicrofoon toevoegen</string>
     <string name="customctrl_voice_audio_add">Voeg stemaudioknop toe</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1348,4 +1333,30 @@
     <string name="battly_social_playing_worlds">Spelen in Battly-werelden · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Verbindingsgeluiden voor voicechat</string>
     <string name="battlyworlds_voice_sounds_summary">Speel een geluid af wanneer jij of een andere speler de voicechat betreedt of verlaat.</string>
+<string name="download_action_browse_worlds_title">Blader door werelden</string>
+    <string name="download_action_browse_worlds_subtitle">Download speelbare werelden naar de instantie die u kiest.</string>
+    <string name="search_world_title">Blader door werelden</string>
+    <string name="search_world_subtitle">Ontdek en installeer CurseForge-werelden in de instantie die u kiest.</string>
+    <string name="hint_search_world">Zoek naar werelden</string>
+    <string name="search_world_no_result">Geen werelden gevonden</string>
+    <string name="search_world_error">Kan geen werelden vinden</string>
+    <string name="search_world_download_error">Kan wereldmetadata niet downloaden</string>
+    <string name="world_install_button">Wereld installeren</string>
+    <string name="world_install_success">%1$s geïnstalleerd in deze instantie</string>
+
+    <string name="battly_whats_new_action_start">Verken 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">De actie Open modpack selecteert nu het nieuwe exemplaar en sluit elk installatie- en inhoudsvenster correct.</string>
+    <string name="battly_whats_new_compatibility_title">Open geïnstalleerde modpacks rechtstreeks</string>
+    <string name="battly_whats_new_controllers_desc">Het Battly-clientinstallatieprogramma gebruikt nu een goede schuifbare lijst, ook op compacte schermen.</string>
+    <string name="battly_whats_new_controllers_title">Het scrollen van de klantenlijst is opgelost</string>
+    <string name="battly_whats_new_desc">Nieuwe geïsoleerde instanties, downloadbare werelden en belangrijke oplossingen voor Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Nieuwe Vanilla-, loader-, client- en modpack-instanties bewaren hun werelden, mods, instellingen en bronpakketten in een onafhankelijke map.</string>
+    <string name="battly_whats_new_instances_title">Voor elk nieuw exemplaar een aparte map</string>
+    <string name="battly_whats_new_recovery_desc">Nieuwe instance-isolatie, veiligere opslag van instellingen en diagnostiek over lange sessies verminderen het aantal configuratieresets en maken het gemakkelijker om problemen te identificeren.</string>
+    <string name="battly_whats_new_recovery_title">Verbeterde stabiliteit</string>
+    <string name="battly_whats_new_title">Battly Mobiel 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Bestaande instances blijven waar ze zijn. Mapisolatie is alleen van toepassing op exemplaren die vanaf deze versie zijn gemaakt.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 is klaar</string>
+    <string name="battly_whats_new_worlds_desc">Blader door en installeer Minecraft-werelden van CurseForge rechtstreeks in de instantie die u kiest.</string>
+    <string name="battly_whats_new_worlds_title">Download werelden van Workspace</string>
 </resources>

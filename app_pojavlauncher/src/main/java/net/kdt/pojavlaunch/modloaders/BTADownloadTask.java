@@ -83,8 +83,6 @@ public class BTADownloadTask implements Runnable {
         MinecraftProfile btaProfile = new MinecraftProfile();
         btaProfile.lastVersionId = btaVersionId;
         btaProfile.name = "Better than Adventure!";
-        // Allows for smooth upgrades
-        btaProfile.gameDir = "./custom_instances/better_than_adventure";
         btaProfile.icon = tryDownloadIcon();
         LauncherProfiles.insertMinecraftProfile(btaProfile);
         LauncherProfiles.write();

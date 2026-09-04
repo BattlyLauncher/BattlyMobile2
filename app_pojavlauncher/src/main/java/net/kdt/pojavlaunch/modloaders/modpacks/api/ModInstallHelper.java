@@ -42,8 +42,17 @@ final class ModInstallHelper {
         if (fileName == null || fileName.isEmpty()) {
             throw new IOException("Unable to resolve a destination filename for " + modDetail.title);
         }
+        fileName = fileName.replace('\\', '/');
+        fileName = fileName.substring(fileName.lastIndexOf('/') + 1);
+        if (fileName.isEmpty()) {
+            throw new IOException("Unable to resolve a safe destination filename for " + modDetail.title);
+        }
 
-        ModDownloader modDownloader = new ModDownloader(targetDirectory);
+        boolean world = modDetail.contentType == SearchFilters.TYPE_WORLD;
+        File downloadDirectory = world
+                ? new File(Tools.DIR_CACHE, "workspace-worlds") : targetDirectory;
+        FileUtils.ensureDirectory(downloadDirectory);
+        ModDownloader modDownloader = new ModDownloader(downloadDirectory);
         modDownloader.submitDownload(1, fileName, modDetail.versionHashes[selectedVersion], url);
         DownloaderProgressWrapper progressWrapper = new DownloaderProgressWrapper(
                 R.string.content_download_downloading,
@@ -52,6 +61,14 @@ final class ModInstallHelper {
         progressWrapper.extraString = modDetail.title;
         try {
             modDownloader.awaitFinish(progressWrapper);
+            if (world) {
+                File archive = new File(downloadDirectory, fileName);
+                try {
+                    WorldArchiveInstaller.install(archive, targetDirectory, modDetail.title);
+                } finally {
+                    archive.delete();
+                }
+            }
             Telemetry.logContentInstall(modDetail.contentType, modDetail.title, true, null);
             Tools.runOnUiThread(() -> Toast.makeText(
                     context,
@@ -76,6 +93,8 @@ final class ModInstallHelper {
                 return new File(gameDir, "shaderpacks");
             case SearchFilters.TYPE_DATAPACK:
                 return new File(gameDir, "datapacks");
+            case SearchFilters.TYPE_WORLD:
+                return new File(gameDir, "saves");
             case SearchFilters.TYPE_MOD:
             default:
                 return new File(gameDir, "mods");
@@ -90,6 +109,8 @@ final class ModInstallHelper {
                 return R.string.shader_install_success;
             case SearchFilters.TYPE_DATAPACK:
                 return R.string.datapack_install_success;
+            case SearchFilters.TYPE_WORLD:
+                return R.string.world_install_success;
             case SearchFilters.TYPE_MOD:
             default:
                 return R.string.mod_install_success;

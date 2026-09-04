@@ -3,7 +3,9 @@ package net.kdt.pojavlaunch.authenticator;
 import android.util.Log;
 
 import net.kdt.pojavlaunch.Tools;
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.Logger;
+import net.kdt.pojavlaunch.utils.BattlyOfflineMode;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 
 import org.json.JSONArray;
@@ -25,11 +27,16 @@ public final class BattlyAuthlibManager {
     }
 
     public static File ensureAuthlib() throws IOException {
+        File cachedAuthlib = new File(Tools.DIR_GAME_HOME, AUTHLIB_PATH);
+        if (PojavApplication.getAppContext() != null
+                && BattlyOfflineMode.isOffline(PojavApplication.getAppContext())) {
+            if (cachedAuthlib.isFile()) return cachedAuthlib;
+            throw new IOException("Battly authlib is not installed and offline mode is active");
+        }
         JSONArray files;
         try {
             files = new JSONArray(DownloadUtils.downloadString(FILES_URL));
         } catch (IOException | JSONException e) {
-            File cachedAuthlib = new File(Tools.DIR_GAME_HOME, AUTHLIB_PATH);
             if (cachedAuthlib.isFile()) {
                 Log.w(TAG, "Using cached Battly authlib because manifest could not be refreshed", e);
                 return cachedAuthlib;

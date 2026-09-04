@@ -192,8 +192,6 @@ public final class BattlyPlusCloud {
                 profile.lastVersionId = manifest.optString("minecraftVersion", MinecraftProfile.LATEST_RELEASE);
                 profile.pojavRendererName = manifest.optString("renderer", "");
                 profile.controlFile = manifest.optString("controlFile", "");
-                profile.gameDir = "instances/" + sanitizeFileName(profile.name);
-
                 if (LauncherProfiles.mainProfileJson == null) {
                     LauncherProfiles.load();
                 }
@@ -673,7 +671,7 @@ public final class BattlyPlusCloud {
         int currentResolution = prefs.getInt("resolutionRatio", 100);
         prefs.edit()
                 .putBoolean("sustainedPerformance", true)
-                .putBoolean("force_vsync", false)
+                .putBoolean("force_vsync", true)
                 .putInt("resolutionRatio", Math.min(currentResolution, 80))
                 .apply();
         LauncherPreferences.loadPreferences(context);

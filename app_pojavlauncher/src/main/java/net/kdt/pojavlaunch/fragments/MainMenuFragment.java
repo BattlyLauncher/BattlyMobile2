@@ -23,6 +23,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -90,12 +91,13 @@ public class MainMenuFragment extends Fragment {
 
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        ImageButton mToolsButton = requireActivity().findViewById(R.id.news_button);
-        ImageButton mLibraryButton = requireActivity().findViewById(R.id.library_button);
-        ImageButton mSocialButton = requireActivity().findViewById(R.id.social_button);
-        mSkinButton = requireActivity().findViewById(R.id.skin_button);
-        mBattlyHubButtonContainer = requireActivity().findViewById(R.id.battly_hub_button_container);
-        mBattlyWorldsNewBadge = requireActivity().findViewById(R.id.battly_worlds_new_badge);
+        FragmentActivity activity = requireActivity();
+        ImageButton toolsButton = activity.findViewById(R.id.news_button);
+        ImageButton libraryButton = activity.findViewById(R.id.library_button);
+        ImageButton socialButton = activity.findViewById(R.id.social_button);
+        mSkinButton = activity.findViewById(R.id.skin_button);
+        mBattlyHubButtonContainer = activity.findViewById(R.id.battly_hub_button_container);
+        mBattlyWorldsNewBadge = activity.findViewById(R.id.battly_worlds_new_badge);
         View mDownloadButton = view.findViewById(R.id.install_jar_button);
         ImageButton mEditProfileButton = view.findViewById(R.id.edit_profile_button);
         mPlayButton = view.findViewById(R.id.play_button);
@@ -106,34 +108,40 @@ public class MainMenuFragment extends Fragment {
         bindNewsPanel(view);
         ExtraCore.addExtraListener(ExtraConstants.LAUNCH_GAME_UI_RESET, mLaunchUiResetListener);
 
-        mToolsButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(),
+        toolsButton.setOnClickListener(v -> Tools.swapFragment(activity,
                 ControlHubFragment.class, ControlHubFragment.TAG, null));
-        mToolsButton.setOnLongClickListener(v -> {
-            Tools.swapFragment(requireActivity(), GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
+        toolsButton.setOnLongClickListener(v -> {
+            Tools.swapFragment(activity, GamepadMapperFragment.class, GamepadMapperFragment.TAG, null);
             return true;
         });
-        mLibraryButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), LibraryCenterFragment.class,
-                LibraryCenterFragment.TAG, null));
-        mSocialButton.setOnClickListener(v -> Tools.swapFragment(requireActivity(), BattlySocialFragment.class,
-                BattlySocialFragment.TAG, null));
+        libraryButton.setOnClickListener(v -> Tools.swapFragment(activity,
+                LibraryCenterFragment.class, LibraryCenterFragment.TAG, null));
+        socialButton.setOnClickListener(v -> Tools.swapFragment(activity,
+                BattlySocialFragment.class, BattlySocialFragment.TAG, null));
         mSkinButton.setOnClickListener(v -> {
-            BattlyWorldsInvites.trackUsage(requireContext(), "home_hub_opened", "home");
-            BattlyHomeHubDialog.show(requireActivity(), this::refreshBattlyWorldsBadge);
+            if (activity.isFinishing() || activity.isDestroyed()) return;
+            BattlyWorldsInvites.trackUsage(activity, "home_hub_opened", "home");
+            BattlyHomeHubDialog.show(activity, () -> refreshBattlyWorldsBadge(activity));
         });
         mDownloadButton.setOnClickListener(v -> openDownloadCenter());
         mEditProfileButton.setOnClickListener(v -> mVersionSpinner.performClick());
         mEditProfileButton.setOnLongClickListener(v -> {
-            mVersionSpinner.openProfileEditor(requireActivity());
+            FragmentActivity currentActivity = getUsableActivity();
+            if (currentActivity != null && mVersionSpinner != null) {
+                mVersionSpinner.openProfileEditor(currentActivity);
+            }
             return true;
         });
         mPlayButton.setOnClickListener(v -> {
+            FragmentActivity launchActivity = getUsableActivity();
+            if (launchActivity == null) return;
             if (mLaunchStarting) {
                 return;
             }
             File optiFine = Tools.findEnabledMod("optifine");
             File embeddium = Tools.findEnabledMod("embeddium");
             if (optiFine != null && embeddium != null) {
-                AlertDialog conflictDialog = Tools.createStyledDialogBuilder(requireContext())
+                AlertDialog conflictDialog = Tools.createStyledDialogBuilder(launchActivity)
                         .setTitle(R.string.mod_conflict_optifine_embeddium_title)
                         .setMessage(R.string.mod_conflict_optifine_embeddium_message)
                         .setIcon(R.drawable.minecraft_tnt)
@@ -141,7 +149,7 @@ public class MainMenuFragment extends Fragment {
                             if (Tools.disableMod(embeddium)) {
                                 requestLaunch();
                             } else {
-                                Tools.showError(requireContext(), new IOException(
+                                Tools.showError(launchActivity, new IOException(
                                         "Could not disable " + embeddium.getName()));
                             }
                         })
@@ -160,7 +168,7 @@ public class MainMenuFragment extends Fragment {
                     }
                     modNames.append("- ").append(file.getName());
                 }
-                AlertDialog incompatibleModsDialog = Tools.createStyledDialogBuilder(requireContext())
+                AlertDialog incompatibleModsDialog = Tools.createStyledDialogBuilder(launchActivity)
                         .setTitle(R.string.android_incompatible_mods_title)
                         .setMessage(getString(R.string.android_incompatible_mods_message, modNames.toString()))
                         .setIcon(R.drawable.minecraft_tnt)
@@ -169,7 +177,7 @@ public class MainMenuFragment extends Fragment {
                                 Tools.disableAndroidIncompatibleNativeMods();
                                 requestLaunch();
                             } catch (RuntimeException exception) {
-                                Tools.showError(requireContext(), exception);
+                                Tools.showError(launchActivity, exception);
                             }
                         })
                         .setNegativeButton(android.R.string.cancel, null)
@@ -281,10 +289,8 @@ public class MainMenuFragment extends Fragment {
     }
 
     private List<NewsCard> loadBattlyNews(String newsLocale, String unavailableText) throws Exception {
-        return DownloadUtils.downloadStringFreshWithCacheFallback(
-                BATLLY_NEWS_URL_BASE + newsLocale + ".json",
-                "battly_mobile_news_" + newsLocale + ".json",
-                input -> {
+        String cacheName = "battly_mobile_news_" + newsLocale + ".json";
+        DownloadUtils.ParseCallback<List<NewsCard>> parser = input -> {
                     try {
                         JsonArray newsArray = Tools.GLOBAL_GSON.fromJson(input, JsonArray.class);
                         if (newsArray == null || newsArray.size() == 0) {
@@ -304,11 +310,16 @@ public class MainMenuFragment extends Fragment {
                     } catch (Exception e) {
                         throw new DownloadUtils.ParseException(e);
                     }
-                });
+                };
+        if (net.kdt.pojavlaunch.utils.BattlyOfflineMode.isOffline(PojavApplication.getAppContext())) {
+            return DownloadUtils.readStringCache(cacheName, parser);
+        }
+        return DownloadUtils.downloadStringFreshWithCacheFallback(
+                BATLLY_NEWS_URL_BASE + newsLocale + ".json", cacheName, parser);
     }
 
     private String getNewsLocale() {
-        String language = LocaleUtils.getCurrentLocale(requireContext()).getLanguage();
+        String language = LocaleUtils.getCurrentLocale(PojavApplication.getAppContext()).getLanguage();
         return "es".equalsIgnoreCase(language) ? "es" : "en";
     }
 
@@ -337,11 +348,12 @@ public class MainMenuFragment extends Fragment {
     }
 
     private void openDownloadCenter() {
-        Tools.swapFragment(requireActivity(), DownloadCenterFragment.class, DownloadCenterFragment.TAG, null);
+        openFragment(DownloadCenterFragment.class, DownloadCenterFragment.TAG, null);
     }
 
     private void openCurrentProfileDirectory() {
-        openPath(requireContext(), getCurrentProfileDirectory(), false);
+        FragmentActivity activity = getUsableActivity();
+        if (activity != null) openPath(activity, getCurrentProfileDirectory(), false);
     }
 
     private File getCurrentProfileDirectory() {
@@ -389,7 +401,6 @@ public class MainMenuFragment extends Fragment {
 
     @Override
     public void onDestroyView() {
-        super.onDestroyView();
         ExtraCore.removeExtraListenerFromValue(ExtraConstants.LAUNCH_GAME_UI_RESET, mLaunchUiResetListener);
         mPlayButton = null;
         mPlayButtonTitle = null;
@@ -400,6 +411,20 @@ public class MainMenuFragment extends Fragment {
         mBattlyWorldsNewBadge = null;
         mNewsPager = null;
         mNewsCardAdapter = null;
+        mVersionSpinner = null;
+        super.onDestroyView();
+    }
+
+    @Nullable
+    private FragmentActivity getUsableActivity() {
+        FragmentActivity activity = getActivity();
+        if (!isAdded() || activity == null || activity.isFinishing() || activity.isDestroyed()) return null;
+        return activity;
+    }
+
+    private void openFragment(Class<? extends Fragment> fragmentClass, String tag, @Nullable Bundle arguments) {
+        FragmentActivity activity = getUsableActivity();
+        if (activity != null) Tools.swapFragment(activity, fragmentClass, tag, arguments);
     }
 
     public void refreshLauncherProfileUi() {
@@ -411,8 +436,9 @@ public class MainMenuFragment extends Fragment {
     }
 
     private void updateBattlySkinButton() {
-        if (mSkinButton == null || !isAdded()) return;
-        MinecraftAccount account = PojavProfile.getCurrentProfileContent(requireContext(), null);
+        FragmentActivity activity = getUsableActivity();
+        if (mSkinButton == null || activity == null) return;
+        MinecraftAccount account = PojavProfile.getCurrentProfileContent(activity, null);
         boolean visible = account != null && account.isBattly();
         if (mBattlyHubButtonContainer != null) {
             mBattlyHubButtonContainer.setVisibility(visible ? View.VISIBLE : View.GONE);
@@ -426,19 +452,24 @@ public class MainMenuFragment extends Fragment {
         BattlyWorldsDiscovery.updateBadge(mBattlyWorldsNewBadge);
     }
 
+    private static void refreshBattlyWorldsBadge(FragmentActivity activity) {
+        if (activity.isFinishing() || activity.isDestroyed()) return;
+        View badge = activity.findViewById(R.id.battly_worlds_new_badge);
+        if (badge != null) BattlyWorldsDiscovery.updateBadge(badge);
+    }
+
     private void runInstallerWithConfirmation(boolean isCustomArgs) {
+        FragmentActivity activity = getUsableActivity();
+        if (activity == null) return;
         if (ProgressKeeper.getTaskCount() == 0) {
-            Tools.installMod(requireActivity(), isCustomArgs);
+            Tools.installMod(activity, isCustomArgs);
         } else {
-            Toast.makeText(requireContext(), R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
+            Toast.makeText(activity, R.string.tasks_ongoing, Toast.LENGTH_LONG).show();
         }
     }
 
     private void openSearch(int contentType) {
-        Tools.swapFragment(
-                requireActivity(),
-                SearchModFragment.class,
-                SearchModFragment.TAG,
+        openFragment(SearchModFragment.class, SearchModFragment.TAG,
                 SearchModFragment.createArguments(contentType));
     }
 

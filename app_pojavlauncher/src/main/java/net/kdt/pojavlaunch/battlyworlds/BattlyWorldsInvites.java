@@ -44,11 +44,13 @@ import net.kdt.pojavlaunch.PojavProfile;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.analytics.Telemetry;
+import net.kdt.pojavlaunch.analytics.FirebaseProcessGuard;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
 import net.kdt.pojavlaunch.extra.ExtraCore;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.tasks.AsyncMinecraftDownloader;
 import net.kdt.pojavlaunch.tasks.AsyncVersionList;
+import net.kdt.pojavlaunch.utils.BattlyOfflineMode;
 import net.kdt.pojavlaunch.utils.NotificationUtils;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
 import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
@@ -258,6 +260,7 @@ public final class BattlyWorldsInvites {
             return;
         }
         if (messagingToken == null || messagingToken.trim().isEmpty()) {
+            if (!FirebaseProcessGuard.ensureInitialized(context)) return;
             FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token -> {
                 if (Tools.isValidString(token)) {
                     Telemetry.saveMessagingToken(context, token);
@@ -290,7 +293,8 @@ public final class BattlyWorldsInvites {
     }
 
     public static void heartbeat(Context context) {
-        if (!BattlyWorldsFeature.ENABLED) {
+        if (!BattlyWorldsFeature.ENABLED || context == null
+                || BattlyOfflineMode.isOffline(context)) {
             return;
         }
         String battlyToken = getBattlyToken(context);
@@ -316,6 +320,7 @@ public final class BattlyWorldsInvites {
 
     public static synchronized void startInvitePolling(Context context) {
         if (!BattlyWorldsFeature.ENABLED || context == null
+                || BattlyOfflineMode.isOffline(context)
                 || !BattlyWorldsPreferences.areInvitationsEnabled(context)) {
             return;
         }
@@ -892,8 +897,7 @@ public final class BattlyWorldsInvites {
                     .setNegativeButton(android.R.string.cancel, null)
                     .setPositiveButton(R.string.battlyworlds_invite_open_launcher, (dialog, which) -> {
                         savePendingInvite(activity, invite);
-                        LauncherActivity.openAfterGameExit(activity, 0,
-                                activity.getString(R.string.battlyworlds_invite_switching_version));
+                        LauncherActivity.openAfterExpectedGameExit(activity);
                         activity.finish();
                         Tools.MAIN_HANDLER.postDelayed(
                                 () -> android.os.Process.killProcess(android.os.Process.myPid()), 450L);

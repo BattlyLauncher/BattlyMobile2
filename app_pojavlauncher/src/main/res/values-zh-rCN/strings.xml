@@ -651,7 +651,7 @@
     <string name="battlyworlds_friend_request_message">向 %1$s 发送好友请求？</string>
     <string name="battlyworlds_friend_request_sent">好友请求已发送至 %1$s。</string>
     <string name="battlyworlds_friend_request_title">发送好友请求</string>
-    <string name="battlyworlds_guest_connected_simple">打开多人游戏并加入 Terracotta 大厅。它可能会显示中文文本。</string>
+    <string name="battlyworlds_guest_connected_simple">打开多人游戏并加入 BattlyWorlds 大厅。</string>
     <string name="battlyworlds_guest_hint_simple">如果服务器没有出现，请等待几秒钟并刷新多人游戏。</string>
     <string name="battlyworlds_guest_url">备份地址：%1$s</string>
     <string name="battlyworlds_host">主持人</string>
@@ -677,7 +677,7 @@
     <string name="battlyworlds_join">加入</string>
     <string name="battlyworlds_join_hint">邀请码</string>
     <string name="battlyworlds_join_status_preparing">正在准备专用 LAN 连接...</string>
-    <string name="battlyworlds_join_status_ready">已连接。在多人游戏中，打开名为 Terracotta 大厅的 LAN 服务器。它可能会显示中文文本。</string>
+    <string name="battlyworlds_join_status_ready">已连接。在多人游戏中，加入 BattlyWorlds 大厅 LAN 服务器。</string>
     <string name="battlyworlds_join_status_title">加入BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">邀请</string>
     <string name="battlyworlds_lan_prompt_message">使用 BattlyWorlds 邀请好友，无需共享网络。</string>
@@ -771,13 +771,13 @@
     <string name="credits_based_on">基于 PojavLauncher 和 Boardwalk</string>
     <string name="credits_game_engine">游戏引擎</string>
     <string name="credits_inspiration">灵感</string>
-    <string name="credits_license_text">项目中包含 GNU GPLv3 和第三方组件。 OpenJDK、LWJGL、GL4ES、Apache Commons、exp4j 等均遵循其原始许可证。</string>
+    <string name="credits_license_text">项目中包含 GNU GPLv3 和第三方组件。 OpenJDK、LWJGL、GL4ES、LTW、Apache Commons、exp4j 等均遵循其原始许可证。</string>
     <string name="credits_license_title">许可证</string>
     <string name="credits_pojav_founder">PojavLauncher创始人</string>
     <string name="credits_primary_development">主要发展</string>
     <string name="credits_section_title">制作人员</string>
     <string name="credits_unaffiliated">此应用程序不隶属于 Minecraft、Mojang 或 Microsoft。</string>
-    <string name="credits_version">版本2.2.1</string>
+    <string name="credits_version">版本2.2.3</string>
     <string name="ctrl_applied_success">控制“%1$s”应用成功。</string>
     <string name="ctrl_apply_btn">应用控制</string>
     <string name="ctrl_apply_msg">下载并应用“%1$s”作为您的控件布局？</string>
@@ -963,7 +963,7 @@
     <string name="instance_storage_calculating">正在计算存储...</string>
     <string name="instance_use">使用</string>
     <string name="java_runtime_download_message">Battly 在首次设置后下载 Java 8，而不是将其发送到应用程序内。这会减少应用程序大小并准备较旧的 Minecraft 版本。</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly启动器2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly启动器2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         基于 PojavLauncher 和 Boardwalk 的启动器。&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;致谢&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -972,13 +972,13 @@
         •木板路&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;许可和第三方&lt;/b&gt;&lt;br/&gt;
         • 项目中包含GNU GPLv3 和第三方组件。&lt;br/&gt;
-        • OpenJDK、LWJGL、GL4ES、Apache Commons、exp4j 等均已获得原始许可。&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK、LWJGL、GL4ES、LTW、Apache Commons、exp4j 等均已获得原始许可。&lt;br/&gt;&lt;br/&gt;
         此应用程序不隶属于 Minecraft、Mojang 或 Microsoft。</string>
-    <string name="launcher_credits_title">Battly启动器2.2.1</string>
+    <string name="launcher_credits_title">Battly启动器2.2.3</string>
     <string name="launcher_download">下载</string>
     <string name="launcher_download_modpack">导入模组包</string>
     <string name="launcher_execute">玩</string>
-    <string name="launcher_mobile_badge">移动版2.2.1</string>
+    <string name="launcher_mobile_badge">移动版2.2.3</string>
     <string name="launcher_nav_back">返回</string>
     <string name="launcher_nav_home">返回家中</string>
     <string name="launcher_nav_workspace">Battly 工作区</string>
@@ -1127,7 +1127,7 @@
     <string name="preference_disable_autojre_select">禁用自动 JRE 选择</string>
     <string name="preference_download_threads_auto_description">Battly适应CPU、内存和网络类型的同时下载。禁用它以使用手动值。</string>
     <string name="preference_download_threads_auto_title">自动下载并行度</string>
-    <string name="preference_download_threads_description">控制 Battly 同时下载多少个游戏文件。在良好的网络上，值越高速度越快。</string>
+    <string name="preference_download_threads_description">Battly 默认使用 64 个同时下载。在快速连接上将其增加到 100。</string>
     <string name="preference_download_threads_title">同时下载</string>
     <string name="preference_renderer_auto">自动</string>
     <string name="preference_renderer_title">渲染器</string>
@@ -1439,21 +1439,6 @@
 
     <string name="battly_new_badge">新的</string>
 
-    <string name="battly_whats_new_transition_desc">您的个人资料完好无损，可以玩了。</string>
-    <string name="battly_whats_new_action_start">探索2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Android 返回按钮现在返回到 Minecraft 而不是关闭它，并且当您确认搜索时，搜索会关闭键盘。</string>
-    <string name="battly_whats_new_compatibility_title">导航不妨碍您</string>
-    <string name="battly_whats_new_controllers_desc">从 Battly 世界设置中配置自动加入、麦克风和音频状态、扬声器叠加可见性、透明度和位置。</string>
-    <string name="battly_whats_new_controllers_title">语音聊天尽在您的掌控</string>
-    <string name="battly_whats_new_desc">针对 Battly 世界、社交、语音聊天和日常导航的重点更新。</string>
-    <string name="battly_whats_new_instances_desc">在查看其安装的模组、资源包、着色器和数据包之前选择一个实例。现在每个图书馆都保持清晰的分离。</string>
-    <string name="battly_whats_new_instances_title">按实例组织的内容</string>
-    <string name="battly_whats_new_recovery_desc">Battly 解释了为什么在询问之前需要访问麦克风、保存语音偏好并改进在线、Battly 世界和多人游戏的存在。</string>
-    <string name="battly_whats_new_recovery_title">更清晰的权限和存在</string>
-    <string name="battly_whats_new_title">Battly手机2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 已准备就绪</string>
-    <string name="battly_whats_new_worlds_desc">直接从 Battly 社交邀请朋友，可靠地接收房间活动，并在 Battly 世界或多人游戏服务器上玩游戏时保持最新状态。</string>
-    <string name="battly_whats_new_worlds_title">Battly 世界，互联更美好</string>
     <string name="customctrl_voice_microphone_add">添加语音麦克风按钮</string>
     <string name="customctrl_voice_audio_add">添加语音音频按钮</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1527,4 +1512,30 @@
     <string name="battly_social_playing_worlds">在 Battly 世界中玩耍 · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">语音聊天连接音效</string>
     <string name="battlyworlds_voice_sounds_summary">当您或其他玩家加入或离开语音聊天时播放声音。</string>
+<string name="download_action_browse_worlds_title">浏览世界</string>
+    <string name="download_action_browse_worlds_subtitle">将可玩的世界下载到您选择的实例中。</string>
+    <string name="search_world_title">浏览世界</string>
+    <string name="search_world_subtitle">发现 CurseForge 世界并将其安装到您选择的实例中。</string>
+    <string name="hint_search_world">寻找世界</string>
+    <string name="search_world_no_result">没有找到世界</string>
+    <string name="search_world_error">未能找到世界</string>
+    <string name="search_world_download_error">无法下载世界元数据</string>
+    <string name="world_install_button">安装世界</string>
+    <string name="world_install_success">%1$s 安装到此实例中</string>
+
+    <string name="battly_whats_new_action_start">探索2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">打开 modpack 操作现在会选择新实例并正确关闭每个安装和内容窗口。</string>
+    <string name="battly_whats_new_compatibility_title">直接打开已安装的模组包</string>
+    <string name="battly_whats_new_controllers_desc">Battly 客户端安装程序现在使用正确的可滚动列表，包括在紧凑屏幕上。</string>
+    <string name="battly_whats_new_controllers_title">客户列表滚动固定</string>
+    <string name="battly_whats_new_desc">新的隔离实例、可下载的世界以及 Battly 工作区的重要修复。</string>
+    <string name="battly_whats_new_instances_desc">新的 Vanilla、加载程序、客户端和 modpack 实例将其世界、mod、设置和资源包保存在独立的文件夹中。</string>
+    <string name="battly_whats_new_instances_title">每个新实例都有一个单独的文件夹</string>
+    <string name="battly_whats_new_recovery_desc">新的实例隔离、更安全的设置存储和长会话诊断减少了配置重置并使问题更容易识别。</string>
+    <string name="battly_whats_new_recovery_title">提高稳定性</string>
+    <string name="battly_whats_new_title">Battly手机2.2.3</string>
+    <string name="battly_whats_new_transition_desc">现有实例保留在原处。文件夹隔离仅适用于从此版本开始创建的实例。</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 已准备就绪</string>
+    <string name="battly_whats_new_worlds_desc">从 CurseForge 浏览 Minecraft 世界并将其直接安装到您选择的实例中。</string>
+    <string name="battly_whats_new_worlds_title">从工作区下载世界</string>
 </resources>

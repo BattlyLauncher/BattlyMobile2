@@ -166,7 +166,7 @@
     <string name="crash_no_findings">Nulla nota ruinae exemplum in recentissimis lignis inventum est.</string>
     <string name="crash_recovery_applied">Recuperatio actio perficitur</string>
     <string name="crash_recovery_manual">Hic exitus manuali indiget mutatione. Aperi trabem in details.</string>
-    <string name="credits_version">Version 2.2.1</string>
+    <string name="credits_version">Version 2.2.3</string>
     <string name="ctrl_like_btn">sicut</string>
     <string name="ctrl_liked_added">Adiecit dominans probaverunt.</string>
     <string name="ctrl_liked_btn">probaverunt</string>
@@ -227,8 +227,8 @@
     <string name="java_runtime_download_progress">Downloading Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Installing Java 8</string>
     <string name="java_runtime_download_waiting">Praeparans Java 8 download...</string>
-    <string name="launcher_credits_title">Battly Launchere 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobile 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launchere 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobile 2.2.3</string>
     <string name="launcher_status_battly">Battly propter</string>
     <string name="launcher_status_battly_plus">Battly+ propter</string>
     <string name="library_analyze_mods">Analyse</string>
@@ -477,7 +477,7 @@
     <string name="battlyworlds_friend_request_message">Amicum petentibus %1$s mittere?</string>
     <string name="battlyworlds_friend_request_sent">Amice rogatu %1$s misit.</string>
     <string name="battlyworlds_friend_request_title">Amicus petitionem mittere</string>
-    <string name="battlyworlds_guest_connected_simple">Multiplayer aperi et Terracotta iungere VESTIBULUM. Patet cum textu Sinensi.</string>
+    <string name="battlyworlds_guest_connected_simple">Multiplayer aperi et BattlyWorlds iungere VESTIBULUM.</string>
     <string name="battlyworlds_guest_hint_simple">Si servo non comparuerit, brevi tempore manere et lusoribus multis recrea.</string>
     <string name="battlyworlds_guest_url">Tergum inscriptio: %1$s</string>
     <string name="battlyworlds_host">Host</string>
@@ -502,7 +502,7 @@
     <string name="battlyworlds_join">Join</string>
     <string name="battlyworlds_join_hint">codice invitare</string>
     <string name="battlyworlds_join_status_preparing">Praeparans nexum privatum LAN ...</string>
-    <string name="battlyworlds_join_status_ready">Coniuncta. In Lusoribus aperi servo LAN nomine VESTIBULUM Terracotta. Patet cum textu Sinensi.</string>
+    <string name="battlyworlds_join_status_ready">Coniuncta. In Multi lusoribus, coniunge cum servo BattlyWorlds VESTIBULUM LAN.</string>
     <string name="battlyworlds_join_status_title">Coniungens BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">invitare</string>
     <string name="battlyworlds_lan_prompt_message">Utere BattlyWorlds ad invitandos amicos sine aeneis communicandis.</string>
@@ -576,7 +576,7 @@
     <string name="credits_based_on">Ex PojavLauncher et Boardwalk</string>
     <string name="credits_game_engine">Ludus engine</string>
     <string name="credits_inspiration">Inspiratio</string>
-    <string name="credits_license_text">GNU GPLv3 et tertia pars partium in project. OpenJDK, LWJGL, GL4ES, Apache Communia, exp4j et plura sub originalibus licentiis.</string>
+    <string name="credits_license_text">GNU GPLv3 et tertia pars partium in project. OpenJDK, LWJGL, GL4ES, LTW, Apache Communia, exp4j et plura sub eorum licentia originali.</string>
     <string name="credits_license_title">Licentia</string>
     <string name="credits_pojav_founder">PojavLauncher conditor</string>
     <string name="credits_primary_development">Praecipua progressio</string>
@@ -712,16 +712,16 @@
     <string name="installer_internal_fallback">Installer destitutus aperiens legatum Java UI</string>
     <string name="installer_internal_running">Analyzing installer…</string>
     <string name="installer_internal_success">%1$s directe intus inauguratus Battly</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launchere 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launchere 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launchere secundum PojavLauncher et Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Promeritum&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
         • PojavLauncherTeam&lt;br/&gt;
         • Tran Khanh Duy&lt;br/&gt;
         • Boardwalk&lt;br/&gt;&lt;br/&gt;
-        &lt;b&gt; Licentia et tertia partes&lt;/b&gt; &lt;br/&gt;
+        &lt;b&gt;Licentia et tertia partes&lt;/b&gt; &lt;br/&gt;
         • GNU GPLv3 et tertia pars partium inclusa in project.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Communia, exp4j et magis sub eorum licentia originali.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Communia, exp4j et magis sub eorum licentia originali.&lt;br/&gt;&lt;br/&gt;
         Hoc app non affiliatur Minecraft, Mojang vel Microsoft.</string>
     <string name="launcher_download">Download</string>
     <string name="launcher_download_modpack">Import modpack</string>
@@ -853,7 +853,7 @@
     <string name="onboarding_welcome_title">Welcome to Battly Mobile</string>
     <string name="preference_category_experimental_settings">Experimentalis occasus</string>
     <string name="preference_disable_autojre_select">Inactivare ipso JRE delectu</string>
-    <string name="preference_download_threads_description">Imperium quot ludum files Battly simul downloads. Superiores valores in bonis retiacula velociores sunt.</string>
+    <string name="preference_download_threads_description">Battly utitur 64 simultaneis downloads per defaltam. Ad 100 augete hospites celeriter.</string>
     <string name="preference_download_threads_title">Simultaneous downloads</string>
     <string name="preference_renderer_auto">Automatic</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1068,21 +1068,6 @@
 
     <string name="battly_new_badge">New</string>
 
-    <string name="battly_whats_new_transition_desc">Profile tuae integrae sunt et ad ludendum paratae.</string>
-    <string name="battly_whats_new_action_start">Explore 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Bulla posteriora Android nunc redit ad Minecraft loco claudendi eam, et perquirit claviculas dimittendas cum eas confirmas.</string>
-    <string name="battly_whats_new_compatibility_title">Navigatio quae remanet de via tua</string>
-    <string name="battly_whats_new_controllers_desc">Configurare automatariam coniunctionem, microphonem et statum audio, orator visibilitatis obduces, diaphanum et situm ab occasus mundi Battly.</string>
-    <string name="battly_whats_new_controllers_title">Curabitur vox in tua potestate</string>
-    <string name="battly_whats_new_desc">Renovatio focused pro Battly World, Social, vox chat et cotidiana navigationis.</string>
-    <string name="battly_whats_new_instances_desc">Exemplum elige antequam recenseas modas inauguratus, subsidiorum sarcinas, shaders et datapacks. Utraque bibliotheca nunc clare separata manet.</string>
-    <string name="battly_whats_new_instances_title">Contentus ab exempli constituto</string>
-    <string name="battly_whats_new_recovery_desc">Battly explicatur cur accessus microphonii necessarius est antequam petat, servat optiones vocis servatae et meliores in online, Battly mundorum et lusorum praesentia.</string>
-    <string name="battly_whats_new_recovery_title">Clariores permissiones et praesentia</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 paratum est</string>
-    <string name="battly_whats_new_worlds_desc">Amicos directe ab Battly invitare Social, cubiculum actuositatis accipe fideliter ac serva statum tuum renovatum dum ludentem in mundo Battly vel in lusoriis servo.</string>
-    <string name="battly_whats_new_worlds_title">Battly Mundi, melius connexum</string>
     <string name="customctrl_voice_microphone_add">Vox tortor ligula felis addere</string>
     <string name="customctrl_voice_audio_add">Addere vocem button audio</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1156,4 +1141,30 @@
     <string name="battly_social_playing_worlds">Ludens in Battly mundos · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Soni conexionis colloquii vocalis</string>
     <string name="battlyworlds_voice_sounds_summary">Sonum redde cum tu vel alius lusor colloquium vocale intrat aut relinquit.</string>
+<string name="download_action_browse_worlds_title">Browse mundos</string>
+    <string name="download_action_browse_worlds_subtitle">Download mundos playable in exemplum vis.</string>
+    <string name="search_world_title">Browse Worlds</string>
+    <string name="search_world_subtitle">Reveles et institue mundos CurseForge in exemplum quod vis.</string>
+    <string name="hint_search_world">Quaerere mundos</string>
+    <string name="search_world_no_result">Non mundos invenerunt</string>
+    <string name="search_world_error">Defecit invenire mundos</string>
+    <string name="search_world_download_error">Deficio ut download mundo metadata</string>
+    <string name="world_install_button">Install mundi</string>
+    <string name="world_install_success">%1$s installed in hoc casu</string>
+
+    <string name="battly_whats_new_action_start">Explore 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Modpack actio Aperta nunc novum instantia eligit et omnem institutionem ac fenestram contentus recte claudit.</string>
+    <string name="battly_whats_new_compatibility_title">Modpacks aperti directe installed</string>
+    <string name="battly_whats_new_controllers_desc">Cliens Battly inauguratus nunc utitur indice proprio scrollable, incluso in screens compactis.</string>
+    <string name="battly_whats_new_controllers_title">Clientem album scrolling fixum</string>
+    <string name="battly_whats_new_desc">Novae instantiae solitariae, mundorum downloadabilium et magni ponderis figmenta pro opere spatii Battly.</string>
+    <string name="battly_whats_new_instances_desc">Nova Vanilla, oneratus, client et modpack instantiae suae mundos, modi, occasus et sarcinas subsidiorum servant in folder independens.</string>
+    <string name="battly_whats_new_instances_title">Separatum folder omni exemplo</string>
+    <string name="battly_whats_new_recovery_desc">Novae instantiae solitudo, tutiora loca reposita et diutinae sessionis diagnostica reducere configurationes resets et difficultates faciliores ad cognoscendum reddunt.</string>
+    <string name="battly_whats_new_recovery_title">Melior fides</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Instantiae instantiae manent ubi sunt. Solitudo folder applicat solum ad instantias quae ab hac versione fiunt.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 paratum est</string>
+    <string name="battly_whats_new_worlds_desc">Percurrere et Minecraft mundos instituere ex CurseForge directe in instantia quam vis.</string>
+    <string name="battly_whats_new_worlds_title">Download mundos ex Workspace</string>
 </resources>

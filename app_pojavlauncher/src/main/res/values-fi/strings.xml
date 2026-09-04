@@ -175,7 +175,7 @@
     <string name="crash_no_findings">Uusimmista lokeista ei löytynyt tunnettua törmäyskuviota.</string>
     <string name="crash_recovery_applied">Palautustoimenpide suoritettu</string>
     <string name="crash_recovery_manual">Tämä ongelma vaatii manuaalisen muutoksen. Avaa loki lisätietoja varten.</string>
-    <string name="credits_version">Versio 2.2.1</string>
+    <string name="credits_version">Versio 2.2.3</string>
     <string name="ctrl_like_btn">Kuten</string>
     <string name="ctrl_liked_added">Lisätty tykättyihin säätimiin.</string>
     <string name="ctrl_liked_btn">Pidin</string>
@@ -236,8 +236,8 @@
     <string name="java_runtime_download_progress">Ladataan Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Java 8:n asentaminen</string>
     <string name="java_runtime_download_waiting">Valmistellaan Java 8 latausta...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobiili 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobiili 2.2.3</string>
     <string name="launcher_status_battly">Battly-tili</string>
     <string name="launcher_status_battly_plus">Battly+ tili</string>
     <string name="library_analyze_mods">Analysoi</string>
@@ -486,7 +486,7 @@
     <string name="battlyworlds_friend_request_message">Lähetetäänkö kaveripyyntö numeroon %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Ystäväpyyntö lähetetty numeroon %1$s.</string>
     <string name="battlyworlds_friend_request_title">Lähetä kaveripyyntö</string>
-    <string name="battlyworlds_guest_connected_simple">Avaa moninpeli ja liity Terracotta Aulaan. Se saattaa näkyä kiinalaisen tekstin kanssa.</string>
+    <string name="battlyworlds_guest_connected_simple">Avaa moninpeli ja liity BattlyWorlds Aulaan.</string>
     <string name="battlyworlds_guest_hint_simple">Jos palvelin ei tule näkyviin, odota muutama sekunti ja päivitä moninpeli.</string>
     <string name="battlyworlds_guest_url">Varaosoite: %1$s</string>
     <string name="battlyworlds_host">Isäntä</string>
@@ -511,7 +511,7 @@
     <string name="battlyworlds_join">Liity</string>
     <string name="battlyworlds_join_hint">Kutsukoodi</string>
     <string name="battlyworlds_join_status_preparing">Valmistellaan yksityistä LAN-yhteyttä...</string>
-    <string name="battlyworlds_join_status_ready">Yhdistetty. Avaa moninpelissä LAN-palvelin nimeltä Terracotta Lobby. Se saattaa näkyä kiinalaisen tekstin kanssa.</string>
+    <string name="battlyworlds_join_status_ready">Yhdistetty. Liity moninpelissä BattlyWorlds Lobby LAN -palvelimeen.</string>
     <string name="battlyworlds_join_status_title">Liittyy BattlyWorlds:hen</string>
     <string name="battlyworlds_lan_prompt_action">Kutsu</string>
     <string name="battlyworlds_lan_prompt_message">Käytä BattlyWorlds:tä kutsuaksesi ystäviä jakamatta verkkoasi.</string>
@@ -585,7 +585,7 @@
     <string name="credits_based_on">Perustuu PojavLauncheriin ja Boardwalkiin</string>
     <string name="credits_game_engine">Pelin moottori</string>
     <string name="credits_inspiration">Inspiraatiota</string>
-    <string name="credits_license_text">GNU GPLv3 ja kolmannen osapuolen komponentit sisältyvät projektiin. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ja paljon muuta alkuperäisillä lisensseillään.</string>
+    <string name="credits_license_text">GNU GPLv3 ja kolmannen osapuolen komponentit sisältyvät projektiin. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ja paljon muuta alkuperäisillä lisensseillään.</string>
     <string name="credits_license_title">Lisenssi</string>
     <string name="credits_pojav_founder">PojavLauncherin perustaja</string>
     <string name="credits_primary_development">Pääkehitys</string>
@@ -722,7 +722,7 @@
     <string name="installer_internal_fallback">Asennusohjelma, jota ei tueta, avaa vanhan Java-käyttöliittymän</string>
     <string name="installer_internal_running">Analysoidaan asennusohjelmaa…</string>
     <string name="installer_internal_success">%1$s asennettu suoraan Battly:n sisään</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher perustuu PojavLauncheriin ja Boardwalkiin.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Krevitykset&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -731,7 +731,7 @@
         • Boardwalk&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lisenssi ja kolmannet osapuolet&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 ja kolmannen osapuolen komponentit sisältyvät projektiin.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ja paljon muuta alkuperäisillä lisensseillään.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ja paljon muuta alkuperäisillä lisensseillään.&lt;br/&gt;&lt;br/&gt;
         Tämä sovellus ei ole sidoksissa Minecraft, Mojang tai Microsoft.</string>
     <string name="launcher_download">Lataa</string>
     <string name="launcher_download_modpack">Tuo modpack</string>
@@ -863,7 +863,7 @@
     <string name="onboarding_welcome_title">Tervetuloa Battly Mobileen</string>
     <string name="preference_category_experimental_settings">Kokeelliset asetukset</string>
     <string name="preference_disable_autojre_select">Poista automaattinen JRE-valinta käytöstä</string>
-    <string name="preference_download_threads_description">Ohjaa kuinka monta pelitiedostoa Battly lataa samanaikaisesti. Korkeammat arvot ovat nopeampia hyvissä verkoissa.</string>
+    <string name="preference_download_threads_description">Battly käyttää oletuksena 64 samanaikaista latausta. Nosta se 100:aan nopeilla yhteyksillä.</string>
     <string name="preference_download_threads_title">Samanaikaiset lataukset</string>
     <string name="preference_renderer_auto">Automaattinen</string>
     <string name="preference_renderer_title">Renderöijä</string>
@@ -1078,21 +1078,6 @@
 
     <string name="battly_new_badge">Uusi</string>
 
-    <string name="battly_whats_new_transition_desc">Profiilisi ovat ehjät ja valmiita pelaamaan.</string>
-    <string name="battly_whats_new_action_start">Tutustu 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Android takaisin -painike palaa nyt Minecraft:ksi sen sulkemisen sijaan, ja haut sulkevat näppäimistön, kun vahvistat ne.</string>
-    <string name="battly_whats_new_compatibility_title">Navigointi, joka pysyy poissa tieltäsi</string>
-    <string name="battly_whats_new_controllers_desc">Määritä automaattinen liittäminen, mikrofonin ja äänen tila, kaiuttimen peittokuvan näkyvyys, läpinäkyvyys ja sijainti Battly Worlds -asetuksista.</string>
-    <string name="battly_whats_new_controllers_title">Äänichat hallinnassasi</string>
-    <string name="battly_whats_new_desc">Kohdistettu päivitys Battly Worlds, Social, äänichat ja jokapäiväiseen navigointiin.</string>
-    <string name="battly_whats_new_instances_desc">Valitse ilmentymä ennen kuin tarkistat sen asennetut modit, resurssipaketit, varjostimet ja tietopaketit. Jokainen kirjasto pysyy nyt selvästi erillään.</string>
-    <string name="battly_whats_new_instances_title">Sisältö on järjestetty esiintymän mukaan</string>
-    <string name="battly_whats_new_recovery_desc">Battly selittää, miksi mikrofonia tarvitaan ennen kysymistä, pitää ääniasetukset tallessa ja parantaa online-, Battly-maailmaa ja moninpeliä.</string>
-    <string name="battly_whats_new_recovery_title">Selkeämmät käyttöoikeudet ja läsnäolo</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 on valmis</string>
-    <string name="battly_whats_new_worlds_desc">Kutsu ystäviä suoraan Battly Socialista, vastaanota huonetoimintaa luotettavasti ja pidä tilasi ajan tasalla pelatessasi Battly Worldsissä tai moninpelipalvelimella.</string>
-    <string name="battly_whats_new_worlds_title">Battly Maailmat, parempi yhteys</string>
     <string name="customctrl_voice_microphone_add">Lisää äänimikrofoni -painike</string>
     <string name="customctrl_voice_audio_add">Lisää ääniäänipainike</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1166,4 +1151,30 @@
     <string name="battly_social_playing_worlds">Pelaaminen Battly Worldsissä · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Äänikeskustelun yhteysäänet</string>
     <string name="battlyworlds_voice_sounds_summary">Toista ääni, kun sinä tai toinen pelaaja liittyy äänikeskusteluun tai poistuu siitä.</string>
+<string name="download_action_browse_worlds_title">Selaa maailmoja</string>
+    <string name="download_action_browse_worlds_subtitle">Lataa pelattavia maailmoja valitsemaasi ilmentymään.</string>
+    <string name="search_world_title">Selaa maailmoja</string>
+    <string name="search_world_subtitle">Löydä ja asenna CurseForge-maailmoja valitsemaasi ilmentymään.</string>
+    <string name="hint_search_world">Etsi maailmoja</string>
+    <string name="search_world_no_result">Maailmaa ei löytynyt</string>
+    <string name="search_world_error">Maailman löytäminen epäonnistui</string>
+    <string name="search_world_download_error">Maailman metatietojen lataaminen epäonnistui</string>
+    <string name="world_install_button">Asenna maailma</string>
+    <string name="world_install_success">%1$s asennettu tähän ilmentymään</string>
+
+    <string name="battly_whats_new_action_start">Tutustu 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Avaa modpack -toiminto valitsee nyt uuden ilmentymän ja sulkee kaikki asennus- ja sisältöikkunat oikein.</string>
+    <string name="battly_whats_new_compatibility_title">Avaa asennetut modpackit suoraan</string>
+    <string name="battly_whats_new_controllers_desc">Battly-asiakasasennusohjelma käyttää nyt kunnollista vieritettävää luetteloa, myös pienikokoisilla näytöillä.</string>
+    <string name="battly_whats_new_controllers_title">Asiakasluettelon vieritys korjattu</string>
+    <string name="battly_whats_new_desc">Uusia yksittäisiä esiintymiä, ladattavia maailmoja ja tärkeitä korjauksia Battly Workspaceen.</string>
+    <string name="battly_whats_new_instances_desc">Uudet Vanilla-, loader-, asiakas- ja modpack-instanssit pitävät maailmansa, modit, asetukset ja resurssipaketit erillisessä kansiossa.</string>
+    <string name="battly_whats_new_instances_title">Jokaiselle uudelle esiintymälle oma kansio</string>
+    <string name="battly_whats_new_recovery_desc">Uusi ilmentymien eristäminen, turvallisempi asetusten tallennus ja pitkän istunnon diagnostiikka vähentävät kokoonpanon nollauksia ja helpottavat ongelmien tunnistamista.</string>
+    <string name="battly_whats_new_recovery_title">Parempi vakaus</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Olemassa olevat tapaukset pysyvät siellä, missä ne ovat. Kansion eristäminen koskee vain esiintymiä, jotka on luotu tästä versiosta eteenpäin.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 on valmis</string>
+    <string name="battly_whats_new_worlds_desc">Selaa ja asenna Minecraft-maailmoja CurseForge:stä suoraan valitsemaasi ilmentymään.</string>
+    <string name="battly_whats_new_worlds_title">Lataa maailmoja Workspacesta</string>
 </resources>

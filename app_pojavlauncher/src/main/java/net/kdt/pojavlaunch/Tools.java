@@ -25,8 +25,6 @@ import android.content.res.Resources;
 import android.database.Cursor;
 import android.hardware.Sensor;
 import android.hardware.SensorManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
@@ -55,6 +53,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentActivity;
+import androidx.fragment.app.FragmentManager;
+import androidx.lifecycle.Lifecycle;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -74,6 +74,7 @@ import net.kdt.pojavlaunch.utils.DateUtils;
 import net.kdt.pojavlaunch.utils.DownloadUtils;
 import net.kdt.pojavlaunch.utils.FileUtils;
 import net.kdt.pojavlaunch.utils.GLInfoUtils;
+import net.kdt.pojavlaunch.utils.FragmentNavigationPolicy;
 import net.kdt.pojavlaunch.utils.JREUtils;
 import net.kdt.pojavlaunch.utils.JSONUtils;
 import net.kdt.pojavlaunch.utils.LegacyShaderpackCompat;
@@ -81,6 +82,7 @@ import net.kdt.pojavlaunch.utils.MCOptionUtils;
 import net.kdt.pojavlaunch.utils.MinecraftCompatibilityEngine;
 import net.kdt.pojavlaunch.utils.OfflineSkinManager;
 import net.kdt.pojavlaunch.utils.PromotedServersManager;
+import net.kdt.pojavlaunch.utils.BattlyOfflineMode;
 import net.kdt.pojavlaunch.utils.OldVersionsUtils;
 import net.kdt.pojavlaunch.utils.BattlyNotify;
 import net.kdt.pojavlaunch.utils.RendererPluginRegistry;
@@ -502,7 +504,11 @@ public final class Tools {
 
         // Pre-process specific files
         disableSplash(gamedir);
-        clearMinecraftSkinCache();
+        if (!BattlyOfflineMode.isOffline(activity)) {
+            clearMinecraftSkinCache();
+        } else {
+            Logger.appendToLog("Info: Offline mode preserved Minecraft skin caches");
+        }
         applyLowEndMinecraftOptions(gamedir);
         PromotedServersManager.syncBeforeLaunch(activity.getApplicationContext(), gamedir);
         LegacyShaderpackCompat.applyIfNeeded(gamedir, versionInfo);
@@ -762,8 +768,9 @@ public final class Tools {
             String relativePath = stripLauncherProfilePrefix(minecraftProfile.gameDir);
             if(relativePath != null)
                 return new File(Tools.DIR_GAME_HOME, relativePath);
-            else
-                return new File(Tools.DIR_GAME_HOME,minecraftProfile.gameDir);
+            File configuredPath = new File(minecraftProfile.gameDir);
+            if (configuredPath.isAbsolute()) return configuredPath;
+            return new File(Tools.DIR_GAME_HOME, minecraftProfile.gameDir);
         }
         return new File(Tools.DIR_GAME_NEW);
     }
@@ -1065,32 +1072,17 @@ public final class Tools {
         }
         try {
             MCOptionUtils.load(gameDir.getAbsolutePath());
-            capIntegerOption("renderDistance", 6);
-            capIntegerOption("renderDistanceChunks", 6);
+            setIfMissing("renderDistance", "6");
+            setIfMissing("renderDistanceChunks", "6");
             setIfMissing("mipmapLevels", "0");
             setIfMissing("particles", "1");
             setIfMissing("clouds", "false");
             setIfMissing("entityShadows", "false");
-            capIntegerOption("maxFps", 60);
+            setIfMissing("maxFps", "60");
             MCOptionUtils.save();
             Logger.appendToLog("Info: Applied low-end Minecraft option defaults");
         } catch (Throwable throwable) {
             Log.w(APP_NAME, "Could not apply low-end Minecraft options", throwable);
-        }
-    }
-
-    private static void capIntegerOption(String key, int maxValue) {
-        String value = MCOptionUtils.get(key);
-        if (!isValidString(value)) {
-            MCOptionUtils.set(key, String.valueOf(maxValue));
-            return;
-        }
-        try {
-            int parsed = Integer.parseInt(value.trim());
-            if (parsed > maxValue) {
-                MCOptionUtils.set(key, String.valueOf(maxValue));
-            }
-        } catch (NumberFormatException ignored) {
         }
     }
 
@@ -2275,12 +2267,35 @@ public final class Tools {
     /** Swap the main fragment with another */
     public static void swapFragment(FragmentActivity fragmentActivity , Class<? extends Fragment> fragmentClass,
                                     @Nullable String fragmentTag, @Nullable Bundle bundle) {
-        // When people tab out, it might happen
-        //TODO handle custom animations
-        fragmentActivity.getSupportFragmentManager().beginTransaction()
-                .setReorderingAllowed(true)
-                .addToBackStack(fragmentClass.getName())
-                .replace(R.id.container_fragment, fragmentClass, bundle, fragmentTag).commit();
+        if (fragmentActivity == null || fragmentClass == null) return;
+        if (Looper.myLooper() != Looper.getMainLooper()) {
+            MAIN_HANDLER.post(() -> swapFragment(fragmentActivity, fragmentClass, fragmentTag, bundle));
+            return;
+        }
+
+        FragmentManager fragmentManager = fragmentActivity.getSupportFragmentManager();
+        boolean lifecycleStarted = fragmentActivity.getLifecycle().getCurrentState()
+                .isAtLeast(Lifecycle.State.STARTED);
+        if (!FragmentNavigationPolicy.canNavigate(
+                fragmentActivity.isFinishing(),
+                fragmentActivity.isDestroyed(),
+                fragmentManager.isStateSaved(),
+                lifecycleStarted)) {
+            Log.w("Tools", "Ignoring fragment navigation after Activity state was saved: "
+                    + fragmentClass.getName());
+            return;
+        }
+
+        try {
+            fragmentManager.beginTransaction()
+                    .setReorderingAllowed(true)
+                    .addToBackStack(fragmentClass.getName())
+                    .replace(R.id.container_fragment, fragmentClass, bundle, fragmentTag)
+                    .commit();
+        } catch (IllegalStateException exception) {
+            Log.w("Tools", "Fragment navigation raced with Activity teardown: "
+                    + fragmentClass.getName(), exception);
+        }
     }
 
     public static void backToMainMenu(FragmentActivity fragmentActivity) {
@@ -2554,7 +2569,6 @@ public final class Tools {
         String[] defaultRendererNames = resources.getStringArray(R.array.renderer);
         boolean deviceHasVulkan = checkVulkanSupport(context.getPackageManager());
         boolean deviceCompatibleMesa = SDK_INT >= Build.VERSION_CODES.Q;
-        boolean deviceHasOSMesaZinkBinary = hasNativeLibrary(context, "libOSMesa.so");
         boolean deviceHasKopperShim = hasNativeLibrary(context, "libglxshim.so");
         boolean deviceHasMesaEgl = hasNativeLibrary(context, "libEGL_mesa.so");
         boolean deviceHasZinkDri = hasNativeLibrary(context, "libzink_dri.so");
@@ -2564,7 +2578,7 @@ public final class Tools {
         boolean appHasGl4es = hasNativeLibrary(context, "libgl4es_114.so");
         boolean appHasMobileGlues = hasNativeLibrary(context, "libmobileglues.so");
         boolean deviceHasOpenGLES3 = JREUtils.getDetectedVersion() >= 3;
-        // LTW is an optional proprietary dependency
+        // LTW is bundled from the public LGPL source module.
         boolean appHasLtw = hasNativeLibrary(context, "libltw.so");
         List<String> rendererIds = new ArrayList<>(defaultRenderers.length);
         List<String> rendererNames = new ArrayList<>(defaultRendererNames.length);
@@ -2572,7 +2586,12 @@ public final class Tools {
             String rendererId = defaultRenderers[i];
             if(rendererId.startsWith("opengles") && !appHasGl4es && !rendererId.contains("mobileglues") && !rendererId.contains("ltw")) continue;
             if(rendererId.contains("vulkan") && !deviceHasVulkan) continue;
-            if("vulkan_zink".equals(rendererId) && (!deviceCompatibleMesa || !deviceHasOSMesaZinkBinary)) continue;
+            // vulkan_zink is retained as a profile compatibility alias. New builds route it
+            // through Kopper, so requiring the removed arm64 libOSMesa.so hides a renderer
+            // that is actually launchable.
+            if("vulkan_zink".equals(rendererId)
+                    && (!deviceHasVulkan || !deviceCompatibleMesa || !deviceHasMesaEgl
+                    || !deviceHasKopperShim || !deviceHasZinkDri)) continue;
             if("opengles3_desktopgl_zink_kopper".equals(rendererId)
                     && (!deviceHasVulkan || !deviceCompatibleMesa || !deviceHasMesaEgl
                     || !deviceHasKopperShim || !deviceHasZinkDri)) continue;
@@ -2650,16 +2669,8 @@ public final class Tools {
         OBSOLETE_RESOURCES_PATH = DIR_GAME_NEW + "/resources";
     }
 
-    private static NetworkInfo getActiveNetworkInfo(Context ctx) {
-        ConnectivityManager connMgr = (ConnectivityManager) ctx.getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo networkInfo = connMgr.getActiveNetworkInfo();
-        return networkInfo; // This can return null when there is no wifi or data connected
-    }
-
     public static boolean isOnline(Context ctx) {
-        NetworkInfo info = getActiveNetworkInfo(ctx);
-        if(info == null) return false;
-        return (info.isConnected());
+        return ctx != null && BattlyOfflineMode.canUseNetwork(ctx);
     }
 
     public static boolean isDemoProfile(Context ctx){

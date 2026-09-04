@@ -100,6 +100,20 @@
         <item>3</item>
         <item>4</item>
     </string-array>
+    <string-array name="graphics_profile_names">
+        <item>@string/graphics_profile_auto</item>
+        <item>@string/graphics_profile_performance</item>
+        <item>@string/graphics_profile_balanced</item>
+        <item>@string/graphics_profile_quality</item>
+        <item>@string/graphics_profile_custom</item>
+    </string-array>
+    <string-array name="graphics_profile_values" translatable="false">
+        <item>auto</item>
+        <item>performance</item>
+        <item>balanced</item>
+        <item>quality</item>
+        <item>custom</item>
+    </string-array>
     <string-array name="mg_renderer_names_multidraw_order">
         <item>@string/global_default</item>
         <item>@string/mg_renderer_md_native_first</item>

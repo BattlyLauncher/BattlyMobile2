@@ -156,9 +156,8 @@ void load_vulkan() {
 }
 
 int pojavInitOpenGL() {
-    // Only affects GL4ES as of now
     const char *forceVsync = getenv("FORCE_VSYNC");
-    if (strcmp(forceVsync, "true") == 0)
+    if (forceVsync != NULL && strcasecmp(forceVsync, "true") == 0)
         pojav_environ->force_vsync = true;
 
     // NOTE: Override for now.

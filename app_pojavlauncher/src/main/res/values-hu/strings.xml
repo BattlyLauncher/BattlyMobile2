@@ -550,7 +550,7 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="crash_no_findings">A legújabb naplókban nem található ismert összeomlási minta.</string>
     <string name="crash_recovery_applied">A helyreállítási művelet befejeződött</string>
     <string name="crash_recovery_manual">Ez a probléma manuális módosítást igényel. Nyissa meg a naplót a részletekért.</string>
-    <string name="credits_version">2.2.1-es verzió</string>
+    <string name="credits_version">2.2.3-es verzió</string>
     <string name="ctrl_like_btn">tetszik</string>
     <string name="ctrl_liked_added">Hozzáadva a kedvelt vezérlőkhöz.</string>
     <string name="ctrl_liked_btn">Tetszett</string>
@@ -611,8 +611,8 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="java_runtime_download_progress">A Java %1$d (%2$.1f MB / %3$.1f MB) letöltése</string>
     <string name="java_runtime_download_title">A Java 8 telepítése</string>
     <string name="java_runtime_download_waiting">A Java 8 letöltésének előkészítése...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_status_battly">Battly fiók</string>
     <string name="launcher_status_battly_plus">Battly+ fiók</string>
     <string name="library_analyze_mods">Elemezze</string>
@@ -850,7 +850,7 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="battlyworlds_friend_request_message">Elküld egy baráti kérést a %1$s címre?</string>
     <string name="battlyworlds_friend_request_sent">Baráti felkérés elküldve a %1$s címre.</string>
     <string name="battlyworlds_friend_request_title">Baráti felkérés küldése</string>
-    <string name="battlyworlds_guest_connected_simple">Nyisd meg a többjátékos módot, és csatlakozz a Terracotta Lobbyhoz. Megjelenhet kínai szöveggel.</string>
+    <string name="battlyworlds_guest_connected_simple">Nyisd meg a többjátékos módot, és csatlakozz a BattlyWorlds Lobbyhoz.</string>
     <string name="battlyworlds_guest_hint_simple">Ha a szerver nem jelenik meg, várjon néhány másodpercet, és frissítse a Multiplayer funkciót.</string>
     <string name="battlyworlds_guest_url">Tartalék cím: %1$s</string>
     <string name="battlyworlds_host">Házigazda</string>
@@ -875,7 +875,7 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="battlyworlds_join">Csatlakozz</string>
     <string name="battlyworlds_join_hint">Meghívó kód</string>
     <string name="battlyworlds_join_status_preparing">A privát LAN kapcsolat előkészítése...</string>
-    <string name="battlyworlds_join_status_ready">Csatlakozva. Többjátékos módban nyissa meg a Terracotta Lobby nevű LAN szervert. Megjelenhet kínai szöveggel.</string>
+    <string name="battlyworlds_join_status_ready">Csatlakozva. Többjátékos módban csatlakozz a BattlyWorlds Lobby LAN szerverhez.</string>
     <string name="battlyworlds_join_status_title">Csatlakozás a BattlyWorlds-hez</string>
     <string name="battlyworlds_lan_prompt_action">Meghívás</string>
     <string name="battlyworlds_lan_prompt_message">A BattlyWorlds használatával hívhat meg barátait a hálózat megosztása nélkül.</string>
@@ -947,7 +947,7 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="credits_based_on">A PojavLauncher és a Boardwalk alapján</string>
     <string name="credits_game_engine">Játék motor</string>
     <string name="credits_inspiration">Inspiráció</string>
-    <string name="credits_license_text">A projektben szereplő GNU GPLv3 és harmadik féltől származó összetevők. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j és még sok más az eredeti licenc alatt.</string>
+    <string name="credits_license_text">GNU GPLv3 és harmadik féltől származó összetevők szerepelnek a projektben. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j és még sok más az eredeti licenc alatt.</string>
     <string name="credits_license_title">Licenc</string>
     <string name="credits_pojav_founder">A PojavLauncher alapítója</string>
     <string name="credits_primary_development">Fő fejlesztés</string>
@@ -1082,7 +1082,7 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="installer_internal_fallback">Nem támogatott telepítő, amely megnyitja a régi Java felhasználói felületet</string>
     <string name="installer_internal_running">Telepítő elemzése…</string>
     <string name="installer_internal_success">A %1$s közvetlenül a Battly belsejébe telepítve</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Indító a PojavLauncher és a Boardwalk alapján.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Jóváírások&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -1091,7 +1091,7 @@ mcl_indítás_letöltés_folyamatban"</string>
         • Sétány&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Licenc és harmadik felek&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 és harmadik féltől származó összetevők a projektben.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j és egyebek az eredeti licenc alatt.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j és egyebek az eredeti licenc alatt.&lt;br/&gt;&lt;br/&gt;
         Ez az alkalmazás nem áll kapcsolatban a Minecraft, a Mojang vagy a Microsoft termékekkel.</string>
     <string name="launcher_download">Letöltés</string>
     <string name="launcher_download_modpack">Modpack importálása</string>
@@ -1218,7 +1218,7 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="onboarding_welcome_desc">Játsszon, telepítsen verziókat, kezelje a profilokat és testreszabja a Minecraft-t telefonjáról.</string>
     <string name="onboarding_welcome_title">Üdvözli a Battly Mobile</string>
     <string name="preference_disable_autojre_select">Az automatikus JRE kiválasztás letiltása</string>
-    <string name="preference_download_threads_description">Szabályozza, hogy a Battly egyszerre hány játékfájlt tölt le. A magasabb értékek gyorsabbak a jó hálózatokon.</string>
+    <string name="preference_download_threads_description">A Battly alapértelmezés szerint 64 egyidejű letöltést használ. Növelje akár 100-ra gyors kapcsolatok esetén.</string>
     <string name="preference_download_threads_title">Egyidejű letöltések</string>
     <string name="preference_renderer_auto">Automatikus</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1408,21 +1408,6 @@ mcl_indítás_letöltés_folyamatban"</string>
 
     <string name="battly_new_badge">Új</string>
 
-    <string name="battly_whats_new_transition_desc">Profiljai sértetlenek és készen állnak a játékra.</string>
-    <string name="battly_whats_new_action_start">Fedezze fel a 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">A Android vissza gomb bezárása helyett most visszatér a Minecraft értékre, és a keresés elveti a billentyűzetet, ha jóváhagyja őket.</string>
-    <string name="battly_whats_new_compatibility_title">Navigáció, amely távol marad</string>
-    <string name="battly_whats_new_controllers_desc">A Battly Worlds beállításaiból konfigurálhatja az automatikus csatlakozást, a mikrofon és a hang állapotát, a hangszóró átfedésének láthatóságát, az átlátszóságot és a pozíciót.</string>
-    <string name="battly_whats_new_controllers_title">Hangcsevegés az Ön irányítása alatt</string>
-    <string name="battly_whats_new_desc">Fókuszált frissítés a Battly Worlds, a közösségi, az audiocsevegés és a mindennapi navigáció számára.</string>
-    <string name="battly_whats_new_instances_desc">Válassza ki a példányt, mielőtt áttekinti annak telepített modjait, erőforrás-csomagjait, árnyékolóit és adatcsomagjait. Az egyes könyvtárak most egyértelműen elkülönülnek egymástól.</string>
-    <string name="battly_whats_new_instances_title">Példány szerint rendezett tartalom</string>
-    <string name="battly_whats_new_recovery_desc">A Battly elmagyarázza, miért van szükség a mikrofon-hozzáférésre, mielőtt megkérdezné, mentve tartja a hangbeállításokat, és javítja az online, Battly világokat és a többjátékos jelenlétet.</string>
-    <string name="battly_whats_new_recovery_title">Világosabb engedélyek és jelenlét</string>
-    <string name="battly_whats_new_title">Battly Mobil 2.2.1</string>
-    <string name="battly_whats_new_transition_title">A Battly 2.2.1 készen áll</string>
-    <string name="battly_whats_new_worlds_desc">Hívja meg barátait közvetlenül a Battly Social oldalról, fogadja megbízhatóan a szobatevékenységeket, és tartsa naprakészen állapotát, miközben a Battly Worldsben vagy egy többjátékos szerveren játszik.</string>
-    <string name="battly_whats_new_worlds_title">Battly Világok, jobb kapcsolat</string>
     <string name="customctrl_voice_microphone_add">Hangmikrofon hozzáadása gomb</string>
     <string name="customctrl_voice_audio_add">Hang hang hozzáadása gomb</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1496,4 +1481,30 @@ mcl_indítás_letöltés_folyamatban"</string>
     <string name="battly_social_playing_worlds">Játssz a Battly Worldsben · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Hangcsevegési kapcsolódási hangok</string>
     <string name="battlyworlds_voice_sounds_summary">Hang lejátszása, amikor te vagy egy másik játékos csatlakozik a hangcsevegéshez vagy kilép belőle.</string>
+<string name="download_action_browse_worlds_title">Böngésszen a világok között</string>
+    <string name="download_action_browse_worlds_subtitle">Töltsön le játszható világokat a választott példányba.</string>
+    <string name="search_world_title">Böngésszen a világok között</string>
+    <string name="search_world_subtitle">Fedezze fel és telepítse a CurseForge világokat a választott példányba.</string>
+    <string name="hint_search_world">Világok keresése</string>
+    <string name="search_world_no_result">Nem található világ</string>
+    <string name="search_world_error">Nem sikerült világokat találni</string>
+    <string name="search_world_download_error">Nem sikerült letölteni a világ metaadatait</string>
+    <string name="world_install_button">Telepítse a világot</string>
+    <string name="world_install_success">%1$s ebbe a példányba telepítve</string>
+
+    <string name="battly_whats_new_action_start">Fedezze fel a 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">A Modpack megnyitása művelet most kiválasztja az új példányt, és megfelelően bezár minden telepítési és tartalomablakot.</string>
+    <string name="battly_whats_new_compatibility_title">Nyissa meg közvetlenül a telepített modpackokat</string>
+    <string name="battly_whats_new_controllers_desc">A Battly kliens telepítő mostantól megfelelő görgethető listát használ, beleértve a kompakt képernyőket is.</string>
+    <string name="battly_whats_new_controllers_title">Az ügyféllista görgetése javítva</string>
+    <string name="battly_whats_new_desc">Új elszigetelt példányok, letölthető világok és fontos javítások a Battly Workspace számára.</string>
+    <string name="battly_whats_new_instances_desc">Az új Vanilla, betöltő, kliens és modpack példányok világaikat, modjaikat, beállításaikat és erőforráscsomagjaikat egy független mappában tárolják.</string>
+    <string name="battly_whats_new_instances_title">Minden új példányhoz külön mappa</string>
+    <string name="battly_whats_new_recovery_desc">Az új példányok elkülönítése, a beállítások biztonságosabb tárolása és a hosszú munkamenet-diagnosztika csökkenti a konfigurációs alaphelyzetbe állítások számát, és megkönnyíti a problémák azonosítását.</string>
+    <string name="battly_whats_new_recovery_title">Javított stabilitás</string>
+    <string name="battly_whats_new_title">Battly Mobil 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">A meglévő példányok ott maradnak, ahol vannak. A mappa elkülönítése csak az ettől a verziótól kezdve létrehozott példányokra vonatkozik.</string>
+    <string name="battly_whats_new_transition_title">A Battly 2.2.3 készen áll</string>
+    <string name="battly_whats_new_worlds_desc">Böngésszen és telepítse a Minecraft világokat a CurseForge-ből közvetlenül a választott példányba.</string>
+    <string name="battly_whats_new_worlds_title">Töltse le a világokat a Workspace-ről</string>
 </resources>

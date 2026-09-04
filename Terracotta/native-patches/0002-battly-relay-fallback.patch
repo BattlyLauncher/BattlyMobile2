@@ -1,0 +1,35 @@
+diff --git a/Cargo.toml b/Cargo.toml
+index 291907a..33d5724 100644
+--- a/Cargo.toml
++++ b/Cargo.toml
+@@ -50,6 +50,6 @@ native-dialog = "0.9.0"
+ 
+ [target.'cfg(target_os = "android")'.dependencies]
+-easytier = { git = "https://github.com/burningtnt/EasyTier.git", branch = "main"}
++easytier = { git = "https://github.com/burningtnt/EasyTier.git", rev = "66c82d0a99ae6733463e37eaa3b8c91f584c4689" }
+ jni = { version = "0.21.1", features = ["invocation"] }
+ # These libraries are the necessities to interact with EasyTier. DO NOT upgrade their version.
+ uuid = "1"
+diff --git a/src/controller/rooms/scaffolding/room.rs b/src/controller/rooms/scaffolding/room.rs
+index 6056e58..651725c 100644
+--- a/src/controller/rooms/scaffolding/room.rs
++++ b/src/controller/rooms/scaffolding/room.rs
+@@ -412,7 +412,7 @@ pub fn start_guest(room: Room, player: Option<String>, capture: AppStateCapture,
+ }
+ 
+ fn compute_arguments(room: &Room, public_servers: PublicServers) -> Vec<Argument> {
+-    static DEFAULT_ARGUMENTS: [Argument; 8] = [
++    static DEFAULT_ARGUMENTS: [Argument; 7] = [
+         Argument::NoTun,
+         Argument::Compression(Cow::Borrowed("zstd")),
+         Argument::MultiThread,
+@@ -427,8 +427,7 @@ fn compute_arguments(room: &Room, public_servers: PublicServers) -> Vec<Argument
+         Argument::Listener {
+             address: SocketAddrV4::new(Ipv4Addr::UNSPECIFIED, 0).into(),
+             proto: Proto::TCP,
+-        },
+-        Argument::P2POnly
++        }
+     ];
+ 
+     let mut args: Vec<Argument> = Vec::with_capacity(32);

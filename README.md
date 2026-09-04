@@ -152,6 +152,6 @@ External imports should use Android document pickers (`ACTION_OPEN_DOCUMENT` or 
 
 ## Credits
 
-Battly Mobile builds on work from PojavLauncher, Boardwalk, LWJGL, LWJGLX, GL4ES, MobileGlues, ANGLE, Mesa, OpenJDK, OpenAL-Soft, SDL and the wider open-source Android Minecraft launcher ecosystem.
+Battly Mobile builds on work from PojavLauncher, Boardwalk, LWJGL, LWJGLX, GL4ES, MobileGlues, LTW, ANGLE, Mesa, OpenJDK, OpenAL-Soft, SDL and the wider open-source Android Minecraft launcher ecosystem.
 
 See source headers and bundled license files for dependency-specific licensing.

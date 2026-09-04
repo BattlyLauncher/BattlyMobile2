@@ -220,7 +220,7 @@
     <string name="crash_no_findings">Һуңғы журналдарҙа билдәле авария ҡалыбы табылмаған.</string>
     <string name="crash_recovery_applied">Һауыҡтырыу акцияһы тамамланды</string>
     <string name="crash_recovery_manual">Был мәсьәләне ҡул менән үҙгәртергә кәрәк. Ентекле мәғлүмәт өсөн журналды асығыҙ.</string>
-    <string name="credits_version">2.2.1 версияһы</string>
+    <string name="credits_version">2.2.3 версияһы</string>
     <string name="ctrl_like_btn">Оҡшай</string>
     <string name="ctrl_liked_added">Оҡшаған контроль элементтарға өҫтәлде.</string>
     <string name="ctrl_liked_btn">Оҡшаны</string>
@@ -281,8 +281,8 @@
     <string name="java_runtime_download_progress">Скачивание Java %1$d (%2$.1f МБ / %3$.1f МБ)</string>
     <string name="java_runtime_download_title">Установка Java 8</string>
     <string name="java_runtime_download_waiting">әҙерләү Java 8 скачать...</string>
-    <string name="launcher_credits_title">Battly Запуск 2.2.1</string>
-    <string name="launcher_mobile_badge">Мобиль 2.2.1</string>
+    <string name="launcher_credits_title">Battly2.2.3.</string>
+    <string name="launcher_mobile_badge">Мобиль 2.2.3</string>
     <string name="launcher_status_battly">Battly иҫәбенә</string>
     <string name="launcher_status_battly_plus">Battly+ иҫәп яҙмаһы</string>
     <string name="library_analyze_mods">Анализлау</string>
@@ -530,7 +530,7 @@
     <string name="battlyworlds_friend_request_message">Дуҫлыҡ һорауын ебәрергә %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Дуҫлыҡ һорауы %1$s адресына ебәрелгән.</string>
     <string name="battlyworlds_friend_request_title">Дуҫлыҡ үтенесен ебәрегеҙ</string>
-    <string name="battlyworlds_guest_connected_simple">Асыҡ Мультиплеер һәм ҡушыла Terracotta Лобби. Ул ҡытай тексы менән күренергә мөмкин.</string>
+    <string name="battlyworlds_guest_connected_simple">Асыҡ Мультиплеер һәм ҡушыла BattlyWorlds Лобби.</string>
     <string name="battlyworlds_guest_hint_simple">Әгәр сервер күренмәй, бер нисә секунд көтөп, яңыртыу Multiplayer.</string>
     <string name="battlyworlds_guest_url">Резерв адресы: %1$s</string>
     <string name="battlyworlds_host">Хужа</string>
@@ -555,7 +555,7 @@
     <string name="battlyworlds_join">Ҡатнашырға</string>
     <string name="battlyworlds_join_hint">Саҡырыу коды</string>
     <string name="battlyworlds_join_status_preparing">Шәхси LAN тоташыуын әҙерләү...</string>
-    <string name="battlyworlds_join_status_ready">Тоташтырылған. Күп уйынсыларҙа LAN серверын асыу, уның исеме Terracotta Лобби. Ул ҡытай тексы менән күренергә мөмкин.</string>
+    <string name="battlyworlds_join_status_ready">Тоташтырылған. Күп уйынсыларҙа BattlyWorlds Лобби LAN серверына ҡушыла.</string>
     <string name="battlyworlds_join_status_title">Ҡушылыу BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Саҡырырға</string>
     <string name="battlyworlds_lan_prompt_message">BattlyWorlds ҡулланыу өсөн дуҫтарҙы саҡырырға, һеҙҙең селтәр менән бүлешмәйенсә.</string>
@@ -629,7 +629,7 @@
     <string name="credits_based_on">ПоджавЛанчер һәм Бордволк нигеҙендә</string>
     <string name="credits_game_engine">Уйын двигателе</string>
     <string name="credits_inspiration">Илһам</string>
-    <string name="credits_license_text">GNU GPLv3 һәм проектҡа индерелгән өсөнсө яҡ компоненттары. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j һәм башҡалар үҙҙәренең тәүге лицензиялары буйынса.</string>
+    <string name="credits_license_text">GNU GPLv3 һәм проектҡа индерелгән өсөнсө яҡ компоненттары. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j һәм башҡалар үҙҙәренең тәүге лицензиялары буйынса.</string>
     <string name="credits_license_title">Лицензия</string>
     <string name="credits_pojav_founder">ПожавЛанчерға нигеҙ һалыусы</string>
     <string name="credits_primary_development">Төп үҫеш .</string>
@@ -765,16 +765,16 @@
     <string name="installer_internal_fallback">Ярҙам итмәгән ҡуйыусы, иҫке Java UI аса</string>
     <string name="installer_internal_running">Анализлау ҡуйыусы...</string>
     <string name="installer_internal_success">%1$s туранан-тура Battly эсендә ҡуйылған</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Запуск 2.0.3
+    <string name="launcher_credits_html">&lt;b&gt;Battly Запуск 2.2.3
         ПоджавЛанчер һәм Бордволк нигеҙендә стартер.&lt;br/&gt;&lt;br/&gt;
         Кредиттар&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
-        • ПожавЛанчеркомандаһы&lt;br/&gt;
+        • ПоджавЛанчеркомандаһы&lt;br/&gt;
         • Тран Хан Дуй&lt;br/&gt;
         • Таҡта тротуар&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Лицензия һәм өсөнсө яҡтар&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 һәм проектҡа индерелгән өсөнсө яҡ компоненттары.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j һәм башҡалар үҙҙәренең тәүге лицензиялары буйынса.
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j һәм башҡалар үҙҙәренең тәүге лицензиялары буйынса.&lt;br/&gt;&lt;br/&gt;
         Был ҡушымта менән бәйле түгел, Minecraft, Mojang йәки Microsoft.</string>
     <string name="launcher_download">Йөктәтергә</string>
     <string name="launcher_download_modpack">Модпакты импортлау</string>
@@ -835,7 +835,7 @@
     <string name="log_viewer_latest_log">Һуңғы журнал</string>
     <string name="log_viewer_loading">Журналды тейәү...</string>
     <string name="log_viewer_log_file">Журнал файлы</string>
-    <string name="log_viewer_meta">%1$s\%2$d КБ · %3$s</string>
+    <string name="log_viewer_meta">%1$s\n%2$d КБ · %3$s</string>
     <string name="log_viewer_no_selection">Журнал һайланмаған.</string>
     <string name="log_viewer_read_failed">Журналды уҡыу мөмкин булманы: %1$s</string>
     <string name="log_viewer_refresh">Яңыртыу</string>
@@ -906,7 +906,7 @@
     <string name="onboarding_welcome_title">Рәхим итегеҙ Battly Мобиль</string>
     <string name="preference_category_experimental_settings">Эксперименталь параметрҙар</string>
     <string name="preference_disable_autojre_select">Автоматик JRE һайлауҙы өҙөү</string>
-    <string name="preference_download_threads_description">Контроль итә, нисә уйын файлдарын Battly бер үк ваҡытта скачать. Яҡшы селтәрҙәрҙә юғары ҡиммәттәр тиҙерәк була.</string>
+    <string name="preference_download_threads_description">Battly 64 бер үк ваҡытта скачивание ҡуллана ғәҙәттәгесә. Тиҙ тоташыуҙарҙа уны 100-гә тиклем арттырығыҙ.</string>
     <string name="preference_download_threads_title">Бер үк ваҡытта скачиваниелар</string>
     <string name="preference_renderer_auto">Автоматик</string>
     <string name="preference_renderer_title">Рендерер</string>
@@ -1055,7 +1055,7 @@
     <string name="battlyworlds_connection_status_summary">Төйөн: %1$s\Terracotta: %2$s\%3$s</string>
     <string name="battlyworlds_connection_status_title">Тоташыу торошо</string>
     <string name="battlyworlds_connection_test_failed">%1$s\n%2$s еткерә алманы</string>
-    <string name="battlyworlds_connection_test_ok">Төйөн: %1$s\nЛатентность: %2$d мс\%3$s</string>
+    <string name="battlyworlds_connection_test_ok">Төйөн: %1$s\nЛатентность: %2$d мс\n%3$s</string>
     <string name="battlyworlds_connection_testing">Һынау Battly Донъялар тоташыуын...</string>
     <string name="battlyworlds_default_duration_summary">Һеҙҙең Battly иҫәбенә сикләнгән</string>
     <string name="battlyworlds_default_duration_title">Ғәҙәттәге оҙайлылыҡ</string>
@@ -1121,21 +1121,6 @@
 
     <string name="battly_new_badge">Яңы</string>
 
-    <string name="battly_whats_new_transition_desc">Һеҙҙең профилдәр бөтөн һәм уйнау өсөн әҙер.</string>
-    <string name="battly_whats_new_action_start">2.2.1 тикшерергә</string>
-    <string name="battly_whats_new_compatibility_desc">Android артҡа төймәһе хәҙер ҡайта Minecraft урынына уны ябыу, һәм эҙләүҙәр клавиатураны эштән бушатыу, ҡасан һеҙ уларҙы раҫлай.</string>
-    <string name="battly_whats_new_compatibility_title">Навигация, һеҙҙең юлдан ситтә ҡала</string>
-    <string name="battly_whats_new_controllers_desc">Автоматик ҡушылыуҙы конфигурациялау, микрофон һәм аудио дәүләт, динамик өҫтәү күренеш, асыҡлыҡ һәм позицияһынан Battly Worlds параметрҙары.</string>
-    <string name="battly_whats_new_controllers_title">Һеҙҙең контроль аҫтында тауыш чат</string>
-    <string name="battly_whats_new_desc">Battly өсөн йүнәлтелгән яңыртыу Донъялар, Социаль, тауыш чат һәм көндәлек навигация.</string>
-    <string name="battly_whats_new_instances_desc">Һайлау экземпляры тикшергәнсе, уның ҡуйылған модтар, ресурс пакеттары, шейдерҙар һәм мәғлүмәт пакеттары. Хәҙер һәр китапхана асыҡ айырым ҡала.</string>
-    <string name="battly_whats_new_instances_title">Йөкмәткеһе экземпляр буйынса ойошторола</string>
-    <string name="battly_whats_new_recovery_desc">Battly аңлата, ни өсөн микрофонға инеү кәрәк, һорау алдынан, тауыш өҫтөнлөктәрен һаҡлай һәм онлайн яҡшырта, Battly Донъялар һәм мультиплеер булыу.</string>
-    <string name="battly_whats_new_recovery_title">Асыҡ рөхсәттәр һәм булыу</string>
-    <string name="battly_whats_new_title">Battly Мобиль 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly2.2.1 әҙер</string>
-    <string name="battly_whats_new_worlds_desc">Дуҫтарҙы туранан-тура саҡырырға Battly Социаль, бүлмә эшмәкәрлеген ышаныслы ала һәм һеҙҙең статусты яңыртыу, ә уйнағанда Battly донъялар йәки күп уйынсылар серверында.</string>
-    <string name="battly_whats_new_worlds_title">Battly Донъялар, яҡшыраҡ тоташтырылған</string>
     <string name="customctrl_voice_microphone_add">Тауышлы микрофон төймәһен өҫтәү</string>
     <string name="customctrl_voice_audio_add">Тауыш аудио төймәһен өҫтәү</string>
     <string name="customctrl_voice_microphone_on">МИК</string>
@@ -1209,4 +1194,30 @@
     <string name="battly_social_playing_worlds">2012 йылда уйнай.BattlyДонъялар ·Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Тауышлы чатҡа тоташыу тауыштары</string>
     <string name="battlyworlds_voice_sounds_summary">Һеҙ йәки башҡа уйынсы тауышлы чатҡа ҡушылғанда йә сыҡҡанда тауыш уйнат.</string>
+<string name="download_action_browse_worlds_title">Донъяларҙы ҡарау</string>
+    <string name="download_action_browse_worlds_subtitle">Скачать уйнау өсөн донъялар һеҙ һайлаған экземпляр.</string>
+    <string name="search_world_title">Донъяларҙы ҡарау</string>
+    <string name="search_world_subtitle">Асып һәм ҡуйырға CurseForge донъялар һеҙ һайлаған экземпляр.</string>
+    <string name="hint_search_world">Донъялар эҙләү .</string>
+    <string name="search_world_no_result">Донъялар табылмаған</string>
+    <string name="search_world_error">Донъяларҙы таба алманы</string>
+    <string name="search_world_download_error">Донъя метамағлүмәттәрен күсереп алыу мөмкин булманы</string>
+    <string name="world_install_button">Донъя ҡуйыу</string>
+    <string name="world_install_success">Был данаға %1$s ҡуйылған</string>
+
+    <string name="battly_whats_new_action_start">2.2.3 тикшерергә</string>
+    <string name="battly_whats_new_compatibility_desc">Open modpack ғәмәле хәҙер яңы экземплярҙы һайлай һәм һәр ҡуйыу һәм йөкмәтке тәҙрәһен дөрөҫ яба.</string>
+    <string name="battly_whats_new_compatibility_title">Ҡуйылған модпактарҙы туранан-тура асыу</string>
+    <string name="battly_whats_new_controllers_desc">Battly клиент ҡуйыусы хәҙер дөрөҫ прокручиваемый исемлек ҡуллана, шул иҫәптән компакт экрандарҙа.</string>
+    <string name="battly_whats_new_controllers_title">Клиент исемлеге прокруткаһы нығытылған</string>
+    <string name="battly_whats_new_desc">Яңы айырымланған осраҡтар, скачиваемый донъялар һәм мөһим төҙәтеүҙәр өсөн Battly Эш майҙаны.</string>
+    <string name="battly_whats_new_instances_desc">Яңы Vanilla, загрузчик, клиент һәм modpack экземплярҙары үҙ донъяларын, модтарҙы, параметрҙарҙы һәм ресурс пакеттарын бойондороҡһоҙ папкала һаҡлай.</string>
+    <string name="battly_whats_new_instances_title">Һәр яңы экземпляр өсөн айырым папка</string>
+    <string name="battly_whats_new_recovery_desc">Яңы экземпляр изоляцияһы, хәүефһеҙерәк параметрҙарҙы һаҡлау һәм оҙайлы сеанс диагностикаһы конфигурацияны ҡайтанан тергеҙеүҙе кәметә һәм проблемаларҙы асыҡлауҙы еңеләйтә.</string>
+    <string name="battly_whats_new_recovery_title">Яҡшыртылған тотороҡлолоҡ</string>
+    <string name="battly_whats_new_title">Battly Мобиль 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Булған инстанциялар үҙҙәре булған урында ҡала. Папкаларҙы айырыу был версиянан башлап булдырылған экземплярҙарға ғына ҡағыла.</string>
+    <string name="battly_whats_new_transition_title">Battly2.2.3 әҙер</string>
+    <string name="battly_whats_new_worlds_desc">Ҡарау һәм ҡуйыу Minecraft донъяларҙан CurseForge туранан-тура һеҙ һайлаған экземплярға.</string>
+    <string name="battly_whats_new_worlds_title">Эш урынынан донъяларҙы күсерергә</string>
 </resources>

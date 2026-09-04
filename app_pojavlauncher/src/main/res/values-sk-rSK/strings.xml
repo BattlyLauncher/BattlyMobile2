@@ -492,7 +492,7 @@
     <string name="battlyworlds_friend_request_message">Poslať žiadosť o priateľstvo %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Žiadosť o priateľstvo bola odoslaná na adresu %1$s.</string>
     <string name="battlyworlds_friend_request_title">Odoslať žiadosť o priateľstvo</string>
-    <string name="battlyworlds_guest_connected_simple">Otvorte multiplayer a pripojte sa k Terracotta Lobby. Môže sa zobraziť s čínskym textom.</string>
+    <string name="battlyworlds_guest_connected_simple">Otvorte multiplayer a pripojte sa k BattlyWorlds Lobby.</string>
     <string name="battlyworlds_guest_hint_simple">Ak sa server nezobrazí, počkajte niekoľko sekúnd a obnovte multiplayer.</string>
     <string name="battlyworlds_guest_url">Záložná adresa: %1$s</string>
     <string name="battlyworlds_host">Hostiteľ</string>
@@ -518,7 +518,7 @@
     <string name="battlyworlds_join">Pripojte sa</string>
     <string name="battlyworlds_join_hint">Pozývací kód</string>
     <string name="battlyworlds_join_status_preparing">Pripravuje sa súkromné pripojenie LAN...</string>
-    <string name="battlyworlds_join_status_ready">Pripojené. V hre pre viacerých hráčov otvorte server LAN s názvom Terracotta Lobby. Môže sa zobraziť s čínskym textom.</string>
+    <string name="battlyworlds_join_status_ready">Pripojené. V hre pre viacerých hráčov sa pripojte k serveru BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">Pripájam sa k BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Pozvať</string>
     <string name="battlyworlds_lan_prompt_message">Použite BattlyWorlds na pozvanie priateľov bez zdieľania vašej siete.</string>
@@ -612,13 +612,13 @@
     <string name="credits_based_on">Na základe PojavLauncher a Boardwalk</string>
     <string name="credits_game_engine">Herný engine</string>
     <string name="credits_inspiration">Inšpirácia</string>
-    <string name="credits_license_text">GNU GPLv3 a komponenty tretích strán zahrnuté v projekte. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j a ďalšie pod ich pôvodnými licenciami.</string>
+    <string name="credits_license_text">GNU GPLv3 a komponenty tretích strán zahrnuté v projekte. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j a ďalšie pod ich pôvodnými licenciami.</string>
     <string name="credits_license_title">Licencia</string>
     <string name="credits_pojav_founder">Zakladateľ PojavLauncher</string>
     <string name="credits_primary_development">Hlavný vývoj</string>
     <string name="credits_section_title">Kredity</string>
     <string name="credits_unaffiliated">Táto aplikácia nie je pridružená k Minecraft, Mojang alebo Microsoft.</string>
-    <string name="credits_version">Verzia 2.2.1</string>
+    <string name="credits_version">Verzia 2.2.3</string>
     <string name="ctrl_applied_success">Kontrola „%1$s“ bola úspešne použitá.</string>
     <string name="ctrl_apply_btn">Použite kontrolu</string>
     <string name="ctrl_apply_msg">Stiahnuť a použiť „%1$s“ ako rozloženie ovládacích prvkov?</string>
@@ -813,7 +813,7 @@
     <string name="java_runtime_download_progress">Sťahovanie Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Inštalácia Java 8</string>
     <string name="java_runtime_download_waiting">Pripravuje sa stiahnutie Java 8...</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Spúšťač Battly 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher založený na PojavLauncher a Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Kredity&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -822,13 +822,13 @@
         • promenáda&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Licencia a tretie strany&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 a komponenty tretích strán zahrnuté v projekte.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j a ďalšie pod ich pôvodnými licenciami.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j a ďalšie pod ich pôvodnými licenciami.&lt;br/&gt;&lt;br/&gt;
         Táto aplikácia nie je pridružená k Minecraft, Mojang alebo Microsoft.</string>
-    <string name="launcher_credits_title">Spúšťač Battly 2.2.1</string>
+    <string name="launcher_credits_title">Spúšťač Battly 2.2.3</string>
     <string name="launcher_download">Stiahnuť</string>
     <string name="launcher_download_modpack">Importujte modpack</string>
     <string name="launcher_execute">Hrať</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_nav_back">Choď späť</string>
     <string name="launcher_nav_home">Vráťte sa domov</string>
     <string name="launcher_nav_workspace">Pracovný priestor Battly</string>
@@ -979,7 +979,7 @@
     <string name="preference_disable_autojre_select">Zakázať automatický výber JRE</string>
     <string name="preference_download_threads_auto_description">Battly prispôsobuje súčasné sťahovanie CPU, pamäti a typu siete. Ak chcete použiť manuálnu hodnotu, vypnite ju.</string>
     <string name="preference_download_threads_auto_title">Paralelnosť automatického sťahovania</string>
-    <string name="preference_download_threads_description">Ovláda, koľko herných súborov Battly stiahne súčasne. Vyššie hodnoty sú rýchlejšie na dobrých sieťach.</string>
+    <string name="preference_download_threads_description">Battly štandardne používa 64 súčasných stiahnutí. Zvýšte ho až na 100 pri rýchlych pripojeniach.</string>
     <string name="preference_download_threads_title">Simultánne sťahovanie</string>
     <string name="preference_renderer_auto">Automaticky</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1325,21 +1325,6 @@
 
     <string name="battly_new_badge">Nové</string>
 
-    <string name="battly_whats_new_transition_desc">Vaše profily sú nedotknuté a pripravené na hranie.</string>
-    <string name="battly_whats_new_action_start">Preskúmať 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Tlačidlo Späť Android sa teraz namiesto zatvorenia vráti na Minecraft a po potvrdení vyhľadávanie zruší klávesnicu.</string>
-    <string name="battly_whats_new_compatibility_title">Navigácia, ktorá vám neprekáža</string>
-    <string name="battly_whats_new_controllers_desc">Nakonfigurujte automatické spájanie, stav mikrofónu a zvuku, viditeľnosť prekrytia reproduktorov, priehľadnosť a polohu z nastavení Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">Hlasový chat pod vašou kontrolou</string>
-    <string name="battly_whats_new_desc">Sústredená aktualizácia pre svety Battly, sociálne siete, hlasový chat a každodennú navigáciu.</string>
-    <string name="battly_whats_new_instances_desc">Pred kontrolou nainštalovaných modulov, zdrojových balíkov, shaderov a dátových balíkov si vyberte inštanciu. Každá knižnica teraz zostáva jasne oddelená.</string>
-    <string name="battly_whats_new_instances_title">Obsah usporiadaný podľa inštancií</string>
-    <string name="battly_whats_new_recovery_desc">Battly vysvetľuje, prečo je potrebný prístup k mikrofónu pred požiadaním, uchováva predvoľby hlasu uložené a zlepšuje online, svety Battly a prítomnosť pre viacerých hráčov.</string>
-    <string name="battly_whats_new_recovery_title">Jasnejšie povolenia a prítomnosť</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 je pripravený</string>
-    <string name="battly_whats_new_worlds_desc">Pozvite priateľov priamo zo sociálnych sietí Battly, získajte spoľahlivo aktivitu v miestnosti a počas hrania v Battly Worlds alebo na serveri pre viacerých hráčov udržujte svoj stav aktuálny.</string>
-    <string name="battly_whats_new_worlds_title">Svety Battly, lepšie prepojené</string>
     <string name="customctrl_voice_microphone_add">Tlačidlo Pridať hlasový mikrofón</string>
     <string name="customctrl_voice_audio_add">Tlačidlo Pridať hlasový zvuk</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1413,4 +1398,30 @@
     <string name="battly_social_playing_worlds">Hranie vo svetoch Battly · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Zvuky pripojenia hlasového chatu</string>
     <string name="battlyworlds_voice_sounds_summary">Prehrať zvuk, keď sa vy alebo iný hráč pripojíte k hlasovému chatu alebo ho opustíte.</string>
+<string name="download_action_browse_worlds_title">Prehľadávať svety</string>
+    <string name="download_action_browse_worlds_subtitle">Stiahnite si hrateľné svety do inštancie, ktorú si vyberiete.</string>
+    <string name="search_world_title">Prehľadávať svety</string>
+    <string name="search_world_subtitle">Objavte a nainštalujte svety CurseForge do inštancie, ktorú si vyberiete.</string>
+    <string name="hint_search_world">Hľadaj svety</string>
+    <string name="search_world_no_result">Nenašli sa žiadne svety</string>
+    <string name="search_world_error">Nepodarilo sa nájsť svety</string>
+    <string name="search_world_download_error">Nepodarilo sa stiahnuť metadáta sveta</string>
+    <string name="world_install_button">Inštalovať svet</string>
+    <string name="world_install_success">%1$s nainštalovaný do tejto inštancie</string>
+
+    <string name="battly_whats_new_action_start">Preskúmať 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Akcia Open modpack teraz vyberie novú inštanciu a správne zatvorí každé okno inštalácie a obsahu.</string>
+    <string name="battly_whats_new_compatibility_title">Otvorte nainštalované modpacky priamo</string>
+    <string name="battly_whats_new_controllers_desc">Inštalačný program klienta Battly teraz používa správny rolovací zoznam, a to aj na kompaktných obrazovkách.</string>
+    <string name="battly_whats_new_controllers_title">Opravené posúvanie zoznamu klientov</string>
+    <string name="battly_whats_new_desc">Nové izolované inštancie, svety na stiahnutie a dôležité opravy pre Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Nové inštancie Vanilla, loader, client a modpack uchovávajú svoje svety, mody, nastavenia a balíčky zdrojov v nezávislom priečinku.</string>
+    <string name="battly_whats_new_instances_title">Samostatný priečinok pre každú novú inštanciu</string>
+    <string name="battly_whats_new_recovery_desc">Nová izolácia inštancií, bezpečnejšie ukladanie nastavení a diagnostika dlhých relácií znižujú resetovanie konfigurácie a uľahčujú identifikáciu problémov.</string>
+    <string name="battly_whats_new_recovery_title">Vylepšená stabilita</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Existujúce prípady zostávajú tam, kde sú. Izolácia priečinkov sa vzťahuje iba na inštancie vytvorené od tejto verzie.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 je pripravený</string>
+    <string name="battly_whats_new_worlds_desc">Prehliadajte a nainštalujte svety Minecraft zo CurseForge priamo do inštancie, ktorú si vyberiete.</string>
+    <string name="battly_whats_new_worlds_title">Stiahnite si svety z Workspace</string>
 </resources>

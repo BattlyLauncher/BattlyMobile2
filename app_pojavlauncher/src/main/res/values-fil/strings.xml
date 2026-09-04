@@ -364,7 +364,7 @@
     <string name="battlyworlds_join">Sumali</string>
     <string name="battlyworlds_join_hint">Code ng imbitasyon</string>
     <string name="battlyworlds_join_status_preparing">Inihahanda ang pribadong LAN na koneksyon...</string>
-    <string name="battlyworlds_join_status_ready">Nakakonekta. Sa Multiplayer, buksan ang LAN server na may pangalang BattlyWorlds Lobby.</string>
+    <string name="battlyworlds_join_status_ready">Nakakonekta. Sa Multiplayer, sumali sa BattlyWorlds Lobby LAN server.</string>
     <string name="battlyworlds_join_status_title">Sumasali sa BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Mag-imbita</string>
     <string name="battlyworlds_lan_prompt_message">Gamitin ang BattlyWorlds upang mag-imbita ng mga kaibigan nang hindi ibinabahagi ang iyong network.</string>
@@ -460,13 +460,13 @@
     <string name="credits_based_on">Batay sa PojavLauncher at Boardwalk</string>
     <string name="credits_game_engine">Game engine</string>
     <string name="credits_inspiration">Inspirasyon</string>
-    <string name="credits_license_text">GNU GPLv3 at mga third-party na bahagi na kasama sa proyekto. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j at higit pa sa ilalim ng kanilang mga orihinal na lisensya.</string>
+    <string name="credits_license_text">GNU GPLv3 at mga third-party na bahagi na kasama sa proyekto. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j at higit pa sa ilalim ng kanilang mga orihinal na lisensya.</string>
     <string name="credits_license_title">Lisensya</string>
     <string name="credits_pojav_founder">Tagapagtatag ng PojavLauncher</string>
     <string name="credits_primary_development">Pangunahing pag-unlad</string>
     <string name="credits_section_title">Mga kredito</string>
     <string name="credits_unaffiliated">Ang app na ito ay hindi kaakibat sa Minecraft, Mojang o Microsoft.</string>
-    <string name="credits_version">Bersyon 2.2.1</string>
+    <string name="credits_version">Bersyon 2.2.3</string>
     <string name="ctrl_applied_success">Matagumpay na nailapat ang kontrol na "%1$s".</string>
     <string name="ctrl_apply_btn">Ilapat ang kontrol</string>
     <string name="ctrl_apply_msg">I-download at ilapat ang "%1$s" bilang iyong control layout?</string>
@@ -661,7 +661,7 @@
     <string name="java_runtime_download_progress">Dina-download ang Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Ini-install ang Java 8</string>
     <string name="java_runtime_download_waiting">Inihahanda ang pag-download ng Java 8...</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher batay sa PojavLauncher at Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Mga Kredito&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -670,13 +670,13 @@
         • Boardwalk&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lisensya at mga third party&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 at mga bahagi ng third-party na kasama sa proyekto.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j at higit pa sa ilalim ng kanilang mga orihinal na lisensya.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j at higit pa sa ilalim ng kanilang mga orihinal na lisensya.&lt;br/&gt;&lt;br/&gt;
         Ang app na ito ay hindi kaakibat sa Minecraft, Mojang o Microsoft.</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
     <string name="launcher_download">I-download</string>
     <string name="launcher_download_modpack">Mag-import ng modpack</string>
     <string name="launcher_execute">Maglaro</string>
-    <string name="launcher_mobile_badge">Mobile 2.2.1</string>
+    <string name="launcher_mobile_badge">Mobile 2.2.3</string>
     <string name="launcher_nav_back">Bumalik ka</string>
     <string name="launcher_nav_home">Bumalik sa bahay</string>
     <string name="launcher_nav_workspace">Battly Workspace</string>
@@ -830,7 +830,7 @@
     <string name="preference_disable_autojre_select">Huwag paganahin ang awtomatikong pagpili ng JRE</string>
     <string name="preference_download_threads_auto_description">Iniangkop ng Battly ang sabay-sabay na pag-download sa CPU, memorya at uri ng network. Huwag paganahin ito upang magamit ang manu-manong halaga.</string>
     <string name="preference_download_threads_auto_title">Awtomatikong pag-download ng paralelismo</string>
-    <string name="preference_download_threads_description">Kinokontrol kung gaano karaming mga file ng laro ang Battly na dina-download nang sabay-sabay. Ang mas mataas na halaga ay mas mabilis sa magagandang network.</string>
+    <string name="preference_download_threads_description">Gumagamit ang Battly ng 64 sabay-sabay na pag-download bilang default. Taasan ito ng hanggang 100 sa mabilis na koneksyon.</string>
     <string name="preference_download_threads_title">Sabay-sabay na pag-download</string>
     <string name="preference_renderer_auto">Awtomatiko</string>
     <string name="preference_renderer_title">Tagapag-render</string>
@@ -1180,21 +1180,6 @@
 
     <string name="battly_new_badge">Bago</string>
 
-    <string name="battly_whats_new_transition_desc">Ang iyong mga profile ay buo at handa nang laruin.</string>
-    <string name="battly_whats_new_action_start">Galugarin ang 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Ang Android back button ay babalik na ngayon sa Minecraft sa halip na isara ito, at ang mga paghahanap ay hindi nawawala ang keyboard kapag kinumpirma mo ang mga ito.</string>
-    <string name="battly_whats_new_compatibility_title">Navigation na nananatiling malayo sa iyong paraan</string>
-    <string name="battly_whats_new_controllers_desc">I-configure ang awtomatikong pagsali, estado ng mikropono at audio, visibility ng overlay ng speaker, transparency at posisyon mula sa mga setting ng Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">Voice chat sa ilalim ng iyong kontrol</string>
-    <string name="battly_whats_new_desc">Isang nakatutok na update para sa Battly Worlds, Social, voice chat at araw-araw na nabigasyon.</string>
-    <string name="battly_whats_new_instances_desc">Pumili ng isang instance bago suriin ang mga naka-install na mod, resource pack, shader at datapack nito. Ang bawat silid-aklatan ay nananatiling malinaw na nakahiwalay.</string>
-    <string name="battly_whats_new_instances_title">Nilalaman na nakaayos ayon sa halimbawa</string>
-    <string name="battly_whats_new_recovery_desc">Ipinapaliwanag ng Battly kung bakit kailangan ang pag-access sa mikropono bago magtanong, pinapanatiling naka-save ang mga kagustuhan sa boses at nagpapabuti online, Battly Worlds at presensya ng multiplayer.</string>
-    <string name="battly_whats_new_recovery_title">Mas malinaw na mga pahintulot at presensya</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Handa na ang Battly 2.2.1</string>
-    <string name="battly_whats_new_worlds_desc">Direktang mag-imbita ng mga kaibigan mula sa Battly Social, makatanggap ng aktibidad sa kwarto nang mapagkakatiwalaan at panatilihing updated ang iyong status habang naglalaro sa Battly Worlds o sa isang multiplayer server.</string>
-    <string name="battly_whats_new_worlds_title">Battly Mundo, mas mahusay na konektado</string>
     <string name="customctrl_voice_microphone_add">Magdagdag ng voice microphone button</string>
     <string name="customctrl_voice_audio_add">Magdagdag ng voice audio button</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1268,4 +1253,30 @@
     <string name="battly_social_playing_worlds">Naglalaro sa Battly Worlds · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Mga tunog ng koneksyon sa voice chat</string>
     <string name="battlyworlds_voice_sounds_summary">Magpatugtog kapag ikaw o ibang manlalaro ay sumali o umalis sa voice chat.</string>
+<string name="download_action_browse_worlds_title">Mag-browse ng mga mundo</string>
+    <string name="download_action_browse_worlds_subtitle">Mag-download ng mga nape-play na mundo sa instance na pipiliin mo.</string>
+    <string name="search_world_title">Mag-browse sa Mundo</string>
+    <string name="search_world_subtitle">Tuklasin at i-install ang CurseForge mundo sa pagkakataong pipiliin mo.</string>
+    <string name="hint_search_world">Maghanap ng mga mundo</string>
+    <string name="search_world_no_result">Walang nahanap na mundo</string>
+    <string name="search_world_error">Nabigong mahanap ang mga mundo</string>
+    <string name="search_world_download_error">Nabigong i-download ang metadata ng mundo</string>
+    <string name="world_install_button">I-install ang mundo</string>
+    <string name="world_install_success">%1$s na naka-install sa pagkakataong ito</string>
+
+    <string name="battly_whats_new_action_start">Galugarin ang 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Pinipili na ngayon ng Open modpack action ang bagong instance at isinasara nang tama ang bawat installation at content window.</string>
+    <string name="battly_whats_new_compatibility_title">Direktang buksan ang mga naka-install na modpack</string>
+    <string name="battly_whats_new_controllers_desc">Gumagamit na ngayon ang Battly client installer ng tamang scroll na listahan, kasama ang mga compact na screen.</string>
+    <string name="battly_whats_new_controllers_title">Naayos ang pag-scroll ng listahan ng kliyente</string>
+    <string name="battly_whats_new_desc">Mga bagong hiwalay na pagkakataon, nada-download na mundo at mahahalagang pag-aayos para sa Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Ang mga bagong Vanilla, loader, client at modpack instance ay nagpapanatili ng kanilang mga mundo, mod, setting at resource pack sa isang independiyenteng folder.</string>
+    <string name="battly_whats_new_instances_title">Isang hiwalay na folder para sa bawat bagong pagkakataon</string>
+    <string name="battly_whats_new_recovery_desc">Ang bagong instance isolation, mas ligtas na storage ng mga setting, at long-session diagnostics ay binabawasan ang mga pag-reset ng configuration at ginagawang mas madaling matukoy ang mga problema.</string>
+    <string name="battly_whats_new_recovery_title">Pinahusay na katatagan</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Ang mga kasalukuyang pagkakataon ay nananatili kung nasaan sila. Nalalapat lang ang paghihiwalay ng folder sa mga pagkakataong ginawa mula sa bersyong ito.</string>
+    <string name="battly_whats_new_transition_title">Handa na ang Battly 2.2.3</string>
+    <string name="battly_whats_new_worlds_desc">Mag-browse at mag-install ng Minecraft mundo mula sa CurseForge nang direkta sa pipiliin mong pagkakataon.</string>
+    <string name="battly_whats_new_worlds_title">Mag-download ng mga mundo mula sa Workspace</string>
 </resources>

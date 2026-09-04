@@ -236,7 +236,7 @@
     <string name="crash_no_findings">Det ble ikke funnet noe kjent krasjmønster i de siste loggene.</string>
     <string name="crash_recovery_applied">Gjenopprettingshandling fullført</string>
     <string name="crash_recovery_manual">Dette problemet må endres manuelt. Åpne loggen for detaljer.</string>
-    <string name="credits_version">Versjon 2.2.1</string>
+    <string name="credits_version">Versjon 2.2.3</string>
     <string name="ctrl_like_btn">Liker</string>
     <string name="ctrl_liked_added">Lagt til likte kontroller.</string>
     <string name="ctrl_liked_btn">Likte</string>
@@ -297,8 +297,8 @@
     <string name="java_runtime_download_progress">Laster ned Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Installere Java 8</string>
     <string name="java_runtime_download_waiting">Forbereder Java 8-nedlasting...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_status_battly">Battly-konto</string>
     <string name="launcher_status_battly_plus">Battly+ konto</string>
     <string name="library_analyze_mods">Analyser</string>
@@ -545,7 +545,7 @@
     <string name="battlyworlds_friend_request_message">Sende en venneforespørsel til %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Venneforespørsel sendt til %1$s.</string>
     <string name="battlyworlds_friend_request_title">Send venneforespørsel</string>
-    <string name="battlyworlds_guest_connected_simple">Åpne Multiplayer og bli med i Terracotta Lobby. Det kan vises med kinesisk tekst.</string>
+    <string name="battlyworlds_guest_connected_simple">Åpne Multiplayer og bli med i BattlyWorlds Lobby.</string>
     <string name="battlyworlds_guest_hint_simple">Hvis serveren ikke vises, vent noen sekunder og oppdater Multiplayer.</string>
     <string name="battlyworlds_guest_url">Reserveadresse: %1$s</string>
     <string name="battlyworlds_host">vert</string>
@@ -570,7 +570,7 @@
     <string name="battlyworlds_join">Bli med</string>
     <string name="battlyworlds_join_hint">Invitasjonskode</string>
     <string name="battlyworlds_join_status_preparing">Forbereder den private LAN-tilkoblingen...</string>
-    <string name="battlyworlds_join_status_ready">Tilkoblet. I Multiplayer åpner du LAN-serveren kalt Terracotta Lobby. Det kan vises med kinesisk tekst.</string>
+    <string name="battlyworlds_join_status_ready">Tilkoblet. I Multiplayer, bli med i BattlyWorlds Lobby LAN-serveren.</string>
     <string name="battlyworlds_join_status_title">Blir med i BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Inviter</string>
     <string name="battlyworlds_lan_prompt_message">Bruk BattlyWorlds til å invitere venner uten å dele nettverket ditt.</string>
@@ -644,7 +644,7 @@
     <string name="credits_based_on">Basert på PojavLauncher og Boardwalk</string>
     <string name="credits_game_engine">Spillmotor</string>
     <string name="credits_inspiration">Inspirasjon</string>
-    <string name="credits_license_text">GNU GPLv3 og tredjepartskomponenter inkludert i prosjektet. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j og mer under deres originale lisenser.</string>
+    <string name="credits_license_text">GNU GPLv3 og tredjepartskomponenter inkludert i prosjektet. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j og mer under deres originale lisenser.</string>
     <string name="credits_license_title">Lisens</string>
     <string name="credits_pojav_founder">Grunnlegger av PojavLauncher</string>
     <string name="credits_primary_development">Hovedutvikling</string>
@@ -780,7 +780,7 @@
     <string name="installer_internal_fallback">Installasjonsprogram som ikke støttes, åpner det eldre brukergrensesnittet for Java</string>
     <string name="installer_internal_running">Analyserer installasjonsprogrammet …</string>
     <string name="installer_internal_success">%1$s installert direkte inne i Battly</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher basert på PojavLauncher og Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Kreditt&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -789,7 +789,7 @@
         • Boardwalk&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lisens og tredjeparter&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 og tredjepartskomponenter inkludert i prosjektet.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j og mer under deres originale lisenser.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j og mer under deres originale lisenser.&lt;br/&gt;&lt;br/&gt;
         Denne appen er ikke tilknyttet Minecraft, Mojang eller Microsoft.</string>
     <string name="launcher_download">Last ned</string>
     <string name="launcher_download_modpack">Importer modpack</string>
@@ -921,7 +921,7 @@
     <string name="onboarding_welcome_title">Velkommen til Battly Mobile</string>
     <string name="preference_category_experimental_settings">Eksperimentelle innstillinger</string>
     <string name="preference_disable_autojre_select">Deaktiver automatisk JRE-valg</string>
-    <string name="preference_download_threads_description">Styrer hvor mange spillfiler Battly laster ned samtidig. Høyere verdier er raskere på gode nettverk.</string>
+    <string name="preference_download_threads_description">Battly bruker 64 samtidige nedlastinger som standard. Øk den til 100 på raske tilkoblinger.</string>
     <string name="preference_download_threads_title">Samtidig nedlastinger</string>
     <string name="preference_renderer_auto">Automatisk</string>
     <string name="preference_renderer_title">Gjengiver</string>
@@ -1136,21 +1136,6 @@
 
     <string name="battly_new_badge">Ny</string>
 
-    <string name="battly_whats_new_transition_desc">Profilene dine er intakte og klare til å spille.</string>
-    <string name="battly_whats_new_action_start">Utforsk 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Android tilbake-knappen går nå tilbake til Minecraft i stedet for å lukke den, og søk avviser tastaturet når du bekrefter dem.</string>
-    <string name="battly_whats_new_compatibility_title">Navigasjon som holder deg unna</string>
-    <string name="battly_whats_new_controllers_desc">Konfigurer automatisk sammenføyning, mikrofon- og lydtilstand, synlighet for høyttaleroverlegg, gjennomsiktighet og posisjon fra Battly Worlds-innstillinger.</string>
-    <string name="battly_whats_new_controllers_title">Talechat under din kontroll</string>
-    <string name="battly_whats_new_desc">En fokusert oppdatering for Battly Worlds, Sosial, talechat og daglig navigasjon.</string>
-    <string name="battly_whats_new_instances_desc">Velg en forekomst før du ser gjennom installerte mods, ressurspakker, shadere og datapakker. Hvert bibliotek forblir nå tydelig atskilt.</string>
-    <string name="battly_whats_new_instances_title">Innhold organisert etter forekomst</string>
-    <string name="battly_whats_new_recovery_desc">Battly forklarer hvorfor mikrofontilgang er nødvendig før du spør, holder stemmepreferanser lagret og forbedrer online, Battly Worlds og flerspillertilstedeværelse.</string>
-    <string name="battly_whats_new_recovery_title">Tydeligere tillatelser og tilstedeværelse</string>
-    <string name="battly_whats_new_title">Battly Mobil 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 er klar</string>
-    <string name="battly_whats_new_worlds_desc">Inviter venner direkte fra Battly Social, motta romaktivitet pålitelig og hold statusen din oppdatert mens du spiller i Battly Worlds eller på en flerspillerserver.</string>
-    <string name="battly_whats_new_worlds_title">Battly Worlds, bedre tilkoblet</string>
     <string name="customctrl_voice_microphone_add">Legg til stemmemikrofonknapp</string>
     <string name="customctrl_voice_audio_add">Legg til stemmelyd-knapp</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1224,4 +1209,30 @@
     <string name="battly_social_playing_worlds">Spille i Battly Worlds · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Tilkoblingslyder for talechat</string>
     <string name="battlyworlds_voice_sounds_summary">Spill av en lyd når du eller en annen spiller blir med i eller forlater talechatten.</string>
+<string name="download_action_browse_worlds_title">Bla gjennom verdener</string>
+    <string name="download_action_browse_worlds_subtitle">Last ned spillbare verdener til den instansen du velger.</string>
+    <string name="search_world_title">Bla gjennom verdener</string>
+    <string name="search_world_subtitle">Oppdag og installer CurseForge-verdener i forekomsten du velger.</string>
+    <string name="hint_search_world">Søk etter verdener</string>
+    <string name="search_world_no_result">Ingen verdener funnet</string>
+    <string name="search_world_error">Klarte ikke å finne verdener</string>
+    <string name="search_world_download_error">Kunne ikke laste ned verdensmetadata</string>
+    <string name="world_install_button">Installer verden</string>
+    <string name="world_install_success">%1$s installert i denne forekomsten</string>
+
+    <string name="battly_whats_new_action_start">Utforsk 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Åpne modpack-handlingen velger nå den nye forekomsten og lukker hvert installasjons- og innholdsvindu på riktig måte.</string>
+    <string name="battly_whats_new_compatibility_title">Åpne installerte modpacks direkte</string>
+    <string name="battly_whats_new_controllers_desc">Battly-klientinstallasjonsprogrammet bruker nå en skikkelig rullbar liste, inkludert på kompakte skjermer.</string>
+    <string name="battly_whats_new_controllers_title">Klientlisterulling fikset</string>
+    <string name="battly_whats_new_desc">Nye isolerte forekomster, nedlastbare verdener og viktige rettelser for Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Nye Vanilla-, loader-, klient- og modpack-forekomster holder sine verdener, mods, innstillinger og ressurspakker i en uavhengig mappe.</string>
+    <string name="battly_whats_new_instances_title">En egen mappe for hver ny forekomst</string>
+    <string name="battly_whats_new_recovery_desc">Ny forekomstisolering, sikrere lagring av innstillinger og diagnostikk med lang økt reduserer konfigurasjonstilbakestillinger og gjør problemer lettere å identifisere.</string>
+    <string name="battly_whats_new_recovery_title">Forbedret stabilitet</string>
+    <string name="battly_whats_new_title">Battly Mobil 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Eksisterende forekomster blir der de er. Mappeisolering gjelder bare for forekomster opprettet fra denne versjonen og fremover.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 er klar</string>
+    <string name="battly_whats_new_worlds_desc">Bla gjennom og installer Minecraft-verdener fra CurseForge direkte i forekomsten du velger.</string>
+    <string name="battly_whats_new_worlds_title">Last ned verdener fra Workspace</string>
 </resources>

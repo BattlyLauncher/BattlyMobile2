@@ -77,7 +77,7 @@ public class LauncherPreferenceVideoFragment extends LauncherPreferenceFragment 
 
     private void computeVisibility(){
         requirePreference("force_vsync", SwitchPreferenceCompat.class)
-                .setVisible(LauncherPreferences.PREF_USE_ALTERNATE_SURFACE);
+                .setVisible(true);
     }
 
     private void configureRendererPreference() {

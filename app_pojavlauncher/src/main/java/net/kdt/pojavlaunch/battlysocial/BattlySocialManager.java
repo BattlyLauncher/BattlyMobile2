@@ -8,6 +8,7 @@ import android.widget.Toast;
 import com.google.firebase.messaging.FirebaseMessaging;
 
 import net.kdt.pojavlaunch.PojavApplication;
+import net.kdt.pojavlaunch.analytics.FirebaseProcessGuard;
 import net.kdt.pojavlaunch.R;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.extra.ExtraConstants;
@@ -17,11 +18,10 @@ import net.kdt.pojavlaunch.tasks.AsyncVersionList;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsManager;
 import net.kdt.pojavlaunch.customcontrols.MinecraftServerSessionTracker;
-import net.kdt.pojavlaunch.value.launcherprofiles.LauncherProfiles;
-import net.kdt.pojavlaunch.value.launcherprofiles.MinecraftProfile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public final class BattlySocialManager {
     private static final String KEY_SERVER_HOST = "pending_server_host";
@@ -35,12 +35,15 @@ public final class BattlySocialManager {
     private static long sLastLauncherHeartbeat;
     private static Context sGameContext;
     private static String sGameVersion = "";
+    private static final AtomicBoolean GAME_HEARTBEAT_IN_FLIGHT = new AtomicBoolean();
     private static final Runnable GAME_HEARTBEAT = new Runnable() {
         @Override
         public void run() {
             Context context = sGameContext;
             if (context == null) return;
-            sendGameHeartbeat(context, sGameVersion);
+            if (GAME_HEARTBEAT_IN_FLIGHT.compareAndSet(false, true)) {
+                sendGameHeartbeat(context, sGameVersion);
+            }
             Tools.MAIN_HANDLER.postDelayed(this, GAME_HEARTBEAT_INTERVAL_MS);
         }
     };
@@ -49,7 +52,8 @@ public final class BattlySocialManager {
     }
 
     public static void heartbeatLauncher(Context context) {
-        if (context == null || System.currentTimeMillis() - sLastLauncherHeartbeat < 30000L) return;
+        if (context == null || !FirebaseProcessGuard.isLauncherProcess(context)
+                || System.currentTimeMillis() - sLastLauncherHeartbeat < 30000L) return;
         if (BattlyWorldsInvites.isGameActive(context)) return;
         sLastLauncherHeartbeat = System.currentTimeMillis();
         PojavApplication.sExecutorService.execute(() -> {
@@ -73,6 +77,7 @@ public final class BattlySocialManager {
         Tools.MAIN_HANDLER.removeCallbacks(GAME_HEARTBEAT);
         sGameContext = null;
         sGameVersion = "";
+        GAME_HEARTBEAT_IN_FLIGHT.set(false);
         LauncherPreferences.DEFAULT_PREF.edit()
                 .remove(KEY_ACTIVE_SERVER_HOST)
                 .remove(KEY_ACTIVE_SERVER_PORT)
@@ -92,12 +97,15 @@ public final class BattlySocialManager {
                         server,
                         battlyWorlds);
             } catch (Throwable ignored) {
+            } finally {
+                GAME_HEARTBEAT_IN_FLIGHT.set(false);
             }
         });
     }
 
     public static void registerDeviceToken(Context context) {
         if (context == null) return;
+        if (!FirebaseProcessGuard.ensureInitialized(context)) return;
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(token -> {
             if (!Tools.isValidString(token)) return;
             PojavApplication.sExecutorService.execute(() -> {
@@ -112,23 +120,20 @@ public final class BattlySocialManager {
     public static void joinServer(Activity activity, BattlySocialApi.Server server, String version) {
         if (activity == null || server == null || !Tools.isValidString(server.host)) return;
         savePendingServer(activity, server, version);
-        if (Tools.isValidString(version)) {
-            LauncherProfiles.load();
-            String selectedProfile = LauncherPreferences.DEFAULT_PREF
-                    .getString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, "");
-            MinecraftProfile profile = LauncherProfiles.mainProfileJson == null
-                    ? null
-                    : LauncherProfiles.mainProfileJson.profiles.get(selectedProfile);
-            if (profile != null) {
-                profile.lastVersionId = version;
-                LauncherProfiles.write();
-            }
-        }
         Toast.makeText(activity, R.string.battly_social_join_preparing, Toast.LENGTH_LONG).show();
         new AsyncVersionList().getVersionList(versions -> {
             if (versions != null) ExtraCore.setValue(ExtraConstants.RELEASE_TABLE, versions);
             Tools.MAIN_HANDLER.post(() -> ExtraCore.setValue(ExtraConstants.LAUNCH_GAME, true));
         }, false);
+    }
+
+    /** Returns the requested server version without modifying the selected instance. */
+    public static String consumePendingLaunchVersion() {
+        SharedPreferences prefs = LauncherPreferences.DEFAULT_PREF;
+        if (prefs == null) return "";
+        String version = prefs.getString(KEY_SERVER_VERSION, "");
+        prefs.edit().remove(KEY_SERVER_VERSION).apply();
+        return version == null ? "" : version.trim();
     }
 
     public static String[] appendPendingServerArgs(String[] originalArgs) {
@@ -192,7 +197,6 @@ public final class BattlySocialManager {
                 .remove(KEY_SERVER_HOST)
                 .remove(KEY_SERVER_PORT)
                 .remove(KEY_SERVER_NAME)
-                .remove(KEY_SERVER_VERSION)
                 .apply();
         return server;
     }

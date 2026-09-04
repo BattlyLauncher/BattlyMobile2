@@ -21,6 +21,8 @@ import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.progresskeeper.ProgressKeeper;
 import net.kdt.pojavlaunch.progresskeeper.ProgressListener;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 public final class JavaRuntimeInstallDialog {
     private JavaRuntimeInstallDialog() {
     }
@@ -30,7 +32,7 @@ public final class JavaRuntimeInstallDialog {
     }
 
     public static void ensureJava8(Activity activity, Runnable afterInstalled) {
-        if (activity == null || activity.isFinishing()) {
+        if (activity == null || activity.isFinishing() || activity.isDestroyed()) {
             return;
         }
         if (isJava8Ready()) {
@@ -58,6 +60,7 @@ public final class JavaRuntimeInstallDialog {
         private final TextView mStatusText;
         private final TextView mRetryButton;
         private final ProgressListener mListener;
+        private final AtomicBoolean mCleanedUp = new AtomicBoolean();
         private boolean mInstalling;
 
         private Controller(Activity activity, Runnable afterInstalled) {
@@ -146,10 +149,7 @@ public final class JavaRuntimeInstallDialog {
                 public void onProgressEnded() {
                 }
             };
-            mDialog.setOnDismissListener(dialog -> {
-                ProgressKeeper.removeListener(ProgressLayout.UNPACK_RUNTIME, mListener);
-                ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, false);
-            });
+            mDialog.setOnDismissListener(dialog -> cleanup());
             ProgressKeeper.addListener(ProgressLayout.UNPACK_RUNTIME, mListener);
             mDialog.show();
         }
@@ -165,7 +165,8 @@ public final class JavaRuntimeInstallDialog {
                     Tools.runOnUiThread(() -> {
                         mInstalling = false;
                         dismiss();
-                        if (mAfterInstalled != null) {
+                        if (mAfterInstalled != null && !mActivity.isFinishing()
+                                && !mActivity.isDestroyed()) {
                             mAfterInstalled.run();
                         }
                     });
@@ -189,16 +190,26 @@ public final class JavaRuntimeInstallDialog {
         }
 
         private void dismiss() {
-            if (!mActivity.isFinishing() && mDialog.isShowing()) {
-                mDialog.dismiss();
-            } else {
-                ProgressKeeper.removeListener(ProgressLayout.UNPACK_RUNTIME, mListener);
-                ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, false);
+            try {
+                if (!mActivity.isFinishing() && !mActivity.isDestroyed() && mDialog.isShowing()) {
+                    mDialog.dismiss();
+                }
+            } catch (IllegalArgumentException | IllegalStateException exception) {
+                android.util.Log.w("BattlyJavaDialog", "Dialog window was already detached", exception);
+            } finally {
+                cleanup();
             }
+        }
+
+        private void cleanup() {
+            if (!mCleanedUp.compareAndSet(false, true)) return;
+            ProgressKeeper.removeListener(ProgressLayout.UNPACK_RUNTIME, mListener);
+            ProgressLayout.setProgressMuted(ProgressLayout.UNPACK_RUNTIME, false);
         }
 
         private void update(int progress, String status) {
             Tools.runOnUiThread(() -> {
+                if (mCleanedUp.get() || mActivity.isFinishing() || mActivity.isDestroyed()) return;
                 boolean determinate = progress >= 0;
                 mProgressBar.setIndeterminate(!determinate);
                 if (determinate) {

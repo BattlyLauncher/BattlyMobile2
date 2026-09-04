@@ -21,14 +21,17 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.FrameLayout;
 import android.widget.GridView;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.annotation.NonNull;
 import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.viewpager2.widget.ViewPager2;
 
 import com.google.android.gms.ads.nativead.NativeAd;
 
@@ -72,6 +75,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     /* This my seem horribly inefficient but it is in fact the most efficient way without effectively writing a weak collection from scratch */
     private final Set<ViewHolder> mViewHolderSet = Collections.newSetFromMap(new WeakHashMap<>());
     private final ModIconCache mIconCache = new ModIconCache();
+    private final ModIconCache mGalleryImageCache = new ModIconCache(1024f);
     private final SearchResultCallback mSearchResultCallback;
     private ModItem[] mModItems;
     private final ModpackApi mModpackApi;
@@ -89,6 +93,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     private String mAdUnitId;
     private int mLoadedPageCount;
     private int mRequestedAdBatches;
+    private WeakReference<RecyclerView> mRecyclerView = new WeakReference<>(null);
+    private volatile boolean mReleased;
 
 
     public ModItemAdapter(Resources resources, ModpackApi api, SearchResultCallback callback) {
@@ -98,20 +104,44 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
     }
 
     public void performSearchQuery(SearchFilters searchFilters) {
-        if(mTaskInProgress != null) {
-            mTaskInProgress.cancel(true);
-            mTaskInProgress = null;
+        Tools.runOnUiThread(() -> runWhenRecyclerIdle(() -> {
+            if (mReleased) return;
+            if(mTaskInProgress != null) {
+                mTaskInProgress.cancel(true);
+                mTaskInProgress = null;
+            }
+            this.mSearchFilters = searchFilters;
+            clearNativeAds();
+            mLoadedPageCount = 0;
+            mRequestedAdBatches = 0;
+            mAdSeed = (searchFilters.name == null ? 0 : searchFilters.name.hashCode())
+                    * 31L + searchFilters.contentType;
+            this.mLastPage = false;
+            notifyDataSetChanged();
+            mTaskInProgress = new SelfReferencingFuture(new SearchApiTask(mSearchFilters, null))
+                    .startOnExecutor(PojavApplication.sExecutorService);
+        }));
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(@NonNull RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView = new WeakReference<>(recyclerView);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(@NonNull RecyclerView recyclerView) {
+        if (mRecyclerView.get() == recyclerView) mRecyclerView.clear();
+        super.onDetachedFromRecyclerView(recyclerView);
+    }
+
+    private void runWhenRecyclerIdle(Runnable action) {
+        RecyclerView recyclerView = mRecyclerView.get();
+        if (recyclerView != null && recyclerView.isComputingLayout()) {
+            recyclerView.post(() -> runWhenRecyclerIdle(action));
+            return;
         }
-        this.mSearchFilters = searchFilters;
-        clearNativeAds();
-        mLoadedPageCount = 0;
-        mRequestedAdBatches = 0;
-        notifyDataSetChanged();
-        mAdSeed = (searchFilters.name == null ? 0 : searchFilters.name.hashCode())
-                * 31L + searchFilters.contentType;
-        this.mLastPage = false;
-        mTaskInProgress = new SelfReferencingFuture(new SearchApiTask(mSearchFilters, null))
-                .startOnExecutor(PojavApplication.sExecutorService);
+        action.run();
     }
 
     @NonNull
@@ -203,14 +233,16 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             BattlyNativeAdHelper.load(activity, unitId, new BattlyNativeAdHelper.Callback() {
                 @Override
                 public void onLoaded(NativeAd ad) {
-                    if (generation != mAdGeneration) {
-                        ad.destroy();
-                        return;
-                    }
-                    mNativeAds.add(ad);
-                    Log.d("BattlyAds", "Workspace native ad inserted; total=" + mNativeAds.size());
-                    rebuildAdPositions();
-                    notifyDataSetChanged();
+                    Tools.runOnUiThread(() -> runWhenRecyclerIdle(() -> {
+                        if (generation != mAdGeneration) {
+                            ad.destroy();
+                            return;
+                        }
+                        mNativeAds.add(ad);
+                        Log.d("BattlyAds", "Workspace native ad inserted; total=" + mNativeAds.size());
+                        rebuildAdPositions();
+                        notifyDataSetChanged();
+                    }));
                 }
 
                 @Override
@@ -225,6 +257,17 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         for (NativeAd ad : mNativeAds) ad.destroy();
         mNativeAds.clear();
         mAdPositions = Collections.emptyList();
+    }
+
+    public void release() {
+        mReleased = true;
+        if (mTaskInProgress != null) {
+            mTaskInProgress.cancel(true);
+            mTaskInProgress = null;
+        }
+        clearNativeAds();
+        mAdActivity.clear();
+        mRecyclerView.clear();
     }
 
     private void rebuildAdPositions() {
@@ -265,15 +308,21 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         private final ImageView mIconView, mSourceView;
         private View mExtendedLayout;
         private TextView mExtendedLoaderSelector;
+        private TextView mExtendedLoaderLabel;
         private TextView mExtendedMinecraftSelector;
         private TextView mExtendedVersionSelector;
         private Button mExtendedButton;
         private Button mExtendedDependenciesButton;
         private TextView mExtendedErrorTextView;
         private TextView mExtendedDependencyTextView;
+        private View mExtendedPreviewContainer;
+        private ImageView mExtendedPreview;
+        private ProgressBar mExtendedPreviewLoading;
         private Future<?> mExtensionFuture;
         private Bitmap mThumbnailBitmap;
         private ImageReceiver mImageReceiver;
+        private ImageReceiver mPreviewImageReceiver;
+        private String[] mPreviewImages = new String[0];
         private boolean mInstallEnabled;
         private String mSelectedLoader;
         private String mSelectedMinecraftVersion;
@@ -291,7 +340,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     // Center on screen: 92% width, 85% height
                     android.util.DisplayMetrics dm = v.getContext().getResources().getDisplayMetrics();
                     boolean landscape = dm.widthPixels > dm.heightPixels;
-                    int dialogWidth = (int)(dm.widthPixels * (landscape ? 0.65f : 0.92f));
+                    int dialogWidth = (int)(dm.widthPixels * (landscape ? 0.72f : 0.92f));
                     int dialogHeight = (int)(dm.heightPixels * (landscape ? 0.90f : 0.85f));
                     dialog.getWindow().setLayout(dialogWidth, dialogHeight);
                     dialog.getWindow().setGravity(android.view.Gravity.CENTER);
@@ -300,11 +349,15 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                     mExtendedButton = dialog.findViewById(R.id.dialog_mod_install_button);
                     mExtendedLoaderSelector = dialog.findViewById(R.id.dialog_mod_loader_selector);
+                    mExtendedLoaderLabel = dialog.findViewById(R.id.dialog_mod_loader_label);
                     mExtendedMinecraftSelector = dialog.findViewById(R.id.dialog_mod_minecraft_selector);
                     mExtendedVersionSelector = dialog.findViewById(R.id.dialog_mod_version_selector);
                     mExtendedErrorTextView = dialog.findViewById(R.id.dialog_mod_error);
                     mExtendedDependenciesButton = dialog.findViewById(R.id.dialog_mod_deps_button);
                     mExtendedDependencyTextView = dialog.findViewById(R.id.dialog_mod_dependency);
+                    mExtendedPreviewContainer = dialog.findViewById(R.id.dialog_mod_preview_container);
+                    mExtendedPreview = dialog.findViewById(R.id.dialog_mod_preview);
+                    mExtendedPreviewLoading = dialog.findViewById(R.id.dialog_mod_preview_loading);
 
                     // Setup dialog basic info
                     ImageView dIcon = dialog.findViewById(R.id.dialog_mod_icon);
@@ -320,6 +373,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
 
                     // Stats row: downloads, follows, loader badge
                     bindStatsRow(dialog, mModItem);
+                    bindPreview(mModItem.previewImageUrls, mModItem.galleryImageUrls);
 
                     dialog.findViewById(R.id.dialog_mod_close_button).setOnClickListener(v13 -> dialog.dismiss());
                     dialog.setOnDismissListener(d -> closeDetailedView());
@@ -402,6 +456,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if(mImageReceiver != null) {
                 mIconCache.cancelImage(mImageReceiver);
             }
+            cancelPreviewRequest();
             if(mExtensionFuture != null) {
                 /*
                  * Since this method reinitializes the ViewHolder for a new mod, this Future stops being ours, so we cancel it
@@ -439,6 +494,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
         /** Display extended info/interaction about a modpack */
         private void setStateDetailed(ModDetail detailedItem) {
             if(detailedItem != null) {
+                bindPreview(detailedItem.previewImageUrls, detailedItem.galleryImageUrls);
                 setInstallEnabled(true);
                 mExtendedErrorTextView.setVisibility(View.GONE);
                 initializeVersionSelection();
@@ -539,8 +595,194 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             return mSelectedVersionIndex;
         }
 
+        private void bindPreview(String[] previewUrls, String[] galleryUrls) {
+            if (mExtendedPreviewContainer == null || mExtendedPreview == null) return;
+            cancelPreviewRequest();
+            mExtendedPreview.setImageDrawable(null);
+            String[] thumbnails = sanitizePreviewUrls(previewUrls);
+            mPreviewImages = sanitizePreviewUrls(galleryUrls);
+            if (mPreviewImages.length == 0) mPreviewImages = thumbnails;
+            if (thumbnails.length == 0) {
+                mExtendedPreviewContainer.setVisibility(View.GONE);
+                mExtendedPreviewContainer.setOnClickListener(null);
+                return;
+            }
+
+            String previewUrl = thumbnails[0];
+            mExtendedPreviewContainer.setVisibility(View.VISIBLE);
+            mExtendedPreviewContainer.setClickable(true);
+            mExtendedPreviewContainer.setFocusable(true);
+            mExtendedPreviewContainer.setOnClickListener(v -> showPreviewCarousel());
+            if (mExtendedPreviewLoading != null) mExtendedPreviewLoading.setVisibility(View.VISIBLE);
+            ImageReceiver receiver = new ImageReceiver() {
+                @Override
+                public void onImageAvailable(Bitmap image) {
+                    if (mPreviewImageReceiver != this || mExtendedPreview == null) return;
+                    mPreviewImageReceiver = null;
+                    mExtendedPreview.setImageDrawable(
+                            new BitmapDrawable(mExtendedPreview.getResources(), image));
+                    if (mExtendedPreviewLoading != null) {
+                        mExtendedPreviewLoading.setVisibility(View.GONE);
+                    }
+                }
+            };
+            mPreviewImageReceiver = receiver;
+            String cacheTag = mModItem.getIconCacheTag() + "_preview_"
+                    + Integer.toHexString(previewUrl.hashCode());
+            mIconCache.getImage(receiver, cacheTag, previewUrl);
+        }
+
+        private String[] sanitizePreviewUrls(String[] previewUrls) {
+            if (previewUrls == null || previewUrls.length == 0) return new String[0];
+            ArrayList<String> validUrls = new ArrayList<>(previewUrls.length);
+            for (String url : previewUrls) {
+                if (Tools.isValidString(url) && !validUrls.contains(url)) validUrls.add(url);
+            }
+            return validUrls.toArray(new String[0]);
+        }
+
+        private void showPreviewCarousel() {
+            if (mPreviewImages.length == 0) return;
+            Context context = itemView.getContext();
+            String[] galleryImages = mPreviewImages.clone();
+            android.app.Dialog dialog = new android.app.Dialog(context, R.style.Theme_AppCompat_Dialog);
+            dialog.setContentView(R.layout.dialog_mod_preview_carousel);
+            dialog.getWindow().setBackgroundDrawableResource(android.R.color.transparent);
+
+            TextView title = dialog.findViewById(R.id.dialog_mod_gallery_title);
+            TextView counter = dialog.findViewById(R.id.dialog_mod_gallery_counter);
+            ImageButton previous = dialog.findViewById(R.id.dialog_mod_gallery_previous);
+            ImageButton next = dialog.findViewById(R.id.dialog_mod_gallery_next);
+            ViewPager2 pager = dialog.findViewById(R.id.dialog_mod_gallery_pager);
+            PreviewCarouselAdapter adapter = new PreviewCarouselAdapter(
+                    galleryImages, mModItem.getIconCacheTag());
+            pager.setAdapter(adapter);
+            pager.setOffscreenPageLimit(1);
+            title.setText(context.getString(R.string.mod_detail_gallery_title, mModItem.title));
+
+            Runnable updateControls = () -> {
+                int position = pager.getCurrentItem();
+                counter.setText(context.getString(R.string.mod_detail_gallery_counter,
+                        position + 1, galleryImages.length));
+                previous.setEnabled(position > 0);
+                previous.setAlpha(position > 0 ? 1f : 0.35f);
+                next.setEnabled(position < galleryImages.length - 1);
+                next.setAlpha(position < galleryImages.length - 1 ? 1f : 0.35f);
+            };
+            pager.registerOnPageChangeCallback(new ViewPager2.OnPageChangeCallback() {
+                @Override
+                public void onPageSelected(int position) {
+                    updateControls.run();
+                }
+            });
+            previous.setOnClickListener(v -> pager.setCurrentItem(pager.getCurrentItem() - 1, true));
+            next.setOnClickListener(v -> pager.setCurrentItem(pager.getCurrentItem() + 1, true));
+            dialog.findViewById(R.id.dialog_mod_gallery_close).setOnClickListener(v -> dialog.dismiss());
+            dialog.setOnDismissListener(ignored -> adapter.dispose());
+            updateControls.run();
+            dialog.show();
+
+            android.util.DisplayMetrics dm = context.getResources().getDisplayMetrics();
+            dialog.getWindow().setLayout((int) (dm.widthPixels * 0.88f),
+                    (int) (dm.heightPixels * 0.88f));
+            dialog.getWindow().setGravity(android.view.Gravity.CENTER);
+        }
+
+        private void cancelPreviewRequest() {
+            if (mPreviewImageReceiver != null) {
+                mIconCache.cancelImage(mPreviewImageReceiver);
+                mPreviewImageReceiver = null;
+            }
+            if (mExtendedPreviewLoading != null) {
+                mExtendedPreviewLoading.setVisibility(View.GONE);
+            }
+        }
+
+        private class PreviewCarouselAdapter extends RecyclerView.Adapter<PreviewPageHolder> {
+            private final String[] urls;
+            private final String cachePrefix;
+            private final ArrayList<PreviewPageHolder> holders = new ArrayList<>();
+
+            PreviewCarouselAdapter(String[] urls, String cachePrefix) {
+                this.urls = urls;
+                this.cachePrefix = cachePrefix;
+            }
+
+            @NonNull
+            @Override
+            public PreviewPageHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+                View view = LayoutInflater.from(parent.getContext())
+                        .inflate(R.layout.view_mod_preview_page, parent, false);
+                PreviewPageHolder holder = new PreviewPageHolder(view);
+                holders.add(holder);
+                return holder;
+            }
+
+            @Override
+            public void onBindViewHolder(@NonNull PreviewPageHolder holder, int position) {
+                holder.bind(urls[position], cachePrefix + "_gallery_" + position);
+            }
+
+            @Override
+            public void onViewRecycled(@NonNull PreviewPageHolder holder) {
+                holder.cancel();
+            }
+
+            @Override
+            public int getItemCount() {
+                return urls.length;
+            }
+
+            void dispose() {
+                for (PreviewPageHolder holder : holders) holder.cancel();
+                holders.clear();
+            }
+        }
+
+        private class PreviewPageHolder extends RecyclerView.ViewHolder {
+            private final ImageView image;
+            private final ProgressBar loading;
+            private ImageReceiver receiver;
+
+            PreviewPageHolder(@NonNull View itemView) {
+                super(itemView);
+                image = itemView.findViewById(R.id.mod_gallery_page_image);
+                loading = itemView.findViewById(R.id.mod_gallery_page_loading);
+            }
+
+            void bind(String url, String cacheTag) {
+                cancel();
+                image.setImageDrawable(null);
+                loading.setVisibility(View.VISIBLE);
+                receiver = new ImageReceiver() {
+                    @Override
+                    public void onImageAvailable(Bitmap bitmap) {
+                        if (receiver != this) return;
+                        receiver = null;
+                        image.setImageDrawable(new BitmapDrawable(image.getResources(), bitmap));
+                        loading.setVisibility(View.GONE);
+                    }
+                };
+                mGalleryImageCache.getImage(receiver, cacheTag + "_hq_"
+                        + Integer.toHexString(url.hashCode()), url);
+            }
+
+            void cancel() {
+                if (receiver != null) {
+                    mGalleryImageCache.cancelImage(receiver);
+                    receiver = null;
+                }
+                loading.setVisibility(View.GONE);
+            }
+        }
+
         private void initializeVersionSelection() {
             List<String> loaders = WorkspaceVersionSelection.collectLoaders(mModDetail);
+            boolean chooseLoader = loaders.size() > 1;
+            if (mExtendedLoaderLabel != null) {
+                mExtendedLoaderLabel.setVisibility(chooseLoader ? View.VISIBLE : View.GONE);
+            }
+            mExtendedLoaderSelector.setVisibility(chooseLoader ? View.VISIBLE : View.GONE);
             mSelectedLoader = loaders.isEmpty() ? null : loaders.get(0);
             mExtendedLoaderSelector.setText(loaders.isEmpty()
                     ? itemView.getContext().getString(R.string.mod_detail_any_loader)
@@ -610,7 +852,11 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
             if (dependenciesOnly) {
                 mModpackApi.handleDependenciesInstallation(itemView.getContext(), mModDetail, selectedVersion, targetProfile);
             } else {
-                mModpackApi.handleInstallation(itemView.getContext(), mModDetail, selectedVersion, targetProfile);
+                Runnable onOpen = mModDetail.isModpack
+                        || mModDetail.contentType == SearchFilters.TYPE_MODPACK
+                        ? this::closeDetailedView : null;
+                mModpackApi.handleInstallation(itemView.getContext(), mModDetail,
+                        selectedVersion, targetProfile, onOpen);
             }
         }
 
@@ -970,6 +1216,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     return R.string.shader_install_button;
                 case SearchFilters.TYPE_DATAPACK:
                     return R.string.datapack_install_button;
+                case SearchFilters.TYPE_WORLD:
+                    return R.string.world_install_button;
                 case SearchFilters.TYPE_MODPACK:
                 default:
                     return R.string.modpack_install_button;
@@ -986,6 +1234,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                     return R.string.search_shader_download_error;
                 case SearchFilters.TYPE_DATAPACK:
                     return R.string.search_datapack_download_error;
+                case SearchFilters.TYPE_WORLD:
+                    return R.string.search_world_download_error;
                 case SearchFilters.TYPE_MODPACK:
                 default:
                     return R.string.search_modpack_download_error;
@@ -1039,8 +1289,8 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 resultModItems = newModItems;
             }
             ModItem[] finalModItems = resultModItems;
-            Tools.runOnUiThread(() -> {
-                if(myFuture.isCancelled()) return;
+            Tools.runOnUiThread(() -> runWhenRecyclerIdle(() -> {
+                if(myFuture.isCancelled() || mReleased) return;
                 mTaskInProgress = null;
                 if(finalModItems == null) {
                     mSearchResultCallback.onSearchError(SearchResultCallback.ERROR_INTERNAL);
@@ -1074,7 +1324,7 @@ public class ModItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder
                 // item accounting and can leave later pages unbound. Rebind the small catalog
                 // grid from its authoritative array instead.
                 notifyDataSetChanged();
-            });
+            }));
         }
     }
 

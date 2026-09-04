@@ -263,7 +263,6 @@ public class ModloaderInstallUtils {
         if (profile == null) {
             profile = new MinecraftProfile();
             profileKey = LauncherProfiles.getFreeProfileKey();
-            LauncherProfiles.mainProfileJson.profiles.put(profileKey, profile);
         }
 
         profile.name = name;
@@ -271,6 +270,9 @@ public class ModloaderInstallUtils {
         profile.icon = icon;
         if (gameDir != null) {
             profile.gameDir = gameDir;
+        }
+        if (!LauncherProfiles.mainProfileJson.profiles.containsKey(profileKey)) {
+            LauncherProfiles.putNewProfile(profileKey, profile);
         }
         LauncherProfiles.write();
         LauncherPreferences.DEFAULT_PREF.edit()

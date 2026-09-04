@@ -38,7 +38,7 @@ static void record_rendered_frame() {
     }
     g_frame_count++;
     uint64_t elapsed = now - g_fps_window_start_ns;
-    if(elapsed >= 500000000ULL) {
+    if(elapsed >= 1000000000ULL) {
         g_renderer_fps = (unsigned int) (((uint64_t) g_frame_count * 1000000000ULL) / elapsed);
         g_frame_count = 0;
         g_fps_window_start_ns = now;

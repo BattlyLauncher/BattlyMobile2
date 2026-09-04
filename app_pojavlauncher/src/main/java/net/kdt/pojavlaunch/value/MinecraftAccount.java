@@ -35,7 +35,9 @@ public class MinecraftAccount {
     public String xuid;
     public long expiresAt;
     public String skinFaceBase64;
-    private Bitmap mFaceCache;
+    // Runtime-only Android object. Persisting Bitmap internals breaks account loading on
+    // vendor ROMs that add private interfaces such as Vivo's IVivoBitmap.
+    private transient Bitmap mFaceCache;
     
     void updateSkinFace(String uuid) {
         try {
@@ -148,7 +150,7 @@ public class MinecraftAccount {
                 acc.profileId = getOfflineUuid(acc.username);
             }
             return acc;
-        } catch(NullPointerException | IOException | JsonSyntaxException e) {
+        } catch(IOException | RuntimeException e) {
             Log.e(MinecraftAccount.class.getName(), "Caught an exception while loading the profile",e);
             return null;
         }

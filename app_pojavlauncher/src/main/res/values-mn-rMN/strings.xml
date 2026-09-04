@@ -208,7 +208,7 @@
     <string name="crash_no_findings">Сүүлийн логуудаас ямар ч мэдэгдэж буй гэмтлийн загвар олдсонгүй.</string>
     <string name="crash_recovery_applied">Сэргээх үйлдэл дууссан</string>
     <string name="crash_recovery_manual">Энэ асуудлыг гараар өөрчлөх шаардлагатай. Бүртгэлийг нээнэ үү.</string>
-    <string name="credits_version">Хувилбар 2.2.1</string>
+    <string name="credits_version">Хувилбар 2.2.3</string>
     <string name="ctrl_like_btn">Дуртай</string>
     <string name="ctrl_liked_added">Таалагдсан удирдлагад нэмсэн.</string>
     <string name="ctrl_liked_btn">Таалагдсан</string>
@@ -269,8 +269,8 @@
     <string name="java_runtime_download_progress">Татаж авч байна Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Java 8 суулгаж байна</string>
     <string name="java_runtime_download_waiting">Java 8 татаж авахыг бэлтгэж байна...</string>
-    <string name="launcher_credits_title">Battly Эхлүүлэгч 2.2.1</string>
-    <string name="launcher_mobile_badge">Гар утас 2.2.1</string>
+    <string name="launcher_credits_title">Battly Эхлүүлэгч 2.2.3</string>
+    <string name="launcher_mobile_badge">Гар утас 2.2.3</string>
     <string name="launcher_status_battly">Battly данс</string>
     <string name="launcher_status_battly_plus">Battly+ бүртгэл</string>
     <string name="library_analyze_mods">Шинжилгээ хийх</string>
@@ -518,7 +518,7 @@
     <string name="battlyworlds_friend_request_message">%1$s руу найзын хүсэлт илгээх үү?</string>
     <string name="battlyworlds_friend_request_sent">%1$s руу найзын хүсэлт илгээсэн.</string>
     <string name="battlyworlds_friend_request_title">Найзын хүсэлт илгээх</string>
-    <string name="battlyworlds_guest_connected_simple">Multiplayer нээгээд Terracotta Лоббид нэгдээрэй. Энэ нь хятад тексттэй хамт гарч ирж магадгүй.</string>
+    <string name="battlyworlds_guest_connected_simple">Multiplayer нээгээд BattlyWorlds Лоббид нэгдээрэй.</string>
     <string name="battlyworlds_guest_hint_simple">Хэрэв сервер гарч ирэхгүй бол хэдэн секунд хүлээгээд Multiplayer-г сэргээнэ үү.</string>
     <string name="battlyworlds_guest_url">Нөөц хаяг: %1$s</string>
     <string name="battlyworlds_host">Хөтлөгч</string>
@@ -543,7 +543,7 @@
     <string name="battlyworlds_join">Нэгдэх</string>
     <string name="battlyworlds_join_hint">Урилгын код</string>
     <string name="battlyworlds_join_status_preparing">Хувийн LAN холболтыг бэлтгэж байна...</string>
-    <string name="battlyworlds_join_status_ready">Холбогдсон. Multiplayer дээр Terracotta Lobby нэртэй LAN серверийг нээнэ үү. Энэ нь хятад тексттэй хамт гарч ирж магадгүй.</string>
+    <string name="battlyworlds_join_status_ready">Холбогдсон. Multiplayer-д BattlyWorlds Lobby LAN серверт нэгдээрэй.</string>
     <string name="battlyworlds_join_status_title">BattlyWorlds-д нэгдэж байна</string>
     <string name="battlyworlds_lan_prompt_action">Урих</string>
     <string name="battlyworlds_lan_prompt_message">BattlyWorlds ашиглан сүлжээгээ хуваалцахгүйгээр найзуудаа урих боломжтой.</string>
@@ -617,7 +617,7 @@
     <string name="credits_based_on">PojavLauncher болон Boardwalk дээр суурилсан</string>
     <string name="credits_game_engine">Тоглоомын хөдөлгүүр</string>
     <string name="credits_inspiration">Урам зориг</string>
-    <string name="credits_license_text">Төсөлд багтсан GNU GPLv3 болон гуравдагч талын бүрэлдэхүүн хэсгүүд. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j болон бусад зүйлс нь анхны лицензийн дагуу.</string>
+    <string name="credits_license_text">Төсөлд багтсан GNU GPLv3 болон гуравдагч талын бүрэлдэхүүн хэсгүүд. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j гэх мэтийг анхны лицензийнхээ дагуу ашиглах боломжтой.</string>
     <string name="credits_license_title">Лиценз</string>
     <string name="credits_pojav_founder">PojavLauncher үүсгэн байгуулагч</string>
     <string name="credits_primary_development">Гол хөгжил</string>
@@ -754,7 +754,7 @@
     <string name="installer_internal_fallback">Дэмжигдээгүй суулгагч, хуучин Java UI-г нээж байна</string>
     <string name="installer_internal_running">Суулгагчийг шинжилж байна...</string>
     <string name="installer_internal_success">%1$s шууд Battly дотор суулгасан</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Эхлүүлэгч 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Эхлүүлэгч 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         PojavLauncher болон Boardwalk дээр суурилсан эхлүүлэгч.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Зээл&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -763,8 +763,8 @@
         • Явах зам&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Тусгай зөвшөөрөл болон гуравдагч этгээд&lt;/b&gt;&lt;br/&gt;
         • Төсөлд багтсан GNU GPLv3 болон гуравдагч талын бүрэлдэхүүн хэсгүүд.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j болон бусад зүйлийг анхны лицензийн дагуу.&lt;br/&gt;&lt;br/&gt;
-        Энэ програм нь Minecraft, Mojang эсвэл Microsoft-тай холбоогүй болно.</string>
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j болон бусад зүйлийг анхны лицензийнхээ дагуу.&lt;br/&gt;&lt;br/&gt;
+        Энэ програм нь Minecraft, Mojang эсвэл Microsoft-тэй холбоогүй.</string>
     <string name="launcher_download">Татаж авах</string>
     <string name="launcher_download_modpack">Modpack импортлох</string>
     <string name="launcher_execute">Тоглох</string>
@@ -895,7 +895,7 @@
     <string name="onboarding_welcome_title">Battly Mobile-д тавтай морил</string>
     <string name="preference_category_experimental_settings">Туршилтын тохиргоо</string>
     <string name="preference_disable_autojre_select">Автомат JRE сонголтыг идэвхгүй болгох</string>
-    <string name="preference_download_threads_description">Battly тоглоомын хэдэн файлыг нэгэн зэрэг татаж авахыг хянадаг. Өндөр утгууд нь сайн сүлжээнд илүү хурдан байдаг.</string>
+    <string name="preference_download_threads_description">Battly нь анхдагчаар 64 нэгэн зэрэг таталтыг ашигладаг. Хурдан холболт дээр үүнийг 100 хүртэл нэмэгдүүлээрэй.</string>
     <string name="preference_download_threads_title">Нэгэн зэрэг татаж авах</string>
     <string name="preference_renderer_auto">Автомат</string>
     <string name="preference_renderer_title">Үзүүлэгч</string>
@@ -1110,21 +1110,6 @@
 
     <string name="battly_new_badge">Шинэ</string>
 
-    <string name="battly_whats_new_transition_desc">Таны профайл бүрэн бүтэн бөгөөд тоглоход бэлэн байна.</string>
-    <string name="battly_whats_new_action_start">2.2.1-ийг судлах</string>
-    <string name="battly_whats_new_compatibility_desc">Android буцах товчлуур одоо хаахын оронд Minecraft руу буцах ба хайлтууд таныг баталгаажуулах үед гарыг хаадаг.</string>
-    <string name="battly_whats_new_compatibility_title">Таны замаас хол байгаа навигаци</string>
-    <string name="battly_whats_new_controllers_desc">Battly Worlds тохиргооноос автоматаар нэгдэх, микрофон болон аудионы төлөв, чанга яригчийн давхар харагдах байдал, ил тод байдал, байрлалыг тохируулна уу.</string>
-    <string name="battly_whats_new_controllers_title">Таны хяналтан дор дуут чат</string>
-    <string name="battly_whats_new_desc">Battly Worlds, Social, дуут чат болон өдөр тутмын навигацид зориулсан шинэчлэлт.</string>
-    <string name="battly_whats_new_instances_desc">Суулгасан мод, нөөцийн багц, шэйдер, дата багцыг шалгахын өмнө жишээг сонго. Номын сан бүр одоо тодорхой тусгаарлагдсан хэвээр байна.</string>
-    <string name="battly_whats_new_instances_title">Агуулгыг жишээгээр зохион байгуулсан</string>
-    <string name="battly_whats_new_recovery_desc">Battly нь асуухаасаа өмнө яагаад микрофонд хандах шаардлагатайг тайлбарлаж, дуу хоолойны тохиргоог хадгалж, онлайн, Battly Worlds болон олон тоглогчийн оролцоог сайжруулдаг.</string>
-    <string name="battly_whats_new_recovery_title">Зөвшөөрөл болон байгаа эсэх нь илүү тодорхой</string>
-    <string name="battly_whats_new_title">Battly гар утас 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 бэлэн боллоо</string>
-    <string name="battly_whats_new_worlds_desc">Battly Social-аас найзуудаа шууд урьж, өрөөний үйл ажиллагааг найдвартай хүлээн авч, Battly Worlds эсвэл олон тоглогчийн сервер дээр тоглож байхдаа статусаа шинэчлээрэй.</string>
-    <string name="battly_whats_new_worlds_title">Battly Worlds, илүү сайн холбогдсон</string>
     <string name="customctrl_voice_microphone_add">Дуут микрофон нэмэх товч</string>
     <string name="customctrl_voice_audio_add">Дуут аудио товчлуур нэмэх</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1198,4 +1183,30 @@
     <string name="battly_social_playing_worlds">Battly ертөнцөд тоглож байна · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Дуут чатын холболтын дуу</string>
     <string name="battlyworlds_voice_sounds_summary">Та эсвэл өөр тоглогч дуут чатад нэгдэх эсвэл гарах үед дуу тоглуулна.</string>
+<string name="download_action_browse_worlds_title">Дэлхий ертөнцийг үзэх</string>
+    <string name="download_action_browse_worlds_subtitle">Тоглуулах боломжтой ертөнцийг сонгосон инстанцдаа татаж аваарай.</string>
+    <string name="search_world_title">Дэлхийг үзэх</string>
+    <string name="search_world_subtitle">CurseForge ертөнцийг олж, сонгосон инстанцдаа суулгаарай.</string>
+    <string name="hint_search_world">Дэлхий ертөнцийг хайх</string>
+    <string name="search_world_no_result">Ямар ч ертөнц олдсонгүй</string>
+    <string name="search_world_error">Дэлхийг олж чадсангүй</string>
+    <string name="search_world_download_error">Дэлхийн мета өгөгдлийг татаж авч чадсангүй</string>
+    <string name="world_install_button">Дэлхийг суулгах</string>
+    <string name="world_install_success">Энэ жишээнд %1$s суулгасан</string>
+
+    <string name="battly_whats_new_action_start">2.2.3-ыг судлах</string>
+    <string name="battly_whats_new_compatibility_desc">Нээлттэй modpack үйлдэл нь одоо шинэ жишээг сонгож, суулгац болон агуулгын цонх бүрийг зөв хаадаг.</string>
+    <string name="battly_whats_new_compatibility_title">Суулгасан modpack-уудыг шууд нээнэ үү</string>
+    <string name="battly_whats_new_controllers_desc">Battly клиент суулгагч нь одоо авсаархан дэлгэцийг оруулаад зохих гүйлгэх жагсаалтыг ашигладаг.</string>
+    <string name="battly_whats_new_controllers_title">Үйлчлүүлэгчийн жагсаалтыг гүйлгэхийг зассан</string>
+    <string name="battly_whats_new_desc">Battly Workspace-д зориулсан шинэ тусгаарлагдсан тохиолдлууд, татаж авах боломжтой ертөнц болон чухал засварууд.</string>
+    <string name="battly_whats_new_instances_desc">Шинэ Vanilla, loader, client болон modpack instances нь ертөнц, мод, тохиргоо, нөөцийн багцаа бие даасан хавтсанд хадгалдаг.</string>
+    <string name="battly_whats_new_instances_title">Шинэ тохиолдол бүрт тусдаа хавтас</string>
+    <string name="battly_whats_new_recovery_desc">Шинэ инстанцийн тусгаарлалт, илүү аюулгүй тохиргооны хадгалалт, урт хугацааны оношлогоо нь тохиргоог дахин тохируулахыг багасгаж, асуудлыг тодорхойлоход хялбар болгодог.</string>
+    <string name="battly_whats_new_recovery_title">Тогтвортой байдал сайжирсан</string>
+    <string name="battly_whats_new_title">Battly гар утас 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Одоо байгаа тохиолдлууд байгаа газартаа үлддэг. Фолдер тусгаарлалт нь зөвхөн энэ хувилбараас хойш үүсгэсэн тохиолдлуудад хамаарна.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 бэлэн боллоо</string>
+    <string name="battly_whats_new_worlds_desc">CurseForge-аас Minecraft ертөнцийг хайж, сонгосон инстанц руугаа шууд суулгаарай.</string>
+    <string name="battly_whats_new_worlds_title">Workspace-с ертөнцийг татаж аваарай</string>
 </resources>

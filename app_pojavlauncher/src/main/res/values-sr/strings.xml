@@ -253,7 +253,7 @@
     <string name="crash_no_findings">У последњим логовима није пронађен познати облик пада.</string>
     <string name="crash_recovery_applied">Акција опоравка је завршена</string>
     <string name="crash_recovery_manual">Овај проблем захтева ручну измену. Отворите лог за детаље.</string>
-    <string name="credits_version">Верзија 2.2.1</string>
+    <string name="credits_version">Верзија 2.2.3</string>
     <string name="ctrl_like_btn">Свиђа ми се</string>
     <string name="ctrl_liked_added">Додато међу омиљене контроле.</string>
     <string name="ctrl_liked_btn">Свиђа ми се</string>
@@ -314,8 +314,8 @@
     <string name="java_runtime_download_progress">Преузимање Java %1$d (%2$.1f МБ / %3$.1f МБ)</string>
     <string name="java_runtime_download_title">Инсталирање Java 8</string>
     <string name="java_runtime_download_waiting">Припрема Java 8 преузимање...</string>
-    <string name="launcher_credits_title">Battly Лаунцхер 2.2.1</string>
-    <string name="launcher_mobile_badge">Мобилни 2.2.1</string>
+    <string name="launcher_credits_title">Battly Лаунцхер 2.2.3</string>
+    <string name="launcher_mobile_badge">Мобилни 2.2.3</string>
     <string name="launcher_status_battly">Battly налог</string>
     <string name="launcher_status_battly_plus">Battly+ налог</string>
     <string name="library_analyze_mods">Анализирати</string>
@@ -562,7 +562,7 @@
     <string name="battlyworlds_friend_request_message">Пошаљите захтев за пријатељство за %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Захтев за пријатељство је послат на %1$s.</string>
     <string name="battlyworlds_friend_request_title">Пошаљите захтев за пријатељство</string>
-    <string name="battlyworlds_guest_connected_simple">Отворите Мултиплаиер и придружите се Terracotta лобију. Може се појавити са кинеским текстом.</string>
+    <string name="battlyworlds_guest_connected_simple">Отворите Мултиплаиер и придружите се BattlyWorlds лобију.</string>
     <string name="battlyworlds_guest_hint_simple">Ако се сервер не појави, сачекајте неколико секунди и освежите Мултиплаиер.</string>
     <string name="battlyworlds_guest_url">Резервна адреса: %1$s</string>
     <string name="battlyworlds_host">Домаћин</string>
@@ -587,7 +587,7 @@
     <string name="battlyworlds_join">Придружите се</string>
     <string name="battlyworlds_join_hint">Инвите цоде</string>
     <string name="battlyworlds_join_status_preparing">Припрема приватне LAN везе...</string>
-    <string name="battlyworlds_join_status_ready">Повезано. У Мултиплаиер-у отворите сервер LAN под називом Terracotta Лобби. Може се појавити са кинеским текстом.</string>
+    <string name="battlyworlds_join_status_ready">Повезано. У мултиплаиер-у, придружите се серверу BattlyWorlds Лобби LAN.</string>
     <string name="battlyworlds_join_status_title">Придруживање BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Позови</string>
     <string name="battlyworlds_lan_prompt_message">Користите BattlyWorlds да позовете пријатеље без дељења мреже.</string>
@@ -661,7 +661,7 @@
     <string name="credits_based_on">Засновано на ПојавЛаунцхер-у и Боардвалк-у</string>
     <string name="credits_game_engine">Гаме енгине</string>
     <string name="credits_inspiration">Инспирација</string>
-    <string name="credits_license_text">ГНУ ГПЛв3 и компоненте треће стране укључене у пројекат. ОпенЈДК, LWJGL, ГЛ4ЕС, Апацхе Цоммонс, екп4ј и више под њиховим оригиналним лиценцама.</string>
+    <string name="credits_license_text">ГНУ ГПЛв3 и компоненте треће стране укључене у пројекат. ОпенЈДК, LWJGL, ГЛ4ЕС, ЛТВ, Апацхе Цоммонс, екп4ј и више под њиховим оригиналним лиценцама.</string>
     <string name="credits_license_title">Лиценца</string>
     <string name="credits_pojav_founder">ПојавЛаунцхер оснивач</string>
     <string name="credits_primary_development">Главни развој</string>
@@ -798,7 +798,7 @@
     <string name="installer_internal_fallback">Неподржани инсталатер, отвара застарели кориснички интерфејс Java</string>
     <string name="installer_internal_running">Анализа инсталатера…</string>
     <string name="installer_internal_success">%1$s инсталиран директно унутар Battly</string>
-    <string name="launcher_credits_html">&lt;б&gt;Battly Лаунцхер 2.0.3&lt;/б&gt;&lt;бр/&gt;&lt;бр/&gt;
+    <string name="launcher_credits_html">&lt;б&gt;Battly Лаунцхер 2.2.3&lt;/б&gt;&lt;бр/&gt;&lt;бр/&gt;
         Покретач заснован на ПојавЛаунцхер-у и Боардвалк-у.&lt;бр/&gt;&lt;бр/&gt;
         &lt;б&gt;Кредити&lt;/б&gt;&lt;бр/&gt;
         • Battly&lt;бр/&gt;
@@ -807,8 +807,8 @@
         • Шеталиште&lt;бр/&gt;&lt;бр/&gt;
         &lt;б&gt;Лиценца и треће стране&lt;/б&gt;&lt;бр/&gt;
         • ГНУ ГПЛв3 и компоненте треће стране укључене у пројекат.&lt;бр/&gt;
-        • ОпенЈДК, LWJGL, ГЛ4ЕС, Апацхе Цоммонс, екп4ј и више под њиховим оригиналним лиценцама.&lt;бр/&gt;&lt;бр/&gt;
-        Ова апликација није повезана са Minecraft, Мојангом или Microsoft.</string>
+        • ОпенЈДК, LWJGL, ГЛ4ЕС, ЛТВ, Апацхе Цоммонс, екп4ј и више под њиховим оригиналним лиценцама.&lt;бр/&gt;&lt;бр/&gt;
+        Ова апликација није повезана са Minecraft, Мојанг или Microsoft.</string>
     <string name="launcher_download">Преузми</string>
     <string name="launcher_download_modpack">Увези модпацк</string>
     <string name="launcher_execute">Играј</string>
@@ -868,7 +868,7 @@
     <string name="log_viewer_latest_log">Најновији дневник</string>
     <string name="log_viewer_loading">Учитавање дневника...</string>
     <string name="log_viewer_log_file">Дневник</string>
-    <string name="log_viewer_meta">%1$s\%2$d КБ · %3$s</string>
+    <string name="log_viewer_meta">%1$s\n%2$d КБ · %3$s</string>
     <string name="log_viewer_no_selection">Није изабран ниједан дневник.</string>
     <string name="log_viewer_read_failed">Неуспешно читање дневника: %1$s</string>
     <string name="log_viewer_refresh">Освежи</string>
@@ -939,7 +939,7 @@
     <string name="onboarding_welcome_title">Добродошли у Battly Мобиле</string>
     <string name="preference_category_experimental_settings">Експерименталне поставке</string>
     <string name="preference_disable_autojre_select">Онемогућите аутоматски избор ЈРЕ</string>
-    <string name="preference_download_threads_description">Контролише колико датотека игара Battly преузима истовремено. Веће вредности су брже на добрим мрежама.</string>
+    <string name="preference_download_threads_description">Battly подразумевано користи 64 истовремена преузимања. Повећајте га до 100 на брзим везама.</string>
     <string name="preference_download_threads_title">Истовремена преузимања</string>
     <string name="preference_renderer_auto">Аутоматски</string>
     <string name="preference_renderer_title">Рендерер</string>
@@ -1087,8 +1087,8 @@
     <string name="battlyworlds_connection_alerts_title">Упозорења о вези</string>
     <string name="battlyworlds_connection_status_summary">Чвор: %1$s\Terracotta: %2$s\%3$s</string>
     <string name="battlyworlds_connection_status_title">Статус везе</string>
-    <string name="battlyworlds_connection_test_failed">Није могуће доћи до %1$s\%2$s</string>
-    <string name="battlyworlds_connection_test_ok">Чвор: %1$s\нКашњење: %2$d мс\%3$s</string>
+    <string name="battlyworlds_connection_test_failed">Није могуће доћи до %1$s\n%2$s</string>
+    <string name="battlyworlds_connection_test_ok">Чвор: %1$s\nКашњење: %2$d мс\n%3$s</string>
     <string name="battlyworlds_connection_testing">Тестирање Battly Ворлдс везе…</string>
     <string name="battlyworlds_default_duration_summary">Ограничено вашим Battly налогом</string>
     <string name="battlyworlds_default_duration_title">Подразумевано трајање</string>
@@ -1154,21 +1154,6 @@
 
     <string name="battly_new_badge">Ново</string>
 
-    <string name="battly_whats_new_transition_desc">Ваши профили су нетакнути и спремни за игру.</string>
-    <string name="battly_whats_new_action_start">Истражите 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Дугме за повратак Android сада се враћа на Minecraft уместо да га затвара, а претраге одбацују тастатуру када их потврдите.</string>
-    <string name="battly_whats_new_compatibility_title">Навигација која вам не смета</string>
-    <string name="battly_whats_new_controllers_desc">Конфигуришите аутоматско спајање, стање микрофона и звука, видљивост преклапања звучника, транспарентност и позицију у подешавањима Battly Ворлдс.</string>
-    <string name="battly_whats_new_controllers_title">Гласовно ћаскање под вашом контролом</string>
-    <string name="battly_whats_new_desc">Фокусирано ажурирање за Battly Ворлдс, Социал, гласовно ћаскање и свакодневну навигацију.</string>
-    <string name="battly_whats_new_instances_desc">Изаберите инстанцу пре него што прегледате њене инсталиране модове, пакете ресурса, шејдере и пакете података. Свака библиотека сада остаје јасно одвојена.</string>
-    <string name="battly_whats_new_instances_title">Садржај организован по инстанци</string>
-    <string name="battly_whats_new_recovery_desc">Battly објашњава зашто је потребан приступ микрофону пре постављања питања, чува гласовне поставке сачуване и побољшава онлајн, Battly Ворлдс и присуство за више играча.</string>
-    <string name="battly_whats_new_recovery_title">Јасније дозволе и присуство</string>
-    <string name="battly_whats_new_title">Battly Мобиле 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 је спреман</string>
-    <string name="battly_whats_new_worlds_desc">Позовите пријатеље директно са Battly Социал, примајте поуздане активности у соби и одржавајте свој статус ажурираним док играте у Battly Ворлдс или на серверу за више играча.</string>
-    <string name="battly_whats_new_worlds_title">Battly Светови, боље повезани</string>
     <string name="customctrl_voice_microphone_add">Дугме за додавање гласовног микрофона</string>
     <string name="customctrl_voice_audio_add">Дугме за додавање гласовног звука</string>
     <string name="customctrl_voice_microphone_on">МИЦ</string>
@@ -1242,4 +1227,30 @@
     <string name="battly_social_playing_worlds">Играње у Battly Ворлдс · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Звуци повезивања гласовног ћаскања</string>
     <string name="battlyworlds_voice_sounds_summary">Пусти звук када се ви или други играч придружите гласовном ћаскању или га напустите.</string>
+<string name="download_action_browse_worlds_title">Прегледајте светове</string>
+    <string name="download_action_browse_worlds_subtitle">Преузмите светове који се могу играти у инстанцу коју одаберете.</string>
+    <string name="search_world_title">Бровсе Ворлдс</string>
+    <string name="search_world_subtitle">Откријте и инсталирајте CurseForge светове у инстанцу коју одаберете.</string>
+    <string name="hint_search_world">Потражите светове</string>
+    <string name="search_world_no_result">Нема пронађених светова</string>
+    <string name="search_world_error">Проналажење светова није успело</string>
+    <string name="search_world_download_error">Преузимање светских метаподатака није успело</string>
+    <string name="world_install_button">Инсталирај свет</string>
+    <string name="world_install_success">%1$s инсталиран у ову инстанцу</string>
+
+    <string name="battly_whats_new_action_start">Истражите 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Акција Опен модпацк сада бира нову инстанцу и исправно затвара сваки прозор инсталације и садржаја.</string>
+    <string name="battly_whats_new_compatibility_title">Директно отворите инсталиране модпакете</string>
+    <string name="battly_whats_new_controllers_desc">Програм за инсталацију клијента Battly сада користи одговарајућу листу која се може померати, укључујући и компактне екране.</string>
+    <string name="battly_whats_new_controllers_title">Поправљено је померање листе клијената</string>
+    <string name="battly_whats_new_desc">Нове изоловане инстанце, светови за преузимање и важне исправке за Battly Воркспаце.</string>
+    <string name="battly_whats_new_instances_desc">Нове инстанце Ванилла, лоадер, клијент и модпацк чувају своје светове, модове, подешавања и пакете ресурса у независној фасцикли.</string>
+    <string name="battly_whats_new_instances_title">Посебна фасцикла за сваку нову инстанцу</string>
+    <string name="battly_whats_new_recovery_desc">Нова изолација инстанце, сигурније складиштење поставки и дијагностика дугих сесија смањују ресетовање конфигурације и олакшавају идентификовање проблема.</string>
+    <string name="battly_whats_new_recovery_title">Побољшана стабилност</string>
+    <string name="battly_whats_new_title">Battly Мобиле 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Постојеће инстанце остају тамо где јесу. Изолација фасцикле се примењује само на инстанце креиране од ове верзије надаље.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 је спреман</string>
+    <string name="battly_whats_new_worlds_desc">Прегледајте и инсталирајте Minecraft светове из CurseForge директно у инстанцу коју одаберете.</string>
+    <string name="battly_whats_new_worlds_title">Преузмите светове са Воркспаце-а</string>
 </resources>

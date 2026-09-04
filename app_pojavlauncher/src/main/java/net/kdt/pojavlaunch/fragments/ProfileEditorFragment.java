@@ -269,7 +269,11 @@ public class ProfileEditorFragment extends Fragment implements CropperUtils.Crop
         else mTempProfile.pojavRendererName = mRenderNames.get(mDefaultRenderer.getSelectedItemPosition());
 
 
-        LauncherProfiles.mainProfileJson.profiles.put(mProfileKey, mTempProfile);
+        if (LauncherProfiles.mainProfileJson.profiles.containsKey(mProfileKey)) {
+            LauncherProfiles.mainProfileJson.profiles.put(mProfileKey, mTempProfile);
+        } else {
+            LauncherProfiles.putNewProfile(mProfileKey, mTempProfile);
+        }
         LauncherProfiles.write();
         ExtraCore.setValue(ExtraConstants.REFRESH_VERSION_SPINNER, mProfileKey);
     }

@@ -369,6 +369,15 @@ public class DownloadUtils {
         return connection;
     }
 
+    public static <T> T readStringCache(String cacheName, ParseCallback<T> parseCallback)
+            throws IOException, ParseException {
+        File cacheDestination = new File(Tools.DIR_CACHE, "string_cache/" + cacheName);
+        if (!cacheDestination.isFile() || !cacheDestination.canRead()) {
+            throw new IOException("Cached data is not available: " + cacheName);
+        }
+        return parseCallback.process(Tools.read(new FileInputStream(cacheDestination)));
+    }
+
     public static boolean isValidZipArchive(File file) {
         if (file == null || !file.isFile() || file.length() == 0L) return false;
         byte[] buffer = new byte[32768];

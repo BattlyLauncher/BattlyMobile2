@@ -496,7 +496,7 @@
     <string name="battlyworlds_friend_request_message">%1$s に友達リクエストを送信しますか?</string>
     <string name="battlyworlds_friend_request_sent">友達リクエストは %1$s に送信されました。</string>
     <string name="battlyworlds_friend_request_title">友達リクエストを送る</string>
-    <string name="battlyworlds_guest_connected_simple">マルチプレイヤーを開いて、Terracotta ロビーに参加します。中国語のテキストが表示される場合があります。</string>
+    <string name="battlyworlds_guest_connected_simple">マルチプレイヤーを開いて、BattlyWorlds ロビーに参加します。</string>
     <string name="battlyworlds_guest_hint_simple">サーバーが表示されない場合は、数秒待ってからマルチプレイヤーを更新してください。</string>
     <string name="battlyworlds_guest_url">バックアップアドレス: %1$s</string>
     <string name="battlyworlds_host">ホスト</string>
@@ -522,7 +522,7 @@
     <string name="battlyworlds_join">参加する</string>
     <string name="battlyworlds_join_hint">招待コード</string>
     <string name="battlyworlds_join_status_preparing">プライベート LAN 接続を準備しています...</string>
-    <string name="battlyworlds_join_status_ready">接続されました。マルチプレイヤーで、Terracotta ロビーという名前の LAN サーバーを開きます。中国語のテキストが表示される場合があります。</string>
+    <string name="battlyworlds_join_status_ready">接続されました。マルチプレイヤーで、BattlyWorlds ロビー LAN サーバーに参加します。</string>
     <string name="battlyworlds_join_status_title">BattlyWorldsに参加しています</string>
     <string name="battlyworlds_lan_prompt_action">招待する</string>
     <string name="battlyworlds_lan_prompt_message">BattlyWorlds を使用して、ネットワークを共有せずに友達を招待します。</string>
@@ -617,13 +617,13 @@
     <string name="credits_based_on">PojavLauncher と Boardwalk に基づく</string>
     <string name="credits_game_engine">ゲームエンジン</string>
     <string name="credits_inspiration">インスピレーション</string>
-    <string name="credits_license_text">プロジェクトに含まれる GNU GPLv3 およびサードパーティ コンポーネント。 OpenJDK、LWJGL、GL4ES、Apache Commons、exp4j などは元のライセンスに基づいて提供されます。</string>
+    <string name="credits_license_text">プロジェクトに含まれる GNU GPLv3 およびサードパーティ コンポーネント。 OpenJDK、LWJGL、GL4ES、LTW、Apache Commons、exp4j などは元のライセンスに基づいています。</string>
     <string name="credits_license_title">ライセンス</string>
     <string name="credits_pojav_founder">PojavLauncher 創設者</string>
     <string name="credits_primary_development">主な開発</string>
     <string name="credits_section_title">クレジット</string>
     <string name="credits_unaffiliated">このアプリはMinecraft、Mojang、またはMicrosoftとは提携していません。</string>
-    <string name="credits_version">バージョン2.2.1</string>
+    <string name="credits_version">バージョン2.2.3</string>
     <string name="ctrl_applied_success">コントロール「%1$s」が正常に適用されました。</string>
     <string name="ctrl_apply_btn">コントロールを適用する</string>
     <string name="ctrl_apply_msg">「%1$s」をダウンロードしてコントロール レイアウトとして適用しますか?</string>
@@ -810,7 +810,7 @@
     <string name="instance_storage_calculating">ストレージを計算しています…</string>
     <string name="instance_use">使用する</string>
     <string name="java_runtime_download_message">Battly は、アプリ内で配布するのではなく、最初のセットアップ後に Java 8 をダウンロードします。これにより、アプリのサイズが削減され、古い Minecraft バージョンが準備されます。</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly ランチャー 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly ランチャー 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         PojavLauncher と Boardwalk に基づくランチャー。&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;クレジット&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -819,13 +819,13 @@
         • 遊歩道&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;ライセンスと第三者&lt;/b&gt;&lt;br/&gt;
         • プロジェクトに含まれる GNU GPLv3 およびサードパーティ コンポーネント。&lt;br/&gt;
-        • オリジナルのライセンスに基づく OpenJDK、LWJGL、GL4ES、Apache Commons、exp4j など。&lt;br/&gt;&lt;br/&gt;
+        • オリジナルのライセンスに基づく OpenJDK、LWJGL、GL4ES、LTW、Apache Commons、exp4j など。&lt;br/&gt;&lt;br/&gt;
         このアプリはMinecraft、Mojang、またはMicrosoftとは提携していません。</string>
-    <string name="launcher_credits_title">Battly ランチャー 2.2.1</string>
+    <string name="launcher_credits_title">Battly ランチャー 2.2.3</string>
     <string name="launcher_download">ダウンロード</string>
     <string name="launcher_download_modpack">MODパックをインポートする</string>
     <string name="launcher_execute">遊ぶ</string>
-    <string name="launcher_mobile_badge">モバイル 2.2.1</string>
+    <string name="launcher_mobile_badge">モバイル 2.2.3</string>
     <string name="launcher_nav_back">戻る</string>
     <string name="launcher_nav_home">家に戻る</string>
     <string name="launcher_nav_workspace">Battly ワークスペース</string>
@@ -976,7 +976,7 @@
     <string name="preference_disable_autojre_select">JRE の自動選択を無効にする</string>
     <string name="preference_download_threads_auto_description">Battly は、CPU、メモリ、ネットワークの種類に合わせて同時ダウンロードを調整します。手動値を使用するには無効にします。</string>
     <string name="preference_download_threads_auto_title">自動ダウンロード並列処理</string>
-    <string name="preference_download_threads_description">Battly が同時にダウンロードするゲーム ファイルの数を制御します。値が大きいほど、良好なネットワークでは高速になります。</string>
+    <string name="preference_download_threads_description">Battly は、デフォルトで 64 の同時ダウンロードを使用します。高速接続では最大 100 まで増やします。</string>
     <string name="preference_download_threads_title">同時ダウンロード</string>
     <string name="preference_renderer_auto">自動</string>
     <string name="preference_renderer_title">レンダラー</string>
@@ -1314,21 +1314,6 @@
 
     <string name="battly_new_badge">新しい</string>
 
-    <string name="battly_whats_new_transition_desc">プロフィールはそのままで、すぐにプレイできます。</string>
-    <string name="battly_whats_new_action_start">2.2.1 を探索する</string>
-    <string name="battly_whats_new_compatibility_desc">Android の戻るボタンは閉じるのではなく Minecraft に戻り、検索を確認するとキーボードが閉じられるようになりました。</string>
-    <string name="battly_whats_new_compatibility_title">邪魔にならないナビゲーション</string>
-    <string name="battly_whats_new_controllers_desc">自動参加、マイクとオーディオの状態、スピーカー オーバーレイの可視性、透明度、位置を Battly Worlds 設定から構成します。</string>
-    <string name="battly_whats_new_controllers_title">あなたのコントロール下でボイスチャット</string>
-    <string name="battly_whats_new_desc">Battly ワールド、ソーシャル、ボイスチャット、日常ナビゲーションに焦点を当てたアップデート。</string>
-    <string name="battly_whats_new_instances_desc">インストールされている MOD、リソース パック、シェーダー、データパックを確認する前に、インスタンスを選択してください。各ライブラリは明確に分離されるようになりました。</string>
-    <string name="battly_whats_new_instances_title">インスタンスごとに整理されたコンテンツ</string>
-    <string name="battly_whats_new_recovery_desc">Battly は、質問する前にマイクへのアクセスが必要な理由を説明し、音声設定を保存し、オンライン、Battly ワールド、マルチプレイヤー プレゼンスを向上させます。</string>
-    <string name="battly_whats_new_recovery_title">より明確な権限とプレゼンス</string>
-    <string name="battly_whats_new_title">Battly モバイル 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 の準備が完了しました</string>
-    <string name="battly_whats_new_worlds_desc">Battly ソーシャルから直接友達を招待し、ルーム アクティビティを確実に受信し、Battly ワールドまたはマルチプレイヤー サーバーでのプレイ中にステータスを最新の状態に保ちます。</string>
-    <string name="battly_whats_new_worlds_title">Battly 世界、さらにつながりやすくなりました</string>
     <string name="customctrl_voice_microphone_add">音声マイク追加ボタン</string>
     <string name="customctrl_voice_audio_add">音声オーディオボタンを追加</string>
     <string name="customctrl_voice_microphone_on">総務省</string>
@@ -1402,4 +1387,30 @@
     <string name="battly_social_playing_worlds">Battly ワールドでプレイする · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">ボイスチャットの接続音</string>
     <string name="battlyworlds_voice_sounds_summary">自分または他のプレイヤーがボイスチャットに参加または退出したときに音を再生します。</string>
+<string name="download_action_browse_worlds_title">世界を閲覧する</string>
+    <string name="download_action_browse_worlds_subtitle">選択したインスタンスにプレイ可能なワールドをダウンロードします。</string>
+    <string name="search_world_title">世界を閲覧する</string>
+    <string name="search_world_subtitle">CurseForge ワールドを検出して、選択したインスタンスにインストールします。</string>
+    <string name="hint_search_world">世界を検索する</string>
+    <string name="search_world_no_result">ワールドが見つかりません</string>
+    <string name="search_world_error">ワールドが見つかりませんでした</string>
+    <string name="search_world_download_error">ワールドメタデータのダウンロードに失敗しました</string>
+    <string name="world_install_button">ワールドをインストールする</string>
+    <string name="world_install_success">%1$s がこのインスタンスにインストールされました</string>
+
+    <string name="battly_whats_new_action_start">2.2.3 を探索する</string>
+    <string name="battly_whats_new_compatibility_desc">「modpack を開く」アクションで新しいインスタンスが選択され、すべてのインストール ウィンドウとコンテンツ ウィンドウが正しく閉じられるようになりました。</string>
+    <string name="battly_whats_new_compatibility_title">インストールされている Modpack を直接開く</string>
+    <string name="battly_whats_new_controllers_desc">Battly クライアント インストーラーは、コンパクトな画面を含め、適切なスクロール可能なリストを使用するようになりました。</string>
+    <string name="battly_whats_new_controllers_title">クライアントリストのスクロールを修正</string>
+    <string name="battly_whats_new_desc">新しい分離インスタンス、ダウンロード可能なワールド、Battly ワークスペースの重要な修正。</string>
+    <string name="battly_whats_new_instances_desc">新しいバニラ、ローダー、クライアント、MODパックのインスタンスは、ワールド、MOD、設定、リソース パックを独立したフォルダーに保存します。</string>
+    <string name="battly_whats_new_instances_title">新しいインスタンスごとに個別のフォルダー</string>
+    <string name="battly_whats_new_recovery_desc">新しいインスタンスの分離、より安全な設定ストレージ、長時間のセッション診断により、構成のリセットが減り、問題の特定が容易になります。</string>
+    <string name="battly_whats_new_recovery_title">安定性の向上</string>
+    <string name="battly_whats_new_title">Battly モバイル 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">既存のインスタンスはそのまま残ります。フォルダーの分離は、このバージョン以降に作成されたインスタンスにのみ適用されます。</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 の準備が完了しました</string>
+    <string name="battly_whats_new_worlds_desc">CurseForge から Minecraft ワールドを参照し、選択したインスタンスに直接インストールします。</string>
+    <string name="battly_whats_new_worlds_title">ワークスペースからワールドをダウンロードする</string>
 </resources>

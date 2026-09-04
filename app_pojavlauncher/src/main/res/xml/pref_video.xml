@@ -12,6 +12,16 @@
             android:icon="@drawable/ic_setting_engine"
             app2:useSimpleSummaryProvider="true" />
 
+        <androidx.preference.ListPreference
+            android:key="graphicsProfile"
+            android:title="@string/preference_graphics_profile_title"
+            android:summary="%s"
+            android:defaultValue="auto"
+            android:entries="@array/graphics_profile_names"
+            android:entryValues="@array/graphics_profile_values"
+            android:icon="@drawable/ic_setting_engine"
+            app2:useSimpleSummaryProvider="true" />
+
         <Preference
             android:title="@string/mcl_setting_title_renderer_settings"
             android:summary="@string/mcl_setting_title_renderer_subtitle"
@@ -52,7 +62,7 @@
             android:title="@string/mcl_setting_title_use_surface_view"
             />
         <androidx.preference.SwitchPreferenceCompat
-            android:defaultValue="false"
+            android:defaultValue="true"
             android:key="force_vsync"
             android:summary="@string/preference_force_vsync_description"
             android:title="@string/preference_force_vsync_title"

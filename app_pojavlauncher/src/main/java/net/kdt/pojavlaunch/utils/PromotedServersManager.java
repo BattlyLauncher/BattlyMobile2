@@ -57,6 +57,10 @@ public final class PromotedServersManager {
 
     public static synchronized void syncBeforeLaunch(Context context, File gameDirectory) {
         if (context == null || gameDirectory == null) return;
+        if (BattlyOfflineMode.isOffline(context)) {
+            Logger.appendToLog("Info: Offline mode preserved the local multiplayer server list");
+            return;
+        }
         try {
             SharedPreferences preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
             List<Promotion> promotions = loadPromotions(preferences, false);
@@ -74,6 +78,7 @@ public final class PromotedServersManager {
     /** Refreshes the API config and persists promoted servers in every known instance. */
     public static synchronized void syncAllAtLauncherStart(Context context) {
         if (context == null) return;
+        if (BattlyOfflineMode.isOffline(context)) return;
         try {
             SharedPreferences preferences = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
             List<Promotion> promotions = loadPromotions(preferences, true);

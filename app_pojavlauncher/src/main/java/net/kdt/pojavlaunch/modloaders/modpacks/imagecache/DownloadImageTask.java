@@ -9,7 +9,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 
 class DownloadImageTask implements Runnable {
-    private static final float BITMAP_FINAL_DIMENSION = 256f;
     private final ReadFromDiskTask mParentTask;
     private int mRetryCount;
     DownloadImageTask(ReadFromDiskTask parentTask) {
@@ -33,20 +32,30 @@ class DownloadImageTask implements Runnable {
         try {
             IconCacheJanitor.waitForJanitorToFinish();
             DownloadUtils.downloadFile(mParentTask.imageUrl, mParentTask.cacheFile);
-            Bitmap bitmap = BitmapFactory.decodeFile(mParentTask.cacheFile.getAbsolutePath());
-            if(bitmap == null) return false;
-            int bitmapWidth = bitmap.getWidth(), bitmapHeight = bitmap.getHeight();
-            if(bitmapWidth <= BITMAP_FINAL_DIMENSION && bitmapHeight <= BITMAP_FINAL_DIMENSION) {
-                bitmap.recycle();
+            float finalDimension = mParentTask.iconCache.getBitmapFinalDimension();
+            BitmapFactory.Options bounds = new BitmapFactory.Options();
+            bounds.inJustDecodeBounds = true;
+            BitmapFactory.decodeFile(mParentTask.cacheFile.getAbsolutePath(), bounds);
+            if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return false;
+            if(bounds.outWidth <= finalDimension && bounds.outHeight <= finalDimension) {
                 return true;
             }
-            float imageRescaleRatio = Math.min(BITMAP_FINAL_DIMENSION/bitmapWidth, BITMAP_FINAL_DIMENSION/bitmapHeight);
+
+            BitmapFactory.Options decodeOptions = new BitmapFactory.Options();
+            decodeOptions.inSampleSize = 1;
+            int largestDimension = Math.max(bounds.outWidth, bounds.outHeight);
+            while (largestDimension / (decodeOptions.inSampleSize * 2f) > finalDimension * 1.5f) {
+                decodeOptions.inSampleSize *= 2;
+            }
+            Bitmap bitmap = BitmapFactory.decodeFile(mParentTask.cacheFile.getAbsolutePath(), decodeOptions);
+            if(bitmap == null) return false;
+            int bitmapWidth = bitmap.getWidth(), bitmapHeight = bitmap.getHeight();
+            float imageRescaleRatio = Math.min(finalDimension/bitmapWidth, finalDimension/bitmapHeight);
             Bitmap resizedBitmap = Bitmap.createScaledBitmap(bitmap,
                     (int)(bitmapWidth * imageRescaleRatio),
                     (int)(bitmapHeight * imageRescaleRatio),
                     true);
-            bitmap.recycle();
-            if(resizedBitmap == bitmap) return true;
+            if(resizedBitmap != bitmap) bitmap.recycle();
             try (FileOutputStream fileOutputStream = new FileOutputStream(mParentTask.cacheFile)) {
                 resizedBitmap.compress(Bitmap.CompressFormat.JPEG, 80, fileOutputStream);
             } finally {

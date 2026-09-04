@@ -42,7 +42,7 @@
     <string name="launcher_mobile_badge_dynamic">Mobile %1$s</string>
     <string name="credits_version_dynamic">Versión %1$s</string>
     <string name="launcher_credits_html"><![CDATA[
-        <b>Battly Launcher 2.0.3</b><br/><br/>
+        <b>Battly Launcher 2.2.3</b><br/><br/>
         Launcher basado en PojavLauncher y Boardwalk.<br/><br/>
         <b>Créditos</b><br/>
         &bull; Battly<br/>
@@ -51,7 +51,7 @@
         &bull; Boardwalk<br/><br/>
         <b>Licencia y terceros</b><br/>
         &bull; GNU GPLv3 y componentes de terceros incluidos en el proyecto.<br/>
-        &bull; OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j y más según sus licencias originales.<br/><br/>
+        &bull; OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j y más según sus licencias originales.<br/><br/>
         Esta app no está afiliada con Minecraft, Mojang ni Microsoft.
     ]]></string>
     <string name="launcher_select_instance">Seleccionar instancia</string>
@@ -133,8 +133,8 @@
     <string name="log_viewer_read_failed">No se pudo leer el registro: %1$s</string>
     <string name="log_viewer_no_selection">No hay ningún registro seleccionado.</string>
     <string name="log_viewer_copied">Log copiado al portapapeles.</string>
-    <string name="log_viewer_latest_log">Ultimo log</string>
-    <string name="log_viewer_latest_crash">Ultimo crash</string>
+    <string name="log_viewer_latest_log">Último log</string>
+    <string name="log_viewer_latest_crash">Último crash</string>
     <string name="log_viewer_installer_log">Log del instalador</string>
     <string name="log_viewer_log_file">Archivo log</string>
     <string name="log_viewer_search">Buscar en este log...</string>
@@ -498,7 +498,7 @@
     <string name="search_filter_subtitle">Filtra el catálogo por origen, cargador, categoría y versión de Minecraft.</string>
     <string name="search_filter_source_label">Origen</string>
     <string name="search_filter_loader_label">Cargador</string>
-    <string name="search_filter_category_label">Categoria</string>
+    <string name="search_filter_category_label">Categoría</string>
     <string name="search_filter_source_any">Cualquier origen</string>
     <string name="search_filter_source_modrinth">Modrinth</string>
     <string name="search_filter_source_curseforge">CurseForge</string>
@@ -599,6 +599,8 @@
     <string name="preference_category_java_tweaks">Ajustes de Java</string>
     <string name="preference_category_main_categories">Categorías</string>
     <string name="preference_category_miscellaneous">Ajustes varios</string>
+    <string name="preference_offline_mode_title">Battly Mobile Offline</string>
+    <string name="preference_offline_mode_description">Usa solo las versiones instaladas y los archivos guardados. Battly no refrescará, descargará ni limpiará cachés locales hasta que lo desactives.</string>
     <string name="preference_category_video">Ajustes de video</string>
     <string name="notification_permission_dialog_title">Permiso requerido</string>
     <string name="notification_permission_dialog_text">Battly usa las notificaciones para invitaciones de amigos, avisos de BattlyWorlds, novedades importantes y descargas en segundo plano. Actívalas para no perderte novedades de Battly ni avisos de tus amigos.</string>
@@ -674,24 +676,24 @@
     <string name="onboarding_show_again">Ver bienvenida de nuevo</string>
     <string name="onboarding_transition_title">Bienvenido a Battly</string>
     <string name="onboarding_transition_desc">Preparando tu launcher...</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_desc">Una actualización centrada en Battly Worlds, Social, el chat de voz y la navegación diaria.</string>
-    <string name="battly_whats_new_instances_title">Contenido organizado por instancia</string>
-    <string name="battly_whats_new_instances_desc">Elige una instancia antes de revisar sus mods, resource packs, shaders y datapacks instalados. Cada biblioteca queda claramente separada.</string>
-    <string name="battly_whats_new_worlds_title">Battly Worlds, mejor conectado</string>
-    <string name="battly_whats_new_worlds_desc">Invita directamente desde Battly Social, recibe correctamente la actividad de la sala y mantén actualizado tu estado en Battly Worlds o servidores multijugador.</string>
-    <string name="battly_whats_new_compatibility_title">Una navegación que no interrumpe</string>
-    <string name="battly_whats_new_compatibility_desc">El botón Atrás de Android vuelve a Minecraft sin cerrarlo y las búsquedas ocultan el teclado al confirmarlas.</string>
-    <string name="battly_whats_new_controllers_title">El chat de voz bajo tu control</string>
-    <string name="battly_whats_new_controllers_desc">Configura la conexión automática, el micrófono, el audio y la visibilidad, transparencia y posición del overlay desde los ajustes de Battly Worlds.</string>
-    <string name="battly_whats_new_recovery_title">Permisos y presencia más claros</string>
-    <string name="battly_whats_new_recovery_desc">Battly explica por qué necesita el micrófono antes de solicitarlo, conserva tus preferencias de voz y mejora la presencia online, en Battly Worlds y multijugador.</string>
-    <string name="battly_whats_new_action_start">Descubrir la 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 está listo</string>
-    <string name="battly_whats_new_transition_desc">Tus perfiles siguen intactos y listos para jugar.</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_desc">Nuevas instancias aisladas, mundos descargables y correcciones importantes para Battly Workspace.</string>
+    <string name="battly_whats_new_instances_title">Una carpeta distinta para cada instancia nueva</string>
+    <string name="battly_whats_new_instances_desc">Las nuevas instancias Vanilla, con loader, cliente o modpack guardan sus mundos, mods, ajustes y paquetes de recursos en una carpeta independiente.</string>
+    <string name="battly_whats_new_worlds_title">Descarga mundos desde Workspace</string>
+    <string name="battly_whats_new_worlds_desc">Busca e instala mundos de Minecraft desde CurseForge directamente en la instancia que elijas.</string>
+    <string name="battly_whats_new_compatibility_title">Abre directamente los modpacks instalados</string>
+    <string name="battly_whats_new_compatibility_desc">La acción Abrir modpack ahora selecciona la instancia nueva y cierra correctamente todas las ventanas de instalación y contenido.</string>
+    <string name="battly_whats_new_controllers_title">Corregido el scroll de la lista de clientes</string>
+    <string name="battly_whats_new_controllers_desc">El instalador de clientes de Battly utiliza ahora una lista desplazable real, también en pantallas compactas.</string>
+    <string name="battly_whats_new_recovery_title">Mejor estabilidad</string>
+    <string name="battly_whats_new_recovery_desc">Las nuevas carpetas independientes, el guardado más seguro de ajustes y el diagnóstico de partidas largas reducen los reinicios de configuración y ayudan a encontrar problemas.</string>
+    <string name="battly_whats_new_action_start">Descubrir la 2.2.3</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 está listo</string>
+    <string name="battly_whats_new_transition_desc">Las instancias existentes se mantienen donde están. Las carpetas aisladas solo se aplican a las instancias creadas desde esta versión.</string>
 
     <string name="app_name">Battly Launcher</string>
-    <string name="launcher_mobile_badge">Mobile 2.2.1</string>
+    <string name="launcher_mobile_badge">Mobile 2.2.3</string>
     <string name="launcher_versions_button">Versiones</string>
     <string name="library_button_desc">Abrir biblioteca</string>
     <string name="battly_login_error_credentials">Usuario o contraseña incorrectos.</string>
@@ -704,7 +706,7 @@
     <string name="version_not_installed_local">%1$s no está instalada. Ve a Descargas para instalarla primero.</string>
     <string name="launcher_version_format">Versión %1$s</string>
     <string name="launcher_version_fallback">Versión 1.21.9</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
     <string name="launcher_news_title">Últimas novedades de Battly</string>
     <string name="launcher_news_battly">Novedades de Battly</string>
     <string name="launcher_news_minecraft">Novedades de Minecraft</string>
@@ -784,7 +786,7 @@
     <string name="onboarding_controls_selected">%1$s seleccionado</string>
     <string name="onboarding_controls_applied">Controles aplicados</string>
     <string name="microsoft_login_started">Inicio de sesión con Microsoft iniciado</string>
-    <string name="credits_version">Versión 2.2.1</string>
+    <string name="credits_version">Versión 2.2.3</string>
     <string name="credits_based_on">Basado en PojavLauncher y Boardwalk</string>
     <string name="credits_section_title">Créditos</string>
     <string name="credits_primary_development">Desarrollo principal</string>
@@ -793,7 +795,7 @@
     <string name="credits_pojav_founder">Fundador de PojavLauncher</string>
     <string name="credits_inspiration">Inspiración</string>
     <string name="credits_license_title">Licencia</string>
-    <string name="credits_license_text">GNU GPLv3 y componentes de terceros incluidos en el proyecto. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j y más según sus licencias originales.</string>
+    <string name="credits_license_text">GNU GPLv3 y componentes de terceros incluidos en el proyecto. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j y más según sus licencias originales.</string>
     <string name="credits_unaffiliated">Esta app no está afiliada con Minecraft, Mojang ni Microsoft.</string>
     <string name="control_keyboard">Teclado</string>
     <string name="control_copy">Copiar</string>
@@ -836,6 +838,12 @@
     <string name="mcl_setting_title_renderer_settings">Ajustes extra del renderizador</string>
     <string name="mcl_setting_title_renderer_subtitle">Ajustes específicos del renderizador</string>
     <string name="preference_renderer_title">Renderizador</string>
+    <string name="preference_graphics_profile_title">Perfil gráfico adaptativo</string>
+    <string name="graphics_profile_auto">Automático (recomendado)</string>
+    <string name="graphics_profile_performance">Rendimiento</string>
+    <string name="graphics_profile_balanced">Equilibrado</string>
+    <string name="graphics_profile_quality">Calidad</string>
+    <string name="graphics_profile_custom">Ajustes personalizados</string>
     <string name="preference_renderer_auto">Automático</string>
     <string name="mcl_setting_renderer_gles2_4">Holy GL4ES - solo 1.21.4 o inferior, rápido</string>
     <string name="mcl_setting_renderer_mobileglues">MobileGlues - OpenGL ES 3</string>
@@ -883,6 +891,28 @@
     <string name="mg_renderer_glsl_cache">Tamaño máximo de caché GLSL</string>
     <string name="mg_renderer_angle">Usar ANGLE como driver</string>
     <string name="mg_renderer_multidraw">Modo de emulación multidraw</string>
+    <string name="mg_benchmark_title">Probar y optimizar MultiDraw</string>
+    <string name="mg_benchmark_summary">Mide todas las estrategias de MobileGlues 2.0 en este dispositivo y recomienda el orden más rápido</string>
+    <string name="mg_benchmark_confirm">Se ejecutará el benchmark gráfico completo de MobileGlues. Normalmente tarda al menos 8 segundos y puede necesitar varios minutos si el dispositivo está ocupado. Mantén Battly abierto y no uses el dispositivo durante la prueba.</string>
+    <string name="mg_benchmark_start">Iniciar prueba</string>
+    <string name="mg_benchmark_running">Midiendo estrategias MultiDraw reales…</string>
+    <string name="mg_benchmark_attempt">Intento de medición %1$d de 4 · %2$d%%</string>
+    <string name="mg_benchmark_retry">El contexto gráfico se volvió inestable. Reintentando de forma segura con %1$d secciones…</string>
+    <string name="mg_benchmark_result_title">Resultados del benchmark de MobileGlues</string>
+    <string name="mg_benchmark_result_intro">Medido en %1$.1f segundos con %2$s. Las estrategias más rápidas aparecen primero.</string>
+    <string name="mg_benchmark_quality">%1$d rondas · variación ±%2$.1f%%</string>
+    <string name="mg_benchmark_noisy">Algunas mediciones siguieron siendo inestables. El orden propuesto es útil, pero los resultados muy cercanos podrían estar invertidos. Repetir la prueba con el dispositivo frío y en reposo mejorará la precisión.</string>
+    <string name="mg_benchmark_wrong_driver">Aviso: MobileGlues solicitó ANGLE, pero la prueba utilizó el driver del sistema. Aplicar este resultado podría no representar el driver que utilizará Minecraft.</string>
+    <string name="mg_benchmark_apply">Aplicar optimización</string>
+    <string name="mg_benchmark_applied">MobileGlues se ha optimizado con el resultado medido.</string>
+    <string name="mg_benchmark_failed">El benchmark de MobileGlues ha fallado: %1$s</string>
+    <string name="mg_benchmark_not_measured">No se pudo medir ninguna estrategia compatible.</string>
+    <string name="mg_benchmark_cancel">Cancelar prueba</string>
+    <string name="mg_benchmark_process_ended">El proceso gráfico de MobileGlues se cerró durante la prueba.</string>
+    <string name="mg_benchmark_driver_stopped">El driver gráfico detuvo el proceso de benchmark.</string>
+    <string name="mg_benchmark_service_failed">No se pudo iniciar el servicio de benchmark de MobileGlues.</string>
+    <string name="mg_benchmark_bind_failed">Battly no pudo conectarse con el benchmark de MobileGlues.</string>
+    <string name="mg_benchmark_save_failed">No se pudo guardar la configuración medida.</string>
     <string name="mg_renderer_multidraw_order">Estrategia MultiDraw</string>
     <string name="mg_renderer_multidraw_order_summary">MobileGlues 2.0 puede elegir y cambiar de método de forma independiente para cada operación de dibujo.</string>
     <string name="mg_renderer_multidraw_per_function">MultiDraw por operación</string>
@@ -1513,6 +1543,11 @@
     <string name="battly_files_folder">Carpeta · %1$d elementos</string>
     <string name="battly_files_file">%1$s · %2$s</string>
     <string name="battly_files_preview">Vista previa del archivo</string>
+    <string name="mod_detail_preview">Previsualización del contenido</string>
+    <string name="mod_detail_gallery_title">Galería de %1$s</string>
+    <string name="mod_detail_gallery_counter">%1$d de %2$d</string>
+    <string name="mod_detail_gallery_previous">Imagen anterior</string>
+    <string name="mod_detail_gallery_next">Imagen siguiente</string>
     <string name="battly_files_preview_too_large">Solo se muestran los primeros 256 KB.</string>
     <string name="battly_files_no_preview">Battly no puede previsualizar este tipo de archivo, pero está disponible en esta carpeta.</string>
     <string name="battly_files_delete_title">Eliminar de Battly</string>
@@ -1720,4 +1755,14 @@
     <string name="battlyworlds_microphone_not_now">Ahora no</string>
     <string name="battlyworlds_microphone_continue">Continuar</string>
     <string name="battly_social_playing_worlds">Jugando en Battly Worlds · Minecraft %1$s</string>
+    <string name="download_action_browse_worlds_title">Buscar mundos</string>
+    <string name="download_action_browse_worlds_subtitle">Descarga mundos jugables en la instancia que elijas.</string>
+    <string name="search_world_title">Buscar mundos</string>
+    <string name="search_world_subtitle">Descubre e instala mundos de CurseForge en la instancia que elijas.</string>
+    <string name="hint_search_world">Buscar mundos</string>
+    <string name="search_world_no_result">No se encontraron mundos</string>
+    <string name="search_world_error">No se pudieron buscar mundos</string>
+    <string name="search_world_download_error">No se pudieron descargar los datos del mundo</string>
+    <string name="world_install_button">Instalar mundo</string>
+    <string name="world_install_success">%1$s se ha instalado en esta instancia</string>
 </resources>

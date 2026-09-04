@@ -10,16 +10,17 @@ public final class GameSessionExitClassifier {
     private GameSessionExitClassifier() {
     }
 
+    public static boolean endedUnexpectedly(int reportedExitCode, String details, String log) {
+        if (details != null && !details.trim().isEmpty()) return true;
+        if (reportedExitCode == 0) return false;
+        if (log == null || log.trim().isEmpty()) return true;
+        return endedUnexpectedly(log);
+    }
+
     public static boolean endedUnexpectedly(String log) {
         if (log == null || log.trim().isEmpty()) return false;
-        Integer exitCode = lastExitCode(log);
-        if (exitCode != null) return exitCode != 0;
-
         String lower = log.toLowerCase(Locale.ROOT);
-        if (lower.contains("stopping!") || lower.contains("shutting down") || lower.contains("fastquit. exiting")) {
-            return false;
-        }
-        return lower.contains("game crashed!")
+        boolean fatal = lower.contains("game crashed!")
                 || lower.contains("---- minecraft crash report ----")
                 || lower.contains("exception in thread \"main\"")
                 || lower.contains("unable to launch")
@@ -28,6 +29,13 @@ public final class GameSessionExitClassifier {
                 || lower.contains("error during pre-loading phase")
                 || lower.contains("modloadingexception")
                 || lower.contains("needs language provider javafml");
+        if (fatal) return true;
+
+        if (lower.contains("stopping!") || lower.contains("shutting down") || lower.contains("fastquit. exiting")) {
+            return false;
+        }
+        Integer exitCode = lastExitCode(log);
+        return exitCode != null && exitCode != 0;
     }
 
     static Integer lastExitCode(String log) {

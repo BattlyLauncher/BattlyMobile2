@@ -32,6 +32,7 @@ public final class BattlyComponentUpdater {
     /** Runs at most twice a day and never blocks launcher startup. */
     public static void scheduleBackgroundCheck(@NonNull Context context) {
         Context appContext = context.getApplicationContext();
+        if (BattlyOfflineMode.isOffline(appContext)) return;
         SharedPreferences preferences = appContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE);
         long now = System.currentTimeMillis();
         if (!shouldCheck(now, preferences.getLong(KEY_LAST_CHECK, 0L))) return;
@@ -58,6 +59,9 @@ public final class BattlyComponentUpdater {
     @NonNull
     public static Result updateAll(@NonNull Context context, @NonNull ProgressListener listener)
             throws IOException {
+        if (BattlyOfflineMode.isOffline(context)) {
+            throw new IOException("Battly Mobile Offline is active");
+        }
         JSONArray manifest;
         try {
             manifest = new JSONArray(DownloadUtils.downloadString(MANIFEST_URL));

@@ -137,6 +137,10 @@ public final class BattlyPlusManager {
             }
             return;
         }
+        if (BattlyOfflineMode.isOffline(appContext)) {
+            if (callback != null) callback.onResult(isPlus(appContext));
+            return;
+        }
         MinecraftAccount currentAccount = PojavProfile.getCurrentProfileContent(appContext, null);
         if (!isBattlyAccountEligible(currentAccount)) {
             setPlus(appContext, false);

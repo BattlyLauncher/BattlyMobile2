@@ -657,7 +657,7 @@
     <string name="battlyworlds_join">Rejoindre</string>
     <string name="battlyworlds_join_hint">Code d\'invitation</string>
     <string name="battlyworlds_join_status_preparing">Préparation de la connexion privée LAN...</string>
-    <string name="battlyworlds_join_status_ready">Connecté. En multijoueur, ouvrez le serveur LAN nommé BattlyWorlds Lobby.</string>
+    <string name="battlyworlds_join_status_ready">Connecté. En multijoueur, rejoignez le serveur BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">Rejoindre BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Inviter</string>
     <string name="battlyworlds_lan_prompt_message">Utilisez BattlyWorlds pour inviter des amis sans partager votre réseau.</string>
@@ -751,13 +751,13 @@
     <string name="credits_based_on">Basé sur PojavLauncher et Boardwalk</string>
     <string name="credits_game_engine">Moteur de jeu</string>
     <string name="credits_inspiration">Inspiration</string>
-    <string name="credits_license_text">GNU GPLv3 et composants tiers inclus dans le projet. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j et plus sous leurs licences d\'origine.</string>
+    <string name="credits_license_text">GNU GPLv3 et composants tiers inclus dans le projet. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j et plus sous leurs licences d\'origine.</string>
     <string name="credits_license_title">Licence</string>
     <string name="credits_pojav_founder">Fondateur de PojavLauncher</string>
     <string name="credits_primary_development">Développement principal</string>
     <string name="credits_section_title">Crédits</string>
     <string name="credits_unaffiliated">Cette application n\'est pas affiliée à Minecraft, Mojang ou Microsoft.</string>
-    <string name="credits_version">Version 2.2.1</string>
+    <string name="credits_version">Version 2.2.3</string>
     <string name="ctrl_applied_success">Contrôle "%1$s" appliqué avec succès.</string>
     <string name="ctrl_apply_btn">Appliquer le contrôle</string>
     <string name="ctrl_apply_msg">Télécharger et appliquer « %1$s » comme disposition de contrôle ?</string>
@@ -943,7 +943,7 @@
     <string name="instance_storage_calculating">Calcul du stockage…</string>
     <string name="instance_use">Utiliser</string>
     <string name="java_runtime_download_message">Battly télécharge Java 8 après la première configuration au lieu de l\'envoyer dans l\'application. Cela réduit la taille de l\'application et prépare les anciennes versions de Minecraft.</string>
-    <string name="launcher_credits_html">&lt;b&gt;Lanceur Battly 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Lanceur Battly 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Lanceur basé sur PojavLauncher et Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Crédits&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -952,13 +952,13 @@
         • Promenade en bois&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Licence et tiers&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 et composants tiers inclus dans le projet.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j et plus sous leurs licences d\'origine.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j et plus sous leurs licences d\'origine.&lt;br/&gt;&lt;br/&gt;
         Cette application n\'est pas affiliée à Minecraft, Mojang ou Microsoft.</string>
-    <string name="launcher_credits_title">Lanceur Battly 2.2.1</string>
+    <string name="launcher_credits_title">Lanceur Battly 2.2.3</string>
     <string name="launcher_download">Télécharger</string>
     <string name="launcher_download_modpack">Importer un pack de modules</string>
     <string name="launcher_execute">Jouer</string>
-    <string name="launcher_mobile_badge">Mobiles 2.2.1</string>
+    <string name="launcher_mobile_badge">Mobiles 2.2.3</string>
     <string name="launcher_nav_back">Retourner</string>
     <string name="launcher_nav_home">Retour à la maison</string>
     <string name="launcher_nav_workspace">Espace de travail Battly</string>
@@ -1107,7 +1107,7 @@
     <string name="preference_disable_autojre_select">Désactiver la sélection automatique de JRE</string>
     <string name="preference_download_threads_auto_description">Battly adapte les téléchargements simultanés au type de CPU, de mémoire et de réseau. Désactivez-le pour utiliser la valeur manuelle.</string>
     <string name="preference_download_threads_auto_title">Parallélisme de téléchargement automatique</string>
-    <string name="preference_download_threads_description">Contrôle le nombre de fichiers de jeu téléchargés simultanément par Battly. Des valeurs plus élevées sont plus rapides sur de bons réseaux.</string>
+    <string name="preference_download_threads_description">Battly utilise 64 téléchargements simultanés par défaut. Augmentez-le jusqu\'à 100 sur les connexions rapides.</string>
     <string name="preference_download_threads_title">Téléchargements simultanés</string>
     <string name="preference_renderer_auto">Automatique</string>
     <string name="preference_renderer_title">Moteur de rendu</string>
@@ -1419,21 +1419,6 @@
 
     <string name="battly_new_badge">Nouveau</string>
 
-    <string name="battly_whats_new_transition_desc">Vos profils sont intacts et prêts à jouer.</string>
-    <string name="battly_whats_new_action_start">Explorer 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Le bouton Précédent du Android revient désormais à Minecraft au lieu de le fermer, et les recherches rejettent le clavier lorsque vous les confirmez.</string>
-    <string name="battly_whats_new_compatibility_title">Une navigation qui ne vous gêne pas</string>
-    <string name="battly_whats_new_controllers_desc">Configurez la connexion automatique, l\'état du microphone et de l\'audio, la visibilité de la superposition des haut-parleurs, la transparence et la position à partir des paramètres Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">Chat vocal sous votre contrôle</string>
-    <string name="battly_whats_new_desc">Une mise à jour ciblée pour les mondes Battly, les réseaux sociaux, le chat vocal et la navigation quotidienne.</string>
-    <string name="battly_whats_new_instances_desc">Choisissez une instance avant de passer en revue ses mods, packs de ressources, shaders et packs de données installés. Chaque bibliothèque reste désormais clairement séparée.</string>
-    <string name="battly_whats_new_instances_title">Contenu organisé par instance</string>
-    <string name="battly_whats_new_recovery_desc">Battly explique pourquoi l\'accès au microphone est nécessaire avant de demander, conserve les préférences vocales enregistrées et améliore en ligne, les mondes Battly et la présence multijoueur.</string>
-    <string name="battly_whats_new_recovery_title">Autorisations et présence plus claires</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 est prêt</string>
-    <string name="battly_whats_new_worlds_desc">Invitez des amis directement depuis Battly Social, recevez l\'activité de la salle de manière fiable et maintenez votre statut à jour lorsque vous jouez dans les mondes Battly ou sur un serveur multijoueur.</string>
-    <string name="battly_whats_new_worlds_title">Battly Des mondes mieux connectés</string>
     <string name="customctrl_voice_microphone_add">Ajouter un bouton de microphone vocal</string>
     <string name="customctrl_voice_audio_add">Ajouter un bouton audio vocal</string>
     <string name="customctrl_voice_microphone_on">MICRO</string>
@@ -1507,4 +1492,30 @@
     <string name="battly_social_playing_worlds">Jouer aux Mondiaux Battly · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Sons de connexion du chat vocal</string>
     <string name="battlyworlds_voice_sounds_summary">Joue un son lorsque vous ou un autre joueur rejoignez ou quittez le chat vocal.</string>
+<string name="download_action_browse_worlds_title">Parcourir les mondes</string>
+    <string name="download_action_browse_worlds_subtitle">Téléchargez des mondes jouables dans l\'instance de votre choix.</string>
+    <string name="search_world_title">Parcourir les mondes</string>
+    <string name="search_world_subtitle">Découvrez et installez les mondes CurseForge dans l\'instance de votre choix.</string>
+    <string name="hint_search_world">Rechercher des mondes</string>
+    <string name="search_world_no_result">Aucun monde trouvé</string>
+    <string name="search_world_error">Impossible de trouver des mondes</string>
+    <string name="search_world_download_error">Échec du téléchargement des métadonnées mondiales</string>
+    <string name="world_install_button">Installer le monde</string>
+    <string name="world_install_success">%1$s installé dans cette instance</string>
+
+    <string name="battly_whats_new_action_start">Explorer 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">L\'action Ouvrir le modpack sélectionne désormais la nouvelle instance et ferme correctement chaque fenêtre d\'installation et de contenu.</string>
+    <string name="battly_whats_new_compatibility_title">Ouvrez directement les modpacks installés</string>
+    <string name="battly_whats_new_controllers_desc">Le programme d\'installation du client Battly utilise désormais une liste déroulante appropriée, y compris sur les écrans compacts.</string>
+    <string name="battly_whats_new_controllers_title">Défilement de la liste des clients corrigé</string>
+    <string name="battly_whats_new_desc">Nouvelles instances isolées, mondes téléchargeables et correctifs importants pour Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Les nouvelles instances Vanilla, chargeur, client et modpack conservent leurs mondes, mods, paramètres et packs de ressources dans un dossier indépendant.</string>
+    <string name="battly_whats_new_instances_title">Un dossier séparé pour chaque nouvelle instance</string>
+    <string name="battly_whats_new_recovery_desc">Une nouvelle isolation des instances, un stockage plus sûr des paramètres et des diagnostics de longue session réduisent les réinitialisations de configuration et facilitent l\'identification des problèmes.</string>
+    <string name="battly_whats_new_recovery_title">Stabilité améliorée</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Les instances existantes restent là où elles se trouvent. L\'isolation des dossiers s\'applique uniquement aux instances créées à partir de cette version.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 est prêt</string>
+    <string name="battly_whats_new_worlds_desc">Parcourez et installez les mondes Minecraft à partir de CurseForge directement dans l\'instance de votre choix.</string>
+    <string name="battly_whats_new_worlds_title">Télécharger des mondes depuis Workspace</string>
 </resources>

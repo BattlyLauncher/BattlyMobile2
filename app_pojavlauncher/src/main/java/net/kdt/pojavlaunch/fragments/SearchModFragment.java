@@ -122,7 +122,7 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
     @Override
     public void onDestroyView() {
         ProgressKeeper.removeTaskCountListener(mModItemAdapter);
-        mModItemAdapter.clearNativeAds();
+        mModItemAdapter.release();
         super.onDestroyView();
     }
 
@@ -260,6 +260,12 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
     }
 
     private FilterOption<Integer>[] getSourceOptions() {
+        if (mSearchFilters.isWorld()) {
+            return new FilterOption[] {
+                    new FilterOption<>(getString(R.string.search_filter_source_curseforge),
+                            Constants.SOURCE_CURSEFORGE)
+            };
+        }
         return new FilterOption[] {
                 new FilterOption<>(getString(R.string.search_filter_source_any), SearchFilters.SOURCE_ANY),
                 new FilterOption<>(getString(R.string.search_filter_source_modrinth), Constants.SOURCE_MODRINTH),
@@ -268,7 +274,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
     }
 
     private FilterOption<String>[] getLoaderOptions() {
-        if (mSearchFilters.isResourcepack() || mSearchFilters.isShader() || mSearchFilters.isDatapack()) {
+        if (mSearchFilters.isResourcepack() || mSearchFilters.isShader()
+                || mSearchFilters.isDatapack() || mSearchFilters.isWorld()) {
             return new FilterOption[] {
                     new FilterOption<>(getString(R.string.search_filter_loader_any), SearchFilters.LOADER_ANY) };
         }
@@ -327,6 +334,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
                 return R.string.search_shader_title;
             case SearchFilters.TYPE_DATAPACK:
                 return R.string.search_datapack_title;
+            case SearchFilters.TYPE_WORLD:
+                return R.string.search_world_title;
             case SearchFilters.TYPE_MODPACK:
             default:
                 return R.string.search_modpack_title;
@@ -343,6 +352,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
                 return R.string.search_shader_subtitle;
             case SearchFilters.TYPE_DATAPACK:
                 return R.string.search_datapack_subtitle;
+            case SearchFilters.TYPE_WORLD:
+                return R.string.search_world_subtitle;
             case SearchFilters.TYPE_MODPACK:
             default:
                 return R.string.search_modpack_subtitle;
@@ -359,6 +370,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
                 return R.string.hint_search_shader;
             case SearchFilters.TYPE_DATAPACK:
                 return R.string.hint_search_datapack;
+            case SearchFilters.TYPE_WORLD:
+                return R.string.hint_search_world;
             case SearchFilters.TYPE_MODPACK:
             default:
                 return R.string.hint_search_modpack;
@@ -375,6 +388,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
                 return R.string.search_shader_no_result;
             case SearchFilters.TYPE_DATAPACK:
                 return R.string.search_datapack_no_result;
+            case SearchFilters.TYPE_WORLD:
+                return R.string.search_world_no_result;
             case SearchFilters.TYPE_MODPACK:
             default:
                 return R.string.search_modpack_no_result;
@@ -391,6 +406,8 @@ public class SearchModFragment extends Fragment implements ModItemAdapter.Search
                 return R.string.search_shader_error;
             case SearchFilters.TYPE_DATAPACK:
                 return R.string.search_datapack_error;
+            case SearchFilters.TYPE_WORLD:
+                return R.string.search_world_error;
             case SearchFilters.TYPE_MODPACK:
             default:
                 return R.string.search_modpack_error;

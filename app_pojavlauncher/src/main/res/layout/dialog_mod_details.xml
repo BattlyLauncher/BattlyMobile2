@@ -181,89 +181,152 @@
                 android:textSize="12sp"
                 tools:text="Machine and magic focused modpack with a large progression tree and a lot of content." />
 
-            <TextView
+            <LinearLayout
+                android:id="@+id/dialog_mod_detail_columns"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="8dp"
-                android:layout_marginBottom="3dp"
-                android:text="@string/mod_detail_step_loader"
-                android:textAllCaps="true"
-                android:textColor="#66C7D4DF"
-                android:textSize="11sp"
-                android:letterSpacing="0.08"
-                android:textStyle="bold" />
+                android:gravity="top"
+                android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/dialog_mod_loader_selector"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_battly_form_field"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:textColor="#DCEAF1"
-                android:textSize="13sp"
-                android:drawableEnd="@drawable/ic_battly_chevron"
-                android:drawablePadding="8dp"
-                tools:text="Fabric" />
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1.2"
+                    android:orientation="vertical">
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:layout_marginBottom="3dp"
-                android:text="@string/mod_detail_step_minecraft"
-                android:textAllCaps="true"
-                android:textColor="#66C7D4DF"
-                android:textSize="11sp"
-                android:letterSpacing="0.08"
-                android:textStyle="bold" />
+                    <TextView
+                        android:id="@+id/dialog_mod_loader_label"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginBottom="3dp"
+                        android:letterSpacing="0.08"
+                        android:text="@string/mod_detail_step_loader"
+                        android:textAllCaps="true"
+                        android:textColor="#66C7D4DF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/dialog_mod_minecraft_selector"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_battly_form_field"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:textColor="#DCEAF1"
-                android:textSize="12sp"
-                android:drawableEnd="@drawable/ic_battly_chevron"
-                android:drawablePadding="8dp"
-                tools:text="Minecraft 1.21.4" />
+                    <TextView
+                        android:id="@+id/dialog_mod_loader_selector"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:clickable="true"
+                        android:drawableEnd="@drawable/ic_battly_chevron"
+                        android:drawablePadding="8dp"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:textColor="#DCEAF1"
+                        android:textSize="13sp"
+                        tools:text="Fabric" />
 
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="7dp"
-                android:layout_marginBottom="3dp"
-                android:text="@string/mod_detail_step_content_version"
-                android:textAllCaps="true"
-                android:textColor="#66C7D4DF"
-                android:textSize="11sp"
-                android:letterSpacing="0.08"
-                android:textStyle="bold" />
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:layout_marginBottom="3dp"
+                        android:letterSpacing="0.08"
+                        android:text="@string/mod_detail_step_minecraft"
+                        android:textAllCaps="true"
+                        android:textColor="#66C7D4DF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
 
-            <TextView
-                android:id="@+id/dialog_mod_version_selector"
-                android:layout_width="match_parent"
-                android:layout_height="40dp"
-                android:background="@drawable/bg_battly_form_field"
-                android:clickable="true"
-                android:focusable="true"
-                android:gravity="center_vertical"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
-                android:textColor="#DCEAF1"
-                android:textSize="13sp"
-                android:drawableEnd="@drawable/ic_battly_chevron"
-                android:drawablePadding="8dp"
-                tools:text="2.4.0 · Recommended" />
+                    <TextView
+                        android:id="@+id/dialog_mod_minecraft_selector"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:clickable="true"
+                        android:drawableEnd="@drawable/ic_battly_chevron"
+                        android:drawablePadding="8dp"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:textColor="#DCEAF1"
+                        android:textSize="12sp"
+                        tools:text="Minecraft 1.21.4" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="7dp"
+                        android:layout_marginBottom="3dp"
+                        android:letterSpacing="0.08"
+                        android:text="@string/mod_detail_step_content_version"
+                        android:textAllCaps="true"
+                        android:textColor="#66C7D4DF"
+                        android:textSize="11sp"
+                        android:textStyle="bold" />
+
+                    <TextView
+                        android:id="@+id/dialog_mod_version_selector"
+                        android:layout_width="match_parent"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_battly_form_field"
+                        android:clickable="true"
+                        android:drawableEnd="@drawable/ic_battly_chevron"
+                        android:drawablePadding="8dp"
+                        android:focusable="true"
+                        android:gravity="center_vertical"
+                        android:paddingStart="14dp"
+                        android:paddingEnd="14dp"
+                        android:textColor="#DCEAF1"
+                        android:textSize="13sp"
+                        tools:text="2.4.0 · Recommended" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/dialog_mod_preview_container"
+                    android:layout_width="0dp"
+                    android:layout_height="130dp"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="0.8"
+                    android:background="@drawable/bg_battly_form_field"
+                    android:gravity="center"
+                    android:orientation="vertical"
+                    android:padding="6dp"
+                    android:visibility="gone"
+                    tools:visibility="visible">
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="0dp"
+                        android:layout_weight="1">
+
+                        <ImageView
+                            android:id="@+id/dialog_mod_preview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:background="@drawable/bg_battly_profile_icon"
+                            android:clipToOutline="true"
+                            android:contentDescription="@string/mod_detail_preview"
+                            android:scaleType="centerCrop" />
+
+                        <ProgressBar
+                            android:id="@+id/dialog_mod_preview_loading"
+                            style="?android:attr/progressBarStyleSmall"
+                            android:layout_width="28dp"
+                            android:layout_height="28dp"
+                            android:layout_gravity="center"
+                            android:indeterminateTint="#82D9C7" />
+                    </FrameLayout>
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:gravity="center"
+                        android:maxLines="1"
+                        android:text="@string/mod_detail_preview"
+                        android:textColor="#AAC7D4DF"
+                        android:textSize="11sp" />
+                </LinearLayout>
+            </LinearLayout>
 
             <TextView
                 android:layout_width="match_parent"

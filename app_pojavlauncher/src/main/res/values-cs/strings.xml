@@ -567,7 +567,7 @@
     <string name="crash_no_findings">V nejnovějších protokolech nebyl nalezen žádný známý vzorec selhání.</string>
     <string name="crash_recovery_applied">Obnovení bylo dokončeno</string>
     <string name="crash_recovery_manual">Tento problém vyžaduje ruční změnu. Pro podrobnosti otevřete protokol.</string>
-    <string name="credits_version">Verze 2.2.1</string>
+    <string name="credits_version">Verze 2.2.3</string>
     <string name="ctrl_like_btn">Jako</string>
     <string name="ctrl_liked_added">Přidáno k oblíbeným ovládacím prvkům.</string>
     <string name="ctrl_liked_btn">Líbilo se</string>
@@ -628,8 +628,8 @@
     <string name="java_runtime_download_progress">Stahování Java %1$d (%2$.1f MB / %3$.1f MB)</string>
     <string name="java_runtime_download_title">Instalace Java 8</string>
     <string name="java_runtime_download_waiting">Příprava stažení Java 8...</string>
-    <string name="launcher_credits_title">Battly Launcher 2.2.1</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_credits_title">Battly Launcher 2.2.3</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_status_battly">Účet Battly</string>
     <string name="launcher_status_battly_plus">Účet Battly+</string>
     <string name="library_analyze_mods">Analyzujte</string>
@@ -867,7 +867,7 @@
     <string name="battlyworlds_friend_request_message">Poslat žádost o přátelství %1$s?</string>
     <string name="battlyworlds_friend_request_sent">Žádost o přátelství byla odeslána na %1$s.</string>
     <string name="battlyworlds_friend_request_title">Odeslat žádost o přátelství</string>
-    <string name="battlyworlds_guest_connected_simple">Otevřete multiplayer a připojte se k Terracotta Lobby. Může se objevit s čínským textem.</string>
+    <string name="battlyworlds_guest_connected_simple">Otevřete multiplayer a připojte se k BattlyWorlds Lobby.</string>
     <string name="battlyworlds_guest_hint_simple">Pokud se server nezobrazí, počkejte několik sekund a obnovte hru pro více hráčů.</string>
     <string name="battlyworlds_guest_url">Záložní adresa: %1$s</string>
     <string name="battlyworlds_host">Hostitel</string>
@@ -892,7 +892,7 @@
     <string name="battlyworlds_join">Připojte se</string>
     <string name="battlyworlds_join_hint">Kód pozvánky</string>
     <string name="battlyworlds_join_status_preparing">Příprava soukromého připojení LAN...</string>
-    <string name="battlyworlds_join_status_ready">Připojeno. Ve hře pro více hráčů otevřete server LAN s názvem Terracotta Lobby. Může se objevit s čínským textem.</string>
+    <string name="battlyworlds_join_status_ready">Připojeno. Ve hře pro více hráčů se připojte k serveru BattlyWorlds Lobby LAN.</string>
     <string name="battlyworlds_join_status_title">Připojuji se k BattlyWorlds</string>
     <string name="battlyworlds_lan_prompt_action">Pozvat</string>
     <string name="battlyworlds_lan_prompt_message">Použijte BattlyWorlds k pozvání přátel bez sdílení vaší sítě.</string>
@@ -964,7 +964,7 @@
     <string name="credits_based_on">Na základě PojavLauncher a Boardwalk</string>
     <string name="credits_game_engine">Herní engine</string>
     <string name="credits_inspiration">Inspirace</string>
-    <string name="credits_license_text">GNU GPLv3 a komponenty třetích stran zahrnuté v projektu. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j a další pod jejich původními licencemi.</string>
+    <string name="credits_license_text">GNU GPLv3 a komponenty třetích stran zahrnuté v projektu. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j a další pod jejich původními licencemi.</string>
     <string name="credits_license_title">Licence</string>
     <string name="credits_pojav_founder">Zakladatel PojavLauncheru</string>
     <string name="credits_primary_development">Hlavní vývoj</string>
@@ -1099,7 +1099,7 @@
     <string name="installer_internal_fallback">Nepodporovaný instalační program, otevírá se starší uživatelské rozhraní Java</string>
     <string name="installer_internal_running">Probíhá analýza instalačního programu…</string>
     <string name="installer_internal_success">%1$s nainstalován přímo uvnitř Battly</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Launcher 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         Launcher založený na PojavLauncher a Boardwalk.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Kredity&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -1108,7 +1108,7 @@
         • Promenáda&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Licence a třetí strany&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 a komponenty třetích stran zahrnuté v projektu.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j a další pod jejich původními licencemi.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j a další pod jejich původními licencemi.&lt;br/&gt;&lt;br/&gt;
         Tato aplikace není přidružena k Minecraft, Mojang nebo Microsoft.</string>
     <string name="launcher_download">Stáhnout</string>
     <string name="launcher_download_modpack">Importujte modpack</string>
@@ -1235,7 +1235,7 @@
     <string name="onboarding_welcome_desc">Hrajte, instalujte verze, spravujte profily a přizpůsobte si Minecraft ze svého telefonu.</string>
     <string name="onboarding_welcome_title">Vítejte v Battly Mobile</string>
     <string name="preference_disable_autojre_select">Zakázat automatický výběr JRE</string>
-    <string name="preference_download_threads_description">Řídí, kolik herních souborů Battly stáhne současně. Vyšší hodnoty jsou na dobrých sítích rychlejší.</string>
+    <string name="preference_download_threads_description">Battly ve výchozím nastavení používá 64 současných stahování. Zvyšte jej až na 100 u rychlých připojení.</string>
     <string name="preference_download_threads_title">Simultánní stahování</string>
     <string name="preference_renderer_auto">Automaticky</string>
     <string name="preference_renderer_title">Renderer</string>
@@ -1425,21 +1425,6 @@
 
     <string name="battly_new_badge">Nový</string>
 
-    <string name="battly_whats_new_transition_desc">Vaše profily jsou neporušené a připravené ke hře.</string>
-    <string name="battly_whats_new_action_start">Prozkoumat 2.2.1</string>
-    <string name="battly_whats_new_compatibility_desc">Tlačítko Zpět Android se nyní místo zavření vrátí na Minecraft a po potvrzení se vyhledávání ukončí.</string>
-    <string name="battly_whats_new_compatibility_title">Navigace, která vám nepřekáží</string>
-    <string name="battly_whats_new_controllers_desc">Nakonfigurujte automatické spojení, stav mikrofonu a zvuku, viditelnost překryvného reproduktoru, průhlednost a polohu z nastavení Battly Worlds.</string>
-    <string name="battly_whats_new_controllers_title">Hlasový chat pod vaší kontrolou</string>
-    <string name="battly_whats_new_desc">Soustředěná aktualizace pro světy Battly, sociální sítě, hlasový chat a každodenní navigaci.</string>
-    <string name="battly_whats_new_instances_desc">Než si prohlédnete nainstalované mody, balíčky zdrojů, shadery a datové balíčky, vyberte instanci. Každá knihovna nyní zůstává jasně oddělena.</string>
-    <string name="battly_whats_new_instances_title">Obsah organizovaný podle instancí</string>
-    <string name="battly_whats_new_recovery_desc">Battly vysvětluje, proč je nutný přístup k mikrofonu, než se zeptáte, uchovává hlasové preference a vylepšuje online, Battly Worlds a přítomnost pro více hráčů.</string>
-    <string name="battly_whats_new_recovery_title">Jasnější oprávnění a přítomnost</string>
-    <string name="battly_whats_new_title">Battly Mobile 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 je připraven</string>
-    <string name="battly_whats_new_worlds_desc">Pozvěte přátele přímo ze sociálních sítí Battly, přijímejte spolehlivě aktivitu v místnosti a udržujte aktuální stav při hraní ve světech Battly nebo na serveru pro více hráčů.</string>
-    <string name="battly_whats_new_worlds_title">Světy Battly, lépe propojené</string>
     <string name="customctrl_voice_microphone_add">Tlačítko Přidat hlasový mikrofon</string>
     <string name="customctrl_voice_audio_add">Tlačítko Přidat hlasový zvuk</string>
     <string name="customctrl_voice_microphone_on">MIC</string>
@@ -1513,4 +1498,30 @@
     <string name="battly_social_playing_worlds">Hraní ve světech Battly · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Zvuky připojení hlasového chatu</string>
     <string name="battlyworlds_voice_sounds_summary">Přehrát zvuk, když se vy nebo jiný hráč připojíte k hlasovému chatu nebo jej opustíte.</string>
+<string name="download_action_browse_worlds_title">Procházet světy</string>
+    <string name="download_action_browse_worlds_subtitle">Stáhněte si hratelné světy do instance, kterou si vyberete.</string>
+    <string name="search_world_title">Procházet světy</string>
+    <string name="search_world_subtitle">Objevte a nainstalujte světy CurseForge do instance, kterou si vyberete.</string>
+    <string name="hint_search_world">Hledat světy</string>
+    <string name="search_world_no_result">Nebyly nalezeny žádné světy</string>
+    <string name="search_world_error">Nepodařilo se najít světy</string>
+    <string name="search_world_download_error">Stažení metadat světa se nezdařilo</string>
+    <string name="world_install_button">Instalovat svět</string>
+    <string name="world_install_success">Do této instance byl nainstalován %1$s</string>
+
+    <string name="battly_whats_new_action_start">Prozkoumat 2.2.3</string>
+    <string name="battly_whats_new_compatibility_desc">Akce Open modpack nyní vybere novou instanci a správně zavře každé okno instalace a obsahu.</string>
+    <string name="battly_whats_new_compatibility_title">Otevřete nainstalované modpacky přímo</string>
+    <string name="battly_whats_new_controllers_desc">Instalační program klienta Battly nyní používá správný rolovací seznam, a to i na kompaktních obrazovkách.</string>
+    <string name="battly_whats_new_controllers_title">Posouvání seznamu klientů opraveno</string>
+    <string name="battly_whats_new_desc">Nové izolované instance, světy ke stažení a důležité opravy pro Battly Workspace.</string>
+    <string name="battly_whats_new_instances_desc">Nové instance Vanilla, loader, klient a modpack uchovávají své světy, mody, nastavení a balíčky zdrojů v nezávislé složce.</string>
+    <string name="battly_whats_new_instances_title">Samostatná složka pro každou novou instanci</string>
+    <string name="battly_whats_new_recovery_desc">Nová izolace instancí, bezpečnější úložiště nastavení a diagnostika dlouhých relací omezují resetování konfigurace a usnadňují identifikaci problémů.</string>
+    <string name="battly_whats_new_recovery_title">Vylepšená stabilita</string>
+    <string name="battly_whats_new_title">Battly Mobile 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Stávající instance zůstávají tam, kde jsou. Izolace složek se vztahuje pouze na instance vytvořené od této verze a dále.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 je připraven</string>
+    <string name="battly_whats_new_worlds_desc">Procházejte a instalujte světy Minecraft ze CurseForge přímo do instance, kterou si vyberete.</string>
+    <string name="battly_whats_new_worlds_title">Stáhněte si světy z Workspace</string>
 </resources>

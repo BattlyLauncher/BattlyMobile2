@@ -23,6 +23,7 @@ import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.nativead.NativeAd;
 import com.google.android.gms.ads.nativead.NativeAdView;
 
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.R;
 
 import java.util.ArrayList;
@@ -47,27 +48,30 @@ public final class BattlyNativeAdHelper {
             callback.onFailed();
             return;
         }
-        MobileAds.initialize(activity, status -> {
-            if (activity.isFinishing() || activity.isDestroyed()) {
-                Log.d(TAG, "Native ad cancelled: activity is closing");
-                callback.onFailed();
-                return;
-            }
-            new AdLoader.Builder(activity, unitId)
-                    .forNativeAd(ad -> activity.runOnUiThread(() -> {
-                        if (activity.isFinishing() || activity.isDestroyed()) ad.destroy();
-                        else callback.onLoaded(ad);
-                    }))
-                    .withAdListener(new com.google.android.gms.ads.AdListener() {
-                        @Override
-                        public void onAdFailedToLoad(@NonNull LoadAdError error) {
-                            Log.w(TAG, "Native ad failed: " + error.getCode() + " " + error.getMessage());
-                            activity.runOnUiThread(callback::onFailed);
-                        }
-                    })
-                    .build()
-                    .loadAd(new AdRequest.Builder().build());
-        });
+        PojavApplication.sExecutorService.execute(() ->
+                MobileAds.initialize(activity.getApplicationContext(), status ->
+                        activity.runOnUiThread(() -> {
+                            if (activity.isFinishing() || activity.isDestroyed()) {
+                                Log.d(TAG, "Native ad cancelled: activity is closing");
+                                callback.onFailed();
+                                return;
+                            }
+                            new AdLoader.Builder(activity, unitId)
+                                    .forNativeAd(ad -> activity.runOnUiThread(() -> {
+                                        if (activity.isFinishing() || activity.isDestroyed()) ad.destroy();
+                                        else callback.onLoaded(ad);
+                                    }))
+                                    .withAdListener(new com.google.android.gms.ads.AdListener() {
+                                        @Override
+                                        public void onAdFailedToLoad(@NonNull LoadAdError error) {
+                                            Log.w(TAG, "Native ad failed: " + error.getCode() + " "
+                                                    + error.getMessage());
+                                            activity.runOnUiThread(callback::onFailed);
+                                        }
+                                    })
+                                    .build()
+                                    .loadAd(new AdRequest.Builder().build());
+                        })));
     }
 
     public static NativeAdView createCompactView(Context context, NativeAd nativeAd) {

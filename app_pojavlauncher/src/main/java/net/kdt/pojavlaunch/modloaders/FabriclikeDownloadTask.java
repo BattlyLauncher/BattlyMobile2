@@ -69,7 +69,7 @@ public class FabriclikeDownloadTask implements Runnable, Tools.DownloaderFeedbac
             fabricProfile.name = mUtils.getName();
             fabricProfile.icon = mUtils.getIconName();
             String profileKey = LauncherProfiles.getFreeProfileKey();
-            LauncherProfiles.mainProfileJson.profiles.put(profileKey, fabricProfile);
+            LauncherProfiles.putNewProfile(profileKey, fabricProfile);
             LauncherProfiles.write();
             LauncherPreferences.DEFAULT_PREF.edit()
                     .putString(LauncherPreferences.PREF_KEY_CURRENT_PROFILE, profileKey)

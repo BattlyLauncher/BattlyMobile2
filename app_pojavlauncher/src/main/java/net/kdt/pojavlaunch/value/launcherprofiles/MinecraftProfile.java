@@ -20,6 +20,8 @@ public class MinecraftProfile {
 	public String logConfig;
 	public boolean logConfigIsXML;
 	public String pojavRendererName;
+	/** Optional per-instance override: auto, performance, balanced, quality or custom. */
+	public String graphicsProfile;
 	public String controlFile;
 	public MinecraftResolution[] resolution;
 	// Optional Battly instance metadata. Old launcher_profiles.json files remain valid.
@@ -67,6 +69,7 @@ public class MinecraftProfile {
 		logConfig = profile.logConfig;
 		logConfigIsXML = profile.logConfigIsXML;
 		pojavRendererName = profile.pojavRendererName;
+		graphicsProfile = profile.graphicsProfile;
 		controlFile = profile.controlFile;
 		resolution = profile.resolution;
 		battlyInstanceId = profile.battlyInstanceId;

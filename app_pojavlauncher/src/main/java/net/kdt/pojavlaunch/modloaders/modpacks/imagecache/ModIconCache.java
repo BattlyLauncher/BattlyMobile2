@@ -19,6 +19,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 public class ModIconCache {
+    private final float bitmapFinalDimension;
     ThreadPoolExecutor cacheLoaderPool = new ThreadPoolExecutor(10,
             10,
             1000,
@@ -27,12 +28,21 @@ public class ModIconCache {
     File cachePath;
     private final List<WeakReference<ImageReceiver>> mCancelledReceivers = new ArrayList<>();
     public ModIconCache() {
+        this(256f);
+    }
+
+    public ModIconCache(float bitmapFinalDimension) {
+        this.bitmapFinalDimension = Math.max(256f, bitmapFinalDimension);
         cachePath = getImageCachePath();
         if(!cachePath.exists() && !cachePath.isFile() && Tools.DIR_CACHE.canWrite()) {
             if(!cachePath.mkdirs())
                 throw new RuntimeException("Failed to create icon cache directory");
         }
 
+    }
+
+    float getBitmapFinalDimension() {
+        return bitmapFinalDimension;
     }
     static File getImageCachePath() {
         return new File(Tools.DIR_CACHE, "mod_icons");

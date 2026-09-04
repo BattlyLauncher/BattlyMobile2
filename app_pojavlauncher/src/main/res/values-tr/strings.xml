@@ -640,7 +640,7 @@
     <string name="battlyworlds_friend_request_message">%1$s\'ye arkadaşlık isteği gönderilsin mi?</string>
     <string name="battlyworlds_friend_request_sent">Arkadaşlık isteği %1$s adresine gönderildi.</string>
     <string name="battlyworlds_friend_request_title">Arkadaşlık isteği gönder</string>
-    <string name="battlyworlds_guest_connected_simple">Çok Oyunculu\'yu açın ve Terracotta Lobisine katılın. Çince metinle görünebilir.</string>
+    <string name="battlyworlds_guest_connected_simple">Çok Oyunculu\'yu açın ve BattlyWorlds Lobisine katılın.</string>
     <string name="battlyworlds_guest_hint_simple">Sunucu görünmezse birkaç saniye bekleyin ve Multiplayer\'ı yenileyin.</string>
     <string name="battlyworlds_guest_url">Yedekleme adresi: %1$s</string>
     <string name="battlyworlds_host">Sunucu</string>
@@ -666,7 +666,7 @@
     <string name="battlyworlds_join">Katıl</string>
     <string name="battlyworlds_join_hint">Kodu davet et</string>
     <string name="battlyworlds_join_status_preparing">Özel LAN bağlantısı hazırlanıyor...</string>
-    <string name="battlyworlds_join_status_ready">Bağlı. Multiplayer\'da Terracotta Lobby adlı LAN sunucusunu açın. Çince metinle görünebilir.</string>
+    <string name="battlyworlds_join_status_ready">Bağlı. Çok Oyunculu modda BattlyWorlds Lobi LAN sunucusuna katılın.</string>
     <string name="battlyworlds_join_status_title">BattlyWorlds\'ye katılma</string>
     <string name="battlyworlds_lan_prompt_action">Davet et</string>
     <string name="battlyworlds_lan_prompt_message">Ağınızı paylaşmadan arkadaşlarınızı davet etmek için BattlyWorlds\'yi kullanın.</string>
@@ -760,13 +760,13 @@
     <string name="credits_based_on">PojavLauncher ve Boardwalk\'a dayanmaktadır</string>
     <string name="credits_game_engine">Oyun motoru</string>
     <string name="credits_inspiration">İlham</string>
-    <string name="credits_license_text">GNU GPLv3 ve üçüncü taraf bileşenler projeye dahil edilmiştir. OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ve daha fazlası orijinal lisansları altında.</string>
+    <string name="credits_license_text">GNU GPLv3 ve üçüncü taraf bileşenler projeye dahil edilmiştir. OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ve daha fazlası orijinal lisansları altında.</string>
     <string name="credits_license_title">Lisans</string>
     <string name="credits_pojav_founder">PojavLauncher\'ın kurucusu</string>
     <string name="credits_primary_development">Ana geliştirme</string>
     <string name="credits_section_title">Kredi</string>
     <string name="credits_unaffiliated">Bu uygulama Minecraft, Mojang veya Microsoft ile bağlantılı değildir.</string>
-    <string name="credits_version">Sürüm 2.2.1</string>
+    <string name="credits_version">Sürüm 2.2.3</string>
     <string name="ctrl_applied_success">"%1$s" kontrolü başarıyla uygulandı.</string>
     <string name="ctrl_apply_btn">Kontrolü uygula</string>
     <string name="ctrl_apply_msg">Kontrol düzeniniz olarak "%1$s" indirip uygulamak ister misiniz?</string>
@@ -952,7 +952,7 @@
     <string name="instance_storage_calculating">Depolama alanı hesaplanıyor…</string>
     <string name="instance_use">Kullanım</string>
     <string name="java_runtime_download_message">Battly, uygulamanın içine göndermek yerine ilk kurulumdan sonra Java 8\'i indirir. Bu, uygulama boyutunu küçültür ve daha eski Minecraft sürümlerini hazırlar.</string>
-    <string name="launcher_credits_html">&lt;b&gt;Battly Başlatıcı 2.0.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
+    <string name="launcher_credits_html">&lt;b&gt;Battly Başlatıcı 2.2.3&lt;/b&gt;&lt;br/&gt;&lt;br/&gt;
         PojavLauncher ve Boardwalk tabanlı başlatıcı.&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Krediler&lt;/b&gt;&lt;br/&gt;
         • Battly&lt;br/&gt;
@@ -961,13 +961,13 @@
         • Tahta kaldırım&lt;br/&gt;&lt;br/&gt;
         &lt;b&gt;Lisans ve üçüncü taraflar&lt;/b&gt;&lt;br/&gt;
         • GNU GPLv3 ve üçüncü taraf bileşenler projeye dahil edilmiştir.&lt;br/&gt;
-        • OpenJDK, LWJGL, GL4ES, Apache Commons, exp4j ve daha fazlası orijinal lisansları altında.&lt;br/&gt;&lt;br/&gt;
+        • OpenJDK, LWJGL, GL4ES, LTW, Apache Commons, exp4j ve daha fazlası orijinal lisansları altında.&lt;br/&gt;&lt;br/&gt;
         Bu uygulama Minecraft, Mojang veya Microsoft ile bağlantılı değildir.</string>
-    <string name="launcher_credits_title">Battly Başlatıcı 2.2.1</string>
+    <string name="launcher_credits_title">Battly Başlatıcı 2.2.3</string>
     <string name="launcher_download">İndir</string>
     <string name="launcher_download_modpack">Mod paketini içe aktar</string>
     <string name="launcher_execute">Oyna</string>
-    <string name="launcher_mobile_badge">Mobil 2.2.1</string>
+    <string name="launcher_mobile_badge">Mobil 2.2.3</string>
     <string name="launcher_nav_back">Geri dön</string>
     <string name="launcher_nav_home">Eve dön</string>
     <string name="launcher_nav_workspace">Battly Çalışma Alanı</string>
@@ -1116,7 +1116,7 @@
     <string name="preference_disable_autojre_select">Otomatik JRE seçimini devre dışı bırak</string>
     <string name="preference_download_threads_auto_description">Battly, eşzamanlı indirmeleri CPU, bellek ve ağ türüne göre uyarlar. Manuel değeri kullanmak için devre dışı bırakın.</string>
     <string name="preference_download_threads_auto_title">Otomatik indirme paralelliği</string>
-    <string name="preference_download_threads_description">Battly\'nin aynı anda kaç oyun dosyası indireceğini kontrol eder. İyi ağlarda daha yüksek değerler daha hızlıdır.</string>
+    <string name="preference_download_threads_description">Battly varsayılan olarak 64 eşzamanlı indirmeyi kullanır. Hızlı bağlantılarda 100\'e kadar artırın.</string>
     <string name="preference_download_threads_title">Eş zamanlı indirmeler</string>
     <string name="preference_renderer_auto">Otomatik</string>
     <string name="preference_renderer_title">Oluşturucu</string>
@@ -1428,21 +1428,6 @@
 
     <string name="battly_new_badge">Yeni</string>
 
-    <string name="battly_whats_new_transition_desc">Profilleriniz sağlam ve oynamaya hazır.</string>
-    <string name="battly_whats_new_action_start">2.2.1\'i keşfedin</string>
-    <string name="battly_whats_new_compatibility_desc">Android geri düğmesi artık kapatmak yerine Minecraft\'ye geri dönüyor ve aramaları onayladığınızda klavye kapatılıyor.</string>
-    <string name="battly_whats_new_compatibility_title">Yolunuzun dışında kalan navigasyon</string>
-    <string name="battly_whats_new_controllers_desc">Otomatik birleştirmeyi, mikrofon ve ses durumunu, hoparlör katmanı görünürlüğünü, şeffaflığı ve konumu Battly Worlds ayarlarından yapılandırın.</string>
-    <string name="battly_whats_new_controllers_title">Sesli sohbet kontrolünüz altında</string>
-    <string name="battly_whats_new_desc">Battly Dünya Şampiyonası, Sosyal, sesli sohbet ve günlük navigasyon için odaklanmış bir güncelleme.</string>
-    <string name="battly_whats_new_instances_desc">Yüklü modlarını, kaynak paketlerini, gölgelendiricilerini ve veri paketlerini incelemeden önce bir örnek seçin. Artık her kütüphane açıkça ayrı tutuluyor.</string>
-    <string name="battly_whats_new_instances_title">Örneğe göre düzenlenen içerik</string>
-    <string name="battly_whats_new_recovery_desc">Battly, sormadan önce mikrofon erişiminin neden gerekli olduğunu açıklıyor, ses tercihlerini kayıtlı tutuyor ve çevrimiçi, Battly Dünyalar ve çok oyunculu varlığı geliştiriyor.</string>
-    <string name="battly_whats_new_recovery_title">Daha net izinler ve varlık</string>
-    <string name="battly_whats_new_title">Battly Mobil 2.2.1</string>
-    <string name="battly_whats_new_transition_title">Battly 2.2.1 hazır</string>
-    <string name="battly_whats_new_worlds_desc">Arkadaşlarınızı doğrudan Battly Social\'dan davet edin, oda etkinliğini güvenilir bir şekilde alın ve Battly Worlds\'de veya çok oyunculu bir sunucuda oynarken durumunuzu güncel tutun.</string>
-    <string name="battly_whats_new_worlds_title">Battly Dünyalar, daha iyi bağlantı</string>
     <string name="customctrl_voice_microphone_add">Ses mikrofonu ekle düğmesi</string>
     <string name="customctrl_voice_audio_add">Sesli ses düğmesi ekle</string>
     <string name="customctrl_voice_microphone_on">mikrofon</string>
@@ -1516,4 +1501,30 @@
     <string name="battly_social_playing_worlds">Battly Dünya Şampiyonasında Oynanıyor · Minecraft %1$s</string>
     <string name="battlyworlds_voice_sounds_title">Sesli sohbet bağlantı sesleri</string>
     <string name="battlyworlds_voice_sounds_summary">Siz veya başka bir oyuncu sesli sohbete katıldığında ya da ayrıldığında ses çal.</string>
+<string name="download_action_browse_worlds_title">Dünyalara göz atın</string>
+    <string name="download_action_browse_worlds_subtitle">Oynanabilir dünyaları seçtiğiniz örneğe indirin.</string>
+    <string name="search_world_title">Dünyalara Göz Atın</string>
+    <string name="search_world_subtitle">CurseForge dünyalarını keşfedin ve seçtiğiniz bulut sunucusuna yükleyin.</string>
+    <string name="hint_search_world">Dünyaları ara</string>
+    <string name="search_world_no_result">Hiçbir dünya bulunamadı</string>
+    <string name="search_world_error">Dünyalar bulunamadı</string>
+    <string name="search_world_download_error">Dünya meta verileri indirilemedi</string>
+    <string name="world_install_button">Dünyayı yükle</string>
+    <string name="world_install_success">Bu örneğe %1$s yüklendi</string>
+
+    <string name="battly_whats_new_action_start">2.2.3\'ü keşfedin</string>
+    <string name="battly_whats_new_compatibility_desc">Modpack\'i aç eylemi artık yeni örneği seçiyor ve her kurulum ve içerik penceresini doğru şekilde kapatıyor.</string>
+    <string name="battly_whats_new_compatibility_title">Yüklü mod paketlerini doğrudan açın</string>
+    <string name="battly_whats_new_controllers_desc">Battly istemci yükleyicisi artık kompakt ekranlar da dahil olmak üzere uygun bir kaydırılabilir liste kullanıyor.</string>
+    <string name="battly_whats_new_controllers_title">Müşteri listesinin kaydırılması düzeltildi</string>
+    <string name="battly_whats_new_desc">Battly Workspace için yeni yalıtılmış örnekler, indirilebilir dünyalar ve önemli düzeltmeler.</string>
+    <string name="battly_whats_new_instances_desc">Yeni Vanilla, yükleyici, istemci ve mod paketi örnekleri, dünyalarını, modlarını, ayarlarını ve kaynak paketlerini bağımsız bir klasörde tutar.</string>
+    <string name="battly_whats_new_instances_title">Her yeni örnek için ayrı bir klasör</string>
+    <string name="battly_whats_new_recovery_desc">Yeni örnek yalıtımı, daha güvenli ayar depolama ve uzun oturumlu tanılama, yapılandırma sıfırlamalarını azaltır ve sorunların tanımlanmasını kolaylaştırır.</string>
+    <string name="battly_whats_new_recovery_title">Geliştirilmiş kararlılık</string>
+    <string name="battly_whats_new_title">Battly Mobil 2.2.3</string>
+    <string name="battly_whats_new_transition_desc">Mevcut örnekler oldukları yerde kalır. Klasör yalıtımı yalnızca bu sürümden itibaren oluşturulan örnekler için geçerlidir.</string>
+    <string name="battly_whats_new_transition_title">Battly 2.2.3 hazır</string>
+    <string name="battly_whats_new_worlds_desc">CurseForge\'den Minecraft dünyalarına göz atın ve doğrudan seçtiğiniz bulut sunucusuna yükleyin.</string>
+    <string name="battly_whats_new_worlds_title">Workspace\'ten dünyaları indirin</string>
 </resources>

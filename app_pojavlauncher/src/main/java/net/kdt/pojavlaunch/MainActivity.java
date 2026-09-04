@@ -14,6 +14,7 @@ import static org.lwjgl.glfw.CallbackBridge.windowWidth;
 
 import android.app.Activity;
 import android.app.AlertDialog;
+import android.app.ActivityManager;
 import android.content.BroadcastReceiver;
 import android.content.ClipData;
 import android.content.ClipboardManager;
@@ -54,6 +55,7 @@ import android.view.Gravity;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
+import androidx.activity.OnBackPressedCallback;
 import androidx.core.content.ContextCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
@@ -61,6 +63,7 @@ import com.kdt.LoggerView;
 import com.google.android.gms.ads.nativead.NativeAd;
 
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsDialog;
+import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsAvatarLoader;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsFeature;
 import net.kdt.pojavlaunch.battlyworlds.BattlyWorldsInvites;
 import net.kdt.pojavlaunch.battlysocial.BattlySocialManager;
@@ -86,7 +89,10 @@ import net.kdt.pojavlaunch.prefs.LauncherPreferences;
 import net.kdt.pojavlaunch.prefs.QuickSettingSideDialog;
 import net.kdt.pojavlaunch.services.GameService;
 import net.kdt.pojavlaunch.utils.JREUtils;
+import net.kdt.pojavlaunch.utils.AdaptiveGraphicsPolicy;
+import net.kdt.pojavlaunch.utils.GLInfoUtils;
 import net.kdt.pojavlaunch.utils.MinecraftCompatibilityEngine;
+import net.kdt.pojavlaunch.utils.MinecraftGraphicsBackendPolicy;
 import net.kdt.pojavlaunch.utils.RendererPluginRegistry;
 import net.kdt.pojavlaunch.utils.ControllerProfileManager;
 import net.kdt.pojavlaunch.utils.MCOptionUtils;
@@ -95,6 +101,9 @@ import net.kdt.pojavlaunch.utils.BattlyClientCompat;
 import net.kdt.pojavlaunch.utils.BattlyNativeAdHelper;
 import net.kdt.pojavlaunch.utils.BattlyWorldsTrailerDialog;
 import net.kdt.pojavlaunch.utils.VanillaPostShaderCompat;
+import net.kdt.pojavlaunch.utils.ShaderRuntimeDetector;
+import net.kdt.pojavlaunch.utils.LogTailReader;
+import net.kdt.pojavlaunch.utils.GameHealthMonitor;
 
 import org.libsdl.app.SDLActivity;
 import net.kdt.pojavlaunch.value.MinecraftAccount;
@@ -108,6 +117,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
 import java.util.Objects;
+import java.util.Collections;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class MainActivity extends BaseActivity implements ControlButtonMenuListener, EditorExitable, ServiceConnection {
     public static volatile ClipboardManager GLOBAL_CLIPBOARD;
@@ -142,6 +153,9 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private ControlLayout mControlLayout;
     private HotbarView mHotbarView;
     private boolean mRendererAutoSelected;
+    private String mAdaptiveGraphicsDiagnostic = "";
+    private final MCOptionUtils.MCOptionListener mOptionListener = MCOptionUtils::getMcScale;
+    private GameHealthMonitor mGameHealthMonitor;
 
     MinecraftProfile minecraftProfile;
 
@@ -158,6 +172,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     private View mLanInvitePrompt;
     private boolean mLanInvitePromptHidden;
     private String mLastLanPromptToken = "";
+    private final AtomicBoolean mLanLogReadInProgress = new AtomicBoolean();
     private final Runnable mLanInviteChecker = new Runnable() {
         @Override
         public void run() {
@@ -171,6 +186,12 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        getOnBackPressedDispatcher().addCallback(this, new OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                handleGameBack();
+            }
+        });
         minecraftProfile = LauncherProfiles.getCurrentProfile();
         BattlySocialManager.heartbeatGame(this,
                 minecraftProfile == null ? "" : minecraftProfile.lastVersionId);
@@ -219,8 +240,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         };
 
         // Recompute the gui scale when options are changed
-        MCOptionUtils.MCOptionListener optionListener = MCOptionUtils::getMcScale;
-        MCOptionUtils.addMCOptionListener(optionListener);
+        MCOptionUtils.addMCOptionListener(mOptionListener);
         mControlLayout.setModifiable(false);
 
         // Set the activity for the executor. Must do this here, or else Tools.showErrorRemote() may not
@@ -404,13 +424,62 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 compatibility.lwjglChannel);
         MinecraftGLSurface.setSdlWindowBridgeEnabled(mSdlWindowBridgeRequired);
         MinecraftGLSurface.setSdlInputBridgeEnabled(mSdlInputBridgeRequired);
-        if (mRendererAutoSelected || !compatibility.rendererId.equals(requestedRenderer)) {
+        String baselineRenderer = compatibility.rendererId;
+        ShaderRuntimeDetector.Result shaderRuntime = ShaderRuntimeDetector.detect(
+                Tools.getGameDirPath(minecraftProfile));
+        GLInfoUtils.GLInfo graphics = GLInfoUtils.getGlInfo();
+        ActivityManager.MemoryInfo memoryInfo = new ActivityManager.MemoryInfo();
+        ActivityManager activityManager = (ActivityManager) getSystemService(Context.ACTIVITY_SERVICE);
+        if (activityManager != null) activityManager.getMemoryInfo(memoryInfo);
+        long memoryMb = memoryInfo.totalMem / 1024L / 1024L;
+        String graphicsProfile = minecraftProfile.graphicsProfile;
+        if (graphicsProfile == null || graphicsProfile.trim().isEmpty()) {
+            graphicsProfile = LauncherPreferences.PREF_GRAPHICS_PROFILE;
+        }
+        int configuredResolution = LauncherPreferences.DEFAULT_PREF == null
+                ? Math.round(LauncherPreferences.PREF_SCALE_FACTOR * 100f)
+                : LauncherPreferences.DEFAULT_PREF.getInt("resolutionRatio",
+                Math.round(LauncherPreferences.PREF_SCALE_FACTOR * 100f));
+        boolean configuredSustained = LauncherPreferences.DEFAULT_PREF == null
+                ? LauncherPreferences.PREF_SUSTAINED_PERFORMANCE
+                : LauncherPreferences.DEFAULT_PREF.getBoolean("sustainedPerformance",
+                LauncherPreferences.PREF_SUSTAINED_PERFORMANCE);
+        AdaptiveGraphicsPolicy.Decision graphicsDecision = new AdaptiveGraphicsPolicy.Input(
+                graphicsProfile,
+                graphics.vendor + " " + graphics.renderer,
+                shaderRuntime.shaderEnabled,
+                compatibility.family.modern,
+                compatibility.family.requiresDesktopGl,
+                memoryMb,
+                configuredResolution,
+                configuredSustained,
+                baselineRenderer,
+                Tools.getCompatibleRenderers(this).rendererIds,
+                Collections.emptyList()).decide();
+
+        if (mRendererAutoSelected) {
+            requestedRenderer = graphicsDecision.rendererId;
+        } else if (!compatibility.rendererId.equals(requestedRenderer)) {
             requestedRenderer = compatibility.rendererId;
+        }
+        LauncherPreferences.PREF_SCALE_FACTOR = graphicsDecision.resolutionPercent / 100f;
+        LauncherPreferences.PREF_SUSTAINED_PERFORMANCE = graphicsDecision.enableSustainedPerformance;
+        if (mRendererAutoSelected || !compatibility.rendererId.equals(requestedRenderer)) {
             Log.i(TAG, "Auto renderer resolved before surface creation: " + requestedRenderer);
         } else {
             Log.i("RdrDebug", "__P_renderer=" + requestedRenderer);
         }
         Tools.LOCAL_RENDERER = RendererPluginRegistry.runtimeRendererFor(this, requestedRenderer);
+        String shaderName = shaderRuntime.shaderEnabled ? shaderRuntime.packName : "off";
+        String decisionLine = "Adaptive graphics: profile=" + graphicsProfile
+                + ", shader=" + shaderName
+                + ", gpu=" + graphics.renderer
+                + ", renderer=" + requestedRenderer
+                + ", resolution=" + graphicsDecision.resolutionPercent + "%"
+                + ", sustained=" + graphicsDecision.enableSustainedPerformance;
+        Log.i(TAG, decisionLine);
+        Logger.appendToLog(decisionLine);
+        mAdaptiveGraphicsDiagnostic = decisionLine;
     }
 
     private void initializeSdlIntegration() {
@@ -541,6 +610,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             return;
         }
         mGameStartingFirstFrameReady = true;
+        if (mGameHealthMonitor == null) {
+            String version = minecraftProfile == null ? null : minecraftProfile.lastVersionId;
+            mGameHealthMonitor = new GameHealthMonitor(this, Tools.LOCAL_RENDERER, version);
+            mGameHealthMonitor.start();
+        }
         maybeFinishGameStartingOverlay();
     }
 
@@ -652,6 +726,11 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         destroyGameStartingAd();
         BattlySocialManager.stopGameHeartbeat(this);
         Tools.MAIN_HANDLER.removeCallbacks(mLanInviteChecker);
+        MCOptionUtils.removeMCOptionListener(mOptionListener);
+        if (mGameHealthMonitor != null) {
+            mGameHealthMonitor.stop();
+            mGameHealthMonitor = null;
+        }
         if (BattlyWorldsFeature.ENABLED) {
             boolean wasHosting = BattlyWorldsManager.isHosting();
             if (isFinishing() && !isChangingConfigurations()) {
@@ -675,7 +754,6 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 BattlyWorldsPreferences.clearActiveRoomCode(this);
             }
             BattlyWorldsInvites.setGameActive(this, false);
-            BattlySocialManager.heartbeatLauncher(this);
             if (mBattlyWorldsInviteReceiver != null) {
                 try {
                     unregisterReceiver(mBattlyWorldsInviteReceiver);
@@ -688,6 +766,13 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
         CallbackBridge.removeGrabListener(minecraftGLView);
         ContextExecutor.clearActivity();
         super.onDestroy();
+    }
+
+    @Override
+    public void onTrimMemory(int level) {
+        super.onTrimMemory(level);
+        BattlyWorldsAvatarLoader.trimMemory();
+        if (mGameHealthMonitor != null) mGameHealthMonitor.recordTrimMemory(level);
     }
 
     @Override
@@ -830,6 +915,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             runOnUiThread(() -> Toast.makeText(this, R.string.autorendererselectfailed, Toast.LENGTH_LONG).show());
             Tools.releaseRenderersCache();
         }
+        MinecraftGraphicsBackendPolicy.apply(compatibility.family, Tools.LOCAL_RENDERER);
 
         // MCL-3732 Mitigation
         // I don't trust the bug tracker. 'server-resource-pack" was removed in 1.20.3-pre3
@@ -845,6 +931,10 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             Logger.appendToLog("WARNING: Sodium detected. Compatibility may depend on the selected renderer and installed mods.");
         Logger.appendToLog("--------- Starting game with Launcher Debug!");
         Tools.printLauncherInfo(versionId, Tools.isValidString(minecraftProfile.javaArgs) ? minecraftProfile.javaArgs : LauncherPreferences.PREF_CUSTOM_JAVA_ARGS);
+        if (!mAdaptiveGraphicsDiagnostic.isEmpty()) {
+            Logger.appendToLog("Info: " + mAdaptiveGraphicsDiagnostic
+                    + ", effectiveRenderer=" + Tools.LOCAL_RENDERER);
+        }
         if(Tools.LOCAL_RENDERER.equals("opengles_mobileglues")) {
             LauncherPreferences.writeMGRendererSettings(isBattlyClient, versionId);
         }
@@ -1036,12 +1126,18 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
                 || (mLanInvitePrompt != null && mLanInvitePrompt.getParent() != null)) {
             return;
         }
-        String token = findLatestLanPortToken();
-        if (token.isEmpty() || token.equals(mLastLanPromptToken)) {
-            return;
-        }
-        mLastLanPromptToken = token;
-        showLanInvitePrompt();
+        if (!mLanLogReadInProgress.compareAndSet(false, true)) return;
+        PojavApplication.sExecutorService.execute(() -> {
+            String token = findLatestLanPortToken();
+            Tools.runOnUiThread(() -> {
+                mLanLogReadInProgress.set(false);
+                if (isFinishing() || isDestroyed() || token.isEmpty()
+                        || token.equals(mLastLanPromptToken)
+                        || mLanInvitePromptHidden || BattlyWorldsManager.getMode() != null) return;
+                mLastLanPromptToken = token;
+                showLanInvitePrompt();
+            });
+        });
     }
 
     private String findLatestLanPortToken() {
@@ -1050,7 +1146,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             return "";
         }
         try {
-            String log = Tools.read(latestLog);
+            String log = LogTailReader.readUtf8Tail(latestLog, 128 * 1024);
             String[] lines = log.split("\n");
             for (int i = lines.length - 1; i >= 0; i--) {
                 String line = lines[i].trim();
@@ -1164,15 +1260,34 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
             }
             return super.dispatchKeyEvent(event);
         }
-        boolean handleEvent;
-        if(!(handleEvent = minecraftGLView.processKeyEvent(event))) {
-            if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !touchCharInput.isEnabled()) {
-                if(event.getAction() != KeyEvent.ACTION_UP) return true; // We eat it anyway
-                sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
-                return true;
+        if (event.getKeyCode() == KeyEvent.KEYCODE_BACK && !isMouseBackEvent(event)) {
+            if (event.getAction() == KeyEvent.ACTION_UP
+                    && (event.getFlags() & KeyEvent.FLAG_CANCELED) == 0) {
+                handleGameBack();
             }
+            return true;
         }
-        return handleEvent;
+        return minecraftGLView.processKeyEvent(event);
+    }
+
+    private static boolean isMouseBackEvent(KeyEvent event) {
+        int source = event.getSource();
+        return event.getDevice() != null
+                && ((source & InputDevice.SOURCE_MOUSE_RELATIVE) == InputDevice.SOURCE_MOUSE_RELATIVE
+                || (source & InputDevice.SOURCE_MOUSE) == InputDevice.SOURCE_MOUSE);
+    }
+
+    private void handleGameBack() {
+        if (isInEditor && mControlLayout != null) {
+            mControlLayout.askToExit(this);
+            return;
+        }
+        if (touchCharInput != null && touchCharInput.isEnabled()) {
+            touchCharInput.disable();
+            Tools.hideKeyboard(touchCharInput);
+            return;
+        }
+        sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
     }
 
     @Override
@@ -1345,16 +1460,7 @@ public class MainActivity extends BaseActivity implements ControlButtonMenuListe
     }
 
     @Override
-    public void onTrimMemory(int level) {
-        super.onTrimMemory(level);
-    }
-
-    @Override
     public void onBackPressed() {
-        if (isInEditor && mControlLayout != null) {
-            mControlLayout.askToExit(this);
-            return;
-        }
-        sendKeyPress(LwjglGlfwKeycode.GLFW_KEY_ESCAPE);
+        handleGameBack();
     }
 }

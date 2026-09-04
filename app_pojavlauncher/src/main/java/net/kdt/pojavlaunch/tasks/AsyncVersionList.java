@@ -12,8 +12,10 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.stream.JsonReader;
 
 import net.kdt.pojavlaunch.JMinecraftVersionList;
+import net.kdt.pojavlaunch.PojavApplication;
 import net.kdt.pojavlaunch.Tools;
 import net.kdt.pojavlaunch.prefs.LauncherPreferences;
+import net.kdt.pojavlaunch.utils.BattlyOfflineMode;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -29,7 +31,9 @@ public class AsyncVersionList {
             File versionFile = new File(Tools.DIR_CACHE + "/version_list.json");
             JMinecraftVersionList versionList = null;
             try{
-                if(!versionFile.exists() || (System.currentTimeMillis() > versionFile.lastModified() + 86400000 )){
+                boolean offline = BattlyOfflineMode.isOffline(PojavApplication.getAppContext());
+                if(!offline && (!versionFile.exists()
+                        || System.currentTimeMillis() > versionFile.lastModified() + 86400000)){
                     versionList = downloadVersionList(LauncherPreferences.PREF_VERSION_REPOS);
                 }
             }catch (Exception e){
@@ -44,10 +48,7 @@ public class AsyncVersionList {
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
                 } catch (JsonIOException | JsonSyntaxException e) {
-                    e.printStackTrace();
-                    versionFile.delete();
-                    if(!secondPass)
-                        getVersionList(listener, true);
+                    Log.e("AsyncVersionList", "Saved version list is invalid; preserving it for recovery", e);
                 }
             }
 
@@ -68,9 +69,25 @@ public class AsyncVersionList {
 
             // Then save the version list
             //TODO make it not save at times ?
-            FileOutputStream fos = new FileOutputStream(Tools.DIR_CACHE + "/version_list.json");
-            fos.write(jsonString.getBytes());
-            fos.close();
+            File destination = new File(Tools.DIR_CACHE, "version_list.json");
+            File temporary = new File(Tools.DIR_CACHE, "version_list.json.download");
+            File backup = new File(Tools.DIR_CACHE, "version_list.json.backup");
+            try (FileOutputStream fos = new FileOutputStream(temporary)) {
+                fos.write(jsonString.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                fos.getFD().sync();
+            }
+            if (backup.exists() && !backup.delete())
+                throw new IOException("Unable to clear old version list backup");
+            boolean hadDestination = destination.isFile();
+            if (hadDestination && !destination.renameTo(backup))
+                throw new IOException("Unable to back up cached version list");
+            if (!temporary.renameTo(destination)) {
+                if (hadDestination && !backup.renameTo(destination))
+                    Log.e("AsyncVersionList", "Unable to restore cached version list backup");
+                throw new IOException("Unable to activate cached version list");
+            }
+            if (backup.exists() && !backup.delete())
+                Log.w("AsyncVersionList", "Unable to remove old version list backup");
 
 
 

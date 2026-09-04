@@ -49,6 +49,7 @@ public class CurseforgeApi implements ModpackApi{
     // https://api.curseforge.com/v1/categories?gameId=432 and search for "Mods" (case-sensitive)
     private static final int CURSEFORGE_MOD_CLASS_ID = 6;
     private static final int CURSEFORGE_RESOURCE_PACK_CLASS_ID = 12;
+    private static final int CURSEFORGE_WORLD_CLASS_ID = 17;
     private static final int CURSEFORGE_SORT_RELEVANCY = 1;
     private static final int CURSEFORGE_PAGINATION_SIZE = 50;
     private static final int CURSEFORGE_PAGINATION_END_REACHED = -1;
@@ -98,6 +99,7 @@ public class CurseforgeApi implements ModpackApi{
                 continue;
             }
             JsonObject logo = GsonJsonUtils.getJsonObjectSafe(dataElement, "logo");
+            JsonArray screenshots = GsonJsonUtils.getJsonArraySafe(dataElement, "screenshots");
             ModItem modItem = new ModItem(Constants.SOURCE_CURSEFORGE,
                     searchFilters.contentType,
                     GsonJsonUtils.getStringSafe(dataElement, "id"),
@@ -105,7 +107,11 @@ public class CurseforgeApi implements ModpackApi{
                     GsonJsonUtils.getStringSafe(dataElement, "summary"),
                     logo == null ? null : GsonJsonUtils.getStringSafe(logo, "thumbnailUrl"),
                     extractCategories(dataElement),
-                    extractLoaders(dataElement));
+                    extractLoaders(dataElement),
+                    getLongSafe(dataElement, "downloadCount"),
+                    0,
+                    screenshotImages(screenshots));
+            modItem.setGalleryImages(screenshotImages(screenshots), screenshotFullImages(screenshots));
             if (!matchesLoaderFilter(searchFilters, modItem.loaders)) {
                 continue;
             }
@@ -121,6 +127,14 @@ public class CurseforgeApi implements ModpackApi{
 
     @Override
     public ModDetail getModDetails(ModItem item) {
+        if (!Tools.isValidString(item.previewImageUrl)) {
+            JsonObject projectResponse = mApiHandler.get("mods/" + item.id, JsonObject.class);
+            JsonObject project = GsonJsonUtils.getJsonObjectSafe(projectResponse, "data");
+            if (project != null) {
+                JsonArray screenshots = GsonJsonUtils.getJsonArraySafe(project, "screenshots");
+                item.setGalleryImages(screenshotImages(screenshots), screenshotFullImages(screenshots));
+            }
+        }
         ArrayList<JsonObject> allModDetails = new ArrayList<>();
         int index = 0;
         while(index != CURSEFORGE_PAGINATION_END_REACHED &&
@@ -174,7 +188,8 @@ public class CurseforgeApi implements ModpackApi{
         if (data == null) return null;
         JsonObject logo = GsonJsonUtils.getJsonObjectSafe(data, "logo");
         String logoUrl = logo == null ? null : GsonJsonUtils.getStringSafe(logo, "thumbnailUrl");
-        return new ModItem(
+        JsonArray screenshots = GsonJsonUtils.getJsonArraySafe(data, "screenshots");
+        ModItem item = new ModItem(
                 Constants.SOURCE_CURSEFORGE,
                 contentType,
                 GsonJsonUtils.getStringSafe(data, "id"),
@@ -182,8 +197,13 @@ public class CurseforgeApi implements ModpackApi{
                 GsonJsonUtils.getStringSafe(data, "summary"),
                 logoUrl,
                 extractCategories(data),
-                extractLoaders(data)
+                extractLoaders(data),
+                getLongSafe(data, "downloadCount"),
+                0,
+                screenshotImages(screenshots)
         );
+        item.setGalleryImages(screenshotImages(screenshots), screenshotFullImages(screenshots));
+        return item;
     }
 
     @Override
@@ -265,6 +285,8 @@ public class CurseforgeApi implements ModpackApi{
                 return CURSEFORGE_MOD_CLASS_ID;
             case SearchFilters.TYPE_RESOURCEPACK:
                 return CURSEFORGE_RESOURCE_PACK_CLASS_ID;
+            case SearchFilters.TYPE_WORLD:
+                return CURSEFORGE_WORLD_CLASS_ID;
             case SearchFilters.TYPE_MODPACK:
             default:
                 return CURSEFORGE_MODPACK_CLASS_ID;
@@ -274,7 +296,8 @@ public class CurseforgeApi implements ModpackApi{
     private static boolean supportsContentType(int contentType) {
         return contentType == SearchFilters.TYPE_MODPACK
                 || contentType == SearchFilters.TYPE_MOD
-                || contentType == SearchFilters.TYPE_RESOURCEPACK;
+                || contentType == SearchFilters.TYPE_RESOURCEPACK
+                || contentType == SearchFilters.TYPE_WORLD;
     }
 
     private static boolean matchesLoaderFilter(SearchFilters filters, String[] loaders) {
@@ -348,6 +371,46 @@ public class CurseforgeApi implements ModpackApi{
             items.add(new ModDependency(projectId, projectId, relationType == 3));
         }
         return items.toArray(new ModDependency[0]);
+    }
+
+    static String firstScreenshotImage(JsonArray screenshots) {
+        String[] images = screenshotImages(screenshots);
+        return images.length == 0 ? null : images[0];
+    }
+
+    static String[] screenshotImages(JsonArray screenshots) {
+        return screenshotImages(screenshots, true);
+    }
+
+    static String[] screenshotFullImages(JsonArray screenshots) {
+        return screenshotImages(screenshots, false);
+    }
+
+    private static String[] screenshotImages(JsonArray screenshots, boolean preferThumbnail) {
+        if (screenshots == null) return new String[0];
+        ArrayList<String> images = new ArrayList<>();
+        for (JsonElement element : screenshots) {
+            JsonObject screenshot = GsonJsonUtils.getJsonObjectSafe(element);
+            if (screenshot == null) continue;
+            String url = GsonJsonUtils.getStringSafe(screenshot,
+                    preferThumbnail ? "thumbnailUrl" : "url");
+            if (url == null || url.trim().isEmpty()) {
+                url = GsonJsonUtils.getStringSafe(screenshot,
+                        preferThumbnail ? "url" : "thumbnailUrl");
+            }
+            if (url != null && !url.trim().isEmpty() && !images.contains(url)) images.add(url);
+        }
+        return images.toArray(new String[0]);
+    }
+
+    private static long getLongSafe(JsonObject object, String memberName) {
+        JsonElement value = object == null ? null : object.get(memberName);
+        if (value == null || value.isJsonNull() || !value.isJsonPrimitive()) return 0;
+        try {
+            return value.getAsLong();
+        } catch (RuntimeException ignored) {
+            return 0;
+        }
     }
 
     private ModLoader installCurseforgeZip(File zipFile, File instanceDestination) throws IOException {
